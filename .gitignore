@@ -11,10 +11,9 @@ local_settings.py
 db.sqlite3
 
 # Media files:
-#media/
-
+media/
 # Static files:
-#static/
+static/
 
 # Secret keys:
 *.secret

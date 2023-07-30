@@ -1,0 +1,51 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Django stuff:
+*.log
+*.pot
+*.pyc
+local_settings.py
+db.sqlite3
+
+# Media files:
+media/
+
+# Static files:
+static/
+
+# Secret keys:
+*.secret
+
+# Environment variables
+.env
+
+# Development files:
+*.idea/
+.vscode/
+*.pyproj
+*.pycproj
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.pycproj.user
+*.user
+*.coverage
+htmlcov/
+.coverage.xml
+.tox/
+.coverage/
+*.orig
+*.rej
+*.tmp
+*.tmp.*
+*.~*.*
+*~*
+
+# Dependency folders:
+venv/
+env/
+node_modules/

@@ -15,6 +15,22 @@ import os
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# Set the URL prefix for static files
+STATIC_URL = '/static/'
+# Define the directory where Django should collect and store static files
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+# Define additional directories where Django should look for static files
+# during development
+STATICFILES_DIRS = [
+    BASE_DIR / 'static',  # Add any other directories if needed
+]
+
+MEDIA_URL = '/media/'
+
+# Define the directory where uploaded media files are stored
+MEDIA_ROOT = BASE_DIR / 'media'
+
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
@@ -134,21 +150,20 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
-# Set the URL prefix for static files
-STATIC_URL = '/static/'
+
 
 # Define the directory where Django should collect and store static files
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+# STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 # Define additional directories where Django should look for static files during development
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static'),  # Add any other directories if needed
-]
+# STATICFILES_DIRS = [
+#     os.path.join(BASE_DIR, '../static'),  # Add any other directories if needed
+# ]
 
-MEDIA_URL = '/media/'
+# MEDIA_URL = '/media/'
 
 # Define the directory where uploaded media files are stored
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+# MEDIA_ROOT = os.path.join(BASE_DIR, '../media')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field

@@ -13,7 +13,7 @@ db.sqlite3
 # Media files:
 #media/
 # Static files:
-static/
+#static/
 
 # Secret keys:
 *.secret

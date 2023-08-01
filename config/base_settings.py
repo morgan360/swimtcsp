@@ -15,6 +15,9 @@ import os
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+from dotenv import load_dotenv
+load_dotenv()  # loads the configs from .env
+
 # Set the URL prefix for static files
 STATIC_URL = '/static/'
 # Define the directory where Django should collect and store static files
@@ -36,7 +39,9 @@ MEDIA_ROOT = BASE_DIR / 'media'
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-t)bhgkjuv98k2#o%1^x8fk#f7voxyx@qafk==-$fwmg#=prxni'
+# SECRET_KEY = 'django-insecure-t)bhgkjuv98k2#o%1^x8fk#f7voxyx@qafk==-$fwmg#=prxni'
+
+SECRET_KEY = str(os.getenv('SECRET_KEY'))
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -186,8 +191,9 @@ ACCOUNT_LOGIN_ATTEMPTS_LIMIT = 5
 ACCOUNT_LOGIN_ATTEMPTS_TIMEOUT = 300
 SOCIALACCOUNT_AUTO_SIGNUP = False
 ACCOUNT_LOGOUT_REDIRECT_URL = "/"
+ACCOUNT_SIGNUP_REQUIRED_FIELDS = ['first_name']
 # disable sign out confirmation
-# ACCOUNT_LOGOUT_ON_GET = True
+ACCOUNT_LOGOUT_ON_GET = True
 # # disable sign in confirmation
 SOCIALACCOUNT_LOGIN_ON_GET = True
 # # ACCOUNT_USER_MODEL_USERNAME_FIELD = None
@@ -231,6 +237,9 @@ SOCIALACCOUNT_PROVIDERS = {
         'VERSION': 'v13.0',
         'GRAPH_API_URL': 'https://graph.facebook.com/v13.0',
     }
+}
+ACCOUNT_FORMS = {
+    'signup': 'users.forms.CustomSignupForm',
 }
 # CrispyForms
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"

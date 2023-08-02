@@ -11,7 +11,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'morganmck$swimtcsp',
         'USER': 'morganmck',
-        'PASSWORD': DB_PASSWORD,
+        'PASSWORD': 'Mango@8899',
         'HOST': 'morganmck.mysql.eu.pythonanywhere-services.com',
     }
 }

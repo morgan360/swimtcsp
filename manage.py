@@ -5,6 +5,8 @@ import sys
 
 
 def main():
+    from dotenv import load_dotenv
+    load_dotenv()  # loads the configs from .env
     """Run administrative tasks. Settings Location is stored in .env as DJANGO_SETTINGS_MODULE"""
 
     os.environ.setdefault('DJANGO_SETTINGS_MODULE',

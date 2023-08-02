@@ -13,3 +13,5 @@ DATABASES = {
         'HOST': 'morganmck.mysql.eu.pythonanywhere-services.com',
     }
 }
+
+DEBUG = False

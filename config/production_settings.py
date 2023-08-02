@@ -1,4 +1,6 @@
 from config.base_settings import *
+from dotenv import load_dotenv
+load_dotenv()  # loads the configs from .env
 
 DATABASES = {
     'other': {

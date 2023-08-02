@@ -15,4 +15,4 @@ DATABASES = {
 }
 
 DEBUG = False
-ALLOWED_HOSTS = ['https://tcsp-morganmck.eu.pythonanywhere.com/']
+ALLOWED_HOSTS = ['tcsp-morganmck.eu.pythonanywhere.com']

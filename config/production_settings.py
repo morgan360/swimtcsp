@@ -9,9 +9,10 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'morganmck$swimtcsp',
         'USER': 'morganmck',
-        'PASSWORD': 'Mongo@8899',
+        'PASSWORD': str(os.getenv('DB_PASSWORD')),
         'HOST': 'morganmck.mysql.eu.pythonanywhere-services.com',
     }
 }
 
 DEBUG = False
+ALLOWED_HOSTS = ['https://tcsp-morganmck.eu.pythonanywhere.com/']

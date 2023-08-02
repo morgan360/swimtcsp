@@ -43,11 +43,6 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 SECRET_KEY = str(os.getenv('SECRET_KEY'))
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-ALLOWED_HOSTS = ['*']
-
 
 # Application definition
 
@@ -109,16 +104,7 @@ WSGI_APPLICATION = 'core.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'swimtcsp',
-        'USER': 'root',
-        'PASSWORD': 'Morgan@8899',
-        'HOST': 'localhost',
-        'PORT': '3306',
-    }
-}
+
 
 
 # Password validation

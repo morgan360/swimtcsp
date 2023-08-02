@@ -17,7 +17,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 from dotenv import load_dotenv
 load_dotenv()  # loads the configs from .env
-
+DB_PASSWORD = str(os.getenv('DB_PASSWORD')),
 # Set the URL prefix for static files
 STATIC_URL = '/static/'
 # Define the directory where Django should collect and store static files

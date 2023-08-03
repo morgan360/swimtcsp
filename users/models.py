@@ -2,6 +2,7 @@ from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, \
     PermissionsMixin, Group
 from django.db import models
 from django.utils import timezone
+from django.conf import settings
 
 
 class UserManager(BaseUserManager):
@@ -54,3 +55,13 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def get_absolute_url(self):
         return "/users/%i/" % (self.pk)
+
+
+class UserProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    mobile_phone = models.CharField(max_length=15, blank=True, null=True)
+    home_phone = models.CharField(max_length=15, blank=True, null=True)
+    notes = models.TextField(blank=True)
+
+    def __str__(self):
+        return f"Profile for {self.user.email}"

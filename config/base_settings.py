@@ -12,28 +12,24 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 
 from pathlib import Path
 import os
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 from dotenv import load_dotenv
+
 load_dotenv()  # loads the configs from .env
 DB_PASSWORD = str(os.getenv('DB_PASSWORD')),
-# Set the URL prefix for static files
-STATIC_URL = '/static/'
-# Define the directory where Django should collect and store static files
-STATIC_ROOT = BASE_DIR / 'staticfiles'
 
-# Define additional directories where Django should look for static files
-# during development
-STATICFILES_DIRS = [
-    BASE_DIR / 'static',  # Add any other directories if needed
-]
+# Set the URL prefix for static files
+STATIC_URL = '/static/'  # URL prefix for static files (e.g., CSS, JavaScript, images)
+STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
+STATIC_ROOT = os.path.join(BASE_DIR, 'static_files/')
 
 MEDIA_URL = '/media/'
 
 # Define the directory where uploaded media files are stored
 MEDIA_ROOT = BASE_DIR / 'media'
-
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
@@ -42,7 +38,6 @@ MEDIA_ROOT = BASE_DIR / 'media'
 # SECRET_KEY = 'django-insecure-t)bhgkjuv98k2#o%1^x8fk#f7voxyx@qafk==-$fwmg#=prxni'
 
 SECRET_KEY = str(os.getenv('SECRET_KEY'))
-
 
 # Application definition
 
@@ -77,6 +72,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
 ]
 
 ROOT_URLCONF = 'core.urls'
@@ -100,11 +96,8 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'core.wsgi.application'
 
-
 # Database
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
-
-
 
 
 # Password validation
@@ -125,7 +118,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/4.1/topics/i18n/
 
@@ -137,10 +129,8 @@ USE_I18N = True
 
 USE_TZ = True
 
-
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
-
 
 
 # Define the directory where Django should collect and store static files
@@ -163,7 +153,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Custom User Model
 AUTH_USER_MODEL = 'users.User'
-
 
 # Allauth
 SITE_ID = 2

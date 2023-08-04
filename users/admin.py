@@ -1,7 +1,11 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
+from .models import User, UserProfile, Swimling
 
-from .models import User, UserProfile
+
+class SwimlingInline(admin.TabularInline):
+    model = Swimling
+    extra = 1  # Set the number of empty forms to display for adding new Swimlings
 
 
 class UserProfileInline(admin.StackedInline):
@@ -10,17 +14,13 @@ class UserProfileInline(admin.StackedInline):
 
 
 class UserAdmin(BaseUserAdmin):
-    inlines =[UserProfileInline]
+    inlines = [SwimlingInline, UserProfileInline]
     fieldsets = (
-        (None, {'fields': ('email', 'password', 'first_name',
-                           'last_name', 'last_login')}),
+        (None, {'fields': (
+        'email', 'password', 'first_name', 'last_name', 'last_login')}),
         ('Permissions', {'fields': (
-            'is_active',
-            'is_staff',
-            'is_superuser',
-            'groups',
-            'user_permissions',
-        )}),
+        'is_active', 'is_staff', 'is_superuser', 'groups',
+        'user_permissions')}),
     )
     add_fieldsets = (
         (
@@ -40,5 +40,3 @@ class UserAdmin(BaseUserAdmin):
 
 
 admin.site.register(User, UserAdmin)
-
-# Register your models here.

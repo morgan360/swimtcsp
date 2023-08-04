@@ -6,7 +6,6 @@ from django.conf import settings
 
 
 class UserManager(BaseUserManager):
-
     def _create_user(self, email, password, first_name, is_staff, is_superuser,
                      **extra_fields):
         if not email:
@@ -66,23 +65,18 @@ class UserProfile(models.Model):
     def __str__(self):
         return f"Profile for {self.user.email}"
 
-from django.db import models
-from django.conf import settings
-
 
 # Create your models here.
 # Stores the swimmer details with link to guardians
 class Swimling(models.Model):
-    guardian = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='my_swimlings',
-                             blank=True, null=True, )
-    first_name = models.CharField(max_length=255, blank=True, null=True, )
-    last_name = models.CharField(max_length=255, blank=True, null=True, )
+    guardian = models.ForeignKey(User, on_delete=models.CASCADE, blank=True,
+                                 null=True)
+    first_name = models.CharField(max_length=255, blank=True, null=True)
+    last_name = models.CharField(max_length=255, blank=True, null=True)
     dob = models.DateField(null=True)
-    school_role_number = models.CharField(max_length=6, blank=True,
-                                          null=True, )
+    school_role_number = models.CharField(max_length=6, blank=True, null=True)
     notes = models.TextField(null=True, blank=True)
-    # id from student details table in wordpress site
-    wp_student_id = models.IntegerField(null=True)
+    wp_student_id = models.IntegerField(blank=True, null=True)
 
     def __str__(self):
-        return self.first_name + "  " + str(self.last_name)
+        return f"{self.first_name} {self.last_name}"

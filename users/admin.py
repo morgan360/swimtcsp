@@ -3,10 +3,10 @@ from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from .models import User, UserProfile, Swimling
 
 
-class SwimlingInline(admin.TabularInline):
+class SwimlingInline(admin.StackedInline):
     model = Swimling
     extra = 1  # Set the number of empty forms to display for adding new Swimlings
-
+    fields = ('first_name', 'last_name', 'dob', 'school_role_number', 'notes',)
 
 class UserProfileInline(admin.StackedInline):
     model = UserProfile
@@ -14,7 +14,7 @@ class UserProfileInline(admin.StackedInline):
 
 
 class UserAdmin(BaseUserAdmin):
-    inlines = [SwimlingInline, UserProfileInline]
+    inlines = [SwimlingInline]
     fieldsets = (
         (None, {'fields': (
         'email', 'password', 'first_name', 'last_name', 'last_login')}),

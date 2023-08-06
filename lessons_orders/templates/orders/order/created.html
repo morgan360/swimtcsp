@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block title %}
+  Thank you
+{% endblock %}
+
+{% block content %}
+  <!-- Display order details -->
+<h1>Class Order Details</h1>
+<p>Order ID: {{ order.id }}</p>
+ <p>Order Type: {{ order_type }}</p>
+<p>User: {{ current_user }}</p>
+
+<!-- Display order items -->
+<h2>Order Items</h2>
+{% for item in order_items %}
+    <p>Product: {{ item.product }}</p>
+    <p>Price: {{ item.price }}</p>
+    <p>Quantity: {{ item.quantity }}</p>
+{% endfor %}
+{% endblock %}

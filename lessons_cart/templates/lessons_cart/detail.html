@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}
+    Your shopping cart
+{% endblock %}
+
+{% block content %}
+    <div class="container">
+         <h1 class="text-center text-primary mt-4 mb-4">Your shopping cart</h1>
+        <div class="row">
+            <div class="col-2 d-flex justify-content-center mb-2">
+                <strong>Product</strong>
+            </div>
+            <div class="col-2 d-flex justify-content-center mb-2">
+                <strong>Class</strong>
+            </div>
+            <div class="col-8 d-flex justify-content-center mb-2">
+                <strong>Items</strong>
+            </div>
+        </div>
+
+        {% for item in cart %}
+            {% with product=item.product %}
+                <div class="row">
+                    <div class="col-2 d-flex justify-content-center mb-2">
+                        <a href="{{ product.get_absolute_url }}">
+                            <img src=" {% if product.image %}{{ product.image.url }}{% else %}{% static "img/no_image.png" %}{% endif %}"
+                                 style="max-width: 150px; max-height: 100px;">
+                        </a>
+                    </div>
+                    <div class="col-2 d-flex justify-content-center mb-2">
+                        {{ product.name }}
+                    </div>
+                    <div class="col-2 d-flex justify-content-center mb-2">{{ item.app_name }}</div>
+                    <div class="col-2 d-flex justify-content-center mb-2">
+                        <form action="{% url 'lessons_cart:cart_add' product_id=product.id %}"
+                              method="post">
+                            {{ item.update_quantity_form.quantity }}
+                            {{ item.update_quantity_form.override }}
+                            <input type="submit" value="Update"
+                                   class="btn btn-info">
+                            {% csrf_token %}
+                        </form>
+                    </div>
+                    <div class="col-2 d-flex justify-content-center mb-2">
+                        <form action="{% url 'lessons_cart:cart_remove' product_id=product.id %}"
+                              method="post">
+                            <input type="submit" value="Remove"
+                                   class="btn btn-warning">
+                            {% csrf_token %}
+                        </form>
+                    </div>
+                    <div class="col num mt-1">€{{ item.price }}</div>
+                    <div class="col num mt-1">€{{ item.total_price }}</div>
+                </div>
+            {% endwith %}
+        {% endfor %}
+
+        <div class="row total">
+            <div class="col mt-4 text-end">
+                <strong>Total</strong>
+            </div>
+            <div class="col num col mt-4 d-flex justify-content-left"><b>€
+                {{ cart.get_total_price }}</b></div>
+            <div class="col"></div>
+            <div class="col"></div>
+            <div class="col"></div>
+            <div class="col"></div>
+
+        </div>
+        <div class="row">
+            <div class="col-2 mb-3 mt-3">
+                <a href="{% url 'lessons:product_list' %}"
+                   class="btn btn-success">Continue
+                    shopping</a>
+            </div>
+
+            <div class="col-2 mb-3 mt-3">
+                <a href="{% url 'lessons_orders:order_create' %}?value=public_class"
+                   class="btn btn-primary">Checkout</a>
+            </div>
+            <div class="col-8"></div>
+        </div>
+    </div>
+{% endblock %}

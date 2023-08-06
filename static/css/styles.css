@@ -5,3 +5,10 @@
 .form-control {
   width: 300px; /* For example, set the width to 300px */
 }
+
+/* Custom CSS for read-only fields in admin */
+.readonly-field {
+  background-color: #f7f7f7; /* Light gray background */
+  color: #777; /* Dark gray text color */
+  cursor: not-allowed; /* Show 'not-allowed' cursor on hover */
+}

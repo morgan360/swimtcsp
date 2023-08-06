@@ -29,7 +29,11 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'static_files/')
 MEDIA_URL = '/media/'
 
 # Define the directory where uploaded media files are stored
-MEDIA_ROOT = BASE_DIR / 'media'
+MEDIA_ROOT = os.path.join(BASE_DIR, '../media')
+
+
+
+
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
@@ -62,6 +66,10 @@ INSTALLED_APPS = [
     # My Apps
     'users',
     'home',
+    'lessons',
+    'lessons_cart',
+    'lessons_orders',
+    'lessons_payment',
 ]
 
 MIDDLEWARE = [
@@ -220,3 +228,20 @@ ACCOUNT_FORMS = {
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 
 CRISPY_TEMPLATE_PACK = "bootstrap5"
+
+# ***  E-Commerce
+
+# How cart sessions are stored
+CART_SESSION_ID = 'cart'
+
+# STRIPE_PUBLISHABLE_KEY = 'pk_test_51NVtpDEFFHpYE55Q12mZc5DlWSTFoA0mRceNzaU1uFM4yN2I7mPiDEpOvjxCCTfd9ZjbR6dgmSL1zlxxOKFgDzMH00QiVhAbQD'
+# STRIPE_SECRET_KEY = 'sk_test_51NVtpDEFFHpYE55QcBDG03wvvJzYo1gWoPkTlbdMKVeVhiCBcDhpANTArmJrjZONezVXM1CCvOubQTwQpGHtGnNK00W4qZXuFk'
+
+
+# This is your Stripe CLI webhook secret for testing your endpoint locally.
+# STRIPE_WEBHOOK_SECRET = \
+#     'whsec_8451c76fcd43e9f51a8480ca699b2a65ff7aebb84bb31997e3346e3478750b27'
+STRIPE_PUBLISHABLE_KEY = str(os.getenv('STRIPE_PUBLISHABLE_KEY'))
+STRIPE_SECRET_KEY = str(os.getenv('STRIPE_SECRET_KEY'))
+STRIPE_WEBHOOK_SECRET = str(os.getenv('STRIPE_WEBHOOK_SECRET'))
+STRIPE_API_VERSION = '2022-08-01'

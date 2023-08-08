@@ -22,24 +22,20 @@ load_dotenv()  # loads the configs from .env
 DB_PASSWORD = str(os.getenv('DB_PASSWORD')),
 
 # Set the URL prefix for static files
-STATIC_URL = '/static/'  # URL prefix for static files (e.g., CSS, JavaScript, images)
-STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
+STATIC_URL = '/static/'
+
+# Specify the directory where static files are collected
 STATIC_ROOT = os.path.join(BASE_DIR, 'static_files/')
+
+# Specify additional directories to search for static files
+STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 
 MEDIA_URL = '/media/'
 
-# Define the directory where uploaded media files are stored
+# Specify the directory where uploaded media files are stored
 MEDIA_ROOT = os.path.join(BASE_DIR, '../media')
 
 
-
-
-
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
-
-# SECURITY WARNING: keep the secret key used in production secret!
-# SECRET_KEY = 'django-insecure-t)bhgkjuv98k2#o%1^x8fk#f7voxyx@qafk==-$fwmg#=prxni'
 
 SECRET_KEY = str(os.getenv('SECRET_KEY'))
 
@@ -104,13 +100,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'core.wsgi.application'
 
-# Database
-# https://docs.djangoproject.com/en/4.1/ref/settings/#databases
-
-
-# Password validation
-# https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators
-
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -144,19 +133,10 @@ USE_TZ = True
 # Define the directory where Django should collect and store static files
 # STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
-# Define additional directories where Django should look for static files during development
-# STATICFILES_DIRS = [
-#     os.path.join(BASE_DIR, '../static'),  # Add any other directories if needed
-# ]
 
-# MEDIA_URL = '/media/'
 
-# Define the directory where uploaded media files are stored
-# MEDIA_ROOT = os.path.join(BASE_DIR, '../media')
 
 # Default primary key field type
-# https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
-
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Custom User Model

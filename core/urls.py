@@ -24,6 +24,7 @@ if settings.DEBUG:
                           document_root=settings.STATIC_ROOT)
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
+
 # Change Site Labels
 admin.site.site_header = "TCSP Administration"
 admin.site.site_title = "TCSP Administration site"

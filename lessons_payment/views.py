@@ -1,11 +1,10 @@
 from decimal import Decimal
 import stripe
 from django.conf import settings
-from django.shortcuts import render, redirect, reverse,\
-                             get_object_or_404
+from django.shortcuts import render, redirect, reverse, \
+    get_object_or_404
 from lessons_orders.models import Order
-
-
+from utils.webhooks import stripe_webhook
 # create the Stripe instance
 stripe.api_key = settings.STRIPE_SECRET_KEY
 stripe.api_version = settings.STRIPE_API_VERSION
@@ -17,16 +16,19 @@ def payment_process(request):
 
     if request.method == 'POST':
         success_url = request.build_absolute_uri(
-                        reverse('lessons_payment:completed'))
+            reverse('lessons_payment:completed'))
         cancel_url = request.build_absolute_uri(
-                        reverse('lessons_payment:canceled'))
-
+            reverse('lessons_payment:canceled'))
+        order_type = 'lessons'
         # Stripe checkout session data
         session_data = {
             'mode': 'payment',
             'client_reference_id': order.id,
             'success_url': success_url,
             'cancel_url': cancel_url,
+            'metadata': {
+                'order_type': order_type,  # Include order_type as metadata
+            },
             'line_items': []
         }
         # add order items to the Stripe checkout session
@@ -58,6 +60,5 @@ def payment_completed(request):
 
 def payment_canceled(request):
     return render(request, 'payment/canceled.html')
-
 
 # Create your views here.

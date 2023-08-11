@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Pay your order{% endblock %}
+
+{% block content %}
+
+
+ <h1>Order summary</h1>
+<div class="container">
+  {% if order.items.all %}
+    <div class="row mb-2">
+      <div class="col">
+        <strong>Product</strong>
+      </div>
+      <div class="col">
+        <strong>Variant</strong>
+      </div>
+      <div class="col">
+        <strong>Price</strong>
+      </div>
+      <div class="col">
+        <strong>Quantity</strong>
+      </div>
+      <div class="col">
+        <strong>Sub Total</strong>
+      </div>
+    </div>
+
+    {% for item in order.items.all %}
+      <div class="row mb-2 {% cycle 'row-1' 'row-2' %}">
+        <div class="col">
+          {{ item.product.name }}
+        </div>
+        <div class="col">
+          {{ item.variant }}
+        </div>
+        <div class="col">
+          <span class="num">€{{ item.price }}</span>
+        </div>
+        <div class="col">
+          <span class="num">{{ item.quantity }}</span>
+        </div>
+        <div class="col">
+          <span class="num">€{{ item.get_cost }}</span>
+        </div>
+      </div>
+    {% endfor %}
+
+    <div class="row total mb-2">
+      <div class="col-6 col-md-8">
+        <strong>Total</strong>
+      </div>
+      <div class="col-6 col-md-4" style="text-align: right;">
+        <span class="num">€{{ order.get_total_cost }}</span>
+      </div>
+    </div>
+  {% else %}
+    <p>No items found.</p>
+  {% endif %}
+</div>
+
+<form action="{% url 'swims_payment:process' %}" method="post">
+  <input type="submit" value="Pay now" class="btn btn-primary">
+  {% csrf_token %}
+</form>
+
+{% endblock %}

@@ -66,6 +66,11 @@ INSTALLED_APPS = [
     'lessons_cart',
     'lessons_orders',
     'lessons_payment',
+    'swims',
+    'swims_cart',
+    'swims_orders',
+    'swims_payment',
+    # 'webhook_handler',
 ]
 
 MIDDLEWARE = [
@@ -120,7 +125,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Europe/Dublin'
 
 USE_I18N = True
 

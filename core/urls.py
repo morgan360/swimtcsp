@@ -17,6 +17,16 @@ urlpatterns = [
     path('lessons_orders/',
          include('lessons_orders.urls', namespace='lessons_orders')),
     path('lessons_payment/', include('lessons_payment.urls', namespace='lessons_payment')),
+    path('swims/',
+         include('swims.urls', namespace='swims')),
+    path('swims_cart/',
+         include('swims_cart.urls', namespace='swims_cart')),
+    path('swims_orders/',
+         include('swims_orders.urls', namespace='swims_orders')),
+    path('swims_payment/',
+         include('swims_payment.urls', namespace='swims_payment')),
+
+    # path('webhook/', webhooks.stripe_webhook, name='stripe-webhook'),
 ]
 # Serve static and media files during development
 if settings.DEBUG:

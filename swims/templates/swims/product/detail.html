@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+    {{ product.name }}
+{% endblock %}
+
+{# THE MAIN CONTENT#}
+{% block content %}
+    <div class="container mt-4">
+        {#    Row 1 Column 1#}
+        <div class="row">
+            {#    Image #}
+            <div class="col-sm-4">
+                <img class="img-fluid" src="{% if product.image %}{{ product.image.url }}{% else %}
+                {% static "images/no_image.png" %}{% endif %}">
+            </div>
+            {#    Row 1 Column 2#}
+            <div class="col-sm-8">
+                {#   First row Col2 #}
+                <div class="row">
+                    <h1>{{ product.name }}</h1>
+                </div>
+                {#   2nd  row Col2 #}
+                <div class="row">
+                    <h3>
+                        <a href="{{ product.category.get_absolute_url }}">
+                            {{ product.category }}
+                        </a>
+                    </h3>
+
+                </div>
+                <br>
+                <div class="row">
+                    <div class="col-sm-6">
+                        <form action="{% url 'swims_cart:add_to_cart'  product.id %}" method="post">
+                            {% csrf_token %}
+                            {% for variation in product.price_variants.all %}
+                                <ul>
+                                    <div class="input-group">
+                                        <label class="input-group-text" for="quantity">{{ variation.variant }}s</label>
+                                        <input type="number" name="quantity_{{ variation.id }}" value="1" min="1"
+                                               max="10"
+                                               class="form-control form-control-sm">
+                                        <div class="col-sm-6">
+                                         &nbsp;&nbsp;€{{ variation.price }} pp
+                                    </div>
+
+                                    </div>
+                                    <input type="hidden" name="variation_{{ variation.id }}" value="{{ variation.id }}">
+                                </ul>
+                            {% endfor %}
+                         <input type="submit" value="Add to cart" class="btn btn-primary">
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+{#    Bottom Row#}
+        <div class="row">
+            <div class="col-sm-10">
+            {{ product.description|linebreaks }}
+            </div>
+        </div>
+    </div>
+{% endblock %}

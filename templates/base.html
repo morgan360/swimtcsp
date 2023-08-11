@@ -15,20 +15,17 @@
     <title>{% block title %}TCSP Home{% endblock %}</title>
 </head>
 <body class="d-flex flex-column min-vh-100">
-<!-- Add the messages block here -->
 <div class="container-fluid">
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
 
         <a class="navbar-brand" href="{% url 'home' %}">
             <img src="{% static 'img/logo.png' %}" alt="logo" width="40"
-                 height="30"
-                 class="d-inline-block align-text-top">
+                 height="30" class="d-inline-block align-text-top">
             TCSP
         </a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
-                data-bs-target="#navbarNav"
-                aria-controls="navbarNav" aria-expanded="false"
-                aria-label="Toggle navigation">
+                data-bs-target="#navbarNav" aria-controls="navbarNav"
+                aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
@@ -38,74 +35,58 @@
                        href="{% url 'home' %}">Home</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="/lessons/">Lessons</a>
-                </li>
-                <li class="nav-item">
                     <a class="nav-link" href="/admin/">Admin</a>
                 </li>
-
             </ul>
         </div>
 
-
-        {% if user.is_authenticated %}
-            <div class="collapse navbar-collapse justify-content-center"
-                 id="navbarNav">
-                <ul class="nav">
-                    <li class="nav-item text-center">
-                        {% block cart %}
-                        {% endblock %}
-                    </li>
-                </ul>
-            </div>
-            <div class="collapse navbar-collapse justify-content-end"
-                 id="navbarNav">
-                <ul class="nav">
+        <div class="collapse navbar-collapse" id="bookingNavbar">
+            <ul class="nav">
+                {% if user.is_authenticated %}
                     <li class="nav-item">
-                        <a class="nav-link"
-                           href="/lessons/">Lessons</a>
-                    </li>
-                      <li class="nav-item">
-                        <a class="nav-link"
-                           href="/users/profile">Customer</a>
+                        <div class="dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" id="bookingDropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                Booking
+                            </a>
+                            <div class="dropdown-menu" aria-labelledby="bookingDropdown">
+                                <a class="dropdown-item" href="/users/profile">Customer</a>
+                                <a class="dropdown-item" href="/lessons/">Lessons</a>
+                                <a class="dropdown-item" href="/swims/">Swims</a>
+                            </div>
+                        </div>
                     </li>
                     <li class="nav-item">
-                        <p class="nav-link text-success">Welcome -
-                            {{ user.first_name }}</p>
+                        <p class="nav-link text-success">Welcome - {{ user.first_name }}</p>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="accounts/logout">Logout</a>
                     </li>
-
-                </ul>
-            </div>
-        {% else %}
-            <div class="collapse navbar-collapse justify-content-end"
-                 id="navbarNav">
-                <ul class="nav">
+                {% else %}
                     <li class="nav-item ">
                         <a class="nav-link" href="accounts/login">Login</a>
                     </li>
                     <li class="nav-item ">
                         <a class="nav-link" href="accounts/signup">Register</a>
                     </li>
-                </ul>
-            </div>
-        {% endif %}
+                {% endif %}
+            </ul>
+        </div>
     </nav>
 </div>
 <main class="flex-grow-1">
-<!-- Add the messages block here -->
     {% if messages %}
-    <ul class="messages list-unstyled">
-        {% for message in messages %}
-            <li class="alert alert-success" role="alert" id="message">{{ message }}</li>
-        {% endfor %}
-    </ul>
+        <ul class="messages list-unstyled">
+            {% for message in messages %}
+                <li class="alert alert-success" role="alert" id="message">{{ message }}</li>
+            {% endfor %}
+        </ul>
     {% endif %}
     {% block content %}
     {% endblock %}
 </main>
+
+<!-- ... (the rest of your code) ... -->
+
 
 <!-- ************* Footer **************-->
 {% block footer %}

@@ -2,6 +2,7 @@ from django.db import models
 from lessons.models import Product
 from django.conf import settings
 from django.contrib.auth.models import User
+from users.models import Swimling
 
 
 class Order(models.Model):
@@ -46,6 +47,10 @@ class OrderItem(models.Model):
     price = models.DecimalField(max_digits=10,
                                 decimal_places=2)
     quantity = models.PositiveIntegerField(default=1)
+
+    swimling = models.ForeignKey(Swimling,
+                                 related_name='swimling',
+                                 on_delete=models.CASCADE)
 
     def __str__(self):
         return str(self.id)

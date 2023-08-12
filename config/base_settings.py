@@ -59,6 +59,7 @@ INSTALLED_APPS = [
     'django_bootstrap_icons',
     "crispy_forms",
     "crispy_bootstrap5",
+    'import_export',
     # My Apps
     'users',
     'home',
@@ -70,7 +71,7 @@ INSTALLED_APPS = [
     'swims_cart',
     'swims_orders',
     'swims_payment',
-    # 'webhook_handler',
+    'lessons_bookings',
 ]
 
 MIDDLEWARE = [
@@ -98,6 +99,8 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                # Mine
+                'lessons_bookings.context_processors.current_term',
             ],
         },
     },

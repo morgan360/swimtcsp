@@ -8,9 +8,8 @@
     <div class="container mt-4">
         <div class="row">
             <div class="col-sm-4">
-                <img src="
-                        {% if product.image %}{{ product.image.url }}{% else %}
-    {% static "img/no_image.png" %}{% endif %}"  class="img-fluid">
+                <img src="{% if product.image %}{{ product.image.url }}{% else %}
+    {% static "img/no_image.png" %}{% endif %}" class="img-fluid">
             </div>
             {#    Row 1 Column 2#}
             <div class="col-sm-8">
@@ -35,10 +34,17 @@
                     {# To the cart #}
                     <form action="{% url "lessons_cart:cart_add" product.id %}"
                           method="post">
-                        {{ cart_product_form }}
-                        {% csrf_token %} <br><br>
-                        <input type="submit" value="Add to cart" class="btn
-                        btn-primary">
+{#                        {{ cart_product_form }}#}
+                        {% csrf_token %}
+
+                        <!-- Add the swimling selection field with Bootstrap styling -->
+                        <div class="form-group">
+                            <label for="{{ cart_product_form.swimling.id_for_label }}" class="control-label">Select a swimling</label>
+                            {{ cart_product_form.swimling }}
+                        </div>
+
+                        <br><br>
+                        <input type="submit" value="Add to cart" class="btn btn-primary">
                     </form>
                 </div>
             </div>

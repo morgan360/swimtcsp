@@ -3,6 +3,8 @@ from lessons.models import Product
 from django.conf import settings
 from django.contrib.auth.models import User
 from users.models import Swimling
+from lessons_bookings.models import Term
+
 
 
 class Order(models.Model):
@@ -38,6 +40,7 @@ class Order(models.Model):
 
 
 class OrderItem(models.Model):
+    term = models.ForeignKey(Term, on_delete=models.SET_NULL, null=True)
     order = models.ForeignKey(Order,
                               related_name='items',
                               on_delete=models.CASCADE)

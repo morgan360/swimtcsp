@@ -3,7 +3,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from lessons.models import Product  # Make sure this import is correct
 from users.models import Swimling  # Make sure this import is correct
-from lessons_orders.models import Order  # Make sure this import is correct
+# from lessons_orders.models import Order
 
 
 class Term(models.Model):
@@ -26,7 +26,7 @@ class LessonEnrollment(models.Model):
     lesson = models.ForeignKey(Product, on_delete=models.CASCADE)
     swimling = models.ForeignKey(Swimling, on_delete=models.CASCADE)
     term = models.ForeignKey(Term, on_delete=models.CASCADE)
-    order = models.ForeignKey(Order, on_delete=models.CASCADE)
+    # order = models.ForeignKey(Order, on_delete=models.CASCADE)
     instructor1 = models.ForeignKey(settings.AUTH_USER_MODEL,
                                     related_name='instructor1',
                                     on_delete=models.SET_NULL, null=True)

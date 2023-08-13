@@ -4,6 +4,8 @@ from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from lessons_orders.models import Order as LessonsOrder
 from swims_orders.models import Order as SwimsOrder
+from lessons_bookings.context_processors import current_term
+
 
 @csrf_exempt
 def stripe_webhook(request):
@@ -28,27 +30,37 @@ def stripe_webhook(request):
         if session.mode == 'payment' and session.payment_status == 'paid':
             order_type = session.metadata.get('order_type')
             if order_type == 'lessons':
-                # Use the LessonsOrder model
                 try:
-                    order = LessonsOrder.objects.get(id=session.client_reference_id)
+                    order = LessonsOrder.objects.get(
+                        id=session.client_reference_id)
                 except Order.DoesNotExist:
                     return HttpResponse(status=404)
+
+                # Update order as paid
+                order.paid = True
+                order.stripe_id = session.payment_intent
+
+                # Call the context processor to get current term
+                context = {}
+                current_term(context)
+                current_term_id = context['current_term'].term_id
+
+                # Store the current_term_id in the Order object
+                order.term_id = current_term_id
+                order.save()
+
             elif order_type == 'swims':
                 try:
                     order = SwimsOrder.objects.get(
                         id=session.client_reference_id)
                 except SwimsOrder.DoesNotExist:
                     return HttpResponse(status=404)
-            else:
-                return HttpResponse(status=400)  # Unknown order_type
-                # Common handling logic for both order types
-                # mark order as paid
-            order.paid = True
-            # store Stripe payment ID
-            order.stripe_id = session.payment_intent
-            order_type = session.metadata.get('order_type')
-            order.save()
-            # launch asynchronous task
-        # payment_completed.delay(order.id)
+
+                # Update order as paid
+                order.paid = True
+                order.stripe_id = session.payment_intent
+                order.save()
+
+            # ... Other order_type handling ...
 
     return HttpResponse(status=200)

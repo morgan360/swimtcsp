@@ -1,13 +1,13 @@
 from django.contrib import admin
 from import_export.admin import ImportExportMixin
 from .models import Term
-# from .resources import TermsResource
+from .resources import TermResource
 
 
-# class TermsAdmin(ImportExportMixin, admin.ModelAdmin):
-#     resource_class = TermsResource
-#     list_display = ['term_id', 'start_date', 'end_date', 'rebooking_date',
-#                     'booking_date', 'assessments_date']
-#
-#
-# admin.site.register(Term, TermsAdmin)
+class TermAdmin(ImportExportMixin, admin.ModelAdmin):
+    resource_class = TermResource
+    list_display = ['term_id', 'start', 'end', 'rebooking',
+                    'booking', 'assessments']
+
+
+admin.site.register(Term, TermAdmin)

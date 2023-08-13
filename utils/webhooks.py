@@ -4,8 +4,6 @@ from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from lessons_orders.models import Order as LessonsOrder
 from swims_orders.models import Order as SwimsOrder
-from lessons_bookings.context_processors import current_term
-
 
 @csrf_exempt
 def stripe_webhook(request):
@@ -39,14 +37,6 @@ def stripe_webhook(request):
                 # Update order as paid
                 order.paid = True
                 order.stripe_id = session.payment_intent
-
-                # Call the context processor to get current term
-                context = {}
-                current_term(context)
-                current_term_id = context['current_term'].term_id
-
-                # Store the current_term_id in the Order object
-                order.term_id = current_term_id
                 order.save()
 
             elif order_type == 'swims':

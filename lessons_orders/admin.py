@@ -5,7 +5,7 @@ from django.utils.safestring import mark_safe
 
 class OrderItemInline(admin.TabularInline):
     model = OrderItem
-    raw_id_fields = ['product']
+    raw_id_fields = ['product', 'term']
 
 
 def order_payment(obj):

@@ -10,9 +10,18 @@ class CategoryAdmin(admin.ModelAdmin):
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ['name', 'slug', 'price',
-                    'available', 'created', 'updated']
+    list_display = ['name', 'slug', 'price', 'available', 'created', 'updated']
     list_filter = ['available', 'created', 'updated']
     list_editable = ['price', 'available']
-    prepopulated_fields = {'slug': ('category','day_of_week', 'start_time',
+
+    # Specify the choices for the day_of_week field
+    # def day_of_week_display(self, obj):
+    #     return dict(Product.DAY_CHOICES).get(obj.day_of_week)
+
+    # day_of_week_display.short_description = 'Day of Week'
+    #
+    # list_display_links = ['name', 'slug']
+    # list_display += ['day_of_week_display']  # Add to the existing list_display
+
+    prepopulated_fields = {'slug': ('category', 'day_of_week', 'start_time',
                                     'end_time')}

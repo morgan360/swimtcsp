@@ -41,17 +41,18 @@ class Product(models.Model):
     slug = models.SlugField(max_length=200, blank=True)
     start_time = models.TimeField(blank=True, default=time(hour=8, minute=0))
     end_time = models.TimeField(blank=True, default=time(hour=9, minute=0))
+
     DAY_CHOICES = [
-        ('Monday', 'Monday'),
-        ('Tuesday', 'Tuesday'),
-        ('Wednesday', 'Wednesday'),
-        ('Thursday', 'Thursday'),
-        ('Friday', 'Friday'),
-        ('Saturday', 'Saturday'),
-        ('Sunday', 'Sunday'),
+    (0, 'Monday'),
+    (1, 'Tuesday'),
+    (2, 'Wednesday'),
+    (3, 'Thursday'),
+    (4, 'Friday'),
+    (5, 'Saturday'),
+    (6, 'Sunday'),
     ]
-    day_of_week = models.CharField(max_length=10, choices=DAY_CHOICES,
-                                   blank=True)
+
+    day_of_week = models.PositiveSmallIntegerField(choices=DAY_CHOICES)
     num_places = models.IntegerField(null=True)
     num_weeks = models.IntegerField(null=True)
     price = models.DecimalField(max_digits=10, decimal_places=2, null=True, )
@@ -67,7 +68,8 @@ class Product(models.Model):
         super().save(*args, **kwargs)
 
     def generate_name(self):
-        return f"{self.category} - {self.day_of_week} - {self.start_time.strftime('%H:%M')} to {self.end_time.strftime('%H:%M')}"
+        return f"{self.category} - " \
+               f"{dict(self.DAY_CHOICES).get(self.day_of_week)} - {self.start_time.strftime('%H:%M')} to {self.end_time.strftime('%H:%M')}"
 
     class Meta:
         verbose_name = 'Lessons'
@@ -80,8 +82,8 @@ class Product(models.Model):
 
     def __str__(self):
         start_time_formatted = self.start_time.strftime("%H:%M %p")
-        return str(
-            self.category) + " " + self.day_of_week + " " + start_time_formatted
+        day_of_week = dict(self.DAY_CHOICES).get(self.day_of_week)
+        return f"{self.category} {day_of_week} {start_time_formatted}"
 
 
 # update name everytime fields are changed

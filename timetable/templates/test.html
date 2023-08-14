@@ -1,0 +1,20 @@
+
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+<h2>This is test page</h2>
+<h2 class=my_h2>I am from inside my_templates dir , register.html page</h2>
+<input type=button value='Click me' id='b1'>
+<div id=t1></div>
+
+{#<script src="{% static 'js/jquery/jquery.min.js' %}"></script>#}
+<script>
+$(document).ready(function() {
+$("#b1").click(function(){
+$("#t1").html('You clicked the button');
+});
+
+
+});
+</script>
+{%  endblock %}

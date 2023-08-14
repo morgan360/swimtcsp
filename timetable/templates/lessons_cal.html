@@ -1,27 +1,40 @@
 <!DOCTYPE html>
-<html>
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
 <head>
+
     <!-- Include FullCalendar CSS and JS -->
     <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.5.0/main.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.5.0/main.js"></script>
     <!-- Other head content, including stylesheets and meta tags -->
 </head>
 <body>
-    <!-- Your page content -->
+<h1>This is my Timetable</h1>
+<!-- Create a div for the calendar -->
+<div id="calendar"></div>
 
-    <!-- Create a div for the calendar -->
-    <div id="calendar"></div>
-
-    <!-- JavaScript code to initialize FullCalendar -->
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            var calendarEl = document.getElementById('calendar');
-            var calendar = new FullCalendar.Calendar(calendarEl, {
-                events: '/get_events/',  // URL to fetch events from Django backend
-                // Other FullCalendar options...
-            });
-            calendar.render();
+<!-- JavaScript code to initialize FullCalendar -->
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var calendarEl = document.getElementById('calendar');
+        var calendar = new FullCalendar.Calendar(calendarEl, {
+            events: {{ lesson_list_json | safe }},  // Use the JSON data passed in the context
+            initialView: 'dayGridMonth', // Default view when the calendar loads
+            views: {
+                dayGridMonth: { buttonText: 'Month' },
+                timeGridWeek: { buttonText: 'Week' },
+                timeGridDay: { buttonText: 'Day' }
+            },
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,timeGridWeek,timeGridDay'
+            },
+            // Other FullCalendar options...
         });
-    </script>
-</body>
-</html>
+        calendar.render();
+    });
+</script>
+
+{%  endblock %}

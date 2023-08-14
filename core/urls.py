@@ -3,6 +3,7 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib.sessions.models import Session
+# from timetable import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -26,9 +27,7 @@ urlpatterns = [
          include('swims_orders.urls', namespace='swims_orders')),
     path('swims_payment/',
          include('swims_payment.urls', namespace='swims_payment')),
-
-    # path('admin/view-session/<str:session_key>/', admin_views.view_session_data,
-    #      name='admin:view_session'),
+    path('timetable/', include('timetable.urls')),
 ]
 # Serve static and media files during development
 if settings.DEBUG:

@@ -72,6 +72,7 @@ INSTALLED_APPS = [
     'swims_orders',
     'swims_payment',
     'lessons_bookings',
+    'timetable',
 ]
 
 MIDDLEWARE = [

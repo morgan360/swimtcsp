@@ -5,7 +5,7 @@ from django.contrib.sessions.models import Session
 from django.urls import reverse
 from django.utils.html import format_html
 from .models import User, UserProfile, Swimling
-
+from django.contrib.auth import get_user_model
 
 class SwimlingInline(admin.StackedInline):
     model = Swimling
@@ -17,7 +17,9 @@ class UserProfileInline(admin.StackedInline):
     model = UserProfile
     can_delete = False
 
+User = get_user_model()
 
+@admin.register(User)
 class UserAdmin(BaseUserAdmin):
     inlines = [SwimlingInline]
     fieldsets = (
@@ -44,7 +46,7 @@ class UserAdmin(BaseUserAdmin):
     filter_horizontal = ('groups', 'user_permissions',)
 
 
-admin.site.register(User, UserAdmin)
+# admin.site.register(User, UserAdmin)
 
 
 # View Session Data

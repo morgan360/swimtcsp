@@ -2,9 +2,18 @@ from django.contrib import admin
 from import_export.admin import ImportExportMixin
 from .models import Term
 from .resources import TermResource
-from .models import LessonAssignment
+from .models import LessonAssignment, LessonEnrollment
 
 
+@admin.register(LessonEnrollment)
+class YourModelNameAdmin(admin.ModelAdmin):
+    list_display = ['id','swimling', 'lesson',]
+    list_display_links = ('id',)
+    list_editable = ['lesson', ]
+    search_fields = ('swimling',)
+    list_filter = ('term', 'lesson')
+
+# Assign Lessons to instructors
 @admin.register(LessonAssignment)
 class LessonAssignmentAdmin(admin.ModelAdmin):
     list_display = ('term', 'instructor', 'display_lessons')

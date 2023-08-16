@@ -1,0 +1,21 @@
+{% extends "admin/base.html" %}
+
+{% block content %}
+    <h1>Custom Admin Dashboard</h1>
+
+    <div>
+        <h2>List of Courses</h2>
+        <ul>
+            {% for course in courses %}
+                <li>
+                    {{ course.name }} - {{ course.day }} {{ course.time }} ({{ course.term }}) Instructor: {{ course.instructor }}
+                    <ul>
+                        {% for swimling in course.swimlings.all %}
+                            <li>{{ swimling }}</li>
+                        {% endfor %}
+                    </ul>
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
+{% endblock %}

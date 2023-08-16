@@ -42,6 +42,7 @@ SECRET_KEY = str(os.getenv('SECRET_KEY'))
 # Application definition
 
 INSTALLED_APPS = [
+    # pre installed
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -75,6 +76,7 @@ INSTALLED_APPS = [
     'timetable',
 ]
 
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -84,6 +86,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
 ]
 
 ROOT_URLCONF = 'core.urls'
@@ -102,6 +105,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 # Mine
                 'lessons_bookings.context_processors.current_term',
+                'home.context_processors.footer_message',
             ],
         },
     },
@@ -222,15 +226,10 @@ CRISPY_TEMPLATE_PACK = "bootstrap5"
 
 # How cart sessions are stored
 CART_SESSION_ID = 'cart'
-
-# STRIPE_PUBLISHABLE_KEY = 'pk_test_51NVtpDEFFHpYE55Q12mZc5DlWSTFoA0mRceNzaU1uFM4yN2I7mPiDEpOvjxCCTfd9ZjbR6dgmSL1zlxxOKFgDzMH00QiVhAbQD'
-# STRIPE_SECRET_KEY = 'sk_test_51NVtpDEFFHpYE55QcBDG03wvvJzYo1gWoPkTlbdMKVeVhiCBcDhpANTArmJrjZONezVXM1CCvOubQTwQpGHtGnNK00W4qZXuFk'
-
-
-# This is your Stripe CLI webhook secret for testing your endpoint locally.
-# STRIPE_WEBHOOK_SECRET = \
-#     'whsec_8451c76fcd43e9f51a8480ca699b2a65ff7aebb84bb31997e3346e3478750b27'
 STRIPE_PUBLISHABLE_KEY = str(os.getenv('STRIPE_PUBLISHABLE_KEY'))
 STRIPE_SECRET_KEY = str(os.getenv('STRIPE_SECRET_KEY'))
 STRIPE_WEBHOOK_SECRET = str(os.getenv('STRIPE_WEBHOOK_SECRET'))
 STRIPE_API_VERSION = '2022-08-01'
+
+FOOTER_MESSAGE = "Base Version"
+

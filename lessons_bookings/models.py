@@ -1,8 +1,8 @@
 from django.conf import settings
 from django.db import models
 from django.contrib.auth.models import User
-from lessons.models import Product  # Make sure this import is correct
-from users.models import  Swimling  # Make sure this import is correct
+from lessons.models import Product
+from users.models import Swimling
 
 
 # from lessons_orders.models import Order
@@ -28,13 +28,6 @@ class LessonEnrollment(models.Model):
     lesson = models.ForeignKey(Product, on_delete=models.CASCADE)
     swimling = models.ForeignKey(Swimling, on_delete=models.CASCADE)
     term = models.ForeignKey(Term, on_delete=models.CASCADE)
-    # order = models.ForeignKey(Order, on_delete=models.CASCADE)
-    instructor1 = models.ForeignKey(settings.AUTH_USER_MODEL,
-                                    related_name='instructor1',
-                                    on_delete=models.SET_NULL, null=True)
-    instructor2 = models.ForeignKey(settings.AUTH_USER_MODEL,
-                                    related_name='instructor2',
-                                    on_delete=models.SET_NULL, null=True)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
     changed_by = models.ForeignKey(settings.AUTH_USER_MODEL,
@@ -47,16 +40,19 @@ class LessonEnrollment(models.Model):
         ordering = ['-term', 'lesson']
 
     def __str__(self):
-        return f'{self.lesson.name}, {self.term.name}, {self.swimling.name}'
+        return f'{self.lesson.name}, {str(self.term.id)}, ' \
+               f'{self.swimling.first_name}, {self.swimling.last_name}'
 
 
 class LessonAssignment(models.Model):
     term = models.ForeignKey(Term, on_delete=models.CASCADE)
     instructor = models.ForeignKey(settings.AUTH_USER_MODEL,
                                    on_delete=models.CASCADE,
-                                   limit_choices_to={'groups__name': 'instructors'},
+                                   limit_choices_to={
+                                       'groups__name': 'instructors'},
                                    related_name='assignments')  # Use a related_name
-    lessons = models.ManyToManyField(Product)  # Many-to-many relationship with Lesson model
+    lessons = models.ManyToManyField(
+        Product)  # Many-to-many relationship with Lesson model
 
     def __str__(self):
         return f"Instructor {self.instructor.get_username()} assigned to {self.lessons.count()} lessons for Term {self.term}"

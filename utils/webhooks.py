@@ -4,6 +4,12 @@ from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from lessons_orders.models import Order as LessonsOrder
 from swims_orders.models import Order as SwimsOrder
+from lessons_bookings.utils.enrollment import handle_lessons_enrollment  #
+from django.contrib.auth import get_user_model
+from django.core.mail import send_mail, EmailMultiAlternatives
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
+
 
 @csrf_exempt
 def stripe_webhook(request):
@@ -31,13 +37,19 @@ def stripe_webhook(request):
                 try:
                     order = LessonsOrder.objects.get(
                         id=session.client_reference_id)
-                except Order.DoesNotExist:
+                except LessonsOrder.DoesNotExist:
                     return HttpResponse(status=404)
 
                 # Update order as paid
                 order.paid = True
                 order.stripe_id = session.payment_intent
                 order.save()
+                send_order_confirmation_email(order)
+                # Call the function in lessons_booking to handle lesson
+                # enrollment
+                handle_lessons_enrollment(order)
+                # Send order confirmation email to the user
+
 
             elif order_type == 'swims':
                 try:
@@ -54,3 +66,24 @@ def stripe_webhook(request):
             # ... Other order_type handling ...
 
     return HttpResponse(status=200)
+
+
+def send_order_confirmation_email(order):
+    subject = 'Order Confirmation'
+    message = 'Thank you for your order!'
+    from_email = 'morgan.mcknightr@gmail.com'
+    recipient_list = [order.user.email]
+
+    # Render the HTML template for the email
+    html_message = render_to_string('emails/order_confirmation.html',
+                                    {'order': order})
+    # send_mail(subject, message, from_email, recipient_list, html_message=html_message)
+
+    # Send the email
+    send_mail(
+        subject,
+        '',  # Use an empty string for the plain text content
+        from_email,
+        recipient_list,  # To email addresses (recipient's email)
+        html_message=html_message,
+    )

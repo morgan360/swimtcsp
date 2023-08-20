@@ -31,6 +31,8 @@ def order_create(request):
     next_occurrence = get_next_occurrence(product.day_of_week)
     order = Order.objects.create(user=request.user, booking=next_occurrence, product_id=product_id)
 
+
+
     for product_id, variation_id, quantity in cart:
         product = PublicSwimProduct.objects.get(id=product_id)
         variations = PriceVariant.objects.get(id=variation_id)

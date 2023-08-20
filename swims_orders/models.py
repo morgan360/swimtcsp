@@ -8,8 +8,6 @@ class Order(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL,
                              on_delete=models.CASCADE,
                              related_name='swims_orders')
-    # user = models.ForeignKey(User, on_delete=models.CASCADE,
-    #                          related_name='swim_orders')
     # Product bought
     product_id = models.CharField(max_length=50, blank=True, null=True)
     # Date attending swim
@@ -20,7 +18,7 @@ class Order(models.Model):
     stripe_id = models.CharField(max_length=250, blank=True)
 
     class Meta:
-        ordering = ['booking']
+        ordering = ['-created']
         indexes = [
             models.Index(fields=['booking']),
         ]

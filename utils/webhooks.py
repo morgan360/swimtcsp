@@ -44,12 +44,12 @@ def stripe_webhook(request):
                 order.paid = True
                 order.stripe_id = session.payment_intent
                 order.save()
-                send_order_confirmation_email(order)
-                # Call the function in lessons_booking to handle lesson
-                # enrollment
+                # email html template to use
+                template = 'emails/lessons_order_confirmation.html'
+                send_order_confirmation_email(order, template)
+                # Call the function in lessons_booking to handle lesson enrollment
                 handle_lessons_enrollment(order)
                 # Send order confirmation email to the user
-
 
             elif order_type == 'swims':
                 try:
@@ -62,27 +62,32 @@ def stripe_webhook(request):
                 order.paid = True
                 order.stripe_id = session.payment_intent
                 order.save()
-
+                template = 'emails/swims_order_confirmation.html'
+                # email html template to use
+                send_order_confirmation_email(order, template)
             # ... Other order_type handling ...
 
     return HttpResponse(status=200)
 
 
-def send_order_confirmation_email(order):
-    subject = 'Order Confirmation'
-    message = 'Thank you for your order!'
-    from_email = 'morgan.mcknightr@gmail.com'
+# Order Confirmation email
+def send_order_confirmation_email(order, template):
+    subject = f'Order Confirmation for Order #{order.id}'
+    message = f'Thank you for your order. Your order #{order.id} has been received.'
+    # subject = 'Order Confirmation'
+    # message = 'Thank you for your order!'
+    from_email = settings.FROM_EMAIL
     recipient_list = [order.user.email]
 
     # Render the HTML template for the email
-    html_message = render_to_string('emails/order_confirmation.html',
+    html_message = render_to_string(template,
                                     {'order': order})
     # send_mail(subject, message, from_email, recipient_list, html_message=html_message)
 
     # Send the email
     send_mail(
         subject,
-        '',  # Use an empty string for the plain text content
+        message,  # Use an empty string for the plain text content
         from_email,
         recipient_list,  # To email addresses (recipient's email)
         html_message=html_message,

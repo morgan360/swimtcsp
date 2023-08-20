@@ -16,5 +16,4 @@ class ProductAdmin(ImportExportMixin, admin.ModelAdmin):
     list_filter = ['available', 'created', 'updated']
     list_editable = ['price', 'available']
 
-    prepopulated_fields = {'slug': ('category', 'day_of_week', 'start_time',
-                                    'end_time')}
+    prepopulated_fields = {'slug': ('category', 'day_of_week', 'start_time', 'end_time')}

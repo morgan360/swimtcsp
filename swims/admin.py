@@ -1,6 +1,8 @@
 from django.contrib import admin
 from .models import PublicSwimCategory, PublicSwimProduct, PriceVariant
-
+from .resources import PublicSwimCategoryResource, PublicSwimProductResource
+from import_export.admin import ImportExportMixin
+from django import forms
 
 # Prices Inline
 class PriceVariantInline(admin.TabularInline):
@@ -9,19 +11,40 @@ class PriceVariantInline(admin.TabularInline):
 
 
 @admin.register(PublicSwimCategory)
-class CategoryAdmin(admin.ModelAdmin):
+class CategoryAdmin(ImportExportMixin, admin.ModelAdmin):
+    resource_class = PublicSwimCategoryResource
     list_display = ['name', 'slug']
     prepopulated_fields = {'slug': ('name',)}
 
+class PublicSwimProductAdminForm(forms.ModelForm):
+    class Meta:
+        model = PublicSwimProduct
+        fields = '__all__'  # Include all fields in the form
 
-@admin.register(PublicSwimProduct)
-class PublicSwimProductAdmin(admin.ModelAdmin):
-    list_display = ['name', 'slug',
-                    'available', 'created', 'updated']
+
+class PublicSwimProductAdmin(ImportExportMixin, admin.ModelAdmin):
+    resource_class = PublicSwimProductResource
+    form = PublicSwimProductAdminForm
+    list_display = ['name', 'slug', 'available', 'created', 'updated']
     list_filter = ['available', 'created', 'updated']
     list_editable = ['available']
-    prepopulated_fields = {'slug': ('name',)}
     inlines = [PriceVariantInline]
+
+    fieldsets = (
+        (None, {
+            'fields': ('category', 'day_of_week', 'start_time', 'end_time', 'num_places', 'available')
+        }),
+        ('Additional Information', {
+            'fields': ('description', 'image')
+        }),
+        ('Auto-Generated Fields', {
+            'fields': ('name', 'slug'),
+            'classes': ('collapse',),  # Hide the fieldset by default
+        }),
+    )
+
+
+admin.site.register(PublicSwimProduct, PublicSwimProductAdmin)
 
 
 @admin.register(PriceVariant)

@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.core.mail import send_mail
 from django.shortcuts import render
 from .forms import ContactForm
@@ -22,20 +23,20 @@ def contact_us(request):
             send_mail(
                 f"Contact Us - {subject}",
                 '',  # Use an empty string for the plain text content
-                'morganmcknight@gmail.com',  # From email address (your email)
-                ['recipient@email.com'],
+                settings.FROM_EMAIL,  # From email address (your email)
+                [email],
                 # To email addresses (recipient's email)
                 html_message=html_message,
             )
 
             # Send confirmation email to the person who filled out the form
-            send_mail(
-                f"Thank you for contacting us",
-                '',  # Use an empty string for the plain text content
-                'morgan.mcknight@gmail.com',  # From email address (your email)
-                [email],  # To email addresses (user's email)
-                html_message=html_message,
-            )
+            # send_mail(
+            #     f"Thank you for contacting us",
+            #     '',  # Use an empty string for the plain text content
+            #     settings.FROM_EMAIL,  # From email address (your email)
+            #     [settings.FROM_EMAIL],  # To email addresses (user's email)
+            #     html_message=html_message,
+            # )
 
             return render(request, 'contact_success.html')
     else:

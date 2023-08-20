@@ -28,10 +28,15 @@ class ProductResource(resources.ModelResource):
         row['time_end'] = datetime.datetime.strptime(row['time_end'],
                                                      '%H:%M:%S').time()
         row['day_id'] = int(row['day_id']) - 1
+
+        # Check if the category exists, create if not
+        category_name = row['category']
+        category, created = Category.objects.get_or_create(name=category_name)
+        row['category'] = category
+
         # Generate slug based on category, day_id, time_start, and time_end
         slug_candidate = f"{row['category']}_{row['day_id']}_{row['time_start']}_{row['time_end']}"
-        row['slug'] = slugify(
-            slug_candidate)  # You need to import slugify from django.utils.text
+        row['slug'] = slugify( slug_candidate)  # You need to import slugify from django.utils.text
 
         # Call the parent before_import_row method to complete the import
         return super().before_import_row(row, **kwargs)

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Order Confirmation</title>
+</head>
+<body>
+    <h1>Swim Order Confirmation</h1>
+    <p>Thank you for your order!</p>
+
+    <h2>Order Details</h2>
+    <p>Order ID: {{ order.id }}</p>
+    <p>Order Date: {{ order.created }}</p>
+
+    <h2>Order Items</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Product</th>
+                <th>Variant</th>
+                <th>Price</th>
+                <th>Quantity</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in order.items.all %}
+            <tr>
+                <td>{{ item.product.name }}</td>
+                <td>{{ item.variant }}</td>
+                <td>€{{ item.price }}</td>
+                <td>{{ item.quantity }}</td>
+                <td>€{{ item.get_cost }} </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <h2>Total Cost:  €{{ order.get_total_cost }}</h2>
+    <p>Booked For: {{ order.booking|date:"F j, Y" }}</p>
+{#This to be change to Order Views when reddy#}
+    <p>For payment details, <a href="{{ order.get_stripe_url }}">click here</a>.</p>
+</body>
+</html>
+

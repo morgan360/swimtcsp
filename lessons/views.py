@@ -34,17 +34,3 @@ def product_detail(request, id, slug):
                   {'product': product,
                    'cart_product_form': cart_product_form})
 
-# def purchase_lessons(request):
-#     if request.method == 'POST':
-#         form = SwimlingSelectionForm(request.POST, user=request.user)
-#         if form.is_valid():
-#             selected_swimling = form.cleaned_data['swimling']
-#             # Perform the lesson purchase process using the selected swimling
-#             # Create the lesson order with the selected swimling
-#             # Redirect to a confirmation page or payment gateway
-#             return redirect(
-#                 'lessons_payment:payment_process')  # Adjust the URL name
-#     else:
-#         form = SwimlingSelectionForm(user=request.user)
-#
-#     return render(request, 'purchase_lessons.html', {'form': form})

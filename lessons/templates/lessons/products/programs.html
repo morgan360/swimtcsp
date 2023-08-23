@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+    <div class="container mt-5">
+        <div class="row">
+            <div class="col-md-8 ">
+                <select class="custom-select mb-4" name="program"
+                        hx-get="{% url 'lessons:categories' %}"
+                        hx-trigger="change" hx-target="#categories">
+
+                    <option value="*" selected>All Programs</option>
+                    {% for program in programs %}
+                        <option value="{{ program.pk }}">{{ program.name }}</option>
+                    {% endfor %}
+                </select>
+
+                <div id="categories">
+                    {% include 'partials/categories.html' %}
+                </div>
+{#                <div id="lessons">#}
+{#                    {% include 'partials/lessons.html' %}#}
+{#                </div>#}
+            </div>
+        </div>
+    </div>
+{% endblock %}

@@ -1,0 +1,2 @@
+id,day_id,category,num_places,num_weeks,start_time,end_time,available,sector,price
+40,5,6,10,11,14:15:00,14:45:00,1,18,112.75

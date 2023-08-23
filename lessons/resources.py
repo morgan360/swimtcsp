@@ -5,38 +5,38 @@ import datetime
 from django.utils.text import slugify
 
 
+class CategoryResource(resources.ModelResource):
+    # we have to name the module_id field in CSV file to program
+    # model_id = fields.Field(attribute='program') (Does not WorK)
+    lesson = fields.Field(attribute='name')
+
+    class Meta:
+        model = Category
+        import_id_fields = ('id',)
+        fields = ('id', 'program', 'lesson',)
+
+
 class ProductResource(resources.ModelResource):
-    category = fields.Field(column_name='category', attribute='category',
-                            widget=ForeignKeyWidget(Category, 'name'))
+    # category = fields.Field(column_name='category', attribute='category',
+    #                         widget=ForeignKeyWidget(Category, 'name'))
     # Crossreference imported fields here
     day_id = fields.Field(attribute='day_of_week')
+    # lesson_id = fields.Field(attribute='category')
     time_start = fields.Field(attribute='start_time')
     time_end = fields.Field(attribute='end_time')
-    active = fields.Field(attribute='available')
-
+    # active = fields.Field(attribute='available')
+    lesson_id = fields.Field(attribute='category')
     # Make sure to put the name of the field you are importing here
     class Meta:
         model = Product
         import_id_fields = ('id',)
-        fields = ('id', 'category', 'day_id', 'num_places', 'num_weeks',
-                  'price', 'time_start', 'time_end', 'active', 'slug')
+        fields = ('id', 'day_id', 'category', 'num_places', 'num_weeks', 'price', 'time_start', 'time_end', 'active')
 
     # Change the value before you import into model
     def before_import_row(self, row, **kwargs):
-        row['time_start'] = datetime.datetime.strptime(row['time_start'],
-                                                       '%H:%M:%S').time()
-        row['time_end'] = datetime.datetime.strptime(row['time_end'],
-                                                     '%H:%M:%S').time()
-        row['day_id'] = int(row['day_id']) - 1
+        # row['day_id'] = int(row['day_id']) - 1
+        row['day_id'] = int(row['day_id'])-1
+        row['time_start'] = datetime.datetime.strptime(row['time_start'], '%H:%M:%S').time()
+        row['time_end'] = datetime.datetime.strptime(row['time_end'], '%H:%M:%S').time()
 
-        # Check if the category exists, create if not
-        category_name = row['category']
-        category, created = Category.objects.get_or_create(name=category_name)
-        row['category'] = category
-
-        # Generate slug based on category, day_id, time_start, and time_end
-        slug_candidate = f"{row['category']}_{row['day_id']}_{row['time_start']}_{row['time_end']}"
-        row['slug'] = slugify( slug_candidate)  # You need to import slugify from django.utils.text
-
-        # Call the parent before_import_row method to complete the import
         return super().before_import_row(row, **kwargs)

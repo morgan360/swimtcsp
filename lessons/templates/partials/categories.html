@@ -1,0 +1,19 @@
+{#{% extends "base.html" %}#}
+{#{% load static %}#}
+
+{% block content %}
+    <select class="custom-select mb-4" name="category"
+             hx-get="{% url 'lessons:lessons' %}"
+            hx-trigger='change' hx-target="#lessons">
+
+        <option value="*" selected>All Categories</option>
+        {% for category in categories %}
+            <option value=" {{ category.pk }}">{{ category.name }}</option>
+        {% endfor %}
+    </select>
+
+    {#    Display Lessons #}
+    <div id="lessons">
+        {% include 'partials/lessons.html' %}
+    </div>
+{% endblock %}

@@ -9,19 +9,23 @@ from users.models import Swimling
 
 
 class Term(models.Model):
-    term_id = models.IntegerField(unique=True)
-    start = models.DateField()
-    end = models.DateField()
-    rebooking = models.DateField()
-    booking = models.DateField()
-    assessments = models.DateField()
+    # term_id = models.IntegerField(unique=True)
+    start_date = models.DateField()
+    end_date = models.DateField()
+    rebooking_date = models.DateField()
+    booking_date = models.DateField()
+    assessment_date = models.DateField( null=True,)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
-    changed_by = models.ForeignKey(settings.AUTH_USER_MODEL,
-                                   on_delete=models.SET_NULL, null=True)
+    changed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True
+    )
 
     def __str__(self):
-        return f"Term {self.term_id}"
+        return f"Term {self.id}"
 
 
 class LessonEnrollment(models.Model):
@@ -31,7 +35,7 @@ class LessonEnrollment(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
     changed_by = models.ForeignKey(settings.AUTH_USER_MODEL,
-                                   on_delete=models.SET_NULL, null=True)
+                                   on_delete=models.SET_NULL, null=True, blank=True)
 
     class Meta:
         indexes = [

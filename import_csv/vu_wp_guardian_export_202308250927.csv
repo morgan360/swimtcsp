@@ -1,0 +1,6 @@
+id,email,username,mobile_phone,user_phone,Role,notes,other_phone,first_name,last_name,group
+12809,gbpak@gmail.com,webadmin,,,"a:1:{s:8:""customer"";b:1;}",,,Klodeon,Nick,"1,2"
+12810,andy.morrin10@gmail.com,Andy Morrin,,,"a:1:{s:8:""customer"";b:1;}",,862513339,Andy,Morrin,"1,2"
+12811,zara.weafer@gmail.com,Zaraweafer,,,"a:1:{s:8:""customer"";b:1;}",,,,,"1,2"
+12812,cigad@yahoo.co.uk,Ciara Kennedy,,,"a:2:{s:8:""customer"";b:1;s:8:""guardian"";b:1;}",,866079002,Alan,Kennedy,"1,2"
+12813,regina.joye@ucd.ie,regjoye,,,"a:1:{s:8:""customer"";b:1;}",,,,,"1,2"

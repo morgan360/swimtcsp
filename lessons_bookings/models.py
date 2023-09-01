@@ -3,13 +3,12 @@ from django.db import models
 from django.contrib.auth.models import User
 from lessons.models import Product
 from users.models import Swimling
-
-
 # from lessons_orders.models import Order
+# Because of circular references had to use string references instead: 'lessons_orders.Order'
 
 
 class Term(models.Model):
-    # term_id = models.IntegerField(unique=True)
+
     start_date = models.DateField()
     end_date = models.DateField()
     rebooking_date = models.DateField()
@@ -25,13 +24,17 @@ class Term(models.Model):
     )
 
     def __str__(self):
-        return f"Term {self.id}"
+        return f"{self.id}"
 
-
+# Contains all the bookings that have being confirmed
 class LessonEnrollment(models.Model):
     lesson = models.ForeignKey(Product, on_delete=models.CASCADE)
     swimling = models.ForeignKey(Swimling, on_delete=models.CASCADE)
     term = models.ForeignKey(Term, on_delete=models.CASCADE)
+    order = models.ForeignKey('lessons_orders.Order', on_delete=models.CASCADE, null=True, blank=True)
+    # notes will contain origional order id from woocommerce
+    notes = models.TextField(null=True, blank=True)
+    # will contain origional date booked
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
     changed_by = models.ForeignKey(settings.AUTH_USER_MODEL,
@@ -47,7 +50,7 @@ class LessonEnrollment(models.Model):
         return f'{self.lesson.name}, {str(self.term.id)}, ' \
                f'{self.swimling.first_name}, {self.swimling.last_name}'
 
-
+# Assign Instructors to Lessons for a term
 class LessonAssignment(models.Model):
     term = models.ForeignKey(Term, on_delete=models.CASCADE)
     instructor = models.ForeignKey(settings.AUTH_USER_MODEL,

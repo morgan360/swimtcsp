@@ -4,6 +4,8 @@ from .resources import PublicSwimCategoryResource, PublicSwimProductResource
 from import_export.admin import ImportExportMixin
 from django import forms
 
+
+
 # Prices Inline
 class PriceVariantInline(admin.TabularInline):
     model = PriceVariant

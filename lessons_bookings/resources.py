@@ -1,6 +1,7 @@
 from import_export import resources, fields
-from .models import Term
+from .models import Term, LessonEnrollment
 from datetime import datetime
+
 
 class TermResource(resources.ModelResource):
     term_id = fields.Field(attribute='id')
@@ -16,11 +17,11 @@ class TermResource(resources.ModelResource):
         fields = (' term_id', 'start_date', 'finish_date', 'rebook_start',
                   'booking_switch_date', 'assesments_complete')
 
-    # def dehydrate_start(self, term):
-    #     return term.assesment_date.strftime('%Y-%m-%d') if term.assesment_date else ''
-    #
-    # def dehydrate_rebook_start(self, term):
-    #     return term.rebooking_date.strftime('%Y-%m-%d') if term.rebooking_date else ''
-    #
-    # def dehydrate_booking_switch_date(self, term):
-    #     return term.booking_date.strftime('%Y-%m-%d') if term.booking_date else ''
+    # Import Bookings from TCSP
+
+
+class EnrollementResource(resources.ModelResource):
+    class Meta:
+        model = LessonEnrollment
+        import_id_fields = ('id',)
+        fields = ('id', 'term', 'swimling', 'lesson', 'notes', 'created', 'updated', 'changed_by')

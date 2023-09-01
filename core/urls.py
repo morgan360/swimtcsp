@@ -5,12 +5,11 @@ from django.conf.urls.static import static
 from django.contrib.sessions.models import Session
 from timetable.admin import events_site
 
-
 urlpatterns = [
-
-    path('events/', events_site.urls),
+    path('grappelli/', include('grappelli.urls')), # grappelli URLS
     path('admin/', admin.site.urls),
     path('', include('home.urls')),
+    path('events/', events_site.urls),
     # Allauth
     path('accounts/', include('allauth.urls')),
     path('users/', include('users.urls', namespace='user')),

@@ -6,25 +6,48 @@ from django.urls import reverse
 from django.utils.html import format_html
 from .models import User, UserProfile, Swimling
 from django.contrib.auth import get_user_model
+from .resources import SwimlingResource, UserResource
+from import_export.admin import ImportExportMixin
+
+
+@admin.register(Swimling)
+class SwimlingAdmin(ImportExportMixin, admin.ModelAdmin):
+    resource_class = SwimlingResource
+    list_display = ['first_name', 'last_name', 'guardian_link']  # Replace 'guardian' with 'guardian_link'
+    list_filter = ('last_name', 'first_name', 'guardian',)
+
+    def guardian_link(self, obj):
+        if obj.guardian:
+            url = reverse("admin:%s_%s_change" % (obj.guardian._meta.app_label, obj.guardian._meta.model_name),
+                          args=[obj.guardian.pk])
+            return format_html('<a href="{}">{}</a>', url, obj.guardian)
+        return None
+
+    guardian_link.short_description = 'Guardian'
+#
+
 
 class SwimlingInline(admin.StackedInline):
     model = Swimling
     extra = 1  # Set the number of empty forms to display for adding new Swimlings
-    fields = ('first_name', 'last_name', 'dob', 'school_role_number', 'notes',)
+    fields = ('first_name', 'last_name', 'dob', 'sco_role_num', 'notes',)
 
 
 class UserProfileInline(admin.StackedInline):
     model = UserProfile
     can_delete = False
 
+
 User = get_user_model()
 
+
 @admin.register(User)
-class UserAdmin(BaseUserAdmin):
+class UserAdmin(ImportExportMixin, BaseUserAdmin):
+    resource_class = UserResource
     inlines = [SwimlingInline]
     fieldsets = (
         (None, {'fields': (
-            'email', 'password', 'first_name', 'last_name', 'last_login')}),
+            'email', 'password', 'mobile_phone', 'first_name', 'last_name','notes',  'last_login')}),
         ('Permissions', {'fields': (
             'is_active', 'is_staff', 'is_superuser', 'groups',
             'user_permissions')}),
@@ -39,40 +62,13 @@ class UserAdmin(BaseUserAdmin):
         ),
     )
 
-    list_display = ('email', 'first_name', 'is_staff', 'last_login')
-    list_filter = ('is_staff', 'is_superuser', 'is_active', 'groups')
-    search_fields = ('email',)
-    ordering = ('email',)
+    def display_groups(self, obj):
+        return ', '.join([group.name for group in obj.groups.all()])
+
+    display_groups.short_description = 'Groups'  # Set the column hea
+
+    list_display = ('email', 'first_name','last_name', 'mobile_phone', 'notes', 'display_groups', 'last_login')
+    list_filter = ('last_name', 'groups',)
+    search_fields = ('email', 'last_name','first_name',)
+    ordering = ('last_name','first_name',)
     filter_horizontal = ('groups', 'user_permissions',)
-
-
-# admin.site.register(User, UserAdmin)
-
-
-# View Session Data
-
-class SessionAdmin(admin.ModelAdmin):
-    def _session_data(self, obj):
-        return obj.get_decoded()
-
-    list_display = ['session_key', '_session_data', 'expire_date']
-    # list_display = ()
-    actions = ['view_selected_session']
-
-    def view_selected_session(self, request, queryset):
-        for session in queryset:
-            session_data = session.get_decoded()
-            # Your custom action logic here
-            # For demonstration, just printing session data
-            print(session_data)
-
-    view_selected_session.short_description = "View selected session data"
-
-    def view_session(self, obj):
-        url = reverse('admin:view_session', args=[obj.session_key])
-        return format_html('<a href="{}">View</a>', url)
-
-    view_session.short_description = 'View'
-
-
-admin.site.register(Session, SessionAdmin)

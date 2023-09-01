@@ -3,6 +3,7 @@ from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, \
 from django.db import models
 from django.utils import timezone
 from django.conf import settings
+from phonenumber_field.modelfields import PhoneNumberField
 
 
 class UserManager(BaseUserManager):
@@ -37,6 +38,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(max_length=254, unique=True)
     first_name = models.CharField(max_length=150)
     last_name = models.CharField(max_length=254, null=True, blank=True)
+    mobile_phone = PhoneNumberField(blank=True)
+    notes = models.TextField(blank=True)
     groups = models.ManyToManyField(Group, blank=True)
     is_staff = models.BooleanField(default=False)
     is_superuser = models.BooleanField(default=False)
@@ -56,7 +59,6 @@ class User(AbstractBaseUser, PermissionsMixin):
 
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    mobile_phone = models.CharField(max_length=15, blank=True, null=True)
     home_phone = models.CharField(max_length=15, blank=True, null=True)
     notes = models.TextField(blank=True)
 
@@ -71,11 +73,10 @@ class Swimling(models.Model):
                                  null=True)
     first_name = models.CharField(max_length=255, blank=True, null=True)
     last_name = models.CharField(max_length=255, blank=True, null=True)
-    dob = models.DateField(null=True)
-    school_role_number = models.CharField(max_length=6, blank=True, null=True)
+    dob = models.DateField(null=True, blank=True)
+    sco_role_num = models.CharField(max_length=6, blank=True, null=True)
     notes = models.TextField(null=True, blank=True)
     wp_student_id = models.IntegerField(blank=True, null=True)
 
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
-

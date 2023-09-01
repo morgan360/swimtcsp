@@ -5,6 +5,9 @@ from django.contrib.auth.models import User
 from django.db import transaction
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from allauth.account.views import EmailVerificationSentView
+
+
 # from .forms import SwimlingForm
 
 
@@ -51,3 +54,6 @@ def update_profile(request):
 #     else:
 #         form = SwimlingForm()
 #     return render(request, "your_template.html", {"form": form})
+
+# views.py
+

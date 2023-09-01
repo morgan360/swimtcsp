@@ -42,10 +42,11 @@ SECRET_KEY = str(os.getenv('SECRET_KEY'))
 # Application definition
 
 INSTALLED_APPS = [
+    'django.contrib.contenttypes',
     # pre installed
     'django.contrib.admin',
     'django.contrib.auth',
-    'django.contrib.contenttypes',
+
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
@@ -61,6 +62,9 @@ INSTALLED_APPS = [
     "crispy_forms",
     "crispy_bootstrap5",
     'import_export',
+    "phonenumber_field",
+    'django_filters',
+
     # My Apps
     'users',
     'home',
@@ -231,4 +235,18 @@ STRIPE_WEBHOOK_SECRET = str(os.getenv('STRIPE_WEBHOOK_SECRET'))
 STRIPE_API_VERSION = '2022-08-01'
 
 FOOTER_MESSAGE = "Base Version"
+# How many records can you upload
+DATA_UPLOAD_MAX_NUMBER_FIELDS = 8000
+
+
+
+
+
+
+
+
+
+
+
+
 

@@ -6,7 +6,6 @@ from django.contrib.sessions.models import Session
 from timetable.admin import events_site
 
 urlpatterns = [
-    path('grappelli/', include('grappelli.urls')), # grappelli URLS
     path('admin/', admin.site.urls),
     path('', include('home.urls')),
     path('events/', events_site.urls),

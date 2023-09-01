@@ -39,13 +39,15 @@ class User(AbstractBaseUser, PermissionsMixin):
     first_name = models.CharField(max_length=150)
     last_name = models.CharField(max_length=254, null=True, blank=True)
     mobile_phone = PhoneNumberField(blank=True)
-    notes = models.TextField(blank=True)
+    other_phone = PhoneNumberField(blank=True)
     groups = models.ManyToManyField(Group, blank=True)
     is_staff = models.BooleanField(default=False)
     is_superuser = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     last_login = models.DateTimeField(null=True, blank=True)
     date_joined = models.DateTimeField(auto_now_add=True)
+    username = models.CharField(max_length=50, blank=True, null=True)
+    notes = models.TextField()
 
     USERNAME_FIELD = 'email'
     EMAIL_FIELD = 'email'
@@ -59,7 +61,6 @@ class User(AbstractBaseUser, PermissionsMixin):
 
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    home_phone = models.CharField(max_length=15, blank=True, null=True)
     notes = models.TextField(blank=True)
 
     def __str__(self):

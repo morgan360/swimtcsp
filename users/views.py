@@ -20,7 +20,7 @@ class UserForm(forms.ModelForm):
 class UserProfileForm(forms.ModelForm):
     class Meta:
         model = UserProfile
-        fields = ("home_phone", "notes")
+        fields = ('notes',)
 
 
 @login_required

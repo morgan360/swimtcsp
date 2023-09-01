@@ -44,6 +44,7 @@ User = get_user_model()
 @admin.register(User)
 class UserAdmin(ImportExportMixin, BaseUserAdmin):
     resource_class = UserResource
+    list_per_page = 500
     inlines = [SwimlingInline]
     fieldsets = (
         (None, {'fields': (

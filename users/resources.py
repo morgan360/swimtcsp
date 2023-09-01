@@ -3,14 +3,14 @@ from .models import Swimling, User
 from import_export.widgets import ForeignKeyWidget
 
 
-
 class UserResource(resources.ModelResource):
-    category_id = fields.Field(attribute='name')
+    # category_id = fields.Field(attribute='name')
 
     class Meta:
         model = User
         import_id_fields = ('id',)
-        fields = ('id', 'first_name', 'last_name', 'email', 'mobile_phone', 'notes', 'groups', 'sco_role_num')
+        fields = ('id', 'first_name', 'last_name', 'email', 'mobile_phone', 'other_phone', 'notes',
+                  'username', 'groups')
 
         def before_import(self, dataset, using_transactions, dry_run, **kwargs):
             # Map the group names to Group objects
@@ -54,4 +54,3 @@ class SwimlingResource(resources.ModelResource):
                 import_result.import_type = RowResult.IMPORT_TYPE_SKIP
 
             return import_result
-

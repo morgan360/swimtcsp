@@ -2,7 +2,13 @@
 
 {% block content %}
 <div class="module">
-   <p><a href="/admin/">Main Admin Area</a></p>
+
+ <h2  style="color: white;><a href="/management/">Management Menu</a></h2>
+  <ul>
+      <li> <h3><a href="/swimsadmin/">Swims Admin</a></h3></li>
+ <li><h3><a href="/lessonsadmin/">Lessons Admin</a></h3></li>
+<li><h3><a href="/usersadmin/">Users Admin</a></h3></li>
+</ul>
 </div>
 {{ block.super }}
 {% endblock %}

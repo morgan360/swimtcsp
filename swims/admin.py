@@ -29,8 +29,7 @@ class PublicSwimProductAdminForm(forms.ModelForm):
 class PublicSwimProductAdmin(ImportExportMixin, admin.ModelAdmin):
     resource_class = PublicSwimProductResource
     form = PublicSwimProductAdminForm
-    list_display = ['name', 'slug', 'available', 'created', 'updated']
-    list_filter = ['available', 'created', 'updated']
+    list_display = ['name', 'available', 'created', 'updated']
     list_editable = ['available']
     inlines = [PriceVariantInline]
 
@@ -46,7 +45,7 @@ class PublicSwimProductAdmin(ImportExportMixin, admin.ModelAdmin):
             'classes': ('collapse',),  # Hide the fieldset by default
         }),
     )
-
+    list_filter = [('name' , DropdownFilter),('category', RelatedDropdownFilter),('day_of_week',  ChoiceDropdownFilter),('available')]
 
 admin.site.register(PublicSwimProduct, PublicSwimProductAdmin)
 

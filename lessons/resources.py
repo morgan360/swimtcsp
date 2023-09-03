@@ -1,15 +1,15 @@
 from import_export import resources, fields
-from .models import Group, Product, Category
+from .models import Area, Product, Category
 from import_export.widgets import ForeignKeyWidget
 import datetime
 from django.utils.text import slugify
 
 
-class GroupResource(resources.ModelResource):
+class AreaResource(resources.ModelResource):
     category_id = fields.Field(attribute='name')
 
     class Meta:
-        model = Group
+        model =Area
         import_id_fields = ('id',)
         fields = ('id', 'category',)
 
@@ -39,7 +39,8 @@ class ProductResource(resources.ModelResource):
     class Meta:
         model = Product
         import_id_fields = ('id',)
-        fields = ('id', 'day_id', 'category', 'num_places', 'num_weeks', 'price', 'time_start', 'time_end', 'active', 'group')
+        fields = ('id', 'day_id', 'category', 'num_places', 'num_weeks', 'price', 'time_start', 'time_end', 'active',
+                  'area')
 
     # Change the value before you import into model
     def before_import_row(self, row, **kwargs):

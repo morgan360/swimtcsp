@@ -14,6 +14,8 @@
   </component>
   <component name="NewModuleRootManager">
     <content url="file://$MODULE_DIR$">
+      <sourceFolder url="file://$MODULE_DIR$/custom_admins" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/import_csv" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/swimtcsp" />
     </content>
     <orderEntry type="inheritedJdk" />

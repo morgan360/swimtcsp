@@ -8,7 +8,8 @@ from django.utils import timezone
 from django.urls import reverse
 from django.utils.safestring import mark_safe
 from django.http import HttpResponse
-
+from custom_admins.swimsadmin import swims_admin_site
+from django_admin_listfilter_dropdown.filters import DropdownFilter, RelatedDropdownFilter, ChoiceDropdownFilter
 
 def export_to_csv(modeladmin, request, queryset):
     opts = modeladmin.model._meta
@@ -107,3 +108,6 @@ class TodaySwimOrderAdmin(admin.ModelAdmin):
 
     def has_change_permission(self, request, obj=None):
         return False  # Prevent changing orders through this admin
+
+
+swims_admin_site.register(Order, SwimOrderAdmin)

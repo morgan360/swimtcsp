@@ -6,7 +6,8 @@ from .resources import EnrollementResource, TermResource
 from django.contrib.auth import get_user_model
 import django_filters
 from utils.terms_utils import get_current_term, get_previous_term, get_next_term
-
+from custom_admins.lessonsadmin import lessons_admin_site
+from django_admin_listfilter_dropdown.filters import DropdownFilter, RelatedDropdownFilter, ChoiceDropdownFilter
 
 # from lessons_bookings.models import Term
 
@@ -90,3 +91,9 @@ class TermAdmin(ImportExportMixin, admin.ModelAdmin):
 
 
 admin.site.register(Term, TermAdmin)
+
+
+# Register to Custom Admin
+lessons_admin_site.register(LessonEnrollment, LessonEnrollmentAdmin)
+lessons_admin_site.register(Term, TermAdmin)
+lessons_admin_site.register(LessonAssignment, LessonAssignmentAdmin)

@@ -8,13 +8,14 @@ from .models import User, UserProfile, Swimling
 from django.contrib.auth import get_user_model
 from .resources import SwimlingResource, UserResource
 from import_export.admin import ImportExportMixin
-
+from custom_admins.usersadmin import users_admin_site
+from django_admin_listfilter_dropdown.filters import DropdownFilter, RelatedDropdownFilter, ChoiceDropdownFilter
 
 @admin.register(Swimling)
 class SwimlingAdmin(ImportExportMixin, admin.ModelAdmin):
     resource_class = SwimlingResource
     list_display = ['first_name', 'last_name', 'guardian_link']  # Replace 'guardian' with 'guardian_link'
-    list_filter = ('last_name', 'first_name', 'guardian',)
+    list_filter = [('last_name', DropdownFilter), ('first_name', DropdownFilter),('guardian',RelatedDropdownFilter)]
 
     def guardian_link(self, obj):
         if obj.guardian:
@@ -44,7 +45,7 @@ User = get_user_model()
 @admin.register(User)
 class UserAdmin(ImportExportMixin, BaseUserAdmin):
     resource_class = UserResource
-    list_per_page = 500
+    list_per_page = 20
     inlines = [SwimlingInline]
     fieldsets = (
         (None, {'fields': (
@@ -69,7 +70,11 @@ class UserAdmin(ImportExportMixin, BaseUserAdmin):
     display_groups.short_description = 'Groups'  # Set the column hea
 
     list_display = ('email', 'first_name','last_name', 'mobile_phone', 'notes', 'display_groups', 'last_login')
-    list_filter = ('last_name', 'groups',)
+    list_filter = [('last_name', DropdownFilter), ('first_name', DropdownFilter),('groups',RelatedDropdownFilter)]
     search_fields = ('email', 'last_name','first_name',)
     ordering = ('last_name','first_name',)
     filter_horizontal = ('groups', 'user_permissions',)
+
+
+users_admin_site.register(User, UserAdmin)
+users_admin_site.register(Swimling, SwimlingAdmin)

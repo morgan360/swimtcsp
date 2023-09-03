@@ -13,7 +13,7 @@ from django.utils.text import slugify
 # Program: Then at the highest level  is a group of  categories types, Beginners to advanced.
 # Groups: are basically different customer groups: Public Classes, Bisghop Galvin Zion NS, Test School
 
-class Group(models.Model):
+class Area(models.Model):
     name = models.CharField(max_length=100, null=True, blank=True)
 
     def __str__(self):
@@ -77,7 +77,7 @@ class Product(models.Model):
     updated = models.DateTimeField(auto_now=True)
     image = models.ImageField(upload_to='products/%Y/%m/%d',
                               default='images/default_image.jpg')
-    group = models.ForeignKey(Group, on_delete=models.CASCADE, default=1)
+    area = models.ForeignKey(Area, on_delete=models.CASCADE, default=1)
 
     def save(self, *args, **kwargs):
         # Create the name by combining other fields

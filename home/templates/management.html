@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<!-- CTA -->
+<div class="container py-5">
+  <div class="row">
+    <!-- Buttons Column -->
+    <div class="col-sm-12 col-md-12 col-lg-6 pb-4">
+      <h1 class="display-4 font-weight-bold">TCSP Pool Management</h1><br>
+      <h5 class="fw-light">
+        <a class="btn btn-primary mt-2" href="/lessonsadmin/">Lessons Admin Area</a>
+      </h5>
+      <h5 class="fw-light">
+        <a class="btn btn-primary mt-2" href="/swimsadmin/">Swims Admin Area</a>
+      </h5>
+      <h5 class="fw-light">
+        <a class="btn btn-primary mt-2" href="/usersadmin/">Users Admin Area</a>
+      </h5>
+      <h5 class="fw-light">
+        <a class="btn btn-primary mt-2" href="/admin/">Management Reports</a>
+      </h5>
+    </div>
+
+    <!-- Image Column -->
+    <div class="col-sm-12 col-md-12 col-lg-6">
+      <img class="img-fluid rounded" src="{% static 'img/swimming-goggles.jpg' %}" alt="Headphones">
+    </div>
+  </div>
+</div>
+
+<div class="container text-dark mt-5">
+  <div class="row justify-content-md-center">
+    <div class="col-md-5 p-3">
+      {# more content #}
+    </div>
+  </div>
+</div>
+{% endblock content %}

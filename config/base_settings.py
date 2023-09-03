@@ -35,8 +35,6 @@ MEDIA_URL = '/media/'
 # Specify the directory where uploaded media files are stored
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-
-
 SECRET_KEY = str(os.getenv('SECRET_KEY'))
 
 # Application definition
@@ -64,7 +62,7 @@ INSTALLED_APPS = [
     'import_export',
     "phonenumber_field",
     'django_filters',
-
+    'django_admin_listfilter_dropdown',
     # My Apps
     'users',
     'home',
@@ -79,7 +77,6 @@ INSTALLED_APPS = [
     'lessons_bookings',
     'timetable',
 ]
-
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -148,8 +145,6 @@ USE_TZ = True
 
 # Define the directory where Django should collect and store static files
 # STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-
-
 
 
 # Default primary key field type
@@ -237,16 +232,5 @@ STRIPE_API_VERSION = '2022-08-01'
 FOOTER_MESSAGE = "Base Version"
 # How many records can you upload
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 12000
-
-
-
-
-
-
-
-
-
-
-
 
 

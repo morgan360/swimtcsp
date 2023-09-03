@@ -3,7 +3,8 @@ from .models import PublicSwimCategory, PublicSwimProduct, PriceVariant
 from .resources import PublicSwimCategoryResource, PublicSwimProductResource
 from import_export.admin import ImportExportMixin
 from django import forms
-
+from custom_admins.swimsadmin import swims_admin_site
+from django_admin_listfilter_dropdown.filters import DropdownFilter, RelatedDropdownFilter, ChoiceDropdownFilter
 
 
 # Prices Inline
@@ -17,6 +18,7 @@ class CategoryAdmin(ImportExportMixin, admin.ModelAdmin):
     resource_class = PublicSwimCategoryResource
     list_display = ['name', 'slug']
     prepopulated_fields = {'slug': ('name',)}
+
 
 class PublicSwimProductAdminForm(forms.ModelForm):
     class Meta:
@@ -57,3 +59,8 @@ class PriceVariantAdmin(admin.ModelAdmin):
         return obj.product.name
 
     product_name.short_description = 'Product'
+
+
+swims_admin_site.register(PublicSwimProduct, PublicSwimProductAdmin)
+swims_admin_site.register(PublicSwimCategory, CategoryAdmin)
+swims_admin_site.register(PriceVariant, PriceVariantAdmin)

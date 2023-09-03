@@ -4,6 +4,9 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib.sessions.models import Session
 from timetable.admin import events_site
+from custom_admins.lessonsadmin import lessons_admin_site
+from custom_admins.usersadmin import users_admin_site
+from custom_admins.swimsadmin import swims_admin_site
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -38,6 +41,13 @@ if settings.DEBUG:
     urlpatterns += [
         path("__debug__/", include("debug_toolbar.urls")),
     ]
+
+# Add Admin Sites
+urlpatterns += [path('lessonsadmin/', lessons_admin_site.urls),
+                path('usersadmin/', users_admin_site.urls),
+                path('swimsadmin/', swims_admin_site.urls)
+                ]
+
 
 # Change Site Labels
 admin.site.site_header = "TCSP Administration"

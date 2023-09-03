@@ -1,8 +1,11 @@
 from django.conf import settings
 from django.core.mail import send_mail
 from django.shortcuts import render
-from .forms import ContactForm
+from home.forms import ContactForm
 from django.template.loader import render_to_string
+from django.contrib.auth.decorators import user_passes_test
+from utils.user_in_group import user_in_group
+from django.contrib.auth.decorators import login_required
 
 
 def contact_us(request):
@@ -46,3 +49,9 @@ def contact_us(request):
 
 def home(request):
     return render(request, 'home.html')
+
+
+@login_required()
+@user_in_group('Manager')
+def management(request):
+    return render(request, 'management.html')

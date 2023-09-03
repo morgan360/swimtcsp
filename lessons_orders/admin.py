@@ -1,6 +1,8 @@
 from django.contrib import admin
 from .models import Order, OrderItem
 from django.utils.safestring import mark_safe
+from custom_admins.lessonsadmin import lessons_admin_site
+from django_admin_listfilter_dropdown.filters import DropdownFilter, RelatedDropdownFilter, ChoiceDropdownFilter
 
 
 class OrderItemInline(admin.TabularInline):
@@ -25,3 +27,7 @@ class OrderAdmin(admin.ModelAdmin):
                     'created', 'updated']
     list_filter = ['paid', 'created', 'updated']
     inlines = [OrderItemInline]
+
+
+# Register to Custom Admin
+lessons_admin_site.register(Order, OrderAdmin)

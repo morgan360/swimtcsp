@@ -27,6 +27,7 @@ class CategoryResource(resources.ModelResource):
 
 class ProductResource(resources.ModelResource):
     # Note you must change 'category_id' field to 'name' in csv file
+    # area not group
     # Crossreference imported fields here
     day_id = fields.Field(attribute='day_of_week')
     # lesson_id = fields.Field(attribute='category')
@@ -39,8 +40,7 @@ class ProductResource(resources.ModelResource):
     class Meta:
         model = Product
         import_id_fields = ('id',)
-        fields = ('id', 'day_id', 'category', 'num_places', 'num_weeks', 'price', 'time_start', 'time_end', 'active',
-                  'area')
+        fields = ('id', 'day_id', 'category', 'num_places', 'num_weeks', 'price', 'time_start', 'time_end', 'active', 'area')
 
     # Change the value before you import into model
     def before_import_row(self, row, **kwargs):

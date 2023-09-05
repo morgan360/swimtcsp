@@ -5,6 +5,9 @@ from .resources import AreaResource, CategoryResource, ProductResource
 from import_export.admin import ImportExportMixin
 from django_admin_listfilter_dropdown.filters import DropdownFilter, RelatedDropdownFilter, ChoiceDropdownFilter
 
+# class OccupancyAdmin(admin.ModelAdmin):
+#     list_display = ['name', 'price', 'active', 'created', 'updated']
+# admin.site.register(OccupancyAdmin)
 
 # @admin.register(Product)
 class ProductAdmin(ImportExportMixin, admin.ModelAdmin):

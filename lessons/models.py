@@ -110,6 +110,6 @@ def update_product_name(sender, instance, **kwargs):
     instance.slug = slugify(instance.name)
 
 
-@receiver(pre_save, sender=Category)
-def update_product_name(sender, instance, **kwargs):
-    instance.slug = slugify(instance.name)
+# @receiver(pre_save, sender=Category)
+# def update_product_name(sender, instance, **kwargs):
+#     instance.slug = slugify(instance.name)

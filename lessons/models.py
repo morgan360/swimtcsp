@@ -5,7 +5,6 @@ from django.db.models.signals import pre_save
 from django.dispatch import receiver
 from django.utils.text import slugify
 
-
 # The modules here represent the structer of lessons and classes in TCSP.
 # Product : represents a series of lessons for a term. Each individual lesson is called a class.
 # Lessons: (same as Product) are subsets of Categories which really define a level of courses.
@@ -102,6 +101,12 @@ class Product(models.Model):
         day_of_week = dict(self.DAY_CHOICES).get(self.day_of_week)
         return f"{self.category} {day_of_week} {start_time_formatted}"
 
+    def get_num_sold(self):
+        from lessons_bookings.models import LessonEnrollment
+        return LessonEnrollment.objects.filter(lesson=self).count()  # Count the number of related orders
+
+    def get_num_left(self):
+        return self.num_places - self.get_num_sold()
 
 # update name everytime fields are changed
 @receiver(pre_save, sender=Product)

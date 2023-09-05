@@ -28,6 +28,9 @@
                 {#   3rd  row Col2 #}
                 <div class="row">
                     <h4 class="price">€{{ product.price }}</h4>
+                    <p>Number of Places: {{ product.num_places }}</p>
+                    <p>Number Sold: {{ product.get_num_sold }}</p>
+                    <p>Number Left: {{ product.get_num_left }}</p>
                 </div>
                 {#   4rd  row Col2 #}
                 <div class="row">

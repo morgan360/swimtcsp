@@ -63,6 +63,8 @@ INSTALLED_APPS = [
     "phonenumber_field",
     'django_filters',
     'django_admin_listfilter_dropdown',
+    'hijack',
+    'hijack.contrib.admin', # add to admin panel
     # My Apps
     'users',
     'home',
@@ -86,6 +88,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'hijack.middleware.HijackUserMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
 ]
 
@@ -156,6 +159,7 @@ AUTH_USER_MODEL = 'users.User'
 # Allauth
 SITE_ID = 2
 LOGIN_REDIRECT_URL = '/'
+LOGOUT_REDIRECT_URL = '/home/'
 
 # ACCOUNT_AUTHENTICATION_METHOD = 'username_email'
 ACCOUNT_EMAIL_REQUIRED = True
@@ -233,4 +237,12 @@ FOOTER_MESSAGE = "Base Version"
 # How many records can you upload
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 12000
 
-
+# HIJACK APP
+HIJACK_LOGIN_REDIRECT_URL = '/'
+HIJACK_LOGOUT_REDIRECT_URL = '/users/user/'
+HIJACK_DISPLAY_ADMIN_BUTTON = True
+HIJACK_USE_BOOTSTRAP = True
+HIJACK_REGISTER_ADMIN = False
+HIJACK_ALLOW_GET_REQUESTS = True
+HIJACK_URL_ALLOWED_ATTRIBUTES = ['username', ]
+HIJACK_PERMISSION_CHECK = "hijack.permissions.superusers_and_staff"

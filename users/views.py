@@ -6,6 +6,7 @@ from django.db import transaction
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from allauth.account.views import EmailVerificationSentView
+from django.http import HttpResponse
 
 
 # from .forms import SwimlingForm
@@ -42,6 +43,21 @@ def update_profile(request):
                   {"u_form": user_form, "p_form": user_profile_form})
 
 
+def hijack_redirect(request, user_id):
+    user_id_value = int(user_id)
+    user_first_name = request.user.first_name
+    user_last_name = request.user.last_name
+
+    fullname = f"{user_first_name} {user_last_name}"
+    # Assuming your custom User model has a 'username' field
+    # user_name = User.objects.get(id=user_id_value).username
+
+    # Display a message
+    messages.success(request, f"You are now logged in as {fullname}.")
+
+    # Redirect to the home page or any other desired URL
+    return redirect('home')  # Replace 'home' with the name of your home page URL pattern
+
 # To save Swimling
 
 # def add_swimling(request):
@@ -56,4 +72,3 @@ def update_profile(request):
 #     return render(request, "your_template.html", {"form": form})
 
 # views.py
-

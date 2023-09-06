@@ -8,5 +8,6 @@ app_name = "users"
 urlpatterns = [
     path("profile/", views.update_profile, name = "profile"),
     path('accounts/', include('allauth.urls')),
+    path('<int:user_id>/', views.hijack_redirect, name='hijack_redirect'),
 ]
 

@@ -10,6 +10,7 @@ from .resources import SwimlingResource, UserResource
 from import_export.admin import ImportExportMixin
 from custom_admins.usersadmin import users_admin_site
 from django_admin_listfilter_dropdown.filters import DropdownFilter, RelatedDropdownFilter, ChoiceDropdownFilter
+from hijack.contrib.admin import HijackUserAdminMixin
 
 @admin.register(Swimling)
 class SwimlingAdmin(ImportExportMixin, admin.ModelAdmin):
@@ -43,7 +44,7 @@ User = get_user_model()
 
 
 @admin.register(User)
-class UserAdmin(ImportExportMixin, BaseUserAdmin):
+class UserAdmin(HijackUserAdminMixin, ImportExportMixin, BaseUserAdmin):
     resource_class = UserResource
     list_per_page = 20
     inlines = [SwimlingInline]
@@ -69,12 +70,16 @@ class UserAdmin(ImportExportMixin, BaseUserAdmin):
 
     display_groups.short_description = 'Groups'  # Set the column hea
 
-    list_display = ('email', 'first_name','last_name', 'mobile_phone', 'notes', 'display_groups', 'last_login')
+    list_display = ('email', 'full_name', 'mobile_phone', 'display_groups',)
     list_filter = [('last_name', DropdownFilter), ('first_name', DropdownFilter),('groups',RelatedDropdownFilter)]
     search_fields = ('email', 'last_name','first_name',)
     ordering = ('last_name','first_name',)
     filter_horizontal = ('groups', 'user_permissions',)
 
+    def full_name(self, obj):
+        return f"{obj.first_name} {obj.last_name}"
+
+    full_name.short_description = 'Full Name'
 
 users_admin_site.register(User, UserAdmin)
 users_admin_site.register(Swimling, SwimlingAdmin)

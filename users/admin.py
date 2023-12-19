@@ -70,7 +70,7 @@ class UserAdmin(HijackUserAdminMixin, ImportExportMixin, BaseUserAdmin):
 
     display_groups.short_description = 'Groups'  # Set the column hea
 
-    list_display = ('email', 'full_name', 'mobile_phone', 'display_groups',)
+    list_display = ('email', 'full_name', 'username', 'mobile_phone', 'display_groups',)
     list_filter = [('last_name', DropdownFilter), ('first_name', DropdownFilter),('groups',RelatedDropdownFilter)]
     search_fields = ('email', 'last_name','first_name',)
     ordering = ('last_name','first_name',)

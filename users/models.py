@@ -36,6 +36,7 @@ class UserManager(BaseUserManager):
 
 class User(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(max_length=254, unique=True)
+    username = models.CharField(max_length=50, blank=True, null=True)
     first_name = models.CharField(max_length=150)
     last_name = models.CharField(max_length=254, null=True, blank=True)
     mobile_phone = PhoneNumberField(blank=True)
@@ -46,8 +47,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField(default=True)
     last_login = models.DateTimeField(null=True, blank=True)
     date_joined = models.DateTimeField(auto_now_add=True)
-    username = models.CharField(max_length=50, blank=True, null=True)
-    notes = models.TextField()
+    notes = models.TextField(null=True, blank=True)
 
     USERNAME_FIELD = 'email'
     EMAIL_FIELD = 'email'
@@ -58,11 +58,10 @@ class User(AbstractBaseUser, PermissionsMixin):
     def get_absolute_url(self):
         return "/users/%i/" % (self.pk)
 
-
-
+# Not going to use this table I think
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    notes = models.TextField(blank=True)
+    notes_extra = models.TextField(null=True, blank=True)
 
     def __str__(self):
         return f"Profile for {self.user.email}"

@@ -23,6 +23,8 @@ urlpatterns = [
     path('lessons_orders/',
          include('lessons_orders.urls', namespace='lessons_orders')),
     path('lessons_payment/', include('lessons_payment.urls', namespace='lessons_payment')),
+    path('', include('lessons_bookings.urls', namespace='lessons_bookings')),
+
     path('swims/',
          include('swims.urls', namespace='swims')),
     path('swims_cart/',

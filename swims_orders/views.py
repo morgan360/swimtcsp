@@ -8,57 +8,71 @@ from django.utils import timezone
 from datetime import timedelta
 from utils.date_utils import get_next_occurrence
 
+
 @login_required
 def order_create(request):
-    order_type = request.GET['value']
+    order_type = request.GET.get('value', 'default_value')
     current_user = request.user
-    cart = Cart(request)  # Assuming you've imported the Cart class properly
+    cart = Cart(request)  # Assuming Cart class is imported
 
-    # Retrieve the first product_id from the cart before creating the order
-    product_id = None
-    for product_id, _, _ in cart:  # Iterate through the cart items to get the first product_id
-        break
-    try:
-        product = PublicSwimProduct.objects.get(id=product_id)
-    except Product.DoesNotExist:
-        # Handle the case where the product_id does not exist
-        # For example, raise an exception or return an error response
-        return HttpResponse("Product does not exist")
+    # Initialize product variable
+    product = None
 
-    # Now you can access the day_of_week from the product instance
-    # day_of_week = product.day_of_week
-
-    next_occurrence = get_next_occurrence(product.day_of_week)
-    order = Order.objects.create(user=request.user, booking=next_occurrence, product_id=product_id)
-
-
-
+    # Attempt to retrieve the first product from the cart
     for product_id, variation_id, quantity in cart:
-        product = PublicSwimProduct.objects.get(id=product_id)
-        variations = PriceVariant.objects.get(id=variation_id)
-        # Create each item
-        OrderItem.objects.create(order=order, product=product,
-                                 variant=variations.variant,
-                                 price=variations.price,
-                                 quantity=quantity)
+        try:
+            product = PublicSwimProduct.objects.get(id=product_id)
+            break
+        except PublicSwimProduct.DoesNotExist:
+            continue
 
+    # Check if a valid product is found
+    if not product:
+        return HttpResponse("No valid product in cart")
+
+    # Create the order with the first found product
+    next_occurrence = get_next_occurrence(product.day_of_week)
+    order = Order.objects.create(user=request.user, booking=next_occurrence, product=product)
+
+    # Process each cart item
+    for product_id, variation_id, quantity in cart:
+        try:
+            product = PublicSwimProduct.objects.get(id=product_id)
+            variation = PriceVariant.objects.get(id=variation_id)
+            OrderItem.objects.create(
+                order=order,
+                variant=variation,  # Pass the PriceVariant instance
+                quantity=quantity
+            )
+        except (PublicSwimProduct.DoesNotExist, PriceVariant.DoesNotExist) as e:
+            # Handle exceptions
+            return HttpResponse(f"Error processing order: {e}")
+
+    # Clear cart and set session order ID
     cart.clear()
     order_created(order.id)
-    # Set the order in the session
     request.session['order_id'] = order.id
-    # redirect for payment
+
+    # Redirect to payment process
     return redirect(reverse('swims_payment:process'))
 
-    current_user = request.user
-    # Retrieve the order items for the created order
+
+def order_confirmation(request):
+    # Assuming the order ID is stored in the session after payment
+    order_id = request.session.get('order_id')
+    if not order_id:
+        # Handle case where there is no order ID in session
+        return HttpResponse("No order found")
+
+    # Retrieve the order and its items
+    order = Order.objects.get(id=order_id)
     order_items = OrderItem.objects.filter(order=order)
-    return render(request,
-                  'swims_orders/order/created.html',
-                  {'order': order,
-                   'order_type': order_type,
-                   'order_items': order_items,
-                   # Pass the order_items to the template
-                   'current_user': current_user})
+
+    return render(request, 'swims_orders/order/created.html', {
+        'order': order,
+        'order_items': order_items,
+        'current_user': request.user
+    })
 
 
 def order_created(order_id):

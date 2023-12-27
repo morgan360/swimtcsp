@@ -76,13 +76,16 @@ class PublicSwimProduct(models.Model):
         start_time_formatted = self.start_time.strftime("%I:%M %p")
         return f"{self.category} - {dict(self.DAY_CHOICES).get(self.day_of_week)} - {start_time_formatted}"
 
-    def create_default_variant(self):
-        default_variant = PriceVariant.objects.create(
-            product=self,
-            variant="Adult",
-            price=9.0  # Set the default price here
-        )
-        return default_variant
+    def create_default_variants(self):
+        default_variants = ['Adult', 'Child', 'OAP', 'Student', 'Infant']
+        for variant_name in default_variants:
+            # Check if the variant already exists for this product
+            if not PriceVariant.objects.filter(product=self, variant=variant_name).exists():
+                PriceVariant.objects.create(
+                    product=self,
+                    variant=variant_name,
+                    price=9.0  # You can set different prices for each if needed
+                )
 
 
 @receiver(pre_save, sender=PublicSwimProduct)
@@ -92,11 +95,12 @@ def update_product_name_and_slug(sender, instance, **kwargs):
 
 
 @receiver(post_save, sender=PublicSwimProduct)
-def create_default_variant(sender, instance, created, **kwargs):
+def create_default_variants(sender, instance, created, **kwargs):
     if created:
-        instance.create_default_variant()
+        instance.create_default_variants()
 
 
+# Handle Varients for each product
 # Prices for OAP, Children etc.
 class PriceVariant(models.Model):
     VARIANT_CHOICES = [
@@ -104,12 +108,16 @@ class PriceVariant(models.Model):
         ('Child', 'Child'),
         ('OAP', 'OAP'),
         ('Student', 'Student'),
+        ('Infant', 'Infant'),
     ]
     product = models.ForeignKey(PublicSwimProduct, on_delete=models.CASCADE,
                                 related_name='price_variants')
     variant = models.CharField(max_length=10, choices=VARIANT_CHOICES,
                                blank=True)
     price = models.DecimalField(max_digits=10, decimal_places=2, null=True, )
+
+    class Meta:
+        unique_together = ('product', 'variant')
 
     def __str__(self):
         return f'{self.product.name} - {self.variant}'

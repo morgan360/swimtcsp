@@ -1,28 +1,31 @@
 from import_export import resources, fields
 from .models import Swimling, User
-from import_export.widgets import ForeignKeyWidget
+from import_export.widgets import ForeignKeyWidget, ManyToManyWidget
+from django.contrib.auth.models import Group
+
+
+class GroupResource(resources.ModelResource):
+    class Meta:
+        model = Group
 
 
 class UserResource(resources.ModelResource):
-    # category_id = fields.Field(attribute='name')
+    groups = fields.Field(
+        column_name='groups',
+        attribute='groups',
+        widget=ManyToManyWidget(Group, field='name')
+    )
 
     class Meta:
         model = User
-        import_id_fields = ('id',)
-        fields = ('id', 'first_name', 'last_name', 'email', 'mobile_phone', 'other_phone', 'notes',
-                  'username', 'groups')
+        fields = ('id', 'email', 'username', 'first_name', 'last_name', 'mobile_phone', 'other_phone', 'notes', 'groups')
+        import_id_fields = ('id',)  # Assuming 'id' is used to identify unique records for update
 
-        def before_import(self, dataset, using_transactions, dry_run, **kwargs):
-            # Map the group names to Group objects
-            group_names = dataset['groups'].split(',') if 'groups' in dataset else []
-            groups = Group.objects.filter(name__in=group_names)
-            dataset.append_col(groups, header="groups")
-
-        def save_instance(self, instance, using_transactions=True, dry_run=False):
-            # Save the instance with groups
-            super().save_instance(instance, using_transactions, dry_run)
-            if 'groups' in self.fields and hasattr(instance, 'groups'):
-                instance.groups.set(self.fields['groups'].clean())
+    def before_import_row(self, row, **kwargs):
+        if 'groups' in row:
+            group_names = [name.strip() for name in row['groups'].split(',') if name.strip()]
+            for name in group_names:
+                Group.objects.get_or_create(name=name)
 
 
 class SwimlingResource(resources.ModelResource):

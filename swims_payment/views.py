@@ -32,14 +32,18 @@ def payment_process(request):
             },
             'line_items': []
         }
-        # add order items to the Stripe checkout session
+        # Retrieve the product from the Order
+        product = order.product
+
+        # Add order items to the Stripe checkout session
         for item in order.items.all():
+            price = item.variant.get_price()  # Get the price from the PriceVariant
             session_data['line_items'].append({
                 'price_data': {
-                    'unit_amount': int(item.price * Decimal('100')),
+                    'unit_amount': int(price * Decimal('100')),  # Convert to cents
                     'currency': 'eur',
                     'product_data': {
-                        'name': item.product.name,
+                        'name': product.name,  # Use the product name from the Order
                     },
                 },
                 'quantity': item.quantity,

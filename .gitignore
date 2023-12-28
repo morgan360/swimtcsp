@@ -47,3 +47,6 @@ htmlcov/
 venv/
 env/
 node_modules/
+
+# My Stuff
+import_csv/

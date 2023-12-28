@@ -1,0 +1,16 @@
+
+pip install "django-phonenumber-field[phonenumberslite]"
+
+ 'phonenumber_field',
+
+
+
+ # Phone Number Field
+PHONENUMBER_DB_FORMAT = 'NATIONAL'
+PHONENUMBER_DEFAULT_REGION = 'IE'
+
+
+from phonenumber_field.modelfields import PhoneNumberField
+
+
+django-phonenumber-field

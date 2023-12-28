@@ -19,6 +19,8 @@ class Order(models.Model):
     class Meta:
         ordering = ['-created']
         indexes = [models.Index(fields=['booking'])]
+        verbose_name = "Swim Order"
+        verbose_name_plural = "Swim Orders"
 
     def __str__(self):
         return f'Order {self.id}'
@@ -44,3 +46,7 @@ class OrderItem(models.Model):
 
     def get_cost(self):
         return self.variant.get_price() * self.quantity
+
+    class Meta:
+        verbose_name = "Swim Orderitem"
+        verbose_name_plural = "Swim Orderitems"

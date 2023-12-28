@@ -80,7 +80,7 @@ class SwimOrderAdmin(ImportExportModelAdmin):
 class OrderProxy(Order):
     class Meta:
         proxy = True
-        verbose_name_plural = "Today's Orders"
+        verbose_name_plural = "Today's Swim Orders"
 
     # You can customize the display name here
     def __str__(self):
@@ -130,7 +130,7 @@ class OrderNext7DaysProxy(Order):
         verbose_name_plural = "Orders in Next 7 Days"
 
     def __str__(self):
-        return f"Order for Next 7 Days - {self.pk}"
+        return f"Swim Orders for Next 7 Days - {self.pk}"
 
 
 @admin.register(OrderNext7DaysProxy)

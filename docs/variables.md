@@ -1,22 +1,21 @@
+# variables
+
 [Index](index.md)
 
 [enviornment variable](https://dev.to/earthcomfy/django-how-to-keep-secrets-safe-with-python-dotenv-5811)
 
+pip install python-dotenv create a .env in your root directory
 
-pip install python-dotenv
-create a .env in your root directory
+SECRET\_KEY = str(os.getenv('SECRET\_KEY'))
 
-SECRET_KEY = str(os.getenv('SECRET_KEY'))
+* This is stored in manage.py, wsgi.py and asgi.py\
 
-- This is stored in manage.py, wsgi.py and asgi.py <br>
-- DJANGO_SETTINGS_MODULE = str(os.getenv('SECRET_KEY'))
-os.environ.setdefault('DJANGO_SETTINGS_MODULE',
-                         str(os.getenv('DJANGO_SETTINGS_MODULE')))
-- DJANGO_SETTINGS_MODULE = 'config.local_settings'
-- DJANGO_SETTINGS_MODULE = 'config.production_settings'
-- ./manage.py migrate
+* DJANGO\_SETTINGS\_MODULE = str(os.getenv('SECRET\_KEY')) os.environ.setdefault('DJANGO\_SETTINGS\_MODULE', str(os.getenv('DJANGO\_SETTINGS\_MODULE')))
+* DJANGO\_SETTINGS\_MODULE = 'config.local\_settings'
+* DJANGO\_SETTINGS\_MODULE = 'config.production\_settings'
+* ./manage.py migrate
 
-### Setup for Manage.py
+#### Setup for Manage.py
 
 ```Python
 def main():

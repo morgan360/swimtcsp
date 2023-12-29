@@ -6,7 +6,7 @@
 * [CSS not loading for Admin when DEBUG = False](Reverse-statix-etc-Problems.md)
 * [Accounts](accounts.md)
 * [admin](admin.md)
-* [commands](commands.md)
+* [Commands](commands.md)
 * [deploying\_site](deploying\_site.md)
 * [import\_export](import\_export.md)
 * [index](index.md)

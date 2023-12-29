@@ -108,17 +108,15 @@
     <!-- ... (the rest of your code) ... -->
 
     <!-- ************* Footer **************-->
-    {% block footer %}
-        <footer class="row">
-            <div class="col-md-6  ml-6 text-left">
-                {% if current_term_formatted %}
-                    Current Term: {{ current_term_formatted }}
-                {% endif %}
-            </div>
-            <div class="col-md-6 text-right">
-                 <p>&copy; Morgan - {{ FOOTER_MESSAGE }}</p>
-            </div>
-        </footer>
+{% block footer %}
+    <footer class="row">
+        <div class="col-md-6 ml-6 text-left">
+            Current Term: {{ term }}
+        </div>
+        <div class="col-md-6 text-right">
+            <p>&copy; Morgan - {{ FOOTER_MESSAGE }}</p>
+        </div>
+    </footer>
     {% endblock %}
 
 </div>

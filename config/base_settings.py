@@ -99,8 +99,8 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 # Mine
-                'lessons_bookings.context_processors.current_term',
-                'home.context_processors.footer_message',
+                'utils.context_processors.get_term',
+                'utils.context_processors.footer_message',
             ],
         },
     },
@@ -126,13 +126,21 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/4.1/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'en-gb'
 
 TIME_ZONE = 'Europe/Dublin'
 
 USE_I18N = True
 
 USE_TZ = True
+
+# European Date Format (e.g., 31/12/2023)
+DATE_FORMAT = 'd/m/Y'
+
+# You can also set the short date format
+SHORT_DATE_FORMAT = 'd/m/Y'
+
+
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.1/howto/static-files/

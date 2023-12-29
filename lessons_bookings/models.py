@@ -3,6 +3,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from lessons.models import Product
 from users.models import Swimling
+from django.utils.formats import date_format
 # from lessons_orders.models import Order
 # Because of circular references had to use string references instead: 'lessons_orders.Order'
 
@@ -25,6 +26,12 @@ class Term(models.Model):
 
     def __str__(self):
         return f"{self.id}"
+    # Method to bring back formated term
+
+    def concatenated_term(self):
+        formatted_start_date = date_format(self.start_date, "SHORT_DATE_FORMAT")
+        formatted_end_date = date_format(self.end_date, "SHORT_DATE_FORMAT")
+        return f"({self.id}) - {formatted_start_date} - {formatted_end_date}"
 
 # Contains all the bookings that have being confirmed
 class LessonEnrollment(models.Model):
@@ -58,8 +65,7 @@ class LessonAssignment(models.Model):
                                    limit_choices_to={
                                        'groups__name': 'instructors'},
                                    related_name='assignments')  # Use a related_name
-    lessons = models.ManyToManyField(
-        Product)  # Many-to-many relationship with Lesson model
+    lessons = models.ManyToManyField(Product)  # Many-to-many relationship with Lesson model
 
     def __str__(self):
         return f"Instructor {self.instructor.get_username()} assigned to {self.lessons.count()} lessons for Term {self.term}"

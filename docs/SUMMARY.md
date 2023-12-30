@@ -1,11 +1,14 @@
 # Table of contents
 
-* [Form Wizard](README.md)
+* [Admin](README.md)
+  * [Accessing Management](admin/accessing-management.md)
+* [Apps](apps.md)
+* [Form Wizard](<README (1).md>)
 * [Issues](Issues.md)
-* [Swim TCSP](<README (1).md>)
+* [Swim TCSP](<README (1) (1).md>)
 * [CSS not loading for Admin when DEBUG = False](Reverse-statix-etc-Problems.md)
 * [Accounts](accounts.md)
-* [admin](admin.md)
+* [admin](admin-1.md)
 * [Commands](commands.md)
 * [deploying\_site](deploying\_site.md)
 * [import\_export](import\_export.md)

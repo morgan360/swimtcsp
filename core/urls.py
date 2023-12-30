@@ -35,6 +35,7 @@ urlpatterns = [
          include('swims_payment.urls', namespace='swims_payment')),
     path('timetable/', include('timetable.urls')),
     path('hijack/', include('hijack.urls')),
+    path('reports/', include('reports.urls')),
 ]
 # Serve static and media files during development
 if settings.DEBUG:

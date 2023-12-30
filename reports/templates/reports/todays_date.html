@@ -1,0 +1,17 @@
+{% extends "admin/base_site.html" %}
+
+{% block title %}Reports- Admin{% endblock %}
+
+{% block branding %}
+<h1 id="site-name">TCSP Report</h1>
+{% endblock %}
+
+{% block content %}
+<div class="module">
+  <h2>Today's Date</h2>
+  <p>{{ today }}</p>
+</div><div class="module">
+  <h2>Current Term</h2>
+  <p>{{ current_term }}</p>
+</div>
+{% endblock %}

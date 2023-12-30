@@ -56,7 +56,7 @@ INSTALLED_APPS = [
     'django_filters',
     'django_admin_listfilter_dropdown',
     'hijack',
-    'hijack.contrib.admin', # add to admin panel
+    'hijack.contrib.admin',  # add to admin panel
     # My Apps
     'users',
     'home',
@@ -70,6 +70,7 @@ INSTALLED_APPS = [
     'swims_payment',
     'lessons_bookings',
     'timetable',
+    'reports',
 ]
 
 MIDDLEWARE = [
@@ -139,8 +140,6 @@ DATE_FORMAT = 'd/m/Y'
 
 # You can also set the short date format
 SHORT_DATE_FORMAT = 'd/m/Y'
-
-
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
@@ -223,7 +222,6 @@ ACCOUNT_FORMS = {
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 
 CRISPY_TEMPLATE_PACK = "bootstrap5"
-
 
 # ***  E-Commerce
 

@@ -107,10 +107,10 @@ Export as csv
 
 ### List of Notebook imports
 
-| Column 1                        | Column 2   | Notes                      |
+| Cell                            | Column 2   | Notes                      |
 | ------------------------------- | ---------- | -------------------------- |
 | Row 1                           | mor\_terms | Fill in blank dates.       |
-| Row 2                           | events     | Categories                 |
+| Bulk Query                      | Terms, etc | Categories                 |
 | public\_swim\_categories.csv    | Data       | Data                       |
 | public\_swims.csv               | products   | Data                       |
 | public\_swims\_order\_items.csv | Data       | These have to be trasposed |

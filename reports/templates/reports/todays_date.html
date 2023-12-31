@@ -1,17 +1,54 @@
 {% extends "admin/base_site.html" %}
 
-{% block title %}Reports- Admin{% endblock %}
+{% block title %}Reports - Admin{% endblock %}
 
 {% block branding %}
 <h1 id="site-name">TCSP Report</h1>
 {% endblock %}
 
 {% block content %}
+<style>
+    .dates-table {
+        width: 30%; /* Adjust the width as needed */
+        {#margin: auto; /* Centers the table on the page */#}
+    }
+    .dates-table th, .dates-table td {
+        text-align: left; /* Aligns text to the left */
+        padding: 8px; /* Adds some padding for better readability */
+    }
+    .dates-table th {
+        background-color: #f2f2f2; /* Light gray background for headers */
+    }
+</style>
+
 <div class="module">
-  <h2>Today's Date</h2>
-  <p>{{ today }}</p>
-</div><div class="module">
-  <h2>Current Term</h2>
-  <p>{{ current_term }}</p>
+  <h2>Important Dates</h2>
+  <table class="dates-table">
+    <tr>
+      <th>Date Type</th>
+      <th>Date</th>
+    </tr>
+    <tr>
+      <td>Today</td>
+      <td>{{ today }}</td>
+    </tr>
+    <tr>
+      <td>Current Term</td>
+      <td>{{ current_term }}</td>
+    </tr>
+    <tr>
+      <td>Previous Term</td>
+      <td>{{ previous_term }}</td>
+    </tr>
+    <tr>
+      <td>Next Term</td>
+      <td>{{ next_term }}</td>
+    </tr>
+      <tr>
+      <td>Current Phase</td>
+      <td>{{ current_phase }}</td>
+    </tr>
+  </table>
 </div>
 {% endblock %}
+

@@ -15,5 +15,5 @@
 * [index](index.md)
 * [newproject](newproject.md)
 * [Webhooks](order\_processing.md)
-* [terms](terms.md)
+* [Terms](terms.md)
 * [variables](variables.md)

@@ -2,12 +2,16 @@ from django.contrib import admin
 from django.contrib.admin import SimpleListFilter
 from import_export.admin import ImportExportMixin
 from .models import Term, LessonAssignment, LessonEnrollment
-from .resources import EnrollementResource, TermResource
+from lessons.models import Product, Category
+from .resources import EnrollmentResource, TermResource
 from django.contrib.auth import get_user_model
 import django_filters
 from utils.terms_utils import get_current_term, get_previous_term, get_next_term
 from custom_admins.lessonsadmin import lessons_admin_site
 from django_admin_listfilter_dropdown.filters import DropdownFilter, RelatedDropdownFilter, ChoiceDropdownFilter
+from django.utils.html import format_html
+from django.urls import reverse
+
 
 # from lessons_bookings.models import Term
 
@@ -50,23 +54,52 @@ class TermFilter(admin.SimpleListFilter):
             )
 
 
+class CategoryFilter(admin.SimpleListFilter):
+    title = 'Category'  # Human-readable title which will be displayed
+    parameter_name = 'category'  # URL query parameter name
+
+    def lookups(self, request, model_admin):
+        # Assuming Category is related to Product
+        categories = set(Product.objects.values_list('category__name', 'category__id'))
+        return [(id, name) for name, id in categories]
+
+    def queryset(self, request, queryset):
+        if self.value():
+            return queryset.filter(lesson__category__id=self.value())
+        return queryset
+
+
+class DayOfWeekFilter(admin.SimpleListFilter):
+    title = 'Day of Week'
+    parameter_name = 'day_of_week'
+
+    def lookups(self, request, model_admin):
+        return Product.DAY_CHOICES
+
+    def queryset(self, request, queryset):
+        if self.value() is not None:
+            return queryset.filter(lesson__day_of_week=self.value())
+        return queryset
+
+
 @admin.register(LessonEnrollment)
 class LessonEnrollmentAdmin(ImportExportMixin, admin.ModelAdmin):
-    resource_class = EnrollementResource
-    list_display = ['swimling', 'term', 'lesson']
+    resource_class = EnrollmentResource
+    list_display = ['swimling', 'term', 'lesson', 'order_link']
     list_display_links = ('swimling',)
-    # list_editable = ['lesson']
-    # search_fields = ('swimling',)
-    list_filter = [TermFilter, ('lesson', admin.RelatedOnlyFieldListFilter)]
+    search_fields = ('swimling__first_name', 'swimling__last_name',)  # Adjust the fields based on your Swimling model
+    list_filter = [TermFilter, CategoryFilter, DayOfWeekFilter, ('lesson', admin.RelatedOnlyFieldListFilter)]
     list_per_page = 20
 
+    def order_link(self, obj):
+        if obj.order:
+            # Corrected URL pattern for the Order model's change page
+            link = reverse("admin:lessons_orders_order_change", args=[obj.order.id])
+            return format_html('<a href="{}">{}</a>', link, obj.order)
+        return '-'
 
-#     def get_queryset(self, request):
-#         queryset = super().get_queryset(request)
-#         specific_term = Term.objects.get(id=48)  # Replace with your desired term
-#         queryset = queryset.filter(term=specific_term).select_related('swimling', 'lesson').prefetch_related(
-#             'order__id')
-#         return queryset
+    order_link.short_description = 'Order'
+
 
 @admin.register(LessonAssignment)
 class LessonAssignmentAdmin(admin.ModelAdmin):
@@ -91,7 +124,6 @@ class TermAdmin(ImportExportMixin, admin.ModelAdmin):
 
 
 admin.site.register(Term, TermAdmin)
-
 
 # Register to Custom Admin
 lessons_admin_site.register(LessonEnrollment, LessonEnrollmentAdmin)

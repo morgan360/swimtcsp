@@ -2,6 +2,7 @@ from import_export import resources, fields
 from .models import Swimling, User
 from import_export.widgets import ForeignKeyWidget, ManyToManyWidget
 from django.contrib.auth.models import Group
+from import_export.results import RowResult
 
 
 class GroupResource(resources.ModelResource):
@@ -18,7 +19,8 @@ class UserResource(resources.ModelResource):
 
     class Meta:
         model = User
-        fields = ('id', 'email', 'username', 'first_name', 'last_name', 'mobile_phone', 'other_phone', 'notes', 'groups')
+        fields = (
+        'id', 'email', 'username', 'first_name', 'last_name', 'mobile_phone', 'other_phone', 'notes', 'groups')
         import_id_fields = ('id',)  # Assuming 'id' is used to identify unique records for update
 
     def before_import_row(self, row, **kwargs):
@@ -34,26 +36,19 @@ class SwimlingResource(resources.ModelResource):
         import_id_fields = ('id',)
         fields = ('id', 'first_name', 'last_name', 'guardian', 'notes', 'dob')
 
-        def import_row(self, row, instance_loader, **kwargs):
-            # overriding import_row to ignore errors and skip rows that fail to import
-            # without failing the entire import
-            import_result = super(ModelResource, self).import_row(
-                row, instance_loader, **kwargs
-            )
+    def import_row(self, row, instance_loader, **kwargs):
+        import_result = super().import_row(row, instance_loader, **kwargs)
 
-            if import_result.import_type == RowResult.IMPORT_TYPE_ERROR:
-                import_result.diff = [
-                    row.get(name, '') for name in self.get_field_names()
-                ]
+        if import_result.import_type == RowResult.IMPORT_TYPE_ERROR:
+            # Manually construct field names list
+            field_names = self._meta.fields
 
-                # Add a column with the error message
-                import_result.diff.append(
-                    "Errors: {}".format(
-                        [err.error for err in import_result.errors]
-                    )
-                )
-                # clear errors and mark the record to skip
-                import_result.errors = []
-                import_result.import_type = RowResult.IMPORT_TYPE_SKIP
+            # Log the row values and the errors
+            import_result.diff = [row.get(name, '') for name in field_names]
+            import_result.diff.append("Errors: {}".format(", ".join([str(err.error) for err in import_result.errors])))
 
-            return import_result
+            # Clear errors and mark the record to skip
+            import_result.errors = []
+            import_result.import_type = RowResult.IMPORT_TYPE_SKIP
+
+        return import_result

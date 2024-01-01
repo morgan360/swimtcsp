@@ -1,17 +1,22 @@
 from import_export import resources, fields
-from .models import Area, Product, Category
+from .models import Area, Product, Category, Program
 from import_export.widgets import ForeignKeyWidget
 import datetime
 from django.utils.text import slugify
 
 
 class AreaResource(resources.ModelResource):
-    category_id = fields.Field(attribute='name')
-
     class Meta:
-        model =Area
+        model = Area
         import_id_fields = ('id',)
-        fields = ('id', 'category',)
+        fields = ('id', 'name',)
+
+
+class ProgramResource(resources.ModelResource):
+    class Meta:
+        model = Program
+        import_id_fields = ('id',)
+        fields = ('id', 'name',)
 
 
 class CategoryResource(resources.ModelResource):
@@ -35,17 +40,19 @@ class ProductResource(resources.ModelResource):
     time_end = fields.Field(attribute='end_time')
     # active = fields.Field(attribute='available')
     lesson_id = fields.Field(attribute='category')
+
     # category_id = fields.Field(attribute='group')
 
     class Meta:
         model = Product
         import_id_fields = ('id',)
-        fields = ('id', 'day_id', 'category', 'num_places', 'num_weeks', 'price', 'time_start', 'time_end', 'active', 'area')
+        fields = (
+            'id', 'day_id', 'category', 'num_places', 'num_weeks', 'price', 'time_start', 'time_end', 'active', 'area')
 
     # Change the value before you import into model
     def before_import_row(self, row, **kwargs):
         # row['day_id'] = int(row['day_id']) - 1
-        row['day_id'] = int(row['day_id'])-1
+        row['day_id'] = int(row['day_id']) - 1
         row['time_start'] = datetime.datetime.strptime(row['time_start'], '%H:%M:%S').time()
         row['time_end'] = datetime.datetime.strptime(row['time_end'], '%H:%M:%S').time()
 

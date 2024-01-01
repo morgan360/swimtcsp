@@ -102,5 +102,9 @@ class LessonAssignment(models.Model):
                                    related_name='assignments')  # Use a related_name
     lessons = models.ManyToManyField(Product)  # Many-to-many relationship with Lesson model
 
+    class Meta:
+        verbose_name = "Instructor Assignment"
+        verbose_name_plural = "Instructor Assignments"
+
     def __str__(self):
         return f"Instructor {self.instructor.get_username()} assigned to {self.lessons.count()} lessons for Term {self.term}"

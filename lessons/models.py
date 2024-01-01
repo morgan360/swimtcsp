@@ -5,6 +5,7 @@ from django.db.models.signals import pre_save
 from django.dispatch import receiver
 from django.utils.text import slugify
 
+
 # The modules here represent the structer of lessons and classes in TCSP.
 # Product : represents a series of lessons for a term. Each individual lesson is called a class.
 # Lessons: (same as Product) are subsets of Categories which really define a level of courses.
@@ -25,6 +26,7 @@ class Program(models.Model):
 
     def __str__(self):
         return self.name
+
 
 # A list of categores of lessons
 class Category(models.Model):
@@ -108,6 +110,7 @@ class Product(models.Model):
     def get_num_left(self):
         return self.num_places - self.get_num_sold()
 
+
 # update name everytime fields are changed
 @receiver(pre_save, sender=Product)
 def update_product_name(sender, instance, **kwargs):
@@ -115,6 +118,21 @@ def update_product_name(sender, instance, **kwargs):
     instance.slug = slugify(instance.name)
 
 
-# @receiver(pre_save, sender=Category)
-# def update_product_name(sender, instance, **kwargs):
-#     instance.slug = slugify(instance.name)
+# Create Slug
+@receiver(pre_save, sender=Category)
+def update_category_slug(sender, instance, **kwargs):
+    if not instance.slug:  # Generate slug only if it doesn't already exist
+        instance.slug = slugify(instance.name)
+
+        # Ensure slug uniqueness (basic example)
+        original_slug = instance.slug
+        queryset = Category.objects.filter(slug__iexact=instance.slug)
+        if instance.pk:  # Exclude current instance in case of update
+            queryset = queryset.exclude(pk=instance.pk)
+        count = 1
+        while queryset.exists():
+            instance.slug = f"{original_slug}-{count}"
+            count += 1
+            queryset = Category.objects.filter(slug__iexact=instance.slug)
+            if instance.pk:
+                queryset = queryset.exclude(pk=instance.pk)

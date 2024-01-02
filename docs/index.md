@@ -7,7 +7,7 @@
 * [Commands](commands.md)
 * [New Project](newproject.md)
 * [Diagrams](swim.svg)
-* [Problems](Reverse-statix-etc-Problems.md)\
+* [Problems](reverse-statix-etc-problems.md)\
 
 
 \

@@ -104,3 +104,5 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 ### Transfering site
 
 pip freeze > requirements.txt
+
+pip install -r requirements.txt

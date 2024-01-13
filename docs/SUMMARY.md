@@ -14,7 +14,7 @@
 * [deploying\_site](deploying\_site.md)
 * [import\_export](import\_export.md)
 * [index](index.md)
-* [newproject](newproject.md)
+* [Create a New Project](newproject.md)
 * [Webhooks](order\_processing.md)
 * [Terms](terms.md)
 * [variables](variables.md)

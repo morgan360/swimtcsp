@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}
+    {% if category %}{{ category.name }}{% else %}Products {% endif %}
+{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <div class="row">
+            <div class="col-md-3">
+                <h3>Program</h3>
+                <select id="id_category" class="form-select custom-select-width"
+                        name="program"
+                        hx-get="{% url 'lessons:update_lesson_list' %}"
+                        hx-include = "#days_list"
+                        hx-trigger="change"
+                        hx-target="#lesson_list"
+                >
+                    <option value="">Select a Program</option>
+                    {% for program in programs %}
+                        <option value="{{ program.id }}">{{ program.name }}</option>
+                    {% endfor %}
+                </select>
+                <div class='my-4'>
+                    <h3>Day</h3>
+                    <select id="days_list" class="form-select custom-select-width"
+                            name="day"
+                            hx-include="#id_category"
+                            hx-get="{% url 'lessons:update_lesson_list' %}"
+                            hx-trigger="change"
+                            hx-target="#lesson_list"
+                    >
+                        <option value="">Select a Day</option>
+                        {% for day_value, day_display in days %}
+                            <option value="{{ day_value }}">{{ day_display }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="col-md-9">
+                <div id="lesson_list" class='my-4'>
+                    {% include 'partials/lesson_list.html' %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

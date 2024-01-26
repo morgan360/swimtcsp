@@ -1,0 +1,29 @@
+{% load crispy_forms_tags %} <!-- Load Crispy Forms tags for better form rendering -->
+
+<!-- Button to open the modal -->
+<button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal">
+    Add new Swimmer <!-- Text displayed on the button -->
+</button>
+
+<!-- Modal Structure -->
+<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true" x-data="{ showModal: false }">
+    <!-- Modal dialog box -->
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <!-- Modal header -->
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Add New Swimling</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" @click="showModal = false"></button>
+            </div>
+            <!-- Modal body -->
+            <div class="modal-body">
+                <!-- Form within the modal -->
+                <form hx-post="{% url 'lessons:add_new_swimling' %}" hx-trigger="submit" hx-target="#information" action="#" hx-swap="outerHTML">
+                    {% csrf_token %}
+                    {{ form|crispy }}
+                    <input @click.debounce.2000ms="showModal = false" type="submit" class="btn btn-primary" value="Submit">
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

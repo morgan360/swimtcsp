@@ -3,19 +3,23 @@ from django.views.decorators.http import require_POST
 from lessons.models import Product
 from users.models import Swimling
 from .cart import Cart
-from .forms import CartAddProductForm
+from .forms import CartAddProductForm, NewSwimlingForm
+from django.contrib.auth.decorators import login_required
 
-
+@login_required
 @require_POST
 def cart_add(request, product_id):
     cart = Cart(request)
     product = get_object_or_404(Product, id=product_id)
-    form = CartAddProductForm(request.user, request.POST)  # Pass the user as the first argument
+    form = CartAddProductForm(user=request.user, data=request.POST)  # Corrected form instantiation
     if form.is_valid():
         cd = form.cleaned_data
         swimling = cd['swimling']
         cart.add(product=product, swimling=swimling)
-    return redirect('lessons_cart:cart_detail')
+        return redirect('lessons_cart:cart_detail')
+    else:
+        # Handle invalid form (optional: return an error message)
+        return redirect('some_error_handling_view')
 
 
 @require_POST

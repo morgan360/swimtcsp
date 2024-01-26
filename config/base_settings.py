@@ -71,6 +71,7 @@ INSTALLED_APPS = [
     'lessons_bookings',
     'timetable',
     'reports',
+    'test_area',
 ]
 
 MIDDLEWARE = [
@@ -221,7 +222,7 @@ ACCOUNT_FORMS = {
 # CrispyForms
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 
-CRISPY_TEMPLATE_PACK = "bootstrap5"
+CRISPY_TEMPLATE_PACK = 'bootstrap5'
 
 # ***  E-Commerce
 

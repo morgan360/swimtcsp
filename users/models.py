@@ -72,7 +72,7 @@ class UserProfile(models.Model):
 class Swimling(models.Model):
     guardian = models.ForeignKey(User, on_delete=models.CASCADE, blank=True,
                                  null=True)
-    first_name = models.CharField(max_length=255, blank=True, null=True)
+    first_name = models.CharField(max_length=255)
     last_name = models.CharField(max_length=255, blank=True, null=True)
     dob = models.DateField(null=True, blank=True)
     sco_role_num = models.CharField(max_length=6, blank=True, null=True)

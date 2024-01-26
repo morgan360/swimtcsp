@@ -1,0 +1,7 @@
+<!-- reports/partials/lesson_options.html -->
+<select name="lesson" id="id_lesson" class="form-select custom-select-width">
+    <option value="">Select a Lesson</option>
+    {% for lesson in lessons %}
+        <option value="{{ lesson.id }}">{{ lesson.name }}</option>
+    {% endfor %}
+</select>

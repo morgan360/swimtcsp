@@ -110,6 +110,14 @@ class Product(models.Model):
     def get_num_left(self):
         return self.num_places - self.get_num_sold()
 
+    # new method
+    def remaining_spaces(self):
+        enrollments_count = self.lessonenrollment_set.count()
+        return max(self.num_places - enrollments_count, 0)
+
+    @property
+    def is_full(self):
+        return self.remaining_spaces() == 0
 
 # update name everytime fields are changed
 @receiver(pre_save, sender=Product)

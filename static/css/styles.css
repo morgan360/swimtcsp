@@ -12,3 +12,7 @@
   color: #777; /* Dark gray text color */
   cursor: not-allowed; /* Show 'not-allowed' cursor on hover */
 }
+
+footer {
+    margin-top: 50px; /* Adjust this value as needed */
+}

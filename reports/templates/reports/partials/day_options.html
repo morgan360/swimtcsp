@@ -1,0 +1,19 @@
+<!-- day_options.html -->
+<select name="day" id="id_day" class="form-select custom-select-width"
+        hx-get="{% url 'update-lessons' %}"
+        hx-trigger="change"
+        hx-target="#id_lesson"
+        hx-include="#id_category">
+    <option selected>Choose a Day</option>
+
+    {% for day_value, day_display in days %}
+        <option value="{{ day_value }}">{{ day_display }}</option>
+    {% endfor %}
+</select>
+{#OOB#}
+{% if is_htmx %}
+<div class="col-md-4" id="id_lesson"  hx-swap-oob="true">
+    {% include 'reports/partials/lesson_options.html' %}
+    <!-- Lesson options will be populated here -->
+</div>
+{% endif %}

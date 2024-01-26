@@ -12,86 +12,18 @@
     <link rel="stylesheet" href="{% static '/css/styles.css' %}">
     <script src="{% static '/js/users/custom.js' %}"></script>
     <script src="{% static 'js/jquery/jquery.min.js' %}"></script>
+    {# Alpine.js #}
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <!-- HTMX -->
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
 
-  <!-- HTMX -->
-    <script src="https://unpkg.com/htmx.org@1.6.0"></script>
+    {#title#}
     <title>{% block title %}TCSP Home{% endblock %}</title>
 </head>
 
 <body class="d-flex flex-column min-vh-100">
 <div class="container-fluid">
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
-
-        <a class="navbar-brand" href="{% url 'home' %}">
-            <img src="{% static 'img/logo.png' %}" alt="logo" width="40"
-                 height="30" class="d-inline-block align-text-top">
-            TCSP
-        </a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
-                data-bs-target="#navbarNav" aria-controls="navbarNav"
-                aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="nav">
-                <li class="nav-item">
-                    <a class="nav-link active" aria-current="page"
-                       href="{% url 'home' %}">Home</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/contact/">Contact Us</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/register/">Register Swim Class</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/admin/">Admin</a>
-                </li>
-            </ul>
-        </div>
-
-        <div class="collapse navbar-collapse" id="bookingNavbar">
-            <ul class="nav">
-                {% if user.is_authenticated %}
-                    <li class="nav-item">
-                        <div class="dropdown">
-                            <a class="nav-link dropdown-toggle" href="#"
-                               role="button" id="bookingDropdown"
-                               data-bs-toggle="dropdown" aria-haspopup="true"
-                               aria-expanded="false">
-                                Booking
-                            </a>
-                            <div class="dropdown-menu"
-                                 aria-labelledby="bookingDropdown">
-                                <a class="dropdown-item" href="/users/profile">Customer</a>
-                                <a class="dropdown-item" href="/lessons/">Lessons</a>
-                                <a class="dropdown-item"
-                                   href="/swims/">Swims</a>
-                            </div>
-                        </div>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/management/">Management</a>
-                    </li>
-                    <li class="nav-item">
-                        <p class="nav-link text-success">Welcome
-                            - {{ user.first_name }}</p>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/accounts/logout">Logout</a>
-                    </li>
-                {% else %}
-                    <li class="nav-item ">
-                        <a class="nav-link" href="accounts/login">Login</a>
-                    </li>
-                    <li class="nav-item ">
-                        <a class="nav-link" href="accounts/signup">Register</a>
-                    </li>
-                {% endif %}
-            </ul>
-        </div>
-    </nav>
-
+    {% include '_navbar.html' %}
     <main class="flex-grow-1">
         {% if messages %}
             <ul class="messages list-unstyled">
@@ -108,16 +40,16 @@
     <!-- ... (the rest of your code) ... -->
 
     <!-- ************* Footer **************-->
-{% block footer %}
-    <footer class="row">
-        <div class="col-md-6 ml-6 text-left">
-            Current Term: {{ current_term }}
-        </div
-        >
-        <div class="col-md-6 text-right">
-            <p>&copy; Morgan - {{ FOOTER_MESSAGE }}</p>
-        </div>
-    </footer>
+    {% block footer %}
+        <footer class="row mt-auto">
+            <div class="col-md-6 ml-6 text-left">
+                Current Term: {{ current_term }}
+            </div
+            >
+            <div class="col-md-6 text-right">
+                <p>&copy; Morgan - {{ FOOTER_MESSAGE }}</p>
+            </div>
+        </footer>
     {% endblock %}
 
 </div>

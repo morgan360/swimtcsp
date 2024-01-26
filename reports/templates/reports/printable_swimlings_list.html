@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+{% block content %}
+<style>
+    .table-container {
+        display: flex;
+        justify-content: center;
+    }
+    .custom-table {
+        width: auto;
+        max-width: 100%;
+    }
+</style>
+<script>
+function printDiv(divName) {
+    var printContents = document.getElementById(divName).innerHTML;
+    var printWindow = window.open('', '_blank');
+
+    printWindow.document.write('<html><head><title>Print</title>');
+    // Manually write the print-specific CSS here
+    printWindow.document.write('<style>');
+    printWindow.document.write('body { font-size: 12pt; margin-top: 20px; } ');
+    printWindow.document.write('h2 { text-align: center; }'); // Center the heading
+    printWindow.document.write('.table-container { width: 100%; display: block; text-align: center; } ');
+    printWindow.document.write('.custom-table { width: 70%; margin: 0 auto; } '); // Adjust table width and centering
+    printWindow.document.write('</style></head><body>');
+    printWindow.document.write(printContents);
+    printWindow.document.write('</body></html>');
+
+    printWindow.document.close();
+    setTimeout(function() {
+        printWindow.print();
+        printWindow.close();
+    }, 250);
+}
+</script>
+<div id="printableArea" class="container mt-4">
+    <h2 class="text-center mb-4">{{ product }}</h2>
+    <div class="table-container">
+        <table class="table table-bordered custom-table">
+            <thead class="thead-light">
+                <tr>
+                    <th>Swimling Name</th>
+                    <th>Notes</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for swimling in swimlings %}
+                <tr>
+                    <td>{{ swimling }}</td>
+                    <td>{{ swimling.notes }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+<button class="btn btn-primary" onclick="printDiv('printableArea')">Print</button>
+{% endblock %}

@@ -13,9 +13,9 @@ from django.utils.html import format_html
 from django.urls import reverse
 
 
-# from lessons_bookings.models import Term
-
-
+# LESSON ENROLLMENT
+# filters for the lesson list
+# 1
 class TermFilter(admin.SimpleListFilter):
     title = 'Term Selection'
     parameter_name = 'term'
@@ -54,6 +54,21 @@ class TermFilter(admin.SimpleListFilter):
             )
 
 
+# 2
+class DayOfWeekFilter(admin.SimpleListFilter):
+    title = 'Day of Week'
+    parameter_name = 'day_of_week'
+
+    def lookups(self, request, model_admin):
+        return Product.DAY_CHOICES
+
+    def queryset(self, request, queryset):
+        if self.value() is not None:
+            return queryset.filter(lesson__day_of_week=self.value())
+        return queryset
+
+
+# 3
 class CategoryFilter(admin.SimpleListFilter):
     title = 'Category'  # Human-readable title which will be displayed
     parameter_name = 'category'  # URL query parameter name
@@ -69,26 +84,14 @@ class CategoryFilter(admin.SimpleListFilter):
         return queryset
 
 
-class DayOfWeekFilter(admin.SimpleListFilter):
-    title = 'Day of Week'
-    parameter_name = 'day_of_week'
-
-    def lookups(self, request, model_admin):
-        return Product.DAY_CHOICES
-
-    def queryset(self, request, queryset):
-        if self.value() is not None:
-            return queryset.filter(lesson__day_of_week=self.value())
-        return queryset
-
-
+#  register
 @admin.register(LessonEnrollment)
 class LessonEnrollmentAdmin(ImportExportMixin, admin.ModelAdmin):
     resource_class = EnrollmentResource
     list_display = ['swimling', 'term', 'lesson', 'order_link']
     list_display_links = ('swimling',)
     search_fields = ('swimling__first_name', 'swimling__last_name',)  # Adjust the fields based on your Swimling model
-    list_filter = [TermFilter, CategoryFilter, DayOfWeekFilter, ('lesson', admin.RelatedOnlyFieldListFilter)]
+    list_filter = [TermFilter, DayOfWeekFilter, ('lesson', RelatedDropdownFilter)]
     list_per_page = 20
 
     def order_link(self, obj):
@@ -101,6 +104,8 @@ class LessonEnrollmentAdmin(ImportExportMixin, admin.ModelAdmin):
     order_link.short_description = 'Order'
 
 
+# LESSON ASSIGNMENT
+
 @admin.register(LessonAssignment)
 class LessonAssignmentAdmin(admin.ModelAdmin):
     list_display = ('term', 'instructor', 'display_lessons')
@@ -110,6 +115,8 @@ class LessonAssignmentAdmin(admin.ModelAdmin):
 
     display_lessons.short_description = 'Lessons Assigned'
 
+
+# TERM ADMIN
 
 class TermAdmin(ImportExportMixin, admin.ModelAdmin):
     resource_class = TermResource

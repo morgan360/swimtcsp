@@ -7,6 +7,7 @@ from timetable.admin import events_site
 from custom_admins.lessonsadmin import lessons_admin_site
 from custom_admins.usersadmin import users_admin_site
 from custom_admins.swimsadmin import swims_admin_site
+from test_area import urls as test_area_urls
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -51,6 +52,10 @@ urlpatterns += [path('lessonsadmin/', lessons_admin_site.urls),
                 path('usersadmin/', users_admin_site.urls),
                 path('swimsadmin/', swims_admin_site.urls)
                 ]
+# Add Admin Sites
+urlpatterns += [path('test_area/', include(test_area_urls))]
+
+
 
 
 # Change Site Labels

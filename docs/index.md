@@ -5,7 +5,7 @@
 * [Accounts](accounts.md)
 * [Env Variables](variables.md)
 * [Commands](commands.md)
-* [New Project](newproject.md)
+* [New Project](broken-reference)
 * [Diagrams](swim.svg)
 * [Problems](reverse-statix-etc-problems.md)\
 

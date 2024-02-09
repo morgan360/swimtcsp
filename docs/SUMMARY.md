@@ -16,5 +16,6 @@
 * [index](index.md)
 * [Payment](payment/README.md)
   * [Webhooks](payment/order\_processing.md)
+  * [Credit Card Details](payment/credit-card-details.md)
 * [Terms](terms.md)
 * [variables](variables.md)

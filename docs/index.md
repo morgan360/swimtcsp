@@ -3,11 +3,11 @@
 ### Documentation
 
 * [Accounts](accounts.md)
-* [Env Variables](variables.md)
-* [Commands](commands.md)
+* [Env Variables](programming/variables.md)
+* [Commands](programming/commands.md)
 * [New Project](broken-reference)
 * [Diagrams](swim.svg)
-* [Problems](reverse-statix-etc-problems.md)\
+* [Problems](problems/reverse-statix-etc-problems.md)\
 
 
 \

@@ -1,6 +1,7 @@
 # Table of contents
 
-* [Admin](README.md)
+* [Tailwind CSS](README.md)
+* [Admin](<README (1).md>)
   * [Accessing Management](admin/accessing-management.md)
 * [Apps](apps.md)
 * [To Do List](to-do-list.md)

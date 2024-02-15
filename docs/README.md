@@ -1,6 +1,4 @@
----
-description: This describes custom admin pages stup
----
+# Tailwind CSS
 
-# Admin
+python manage.py tailwind start
 

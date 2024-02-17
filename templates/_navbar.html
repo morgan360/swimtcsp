@@ -3,8 +3,7 @@
     <div class="flex-1 navbar-start">
         <div class="dropdown">
             <label tabindex="0" class="btn btn-ghost lg:hidden">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
-                     stroke="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h8m-8 6h16"/>
                 </svg>
             </label>
@@ -20,22 +19,25 @@
             {% include '_menu_items.html' %}
         </ul>
     </div>
-    <div class="flex-1 navbar-end justify-end">
-        {% if user.is_authenticated %}
-            <p>Welcome - {{ user.first_name }}</p>
-            <a class="btn" href="/accounts/logout">Logout</a>
-        {% if user.is_staff or user.is_superuser %}
-            <details class="relative z-50">
-        <summary>Administration</summary>
-            <ul class="p-2">
-                <li><a href="/admin/" class="btn">Admin Area</a></li>
-                <li><a class="btn" href="/management/">Management</a></li>
-            </ul>
-            </details>
-             {% endif %}
-        {% else %}
-            <a href="/accounts/signup" class="btn">Register</a>
-            <a class="btn" href="/accounts/login">Login</a>
-        {% endif %}
+    <div class="flex-1 navbar-end justify-end relative">
+        <div class="flex items-center space-x-2"> <!-- Container for admin and auth links -->
+            {% if user.is_authenticated %}
+                <p class ="mr-6">Welcome - {{ user.first_name }}</p>
+                {% if user.is_staff or user.is_superuser %}
+                    <details class="dropdown z-50">
+                        <summary class="text-white cursor-pointer mr-6">Administration</summary> <!-- Adjusted for 
+                        white text and removed box -->
+                        <ul class="dropdown-content menu p-2 shadow bg-base-100 rounded-box mt-1 absolute right-0">
+                            <li><a href="/admin/" class="btn">Admin Area</a></li>
+                            <li><a href="/management/" class="btn">Management</a></li>
+                        </ul>
+                    </details>
+                {% endif %}
+                <a class="btn" href="/accounts/logout">Logout</a>
+            {% else %}
+                <a href="/accounts/signup" class="btn">Register</a>
+                <a href="/accounts/login" class="btn">Login</a>
+            {% endif %}
+        </div>
     </div>
 </div>

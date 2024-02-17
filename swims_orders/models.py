@@ -47,6 +47,9 @@ class OrderItem(models.Model):
     def get_cost(self):
         return self.variant.get_price() * self.quantity
 
+    def get_unit_price(self):
+        return self.variant.get_price()
+
     class Meta:
         verbose_name = "Swim Orderitem"
         verbose_name_plural = "Swim Orderitems"

@@ -47,16 +47,20 @@ INSTALLED_APPS = [
     'allauth.socialaccount',  # Allauth
     'allauth.socialaccount.providers.google',  # Allauth
     'allauth.socialaccount.providers.facebook',  # Allauth
-    "bootstrap5",
-    'django_bootstrap_icons',
+    # "bootstrap5",
+    # 'django_bootstrap_icons',
     "crispy_forms",
-    "crispy_bootstrap5",
+    # "crispy_bootstrap5",
     'import_export',
     "phonenumber_field",
     'django_filters',
     'django_admin_listfilter_dropdown',
     'hijack',
     'hijack.contrib.admin',  # add to admin panel
+    'widget_tweaks', # Allows adding css to fields in form templates directly
+    'django_browser_reload',  # when debug load automaticaly browser
+    'tailwind',
+    'theme', # where tailwind config stored
     # My Apps
     'users',
     'home',
@@ -72,6 +76,11 @@ INSTALLED_APPS = [
     'timetable',
     'reports',
     'test_area',
+    'schools',
+    'schools_bookings',
+    'schools_cart',
+    'schools_orders',
+    'schools_payment',
 ]
 
 MIDDLEWARE = [
@@ -84,6 +93,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'hijack.middleware.HijackUserMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
+    'django_browser_reload.middleware.BrowserReloadMiddleware',
 ]
 
 ROOT_URLCONF = 'core.urls'
@@ -141,7 +151,7 @@ DATE_FORMAT = 'd/m/Y'
 
 # You can also set the short date format
 SHORT_DATE_FORMAT = 'd/m/Y'
-
+TAILWIND_APP_NAME = 'theme'
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
@@ -159,7 +169,7 @@ AUTH_USER_MODEL = 'users.User'
 # Allauth
 SITE_ID = 2
 LOGIN_REDIRECT_URL = '/'
-LOGOUT_REDIRECT_URL = '/home/'
+LOGOUT_REDIRECT_URL = '/'
 
 # ACCOUNT_AUTHENTICATION_METHOD = 'username_email'
 ACCOUNT_EMAIL_REQUIRED = True
@@ -219,10 +229,10 @@ SOCIALACCOUNT_PROVIDERS = {
 ACCOUNT_FORMS = {
     'signup': 'users.forms.CustomSignupForm',
 }
-# CrispyForms
-CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
-
-CRISPY_TEMPLATE_PACK = 'bootstrap5'
+# # CrispyForms
+# CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
+#
+# CRISPY_TEMPLATE_PACK = 'bootstrap5'
 
 # ***  E-Commerce
 

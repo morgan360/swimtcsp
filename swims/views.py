@@ -40,9 +40,11 @@ def product_detail(request, id, slug):
                                 available=True)
     cart_product_form = CartAddProductForm()
     price_variants = PriceVariant.objects.filter(product=product)
+    quantities = range(1, 11)
     context = {'product': product,
                'price_variants': price_variants,
-               'cart_product_form': cart_product_form}
+               'cart_product_form': cart_product_form,
+               'quantities': quantities,}
     return render(request,
                   'swims/product/detail.html',
                   context)

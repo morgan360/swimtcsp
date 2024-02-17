@@ -25,7 +25,7 @@ urlpatterns = [
          include('lessons_orders.urls', namespace='lessons_orders')),
     path('lessons_payment/', include('lessons_payment.urls', namespace='lessons_payment')),
     path('', include('lessons_bookings.urls', namespace='lessons_bookings')),
-
+    # Swims
     path('swims/',
          include('swims.urls', namespace='swims')),
     path('swims_cart/',
@@ -34,6 +34,14 @@ urlpatterns = [
          include('swims_orders.urls', namespace='swims_orders')),
     path('swims_payment/',
          include('swims_payment.urls', namespace='swims_payment')),
+    # Schools
+    path('schools/', include('schools.urls', namespace='schools')),
+    path('schools_cart/', include('schools_cart.urls', namespace='schools_cart')),
+    path('schools_orders/',
+         include('schools_orders.urls', namespace='schools_orders')),
+    path('schools_payment/', include('schools_payment.urls', namespace='schools_payment')),
+    path('', include('schools_bookings.urls', namespace='schools_bookings')),
+    # Others
     path('timetable/', include('timetable.urls')),
     path('hijack/', include('hijack.urls')),
     path('reports/', include('reports.urls')),
@@ -54,8 +62,8 @@ urlpatterns += [path('lessonsadmin/', lessons_admin_site.urls),
                 ]
 # Add Admin Sites
 urlpatterns += [path('test_area/', include(test_area_urls))]
-
-
+# add auto reload
+urlpatterns += [path('__reload__/', include('django_browser_reload.urls'))]
 
 
 # Change Site Labels

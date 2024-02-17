@@ -1,0 +1,80 @@
+{% load static %}
+
+{% block content %}
+    <div class="bg-blue-500 p-3">
+        <h1 class="text-2xl text-white text-center">School Swim Lessons</h1>
+    </div>
+    <div class="container mx-auto mt-6">
+        <div class="row">
+            <div class="col-md-11">
+                <table class="table table-striped">
+                    <thead>
+                    <tr>
+                        <th>Lessons</th>
+                        <th>Spaces</th>
+                        <th>Places left</th>
+                        <th>Lessons</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for lesson in page_obj %}
+                        <tr>
+                            <td>{{ lesson.name }}</td>
+                            <td>{{ lesson.num_places }}</td>
+                            <td>
+                                {% if lesson.remaining_spaces <= 0 %}
+                                    <p>Full</p>
+                                {% else %}
+                                    <p>{{ lesson.remaining_spaces }}</p>
+                                {% endif %}
+                            </td>
+                            <td><a href="{% url 'schools:school_detail' slug=lesson.slug %}" class="btn btn-info
+                          btn-sm">Book</a></td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <!-- Pagination Navigation with Tailwind -->
+   <nav aria-label="Page navigation" class="flex justify-center mt-4">
+    <ul class="inline-flex -space-x-px">
+        {% if page_obj.has_previous %}
+            <li>
+                <a href="?page=1" class="py-2 px-3 ml-0 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700" aria-label="First">
+                    <span aria-hidden="true">&laquo;&laquo;</span>
+                </a>
+            </li>
+            <li>
+                <a href="?page={{ page_obj.previous_page_number }}" class="py-2 px-3 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700" aria-label="Previous">
+                    <span aria-hidden="true">&laquo;</span>
+                </a>
+            </li>
+        {% endif %}
+
+        {% for num in page_obj.paginator.page_range %}
+            <li>
+                <a href="?page={{ num }}" class="{% if page_obj.number == num %}py-2 px-3 leading-tight text-gray-500 bg-blue-500 text-white border border-blue-500 hover:bg-blue-600 hover:text-white{% else %}py-2 px-3 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700{% endif %}">
+                    {{ num }}
+                </a>
+            </li>
+        {% endfor %}
+
+        {% if page_obj.has_next %}
+            <li>
+                <a href="?page={{ page_obj.next_page_number }}" class="py-2 px-3 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700" aria-label="Next">
+                    <span aria-hidden="true">&raquo;</span>
+                </a>
+            </li>
+            <li>
+                <a href="?page={{ page_obj.paginator.num_pages }}" class="py-2 px-3 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700" aria-label="Last">
+                    <span aria-hidden="true">&raquo;&raquo;</span>
+                </a>
+            </li>
+        {% endif %}
+    </ul>
+</nav>
+
+
+{% endblock %}

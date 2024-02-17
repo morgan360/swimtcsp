@@ -1,0 +1,93 @@
+{% load static %}  <!-- Load static files -->
+
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <!-- Navigation bar with Bootstrap classes -->
+
+    <a class="navbar-brand" href="{% url 'home' %}">
+        <!-- Brand/logo linking to home -->
+        <img src="{% static 'img/logo.png' %}" alt="logo" width="40" height="30" class="d-inline-block align-text-top">
+        <!-- Logo image -->
+        TCSP  <!-- Brand text -->
+    </a>
+
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+            data-bs-target="#navbarNav" aria-controls="navbarNav"
+            aria-expanded="false" aria-label="Toggle navigation">
+        <!-- Toggle button for small screens -->
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarNav">
+        <!-- Navbar content -->
+        <ul class="nav">
+            <!-- Nav list -->
+            <li class="nav-item">
+                <a class="nav-link active" aria-current="page" href="{% url 'home' %}">Home</a>
+                <!-- Home link -->
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/contact/">Contact Us</a>
+                <!-- Contact link -->
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/register/">Register Swim Class</a>
+                <!-- Register link -->
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/admin/">Admin</a>
+                <!-- Admin link -->
+            </li>
+        </ul>
+    </div>
+
+    <div class="collapse navbar-collapse" id="bookingNavbar">
+        <!-- Second navbar content -->
+        <ul class="nav">
+            {% if user.is_authenticated %}
+                <!-- Authenticated user links -->
+                <li class="nav-item">
+                    <div class="dropdown">
+                        <!-- Dropdown for bookings -->
+                        <a class="nav-link dropdown-toggle" href="#" role="button" id="bookingDropdown"
+                           data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            Booking
+                        </a>
+                        <div class="dropdown-menu" aria-labelledby="bookingDropdown">
+                            <!-- Dropdown items -->
+                            <a class="dropdown-item" href="/users/profile">Profile</a>
+                            <!-- Customer profile link -->
+                            <a class="dropdown-item" href="/lessons/lesson_list">Lessons</a>
+                            <!-- Lessons link -->
+                            <a class="dropdown-item" href="/swims/">Swims</a>
+                            <!-- Swims link -->
+                            <a class="dropdown-item" href="/test_area/t_lessons/">Test</a>
+                            <!-- Swims link -->
+                        </div>
+                    </div>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/management/">Management</a>
+                    <!-- Management link -->
+                </li>
+                <li class="nav-item">
+                    <p class="">Welcome - {{ user.first_name }}</p>
+                    <!-- Welcome message -->
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/accounts/logout">Logout</a>
+                    <!-- Logout link -->
+                </li>
+            {% else %}
+                <!-- Non-authenticated user links -->
+                <li class="nav-item">
+                    <a class="nav-link" href="accounts/login">Login</a>
+                    <!-- Login link -->
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="accounts/signup">Register</a>
+                    <!-- Register link -->
+                </li>
+            {% endif %}
+        </ul>
+    </div>
+</nav>

@@ -54,7 +54,7 @@ def stripe_webhook(request):
                 # Specify the email template to use for order confirmation
                 template = 'emails/lessons_order_confirmation.html'
                 # Send an order confirmation email to the customer
-                send_order_confirmation_email(order, template)
+                # send_order_confirmation_email(order, template)
 
                 # Call a function to handle lesson enrollment based on the order
                 handle_lessons_enrollment(order)

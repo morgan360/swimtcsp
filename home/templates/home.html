@@ -1,26 +1,43 @@
-{% extends "base.html" %}
+{% extends "_base.html" %}
 {% load static %}
 {% block content %}
-     <!--CTA-->
-   <div class="container py-5">
-  <div class="row">
-    <div class="col-sm-12 col-md-12 col-lg-6 pb-4">
-      <h1 class="display-4 font-weight-bold">Swimming is for Life</h1>
-      <h5 class = "fw-light">Swimming has many benefits, including improving cardiovascular fitness, strengthening muscles, increasing flexibility, and providing a low-impact cardiovascular workout. It can also help with weight loss and relaxation, and it can be enjoyed by people of all ages and fitness levels. Swimming can also be a fun and social activity, as it can be done with friends or as part of a team.</h5>
-      <a class="btn btn-primary mt-2" href="/timetable/">Timetable for
-          Everything</a>
+    <h1 class="text-center text-7xl md:text-5   md:text-5xl font-bold mt-28 ">Templeogue College Swimming Pool</h1>
+ <div class="flex justify-around items-stretch h-screen">
+  <!-- Hero 1 -->
+  <div class="hero w-1/3 bg-cover bg-center relative" style="background-image: url('your-image-url-1.jpg');">
+    <div class="flex items-center h-full p-4">
+      <div class="text-white">
+        <h1 class="text-xl md:text-2xl font-bold">Public Swims</h1>
+        <p class="mt-2 text-sm md:text-lg">To book a public swim you need to register first. If you are already 
+            registered Log In above and select Public Swims.
+            .</p>
+        <a href="accounts/signup" class="mt-4 inline-block bg-blue-500 text-white font-semibold py-2 px-4 rounded-lg 
+        hover:bg-blue-700 transition-colors">Register</a>
+      </div>
     </div>
-    <div class="col-sm-12 col-md-12 col-lg-6">
-      <img class = "img-fluid rounded" src="{% static 'img/swimming-goggles.jpg' %}" alt="Headphones">
+  </div>
+  <!-- Hero 2 -->
+  <div class="hero w-1/3 bg-cover bg-center relative" style="background-image: url('your-image-url-2.jpg');">
+    <div class="flex items-center h-full p-4">
+      <div class="text-white">
+        <h1 class="text-xl md:text-2xl font-bold">Swimming Lessons</h1>
+        <p class="mt-2 text-sm md:text-lg">To book Swimming Lessons you need to register first. If you are already 
+            registered Log In above and select Swimming Lessons.</p>
+        <a href="/register/" class="mt-4 inline-block bg-green-500 text-white font-semibold py-2 px-4 rounded-lg 
+        hover:bg-green-700 transition-colors">Register Lessons </a>
+      </div>
+    </div>
+  </div>
+  <!-- Hero 3 -->
+  <div class="hero w-1/3 bg-cover bg-center relative" style="background-image: url('your-image-url-3.jpg');">
+    <div class="flex items-center h-full p-4">
+      <div class="text-white">
+        <h1 class="text-xl md:text-2xl font-bold">Join Our Community</h1>
+        <p class="mt-2 text-sm md:text-lg">Be part of something bigger.</p>
+        <a href="#" class="mt-4 inline-block bg-red-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-red-700 transition-colors">Sign Up</a>
+      </div>
     </div>
   </div>
 </div>
-
-    <div class="container text-dark mt-5">
-        <div class="row justify-content-md-center">
-          <div class="col-md-5 p-3">
-{#               more content #}
-          </div>
-        </div>
-      </div>
 {% endblock content %}
+

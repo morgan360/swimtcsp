@@ -1,7 +1,7 @@
 from django import forms
 from allauth.account.forms import SignupForm
-from django.contrib.auth.models import Group
-
+from django.contrib.auth.models import Group,User
+from .models import UserProfile
 
 class CustomSignupForm(SignupForm):
     first_name = forms.CharField(max_length=150, required=True)
@@ -25,3 +25,15 @@ class CustomSignupForm(SignupForm):
 
         # Return the user instance
         return user
+
+# Update Profile
+class UserForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = ("first_name", "last_name")
+
+
+class UserProfileForm(forms.ModelForm):
+    class Meta:
+        model = UserProfile
+        fields = ('notes',)

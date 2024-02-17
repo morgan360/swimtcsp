@@ -7,21 +7,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from allauth.account.views import EmailVerificationSentView
 from django.http import HttpResponse
-
-
-# from .forms import SwimlingForm
-
-
-class UserForm(forms.ModelForm):
-    class Meta:
-        model = User
-        fields = ("first_name", "last_name")
-
-
-class UserProfileForm(forms.ModelForm):
-    class Meta:
-        model = UserProfile
-        fields = ('notes_extra',)
+from .forms import UserForm, UserProfileForm
 
 
 @login_required
@@ -35,7 +21,7 @@ def update_profile(request):
             user_form.save()
             user_profile_form.save()
             messages.success(request, "Saved")
-            return redirect("user:profile")
+            return redirect("home")
     else:
         user_form = UserForm(instance=request.user)
         user_profile_form = UserProfileForm(instance=request.user.userprofile)

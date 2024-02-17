@@ -16,15 +16,13 @@ def payment_process(request):
     order = get_object_or_404(Order, id=order_id)
 
     if request.method == 'POST':
-        success_url = request.build_absolute_uri(
-                        reverse('swims_payment:completed'))
-        cancel_url = request.build_absolute_uri(
-                        reverse('swims_payment:canceled'))
+        success_url = request.build_absolute_uri(reverse('swims_payment:completed'))
+        cancel_url = request.build_absolute_uri(reverse('swims_payment:canceled'))
         order_type = 'swims'
         # Stripe checkout session data
         session_data = {
             'mode': 'payment',
-            'client_reference_id': order.id,
+            'client_reference_id': str(order.id),
             'success_url': success_url,
             'cancel_url': cancel_url,
             'metadata': {
@@ -33,30 +31,32 @@ def payment_process(request):
             'line_items': []
         }
         # Retrieve the product from the Order
-        product = order.product
-
-        # Add order items to the Stripe checkout session
+        # Assume each item may have its own product or variant; adjust as per your model
         for item in order.items.all():
-            price = item.variant.get_price()  # Get the price from the PriceVariant
+            price = item.variant.get_price()  # Get the price from the variant or related model
             session_data['line_items'].append({
                 'price_data': {
-                    'unit_amount': int(price * Decimal('100')),  # Convert to cents
                     'currency': 'eur',
+                    'unit_amount': int(price * Decimal('100')),  # Convert to cents
                     'product_data': {
-                        'name': product.name,  # Use the product name from the Order
+                        'name':item.variant.product.name,  # Use the product name from each item
                     },
                 },
                 'quantity': item.quantity,
             })
 
-        # create Stripe checkout session
+        # Create Stripe checkout session
         session = stripe.checkout.Session.create(**session_data)
 
-        # redirect to Stripe payment form
+        # Redirect to Stripe payment form
         return redirect(session.url, code=303)
 
     else:
-        return render(request, 'swims_payment/process.html', locals())
+        # Explicitly define context
+        context = {
+            'order': order,
+        }
+        return render(request, 'swims_payment/process.html', context)
 
 
 def payment_completed(request):

@@ -1,13 +1,17 @@
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, get_object_or_404
 from lessons_cart.forms import CartAddProductForm, NewSwimlingForm
-# from .forms import SwimlingSelectionForm
+from django.template.loader import render_to_string
+from django.http import JsonResponse
 from .models import Program, Category, Product
 from users.models import Swimling
 import django_filters
 from .filters import ProductFilter
 from django.core.paginator import Paginator
 from django.http import HttpResponse
+from django.shortcuts import render, redirect
+from django.contrib import messages
+
 
 # Get Lesson list for public swims only Area _ID = 18 (Public) and Active=1
 def lesson_list(request):
@@ -15,7 +19,7 @@ def lesson_list(request):
     day_choices = [(day, dict(Product.DAY_CHOICES)[day]) for day in days]
     programs = Program.objects.all()
     active_lessons = Product.objects.filter(active=True, area_id=18)
-    paginator = Paginator(active_lessons, 10)  # Show 10 lessons per page
+    paginator = Paginator(active_lessons, 8)  # Show  8 lessons per page
     page_number = request.GET.get('page')  # Get the page number from the request
     page_obj = paginator.get_page(page_number)  # Get the page object
 
@@ -49,7 +53,7 @@ def update_lesson_list(request):
 
     # Execute the query
     active_lessons = query
-    paginator = Paginator(active_lessons, 10)  # Show 10 lessons per page
+    paginator = Paginator(active_lessons, 8)  # Show 10 lessons per page
     page_number = request.GET.get('page')  # Get the page number from the request
     page_obj = paginator.get_page(page_number)  # Get the page object
     return render(request, 'partials/lesson_list.html', {'page_obj': page_obj, })
@@ -57,13 +61,18 @@ def update_lesson_list(request):
 
 @login_required
 def product_detail(request, slug):
-    form = NewSwimlingForm()
     product = get_object_or_404(Product, slug=slug)
+    form = NewSwimlingForm()
     cart_product_form = CartAddProductForm(user=request.user)  # Instantiate the form
+    swimlings = Swimling.objects.filter(guardian=request.user)  # Assuming association via guardian
+
     return render(request, 'lessons/products/detail.html', {
         'product': product,
-        'cart_product_form': cart_product_form,  'form' : form
+        'cart_product_form': cart_product_form,
+        'form': form,
+        'swimlings': swimlings,  # Pass swimlings to the template
     })
+
 
 def product_list(request):
     filter = ProductFilter(request.GET, queryset=Product.objects.all())
@@ -74,7 +83,6 @@ def product_list(request):
 
     return render(request, 'lessons/products/list_filter.html', {'filter': filter})
 
-# views.py
 
 def add_new_swimling(request):
     if request.method == 'POST':
@@ -83,20 +91,43 @@ def add_new_swimling(request):
             new_swimling = form.save(commit=False)
             new_swimling.guardian = request.user
             new_swimling.save()
-            msg = "New swimmer created successfully"
-            # Return a success message or redirect
-            return render(request,'partials/success.html', {'success_message': msg})
-        else:
-            # Return the form with errors
-            msg = "Something went wrong"
-            return render(request, 'partials/failure.html', {'failure_message': msg})
 
-    # GET request handling if necessary
-    form = NewSwimlingForm()
-    return render(request, 'partials/new_swimling_form.htm', {'form': form})
+            # Fetch updated swimlings for the dropdown
+            swimlings = Swimling.objects.filter(guardian=request.user)
+            # success message
+            messages.success(request, 'Swimling added successfully.')
+            # Render the partial template for the dropdown
+            rendered_html = render_to_string('partials/swimlings_list.html', {'swimlings': swimlings},
+                                             request=request)
+
+            # Respond with the rendered HTML for HTMX to swap
+            return HttpResponse(rendered_html)
+        else:
+            if "HX-Request" in request.headers:
+                # If form is invalid during an HTMX request, return the form with errors
+                context = {'form': form}
+                html = render_to_string('partials/new_swimling_form.html', context, request=request)
+                return HttpResponse(html, status=400)
+            else:
+                # For non-HTMX, render the form with errors within the context of a full page
+                return render(request, 'partials/new_swimling_form.html', {'form': form})
+
+    else:
+        form = NewSwimlingForm()
+        return render(request, 'partials/new_swimling_form.html', {'form': form})
+
+
+# Success view
+def swimling_success(request):
+    return render(request, 'lessons/success.html')
+
+
+# Failure view
+def swimling_failure(request):
+    return render(request, 'lessons/failure.html')
+
 
 def load_new_swimling_form(request, product_slug):
     form = NewSwimlingForm()
     product = Product.objects.get(slug=product_slug)  # Retrieve the product based on the slug
     return render(request, 'partials/new_swimling_form.html', {'form': form, 'product': product})
-

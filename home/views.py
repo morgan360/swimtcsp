@@ -50,8 +50,15 @@ def contact_us(request):
 def home(request):
     return render(request, 'home.html')
 
+def about(request):
+    return render(request, 'about.html')
 
 @login_required()
 @user_in_group('Manager')
 def management(request):
     return render(request, 'management.html')
+
+
+# Test page
+def test_daisyui(request):
+    return render(request, 'test_daisyui.html')

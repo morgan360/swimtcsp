@@ -7,7 +7,7 @@ from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 from datetime import timedelta
 from utils.date_utils import get_next_occurrence
-
+from django.http import HttpResponse
 
 @login_required
 def order_create(request):

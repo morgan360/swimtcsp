@@ -1,49 +1,46 @@
-{% extends 'base.html' %}
+{% extends '_base.html' %}
 {% load static %}
 
 {% block content %}
-    <div class="container">
-        <div class="row">
-            <div class="col-md-3">
-                <h3>Categories</h3>
-                <ul>
-                    <li {% if not category %}class="selected"{% endif %}>
-                        <a href="{% url 'swims:product_list' %}">All</a>
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex flex-wrap -mx-4">
+            <div class="w-full md:w-1/4 px-4 mb-4 md:mb-0">
+                <h3 class="text-xl font-semibold mb-4">Categories</h3>
+                <ul class="list-none m-0 p-0">
+                    <li {% if not category %}class="text-blue-600 font-semibold"{% endif %}>
+                        <a href="{% url 'swims:product_list' %}" class="text-gray-700 hover:text-gray-900">All</a>
                     </li>
                     {% for c in categories %}
-                        <li {% if category.slug == c.slug %}class="selected"{% endif %}>
-                            <a href="{{ c.get_absolute_url }}">{{ c.name }}</a>
+                        <li {% if category.slug == c.slug %}class="text-blue-600 font-semibold"{% endif %}>
+                            <a href="{{ c.get_absolute_url }}" class="text-gray-700 hover:text-gray-900">{{ c.name }}</a>
                         </li>
                     {% endfor %}
                 </ul>
             </div>
-            <div class="col-md-9">
-                <div id="main" class="product-list">
-                    <h1>{% if category %}{{ category.name }}{% else %}
-                        Swim Sessions{% endif %}</h1>
+            <div class="w-full md:w-3/4 px-4">
+                <div id="main">
+                    <h1 class="text-2xl font-bold mb-4">{% if category %}{{ category.name }}{% else %}Swim Sessions{% endif %}</h1>
                     {% for product in products %}
-                        <div class="card mb-3">
-                            <div class="row g-0">
-                                <div class="col-md-4">
-                                    <a href="{{ product.get_absolute_url }}">
-                                        <img src="
-                                                {% if product.image %}{{ product.image.url }}{% else %}{% static 'img/no_image.png' %}{% endif %}" class="img-fluid"  alt="{{ product.name }}">
+                        <div class="flex mb-6 bg-white shadow-lg rounded-lg overflow-hidden">
+                            <div class="w-full md:w-1/3">
+                                <a href="{{ product.get_absolute_url }}">
+                                    <img src="{% if product.image %}{{ product.image.url }}{% else %}{% static 'img/no_image.png' %}{% endif %}" class="object-cover w-full h-full" alt="{{ product.name }}">
+                                </a>
+                            </div>
+                            <div class="w-full md:w-2/3 p-4">
+                                <div class="card-body">
+                                    <h5 class="card-title text-lg font-semibold">
+                                        <a href="{{ product.get_absolute_url }}" class="hover:text-blue-600">{{ product.name }}</a>
+                                    </h5>
+                                    <h6 class="text-gray-500 mb-2">{{ product.next_occurrence_date }}: {{ product.start_time }}</h6>
+                                    <p class="card-text text-gray-700 mb-4">
+                                        Category: {{ product.category.name }}</p>
+                                    {% for price_variant in product.price_variants.all %}
+                                        <p class="text-gray-800">{{ price_variant.variant }} €{{ price_variant.price }}</p>
+                                    {% endfor %}
+                                    <a href="{{ product.get_absolute_url }}" class="mt-4 inline-block bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                                        View Details
                                     </a>
-                                </div>
-                                <div class="col-md-8">
-                                    <div class="card-body">
-                                        <h5 class="card-title"><a
-                                                href="{{ product.get_absolute_url }}">{{ product.name }}</a>
-                                        </h5>
-                                        <h6>{{ product.next_occurrence_date }}:
-                                            {{ product.start_time }}</h6>
-                                        <p class="card-text">
-                                            Category: {{ product.category }}</p>
-                                        {% for price_variant in product.price_variants.all %}
-                                            <p>{{ price_variant.variant }}
-                                                €{{ price_variant.price }}</p>
-                                        {% endfor %}
-                                    </div>
                                 </div>
                             </div>
                         </div>

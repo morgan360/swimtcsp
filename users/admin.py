@@ -54,7 +54,7 @@ class UserAdmin(HijackUserAdminMixin, ImportExportMixin, BaseUserAdmin):
     inlines = [SwimlingInline]
     fieldsets = (
         (None, {'fields': (
-            'email', 'password', 'mobile_phone', 'first_name', 'last_name','notes',  'last_login')}),
+            'email', 'password', 'mobile_phone', 'first_name', 'last_name','admin_notes',  'last_login')}),
         ('Permissions', {'fields': (
             'is_active', 'is_staff', 'is_superuser', 'groups',
             'user_permissions')}),

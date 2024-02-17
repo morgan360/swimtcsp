@@ -1,18 +1,12 @@
-.content-container {
-  margin-left: 20px;
+/* tailwind */
+.btn-large {
+ @apply bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded shadow;
 }
 
-.form-control {
-  width: 300px; /* For example, set the width to 300px */
+.custom-h1 {
+  @apply text-center   mb-4 text-4xl font-extrabold text-blue-800 px-4;
 }
 
-/* Custom CSS for read-only fields in admin */
-.readonly-field {
-  background-color: #f7f7f7; /* Light gray background */
-  color: #777; /* Dark gray text color */
-  cursor: not-allowed; /* Show 'not-allowed' cursor on hover */
-}
-
-footer {
-    margin-top: 50px; /* Adjust this value as needed */
+h2 {
+  @apply text-xl font-semibold text-gray-700;
 }

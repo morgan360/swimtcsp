@@ -1,7 +1,10 @@
 {% load static %}
 
 {% block content %}
-    <div class="container mt-5">
+    <div class="bg-blue-500 p-3">
+        <h1 class="text-2xl text-white text-center">Public Swim Lessons</h1>
+    </div>
+    <div class="container mx-auto mt-8">
         <div class="row">
             <div class="col-md-11">
                 <table class="table table-striped">
@@ -26,17 +29,7 @@
                                 {% endif %}
                             </td>
                             <td><a href="{% url 'lessons:product_detail' slug=lesson.slug %}" class="btn btn-info
-                          btn-sm">Details</a></td>
-                            <td>
-                                <form action="{% url 'lessons_cart:cart_add' lesson.id %}" method="post"
-                                      class="d-inline">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="quantity" value="1"> <!-- Adjust as needed -->
-                                    <button type="submit" class="btn btn-success btn-sm"
-                                            {% if lesson.remaining_spaces <= 0 %} disabled {% endif %}>Add to Cart
-                                    </button>
-                                </form>
-                            </td>
+                          btn-sm">Book Now</a></td>
                         </tr>
                     {% endfor %}
                     </tbody>
@@ -44,43 +37,43 @@
             </div>
         </div>
     </div>
-    <!-- Pagination Navigation with Bootstrap -->
-    <nav aria-label="Page navigation">
-        <ul class="pagination">
-            {% if page_obj.has_previous %}
-                <li class="page-item">
-                    <a class="page-link" href="?page=1" aria-label="First">
-                        <span aria-hidden="true">&laquo;&laquo;</span>
-                    </a>
-                </li>
-                <li class="page-item">
-                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Previous">
-                        <span aria-hidden="true">&laquo;</span>
-                    </a>
-                </li>
-            {% endif %}
+    <!-- Pagination Navigation with Tailwind -->
+   <nav aria-label="Page navigation" class="flex justify-center mt-4">
+    <ul class="inline-flex -space-x-px">
+        {% if page_obj.has_previous %}
+            <li>
+                <a href="?page=1" class="py-2 px-3 ml-0 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700" aria-label="First">
+                    <span aria-hidden="true">&laquo;&laquo;</span>
+                </a>
+            </li>
+            <li>
+                <a href="?page={{ page_obj.previous_page_number }}" class="py-2 px-3 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700" aria-label="Previous">
+                    <span aria-hidden="true">&laquo;</span>
+                </a>
+            </li>
+        {% endif %}
 
-            {% for num in page_obj.paginator.page_range %}
-                {% if page_obj.number == num %}
-                    <li class="page-item active"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
-                {% else %}
-                    <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
-                {% endif %}
-            {% endfor %}
+        {% for num in page_obj.paginator.page_range %}
+            <li>
+                <a href="?page={{ num }}" class="{% if page_obj.number == num %}py-2 px-3 leading-tight text-gray-500 bg-blue-500 text-white border border-blue-500 hover:bg-blue-600 hover:text-white{% else %}py-2 px-3 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700{% endif %}">
+                    {{ num }}
+                </a>
+            </li>
+        {% endfor %}
 
-            {% if page_obj.has_next %}
-                <li class="page-item">
-                    <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Next">
-                        <span aria-hidden="true">&raquo;</span>
-                    </a>
-                </li>
-                <li class="page-item">
-                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}" aria-label="Last">
-                        <span aria-hidden="true">&raquo;&raquo;</span>
-                    </a>
-                </li>
-            {% endif %}
-        </ul>
-    </nav>
+        {% if page_obj.has_next %}
+            <li>
+                <a href="?page={{ page_obj.next_page_number }}" class="py-2 px-3 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700" aria-label="Next">
+                    <span aria-hidden="true">&raquo;</span>
+                </a>
+            </li>
+            <li>
+                <a href="?page={{ page_obj.paginator.num_pages }}" class="py-2 px-3 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700" aria-label="Last">
+                    <span aria-hidden="true">&raquo;&raquo;</span>
+                </a>
+            </li>
+        {% endif %}
+    </ul>
+</nav>
 
 {% endblock %}

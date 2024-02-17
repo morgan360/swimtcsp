@@ -1,0 +1,49 @@
+{% extends "_base.html" %}
+{% load static %}
+
+{% block title %}
+    {% if category %}{{ category.name }}{% else %}Products {% endif %}
+{% endblock %}
+
+{% block content %}
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"> <!-- Container equivalent -->
+        <div class="flex flex-wrap -mx-4"> <!-- Row equivalent -->
+            <div class="w-full md:w-1/4 px-4"> <!-- Column equivalent for filters -->
+                <h3 class="text-lg font-semibold">Program</h3>
+                <select id="id_category" class="form-select mt-1 block w-full border-gray-300 rounded-md shadow-sm text-black"
+                        name="program"
+                        hx-get="{% url 'lessons:update_lesson_list' %}"
+                        hx-include="#days_list"
+                        hx-trigger="change"
+                        hx-target="#lesson_list"
+                >
+                    <option value="">Select a Program</option>
+                    {% for program in programs %}
+                        <option value="{{ program.id }}">{{ program.name }}</option>
+                    {% endfor %}
+                </select>
+                <div class='mt-4'>
+                    <h3 class="text-lg font-semibold">Day</h3>
+                    <select id="days_list" class="form-select mt-1 block w-full border-gray-300 rounded-md shadow-sm text-black"
+                            name="day"
+                            hx-include="#id_category"
+                            hx-get="{% url 'schools:update_school_list' %}"
+                            hx-trigger="change"
+                            hx-target="#lesson_list"
+                    >
+                        <option value="">Select a Day</option>
+                        {% for day_value, day_display in days %}
+                            <option value="{{ day_value }}">{{ day_display }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="w-full md:w-3/4 px-4"> <!-- Column equivalent for lesson list -->
+                <div id="lesson_list" class='mt-4'>
+                    {% include 'partials/schools_list.html' %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

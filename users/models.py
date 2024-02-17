@@ -47,7 +47,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField(default=True)
     last_login = models.DateTimeField(null=True, blank=True)
     date_joined = models.DateTimeField(auto_now_add=True)
-    notes = models.TextField(null=True, blank=True)
+    admin_notes = models.TextField(null=True, blank=True)
 
     USERNAME_FIELD = 'email'
     EMAIL_FIELD = 'email'
@@ -61,7 +61,7 @@ class User(AbstractBaseUser, PermissionsMixin):
 # Not going to use this table I think
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    notes_extra = models.TextField(null=True, blank=True)
+    notes = models.TextField(null=True, blank=True)
 
     def __str__(self):
         return f"Profile for {self.user.email}"

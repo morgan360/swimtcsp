@@ -5,21 +5,32 @@ from .forms import CartAddProductForm
 from django.urls import reverse
 
 
+from django.http import HttpResponseBadRequest
+from django.shortcuts import get_object_or_404, redirect
+
 def add_to_cart(request, product_id):
     cart = Cart(request)
-    # cart.clear()
     variation_list = []
     quantity_list = []
     # Get the product queryset
     product = get_object_or_404(PublicSwimProduct, id=product_id)
     for variation in product.price_variants.all():
-        quantity = int(request.POST.get(f'quantity_{variation.id}'))
-        if quantity > 0:
-            variation_id = request.POST.get(f'variation_{variation.id}')
-            variation_list.append(variation_id)
-            quantity_list.append(quantity)
+        quantity_str = request.POST.get(f'quantity_{variation.id}')
+        if quantity_str is not None:
+            try:
+                quantity = int(quantity_str)
+            except ValueError:
+                # Handle the case where the quantity is not a valid integer
+                return HttpResponseBadRequest(f"Invalid quantity for variation {variation.id}.")
+            if quantity > 0:
+                variation_id = variation.id  # Directly use variation.id since it's already an int
+                variation_list.append(variation_id)
+                quantity_list.append(quantity)
+        # Optionally, handle the case where quantity_str is None
+        # For example, skip adding this variation or set a default quantity
     cart.add(product.id, variation_list, quantity_list)
     return redirect('swims_cart:cart_detail')
+
 
 
 def remove_from_cart(request, product_id):

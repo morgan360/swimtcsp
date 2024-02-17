@@ -1,65 +1,71 @@
-{% extends 'base.html' %}
+{% extends '_base.html' %}
 {% load static %}
 
 {% block title %}
     {{ product.name }}
 {% endblock %}
 
-{# THE MAIN CONTENT#}
+{# THE MAIN CONTENT #}
 {% block content %}
-    <div class="container mt-4">
-        {#    Row 1 Column 1#}
-        <div class="row">
-            {#    Image #}
-            <div class="col-sm-4">
-                <img class="img-fluid" src="{% if product.image %}{{ product.image.url }}{% else %}
-                {% static "images/no_image.png" %}{% endif %}">
-            </div>
-            {#    Row 1 Column 2#}
-            <div class="col-sm-8">
-                {#   First row Col2 #}
-                <div class="row">
-                    <h1>{{ product.name }}</h1>
-                </div>
-                {#   2nd  row Col2 #}
-                <div class="row">
-                    <h3>
-                        <a href="{{ product.category.get_absolute_url }}">
-                            {{ product.category }}
-                        </a>
-                    </h3>
+    <div class="container mx-auto mt-4">
+    {# Row 1 #}
+    <div class="flex flex-wrap -mx-4">
+    {# Image Column #}
+    <div class="w-full md:w-1/3 px-4">
+        <img class="w-full h-auto" src="
 
-                </div>
-                <br>
-                <div class="row">
-                    <div class="col-sm-6">
-                        <form action="{% url 'swims_cart:add_to_cart'  product.id %}" method="post">
-                            {% csrf_token %}
-                            {% for variation in product.price_variants.all %}
-                                <ul>
-                                    <div class="input-group">
-                                        <label class="input-group-text" for="quantity">{{ variation.variant }}s</label>
-                                        <input type="number" name="quantity_{{ variation.id }}" value="1" min="1"
-                                               max="10"
-                                               class="form-control form-control-sm">
-                                        <div class="col-sm-6">
-                                         &nbsp;&nbsp;€{{ variation.price }} pp
-                                    </div>
 
-                                    </div>
-                                    <input type="hidden" name="variation_{{ variation.id }}" value="{{ variation.id }}">
-                                </ul>
-                            {% endfor %}
-                         <input type="submit" value="Add to cart" class="btn btn-primary">
-                        </form>
-                    </div>
-                </div>
+
+                {% if product.image %}{{ product.image.url }}{% else %}{% static 'images/no_image.png' %}{% endif %}"
+             alt="{{ product.name }}">
+    </div>
+    {# Details Column #}
+    <div class="w-full md:w-1/4 px-4">
+        {# Product Name #}
+        <div class="mt-4 md:mt-0">
+            <h1 class="text-xl font-semibold">{{ product.name }}</h1>
+        </div>
+        {# Category Link #}
+        <div class="mt-4">
+            <div class="flex flex-wrap">
+                <form action="{% url 'swims_cart:add_to_cart' product.id %}" method="post" class="w-full">
+                    {% csrf_token %}
+                    {% for variation in price_variants %}
+                        <!-- Grid Container -->
+                        <div class="grid grid-cols-3 items-center gap-4 py-2">
+                            <!-- Label -->
+                            <label for="quantity_{{ variation.id }}" class="text-sm font-medium text-white">
+                                {{ variation.variant }}s:
+                            </label>
+                            <!-- Selection Box -->
+                            <div>
+                                <select name="quantity_{{ variation.id }}" id="quantity_{{ variation.id }}"
+                                        class="appearance-none bg-white border border-gray-400 hover:border-gray-500 px-4 py-2 rounded shadow leading-tight focus:outline-none focus:shadow-outline text-black sm:text-sm">
+                                    {% for num in quantities %}
+                                        <option value="{{ num }}">{{ num }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <!-- Price Display -->
+                            <span class="text-white sm:text-sm">
+                        €{{ variation.price }} pp
+                    </span>
+                            <input type="hidden" name="variation_{{ variation.id }}" value="{{ variation.id }}">
+                        </div>
+                    {% endfor %}
+                    <input type="submit" value="Add to cart"
+                           class="mt-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                </form>
             </div>
         </div>
-{#    Bottom Row#}
-        <div class="row">
-            <div class="col-sm-10">
-            {{ product.description|linebreaks }}
+
+
+        {# Product Description #}
+        <div class="flex flex-wrap mt-8">
+            <div class="w-full px-4">
+                <div class="prose">
+                    {{ product.description|linebreaks }}
+                </div>
             </div>
         </div>
     </div>

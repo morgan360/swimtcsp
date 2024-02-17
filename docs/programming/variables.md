@@ -1,6 +1,6 @@
 # variables
 
-[Index](index.md)
+[Index](../index.md)
 
 [enviornment variable](https://dev.to/earthcomfy/django-how-to-keep-secrets-safe-with-python-dotenv-5811)
 

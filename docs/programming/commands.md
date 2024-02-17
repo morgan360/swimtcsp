@@ -4,7 +4,7 @@ description: Commonly used commands
 
 # Commands
 
-[Index](index.md)
+[Index](../index.md)
 
 | Command                                                    | What it does         | Notes |
 | ---------------------------------------------------------- | -------------------- | ----- |

@@ -1,6 +1,6 @@
 # schools/resources.py
 from import_export import resources, fields
-from .models import ScoArea, ScoLessons, ScoCategory, ScoProgram, ScoSchool
+from .models import  ScoLessons, ScoCategory, ScoProgram, ScoSchool
 from import_export.widgets import ForeignKeyWidget
 import datetime
 from django.utils.text import slugify
@@ -13,11 +13,11 @@ class SchoolResource(resources.ModelResource):
         import_id_fields = ('id',)  # Assuming 'id' is used to identify records uniquely
 
 
-class AreaResource(resources.ModelResource):
-    class Meta:
-        model = ScoArea
-        import_id_fields = ('id',)
-        fields = ('id', 'name',)
+# class AreaResource(resources.ModelResource):
+#     class Meta:
+#         model = ScoArea
+#         import_id_fields = ('id',)
+#         fields = ('id', 'name',)
 
 
 class ProgramResource(resources.ModelResource):

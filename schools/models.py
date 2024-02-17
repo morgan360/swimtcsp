@@ -23,11 +23,11 @@ class ScoSchool(models.Model):
 
 
 # Different schools
-class ScoArea(models.Model):
-    name = models.CharField(max_length=100, null=True, blank=True)
-
-    def __str__(self):
-        return self.name
+# class ScoArea(models.Model):
+#     name = models.CharField(max_length=100, null=True, blank=True)
+#
+#     def __str__(self):
+#         return self.name
 
 
 # A Program is a collection of Lessons

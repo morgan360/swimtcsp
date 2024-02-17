@@ -1,7 +1,7 @@
 from django.contrib import admin
 from custom_admins.lessonsadmin import lessons_admin_site
-from .models import ScoArea, ScoLessons, ScoCategory, ScoProgram, ScoSchool
-from .resources import AreaResource, CategoryResource, ProductResource, ProgramResource, SchoolResource
+from .models import  ScoLessons, ScoCategory, ScoProgram, ScoSchool
+from .resources import  CategoryResource, ProductResource, ProgramResource, SchoolResource
 from import_export.admin import ImportExportMixin
 from django_admin_listfilter_dropdown.filters import DropdownFilter, RelatedDropdownFilter, ChoiceDropdownFilter
 
@@ -40,10 +40,10 @@ class ProgramAdmin(ImportExportMixin, admin.ModelAdmin):
     list_filter = [('name', DropdownFilter)]
 
 
-@admin.register(ScoArea)
-class AreaAdmin(ImportExportMixin, admin.ModelAdmin):
-    resource_class = AreaResource
-    list_display = ['id', 'name']
+# @admin.register(ScoArea)
+# class AreaAdmin(ImportExportMixin, admin.ModelAdmin):
+#     resource_class = AreaResource
+#     list_display = ['id', 'name']
 
 
 @admin.register(ScoCategory)
@@ -61,6 +61,6 @@ class ScoSchoolAdmin(ImportExportMixin, admin.ModelAdmin):
 
 
 lessons_admin_site.register(ScoLessons, ProductAdmin)
-lessons_admin_site.register(ScoArea, AreaAdmin)
+# lessons_admin_site.register(ScoArea, AreaAdmin)
 lessons_admin_site.register(ScoCategory, CategoryAdmin)
 lessons_admin_site.register(ScoProgram, ProgramAdmin)

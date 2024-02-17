@@ -1,6 +1,6 @@
 # Responsible for defining what goes into the Lesson Admin area
 from django.contrib.admin import AdminSite
-from lessons.models import Program, Area, Category, Product
+from lessons.models import Program,  Category, Product
 from users.models import User, Swimling
 from django.contrib.admin import AdminSite
 from django.contrib.auth.models import Group

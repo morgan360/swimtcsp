@@ -40,12 +40,6 @@ class ProgramAdmin(ImportExportMixin, admin.ModelAdmin):
     list_filter = [('name', DropdownFilter)]
 
 
-# @admin.register(ScoArea)
-# class AreaAdmin(ImportExportMixin, admin.ModelAdmin):
-#     resource_class = AreaResource
-#     list_display = ['id', 'name']
-
-
 @admin.register(ScoCategory)
 class CategoryAdmin(ImportExportMixin, admin.ModelAdmin):
     resource_class = CategoryResource
@@ -61,6 +55,5 @@ class ScoSchoolAdmin(ImportExportMixin, admin.ModelAdmin):
 
 
 lessons_admin_site.register(ScoLessons, ProductAdmin)
-# lessons_admin_site.register(ScoArea, AreaAdmin)
 lessons_admin_site.register(ScoCategory, CategoryAdmin)
 lessons_admin_site.register(ScoProgram, ProgramAdmin)

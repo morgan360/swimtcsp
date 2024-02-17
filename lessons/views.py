@@ -13,12 +13,12 @@ from django.shortcuts import render, redirect
 from django.contrib import messages
 
 
-# Get Lesson list for public swims only Area _ID = 18 (Public) and Active=1
+# Get Lesson list for (Public) and Active=1
 def lesson_list(request):
     days = Product.objects.values_list('day_of_week', flat=True).distinct()
     day_choices = [(day, dict(Product.DAY_CHOICES)[day]) for day in days]
     programs = Program.objects.all()
-    active_lessons = Product.objects.filter(active=True, area_id=18)
+    active_lessons = Product.objects.filter(active=True)
     paginator = Paginator(active_lessons, 8)  # Show  8 lessons per page
     page_number = request.GET.get('page')  # Get the page number from the request
     page_obj = paginator.get_page(page_number)  # Get the page object
@@ -32,7 +32,7 @@ def update_lesson_list(request):
     day = request.GET.get('day')
 
     # Initialize query
-    query = Product.objects.filter(active=True, area_id=18)
+    query = Product.objects.filter(active=True)
 
     # Apply filters if valid values are provided
     if program_id not in [None, '', 'null', 'undefined']:

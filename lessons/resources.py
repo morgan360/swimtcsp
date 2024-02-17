@@ -1,15 +1,8 @@
 from import_export import resources, fields
-from .models import Area, Product, Category, Program
+from .models import Product, Category, Program
 from import_export.widgets import ForeignKeyWidget
 import datetime
 from django.utils.text import slugify
-
-
-class AreaResource(resources.ModelResource):
-    class Meta:
-        model = Area
-        import_id_fields = ('id',)
-        fields = ('id', 'name',)
 
 
 class ProgramResource(resources.ModelResource):
@@ -17,7 +10,6 @@ class ProgramResource(resources.ModelResource):
         model = Program
         import_id_fields = ('id',)
         fields = ('id', 'name',)
-
 
 class CategoryResource(resources.ModelResource):
     # we have to name the module_id field in CSV file to program
@@ -47,7 +39,7 @@ class ProductResource(resources.ModelResource):
         model = Product
         import_id_fields = ('id',)
         fields = (
-            'id', 'day_id', 'category', 'num_places', 'num_weeks', 'price', 'time_start', 'time_end', 'active', 'area')
+            'id', 'day_id', 'category', 'num_places', 'num_weeks', 'price', 'time_start', 'time_end', 'active')
 
     # Change the value before you import into model
     def before_import_row(self, row, **kwargs):

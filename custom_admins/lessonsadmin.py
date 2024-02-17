@@ -1,6 +1,6 @@
 # Responsible for defining what goes into the Lesson Admin area
 from django.contrib.admin import AdminSite
-from lessons.models import Program, Area, Category, Product
+from lessons.models import Program, Category, Product
 from lessons_bookings.models import Term
 from django.contrib.admin import AdminSite
 

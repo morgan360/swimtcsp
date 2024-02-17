@@ -13,13 +13,6 @@ class SchoolResource(resources.ModelResource):
         import_id_fields = ('id',)  # Assuming 'id' is used to identify records uniquely
 
 
-# class AreaResource(resources.ModelResource):
-#     class Meta:
-#         model = ScoArea
-#         import_id_fields = ('id',)
-#         fields = ('id', 'name',)
-
-
 class ProgramResource(resources.ModelResource):
     class Meta:
         model = ScoProgram

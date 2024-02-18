@@ -61,6 +61,8 @@ INSTALLED_APPS = [
     'django_browser_reload',  # when debug load automaticaly browser
     'tailwind',
     'theme', # where tailwind config stored
+    'axes', # Login protection
+
     # My Apps
     'users',
     'home',
@@ -94,7 +96,10 @@ MIDDLEWARE = [
     'hijack.middleware.HijackUserMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django_browser_reload.middleware.BrowserReloadMiddleware',
+    'axes.middleware.AxesMiddleware',
 ]
+
+
 
 ROOT_URLCONF = 'core.urls'
 
@@ -119,6 +124,16 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'core.wsgi.application'
+
+
+# Used with axes
+AUTHENTICATION_BACKENDS = [
+    'axes.backends.AxesStandaloneBackend',  # Add this for Django Axes
+    'django.contrib.auth.backends.ModelBackend',  # Django's default auth backend
+]
+AUTHENTICATION_BACKENDS += [
+    'allauth.account.auth_backends.AuthenticationBackend',
+]
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -235,6 +250,11 @@ ACCOUNT_FORMS = {
 # CRISPY_TEMPLATE_PACK = 'bootstrap5'
 
 # ***  E-Commerce
+
+# AXES PARAMETERS
+AXES_FAILURE_LIMIT = 5  # Number of attempts before lockout
+AXES_LOCKOUT_TEMPLATE = 'your_lockout_template.html'  # Optional: Custom template to show on lockout
+AXES_USERNAME_FORM_FIELD = 'login'
 
 # How cart sessions are stored
 CART_SESSION_ID = 'cart'

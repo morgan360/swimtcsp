@@ -18,7 +18,7 @@
       <sourceFolder url="file://$MODULE_DIR$/import_csv" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/swimtcsp" />
     </content>
-    <orderEntry type="inheritedJdk" />
+    <orderEntry type="jdk" jdkName="Remote Python 3.10.5 (sftp://morganmck@ssh.eu.pythonanywhere.com:22/home/morganmck/.virtualenvs/swimtcsp/bin/python)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
   <component name="PyDocumentationSettings">

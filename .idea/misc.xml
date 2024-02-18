@@ -3,5 +3,5 @@
   <component name="Black">
     <option name="sdkName" value="Python 3.10 (swimtcsp)" />
   </component>
-  <component name="ProjectRootManager" version="2" project-jdk-name="Python 3.10 (swimtcsp)" project-jdk-type="Python SDK" />
+  <component name="ProjectRootManager" version="2" project-jdk-name="Remote Python 3.10.5 (sftp://morganmck@ssh.eu.pythonanywhere.com:22/home/morganmck/.virtualenvs/swimtcsp/bin/python)" project-jdk-type="Python SDK" />
 </project>

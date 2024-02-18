@@ -1,10 +1,11 @@
-<li><a href="{% url 'home' %}">Home</a></li>
-<li><a href="{% url 'about' %}">About</a></li>
-<li><a href="{% url 'contact' %}">Contact Us</a></li>
-<li>
-    <details class="relative z-50">
+
+<li class="relative z-50 text-lg" ><a href="{% url 'home' %}">Home</a></li>
+<li class="relative z-50 text-lg"><a href="{% url 'about' %}">About</a></li>
+<li class="relative z-50 text-lg"><a href="{% url 'contact' %}">Contact Us</a></li>
+<li class="relative z-50 text-lg">
+    <details class="relative z-50 text-lg">
         <summary>Public Lessons</summary>
-        <ul class="p-2">
+        <ul >
             <li><a href="/lessons/lesson_list">Lessons</a></li>
             <li><a>Booking</a></li>
             <li><a>Rebooking</a></li>
@@ -14,11 +15,11 @@
     </details>
 </li>
 <li>
-    <details>
-        <summary>Public Swims</summary>
+    <details class="relative z-50 text-lg">
+        <summary >Public Swims</summary>
         <ul class="p-2 min-w-[200px]">
             <li><a href="/swims/">Public Swims</a></li>
         </ul>
     </details>
 </li>
-<li><a href="{% url 'users:profile' %}">My Profile</a></li>
+<li class="relative z-50 text-lg"><a href="{% url 'users:profile' %}">My Profile</a></li>

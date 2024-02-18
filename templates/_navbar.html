@@ -7,12 +7,13 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h8m-8 6h16"/>
                 </svg>
             </label>
-            <ul tabindex="0" class="menu menu-compact dropdown-content mt-3 p-2 shadow bg-base-100 rounded-box w-52">
+            <ul tabindex="0" class="menu menu-compact dropdown-content mt-3 p-2 shadow bg-base-100 rounded-box w-52 
+            text-lg">
                 {% include '_menu_items.html' %}
             </ul>
         </div>
         <img src="{% static 'img/logo.png' %}" alt="logo" width="40" height="30" class="d-inline-block align-text-top">
-        <a class="btn btn-ghost text-xl">TCSP</a>
+        <a class="btn btn-ghost text-2xl">TCSP</a>
     </div>
     <div class="navbar-center lg:flex hidden">
         <ul class="menu menu-horizontal p-0">
@@ -27,16 +28,16 @@
                     <details class="dropdown z-50">
                         <summary class="text-white cursor-pointer mr-6">Administration</summary> <!-- Adjusted for 
                         white text and removed box -->
-                        <ul class="dropdown-content menu p-2 shadow bg-base-100 rounded-box mt-1 absolute right-0">
+                        <ul class="dropdown-content menu p-2 shadow bg-base-100 rounded-box mt-1 absolute right-0 text-2xl">
                             <li><a href="/admin/" class="btn">Admin Area</a></li>
                             <li><a href="/management/" class="btn">Management</a></li>
                         </ul>
                     </details>
                 {% endif %}
-                <a class="btn" href="/accounts/logout">Logout</a>
+                <a class="btn" href="/accounts/logout text-2xl" >Logout</a>
             {% else %}
-                <a href="/accounts/signup" class="btn">Register</a>
-                <a href="/accounts/login" class="btn">Login</a>
+                <a href="/accounts/signup" class="btn text-lg">Register</a>
+                <a href="/accounts/login" class="btn text-lg">Login</a>
             {% endif %}
         </div>
     </div>

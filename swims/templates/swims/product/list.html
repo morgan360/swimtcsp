@@ -7,12 +7,14 @@
             <div class="w-full md:w-1/4 px-4 mb-4 md:mb-0">
                 <h3 class="text-xl font-semibold mb-4">Categories</h3>
                 <ul class="list-none m-0 p-0">
-                    <li {% if not category %}class="text-blue-600 font-semibold"{% endif %}>
-                        <a href="{% url 'swims:product_list' %}" class="text-gray-700 hover:text-gray-900">All</a>
+                    <li {% if not category %}class="text-orange-600 font-semibold"{% endif %}>
+                        <a href="{% url 'swims:product_list' %}" class="text-orange-400
+                        hover:text-white">All</a>
                     </li>
                     {% for c in categories %}
                         <li {% if category.slug == c.slug %}class="text-blue-600 font-semibold"{% endif %}>
-                            <a href="{{ c.get_absolute_url }}" class="text-gray-700 hover:text-gray-900">{{ c.name }}</a>
+                            <a href="{{ c.get_absolute_url }}" class="text-gray-200 hover:text-orange-400">
+                                {{ c.name }}</a>
                         </li>
                     {% endfor %}
                 </ul>

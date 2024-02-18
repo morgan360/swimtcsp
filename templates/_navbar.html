@@ -22,16 +22,6 @@
     <div class="flex-1 navbar-end justify-end relative">
         <div class="flex items-center space-x-2">
             {% if user.is_authenticated %}
-                <p class="mr-6 text-base md:text-lg">Hi - {{ user.first_name }}</p>
-                {% if user.is_staff or user.is_superuser %}
-                    <details class="dropdown z-50">
-                        <summary class="text-white cursor-pointer mr-6 text-base md:text-lg">Admin</summary>
-                        <ul class="dropdown-content menu p-2 shadow bg-base-100 rounded-box mt-1 absolute right-0 text-lg md:text-xl">
-                            <li><a href="/admin/" class="btn">Admin Area</a></li>
-                            <li><a href="/management/" class="btn">Management</a></li>
-                        </ul>
-                    </details>
-                {% endif %}
                 <a class="btn text-base md:text-lg" href="/accounts/logout">Logout</a>
             {% else %}
                 <a href="/accounts/signup" class="btn text-base md:text-lg">Register</a>

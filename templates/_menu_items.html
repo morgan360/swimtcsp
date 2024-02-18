@@ -1,25 +1,33 @@
-
-<li class="relative z-50 text-lg" ><a href="{% url 'home' %}">Home</a></li>
+<li class="relative z-50 text-lg"><a href="{% url 'home' %}">Home</a></li>
 <li class="relative z-50 text-lg"><a href="{% url 'about' %}">About</a></li>
 <li class="relative z-50 text-lg"><a href="{% url 'contact' %}">Contact Us</a></li>
 <li class="relative z-50 text-lg">
     <details class="relative z-50 text-lg">
         <summary>Public Lessons</summary>
-        <ul >
+        <ul>
             <li><a href="/lessons/lesson_list">Lessons</a></li>
             <li><a>Booking</a></li>
             <li><a>Rebooking</a></li>
             <li><a href="/schools/school_list">Schools</a></li>
-            
+
         </ul>
     </details>
 </li>
 <li>
     <details class="relative z-50 text-lg">
-        <summary >Public Swims</summary>
+        <summary>Public Swims</summary>
         <ul class="p-2 min-w-[200px]">
             <li><a href="/swims/">Public Swims</a></li>
         </ul>
     </details>
 </li>
 <li class="relative z-50 text-lg"><a href="{% url 'users:profile' %}">My Profile</a></li>
+<li>{% if user.is_staff or user.is_superuser %}
+    <details class="dropdown z-50">
+        <summary >Admin</summary>
+        <ul class="dropdown-content menu p-2 shadow bg-base-100 rounded-box mt-1 absolute right-0 text-lg md:text-xl">
+            <li><a href="/admin/" class="btn">Admin Area</a></li>
+            <li><a href="/management/" class="btn">Management</a></li>
+        </ul>
+    </details></li>
+{% endif %}

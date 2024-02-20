@@ -1,64 +1,52 @@
-{% extends "base_bootstrap.html" %}
+{% extends "_base.html" %}
 {% load crispy_forms_tags %}
 
 {% block content %}
-    <style>
-        .custom-select-width {
-            width: 100%; /* Full width within the column */
-        }
-
-        .form-label-right {
-            text-align: right; /* Align labels to the right */
-            padding-right: 15px; /* Add some space before the dropdown */
-        }
-    </style>
-
-    <div class="container mt-4">
-        <h2>Print Class Lists</h2>
-        <form method="post" action="{% url 'class_print' %}" class="form">
-            {% csrf_token %}
-            <div class="row mb-3 align-items-center">
-                <div class="col-md-2">
-                    <label for="id_category" class="form-label form-label-right">Category:</label>
-                </div>
-                <div class="col-md-4">
-                    <select name="category" id="id_category" class="form-select custom-select-width"
-                            hx-get={% url 'update-days' %} hx-trigger="change" hx-target="#id_day">
-                        <option value="">Select a Category</option>
-                        {% for category in categories %}
-                            <option value="{{ category.id }}">{{ category.name }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
+<div class="container mx-auto mt-8">
+    <h2 class="text-xl font-bold">Print Class Lists</h2>
+    <form method="post" action="{% url 'class_print' %}">
+        {% csrf_token %}
+        <div class="flex flex-wrap mb-6 -mx-3 items-center">
+            <div class="w-full md:w-1/6 px-3 mb-6 md:mb-0">
+                <label for="id_category" class="block uppercase tracking-wide text-white text-xs font-bold mb-2
+                text-right pr-4">Category:</label>
             </div>
-
-            <div class="row mb-3 align-items-center">
-                <div class="col-md-2">
-                    <label for="id_day" class="form-label form-label-right">Day:</label>
-                </div>
-                <div class="col-md-4" id="id_day" >
-                    {% include 'reports/partials/day_options.html' %}
-                    <!-- Day options will be populated here -->
-                </div>
+            <div class="w-full md:w-2/6 px-3">
+                <select name="category" id="id_category" class="block appearance-none w-full bg-gray-200 border border-gray-200 text-gray-700 py-3 px-4 pr-8 rounded leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                        hx-get="{% url 'update-days' %}" hx-trigger="change" hx-target="#id_day">
+                    <option value="">Select a Category</option>
+                    {% for category in categories %}
+                        <option value="{{ category.id }}">{{ category.name }}</option>
+                    {% endfor %}
+                </select>
             </div>
+        </div>
 
-            <div class="row mb-3 align-items-center">
-                <div class="col-md-2">
-                    <label for="id_lesson" class="form-label form-label-right">Lesson:</label>
-                </div>
-                <div class="col-md-4" id="id_lesson" >
-                    {% include 'reports/partials/lesson_options.html' %}
-                    <!-- Lesson options will be populated here -->
-                </div>
+        <div class="flex flex-wrap mb-6 -mx-3 items-center">
+            <div class="w-full md:w-1/6 px-3 mb-6 md:mb-0">
+                <label for="id_day" class="block uppercase tracking-wide text-white text-xs font-bold mb-2 text-right pr-4">Day:</label>
             </div>
-
-            <div class="row">
-                <div class="col-md-6">
-                    <button type="submit" class="btn btn-primary">Submit</button>
-                </div>
+            <div class="w-full md:w-2/6 px-3" id="id_day">
+                {% include 'reports/partials/day_options.html' %}
+                <!-- Day options will be populated here -->
             </div>
-        </form>
-    </div>
+        </div>
 
+        <div class="flex flex-wrap mb-6 -mx-3 items-center">
+            <div class="w-full md:w-1/6 px-3 mb-6 md:mb-0">
+                <label for="id_lesson" class="block uppercase tracking-wide text-white text-xs font-bold mb-2 text-right pr-4">Lesson:</label>
+            </div>
+            <div class="w-full md:w-2/6 px-3" id="id_lesson">
+                {% include 'reports/partials/lesson_options.html' %}
+                <!-- Lesson options will be populated here -->
+            </div>
+        </div>
+
+        <div class="flex flex-wrap -mx-3">
+            <div class="w-full md:w-1/2 px-3">
+                <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">Submit</button>
+            </div>
+        </div>
+    </form>
+</div>
 {% endblock %}
-

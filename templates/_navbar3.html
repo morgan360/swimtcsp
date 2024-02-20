@@ -10,10 +10,13 @@
             <img src="{% static 'img/logo.png' %}" alt="logo" width="50" height="40"
                  class="d-inline-block align-text-top">
 
-            <a href="/home/"
+            <a href="/"
                class="text-lg font-semibold tracking-widest text-gray-900 uppercase rounded-lg dark-mode:text-white
                focus:outline-none focus:shadow-outline">TCSP
             </a>
+             <a class="ml-3 px-4 py-2 mt-2 text-sm font-semibold text-gray-900 bg-gray-200 rounded-lg 
+             dark-mode:bg-gray-700 dark-mode:hover:bg-gray-600 dark-mode:focus:bg-gray-600 dark-mode:focus:text-white dark-mode:hover:text-white dark-mode:text-gray-200 md:mt-0 hover:text-gray-900 focus:text-gray-900 hover:bg-gray-200 focus:bg-gray-200 focus:outline-none focus:shadow-outline"
+               href="/accounts/login/">Login</a>
             <!-- Mobile menu toggle button -->
             <button class="rounded-lg md:hidden focus:outline-none focus:shadow-outline" @click="open = !open">
                 <!-- SVG for the menu icon, changes between hamburger and 'X' based on 'open' state -->
@@ -32,6 +35,7 @@
         <!-- Navigation menu, visibility controlled by Alpine.js 'open' state -->
         <nav :class="{'flex': open, 'hidden': !open}"
              class="flex-col flex-grow hidden pb-4 md:pb-0 md:flex md:justify-end md:flex-row">
+           
             <!-- Navigation links with responsive design and hover effects for light/dark mode -->
             <!-- Each link has padding, margin, font styling, rounded borders, and conditional backgrounds for hover states and dark mode -->
             <a class="px-4 py-2 mt-2 text-sm font-semibold text-gray-900 bg-gray-200 rounded-lg dark-mode:bg-gray-700 dark-mode:hover:bg-gray-600 dark-mode:focus:bg-gray-600 dark-mode:focus:text-white dark-mode:hover:text-white dark-mode:text-gray-200 md:mt-0 hover:text-gray-900 focus:text-gray-900 hover:bg-gray-200 focus:bg-gray-200 focus:outline-none focus:shadow-outline"
@@ -135,7 +139,7 @@
                                     <p class="text-sm">Day to day administration.</p>
                                 </div>
                                 <a class="flex flex row items-start rounded-lg bg-transparent p-2 dark-mode:hover:bg-gray-600 dark-mode:focus:bg-gray-600 dark-mode:focus:text-white dark-mode:hover:text-white dark-mode:text-gray-200 hover:text-gray-900 focus:text-gray-900 hover:bg-gray-200 focus:bg-gray-200 focus:outline-none focus:shadow-outline"
-                                   href="#">
+                                   href="reports/today">
                                     <div class="bg-teal-500 text-white rounded-lg p-3">
                                         <svg fill="none" stroke="currentColor" stroke-linecap="round"
                                              stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24"

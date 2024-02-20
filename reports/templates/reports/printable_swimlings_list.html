@@ -1,28 +1,17 @@
-{% extends "base_bootstrap.html" %}
+{% extends "_base.html" %}
 {% load crispy_forms_tags %}
 {% block content %}
-<style>
-    .table-container {
-        display: flex;
-        justify-content: center;
-    }
-    .custom-table {
-        width: auto;
-        max-width: 100%;
-    }
-</style>
 <script>
 function printDiv(divName) {
     var printContents = document.getElementById(divName).innerHTML;
     var printWindow = window.open('', '_blank');
 
     printWindow.document.write('<html><head><title>Print</title>');
-    // Manually write the print-specific CSS here
     printWindow.document.write('<style>');
     printWindow.document.write('body { font-size: 12pt; margin-top: 20px; } ');
-    printWindow.document.write('h2 { text-align: center; }'); // Center the heading
+    printWindow.document.write('h2 { text-align: center; }');
     printWindow.document.write('.table-container { width: 100%; display: block; text-align: center; } ');
-    printWindow.document.write('.custom-table { width: 70%; margin: 0 auto; } '); // Adjust table width and centering
+    printWindow.document.write('.custom-table { width: 70%; margin: 0 auto; } ');
     printWindow.document.write('</style></head><body>');
     printWindow.document.write(printContents);
     printWindow.document.write('</body></html>');
@@ -34,26 +23,27 @@ function printDiv(divName) {
     }, 250);
 }
 </script>
-<div id="printableArea" class="container mt-4">
-    <h2 class="text-center mb-4">{{ product }}</h2>
-    <div class="table-container">
-        <table class="table table-bordered custom-table">
-            <thead class="thead-light">
+
+<div id="printableArea" class="container mx-auto mt-4">
+    <h2 class="text-center text-2xl mb-4">{{ product }}</h2>
+    <div class="flex justify-center">
+        <table class="table-auto border-collapse border border-gray-400 w-auto max-w-full">
+            <thead class="bg-gray-200">
                 <tr>
-                    <th>Swimling Name</th>
-                    <th>Notes</th>
+                    <th class="border border-gray-300 px-4 py-2 text-left">Swimling Name</th>
+                    <th class="border border-gray-300 px-4 py-2 text-left">Notes</th>
                 </tr>
             </thead>
             <tbody>
                 {% for swimling in swimlings %}
                 <tr>
-                    <td>{{ swimling }}</td>
-                    <td>{{ swimling.notes }}</td>
+                    <td class="border border-gray-300 px-4 py-2">{{ swimling }}</td>
+                    <td class="border border-gray-300 px-4 py-2">{{ swimling.notes }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
 </div>
-<button class="btn btn-primary" onclick="printDiv('printableArea')">Print</button>
+<button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onclick="printDiv('printableArea')">Print</button>
 {% endblock %}

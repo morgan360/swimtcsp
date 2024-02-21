@@ -32,6 +32,14 @@ class ScoTerm(models.Model):
         related_name='school_terms'  # Optional: sets a name for the reverse relation from ScoSchool to ScoTerm
     )
 
+    @classmethod
+    def get_current_term_for_school(cls, school_id):
+        today = timezone.now().date()
+        return cls.objects.filter(
+            school_id=school_id,
+            start_date__lte=today,
+            end_date__gte=today
+        ).order_by('start_date').first()
 
     def __str__(self):
         return f"{self.id}"

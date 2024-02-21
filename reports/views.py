@@ -1,11 +1,15 @@
 from django.shortcuts import render
 import datetime
 from lessons_bookings.models import Term, LessonEnrollment
+from schools_bookings.models import ScoTerm
+from schools.models import ScoSchool
 from .forms import ClassListForm
 from django.http import HttpResponse
 from lessons.models import Product, Category
 from users.views import Swimling
 from django.shortcuts import get_object_or_404
+
+today = datetime.date.today()
 
 
 def class_print(request):
@@ -82,7 +86,7 @@ def show_todays_date(request):
             current_term = Term.objects.get(id=current_term_id)
             current_term_string = current_term.concatenated_term()
             current_phase = current_term.determine_phase()
-
+            next_phase = current_term.determine_next_phase()
             # Fetch the previous and next term if they exist
             try:
                 previous_term = Term.objects.get(id=current_term_id - 1)
@@ -106,7 +110,29 @@ def show_todays_date(request):
         previous_term_string = "No previous term"
         next_term_string = "No next term"
 
-    today = datetime.date.today()
+    # Fetch unique School objects referred in ScoTerm
+    unique_schools = ScoSchool.objects.filter(
+        id__in=ScoTerm.objects.values_list('school_id', flat=True).distinct()
+    ).order_by('sco_name')
+
+    schools_info = []
+    for school in unique_schools:
+        current_term = ScoTerm.get_current_term_for_school(school.id)
+        if current_term:
+            schools_info.append({
+                'name': school.sco_name,
+                'current_term_id': current_term.id,  # Assuming you still want the ID
+                'start_date': current_term.start_date,
+                'end_date': current_term.end_date,
+            })
+        else:
+            # Handle the case where there is no current term
+            schools_info.append({
+                'name': school.sco_name,
+                'current_term_id': None,
+                'start_date': None,
+                'end_date': None,
+            })
 
     return render(request, 'reports/todays_date.html', {
         'today': today,
@@ -114,4 +140,6 @@ def show_todays_date(request):
         'previous_term': previous_term_string,
         'next_term': next_term_string,
         'current_phase': current_phase,
+        'next_phase': next_phase,
+        'schools_info': schools_info,
     })

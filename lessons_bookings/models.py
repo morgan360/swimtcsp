@@ -53,6 +53,18 @@ class Term(models.Model):
         else:
             return 'Outside Term'
 
+    def determine_next_phase(self):
+        today = timezone.now().date()
+        current_term_id = Term.get_current_term_id()  # Get the current term id
+        if self.start_date <= today < self.booking_date:
+            return f'ReBooking for Next Term - Term ({current_term_id+ 1}) starts on {self.rebooking_date}'
+        elif self.booking_date <= today < self.rebooking_date:
+            return f'Rebooking for Next Term - Term ({current_term_id + 1})'
+        elif self.rebooking_date <= today <= self.end_date:
+            return f'Rebooking for  -  Term ({current_term_id + 1} ends on {self.booking_date})'
+        else:
+            return 'Outside Term'
+
     def get_phase_code(self):
         today = timezone.now().date()
         current_term_id = Term.get_current_term_id()

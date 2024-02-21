@@ -48,9 +48,9 @@
                href="/swims/">Public Swims</a>
             <!-- Additional navigation links... -->
             <a class="px-4 py-2 mt-2 text-sm font-semibold bg-transparent rounded-lg dark-mode:bg-transparent dark-mode:hover:bg-gray-600 dark-mode:focus:bg-gray-600 dark-mode:focus:text-white dark-mode:hover:text-white dark-mode:text-gray-200 md:mt-0 md:ml-4 hover:text-gray-900 focus:text-gray-900 hover:bg-gray-200 focus:bg-gray-200 focus:outline-none focus:shadow-outline"
-               href="#">Portfolio</a>
+               href="{% url 'users:profile' %}">My Account</a>
             <a class="px-4 py-2 mt-2 text-sm font-semibold bg-transparent rounded-lg dark-mode:bg-transparent dark-mode:hover:bg-gray-600 dark-mode:focus:bg-gray-600 dark-mode:focus:text-white dark-mode:hover:text-white dark-mode:text-gray-200 md:mt-0 md:ml-4 hover:text-gray-900 focus:text-gray-900 hover:bg-gray-200 focus:bg-gray-200 focus:outline-none focus:shadow-outline"
-               href="#">About</a>
+               href="{% url 'about' %}>About</a>
             <a class="px-4 py-2 mt-2 text-sm font-semibold bg-transparent rounded-lg dark-mode:bg-transparent dark-mode:hover:bg-gray-600 dark-mode:focus:bg-gray-600 dark-mode:focus:text-white dark-mode:hover:text-white dark-mode:text-gray-200 md:mt-0 md:ml-4 hover:text-gray-900 focus:text-gray-900 hover:bg-gray-200 focus:bg-gray-200 focus:outline-none focus:shadow-outline"
                href="#">Contact</a>
             <!-- Dropdown component with its own 'open' state for showing/hiding content -->
@@ -88,6 +88,8 @@
                 </div>
             </div>
             <!-- Additional dropdown for a grid layout, similar structure and functionality -->
+        
+            {% if user.is_staff or user.is_superuser %}
             <div @click.away="open = false" class="relative" x-data="{ open: false }">
                 <button @click="open = !open"
                         class="flex flex-row items-center w-full px-4 py-2 mt-2 text-sm font-semibold text-left bg-transparent rounded-lg dark-mode:bg-transparent dark-mode:focus:text-white dark-mode:hover:text-white dark-mode:focus:bg-gray-600 dark-mode:hover:bg-gray-600 md:w-auto md:inline md:mt-0 md:ml-4 hover:text-gray-900 focus:text-gray-900 hover:bg-gray-200 focus:bg-gray-200 focus:outline-none focus:shadow-outline">
@@ -145,7 +147,7 @@
                                     <p class="text-sm">Day to day administration.</p>
                                 </div>
                                 <a class="flex flex row items-start rounded-lg bg-transparent p-2 dark-mode:hover:bg-gray-600 dark-mode:focus:bg-gray-600 dark-mode:focus:text-white dark-mode:hover:text-white dark-mode:text-gray-200 hover:text-gray-900 focus:text-gray-900 hover:bg-gray-200 focus:bg-gray-200 focus:outline-none focus:shadow-outline"
-                                   href="reports/today">
+                                  href="{% url 'show_todays_data' %}" >
                                     <div class="bg-teal-500 text-white rounded-lg p-3">
                                         <svg fill="none" stroke="currentColor" stroke-linecap="round"
                                              stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24"
@@ -164,6 +166,7 @@
                     </div>
                 </div>
             </div>
+            {% endif %}
         </nav>
     </div>
 </div>

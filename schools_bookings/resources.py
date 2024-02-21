@@ -16,7 +16,7 @@ class TermResource(resources.ModelResource):
         model = ScoTerm
         import_id_fields = 'id',
         fields = ('id', 'start_date', 'end_date', 'booking_start_date',
-                  'booking_end_date', 'assessment_date')
+                  'booking_end_date', 'assessment_date','school')
 
     # Import Bookings from TCSP
 

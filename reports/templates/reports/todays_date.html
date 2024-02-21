@@ -3,20 +3,20 @@
 {% block title %}Reports - Admin{% endblock %}
 
 {% block branding %}
-<h1 id="site-name">TCSP Report</h1>
+    <h1 id="site-name">TCSP Report</h1>
 {% endblock %}
 
 {% block content %}
-<div class="module">
-    <h2>Important Dates</h2>
-    <table class="table table-bordered">
-        <thead class="thead-light">
+    <div class="module">
+        <h2>Important Dates</h2>
+        <table class="table table-bordered">
+            <thead class="thead-light">
             <tr>
                 <th scope="col">Date Type</th>
                 <th scope="col">Date</th>
             </tr>
-        </thead>
-        <tbody>
+            </thead>
+            <tbody>
             <tr>
                 <td>Today</td>
                 <td>{{ today }}</td>
@@ -37,13 +37,24 @@
                 <td>Current Phase</td>
                 <td>{{ current_phase }}</td>
             </tr>
-        </tbody>
-    </table>
-</div>
+            <tr>
+                <td>Next Phase</td>
+                <td>{{ next_phase }}</td>
+            </tr>
+
+            {% for school in schools_info %}
+                <tr>
+                    <td>{{ school.name }} - Current Term:</td> <td> ({{ school.current_term_id }})
+                    {{ school.start_date }} -  {{ school.end_date }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
     <!-- Link to Print Class Lists -->
-<div class="module mt-3">
-    <a href="{% url 'class_list_view' %}" class="btn btn-primary">Print Class Lists</a>
-</div>
+    <div class="module mt-3">
+        <a href="{% url 'class_list_view' %}" class="btn btn-primary">Print Class Lists</a>
+    </div>
 {% endblock %}
 
 

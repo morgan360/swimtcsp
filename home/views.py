@@ -54,7 +54,6 @@ def about(request):
     return render(request, 'about.html')
 
 @login_required()
-@user_in_group('Manager')
 def management(request):
     return render(request, 'management.html')
 

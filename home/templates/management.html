@@ -1,38 +1,36 @@
-{% extends "base_bootstrap.html" %}
+{% extends "_base.html" %}
 {% load static %}
 
 {% block content %}
-<!-- CTA -->
-<div class="container py-5">
-  <div class="row">
+<!-- Container for the CTA -->
+<div class="container mx-auto py-10">
+  <div class="flex flex-wrap">
     <!-- Buttons Column -->
-    <div class="col-sm-12 col-md-12 col-lg-6 pb-4">
-      <h1 class="display-4 font-weight-bold">TCSP Pool Management</h1><br>
-      <h5 class="fw-light">
-        <a class="btn btn-primary mt-2" href="/lessonsadmin/">Lessons Admin Area</a>
-      </h5>
-      <h5 class="fw-light">
-        <a class="btn btn-primary mt-2" href="/swimsadmin/">Swims Admin Area</a>
-      </h5>
-      <h5 class="fw-light">
-        <a class="btn btn-primary mt-2" href="/usersadmin/">Users Admin Area</a>
-      </h5>
-      <h5 class="fw-light">
-        <a class="btn btn-primary mt-2" href="/admin/">Management Reports</a>
-      </h5>
+    <div class="w-full lg:w-1/2 pb-4 px-4">
+      <h1 class="text-4xl font-bold mb-4">TCSP Pool Management</h1>
+      <div class="space-y-3">
+        <a class="inline-block bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200" href="/lessonsadmin/">Lessons Admin Area</a>
+        <a class="inline-block bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200" href="/swimsadmin/">Swims Admin Area</a>
+        <a class="inline-block bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200" href="/usersadmin/">Users Admin Area</a>
+        <a class="inline-block bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200"  href="{% url 'show_todays_data' %}">Management Reports</a>
+      </div>
     </div>
 
     <!-- Image Column -->
-    <div class="col-sm-12 col-md-12 col-lg-6">
-      <img class="img-fluid rounded" src="{% static 'img/swimming-goggles.jpg' %}" alt="Headphones">
+    <div class="w-full lg:w-1/2 px-4">
+      <img class="max-w-full h-auto rounded-lg" src="{% static 'img/swimming-goggles.jpg' %}" alt="Swimming Goggles">
     </div>
   </div>
 </div>
 
-<div class="container text-dark mt-5">
-  <div class="row justify-content-md-center">
-    <div class="col-md-5 p-3">
-      {# more content #}
+<div class="bg-gray-100 text-gray-800 mt-10 py-5">
+  <div class="container mx-auto text-center">
+    <div class="max-w-md mx-auto bg-white rounded-lg overflow-hidden md:max-w-lg">
+      <div class="md:flex">
+        <div class="w-full p-5">
+          {# more content #}
+        </div>
+      </div>
     </div>
   </div>
 </div>

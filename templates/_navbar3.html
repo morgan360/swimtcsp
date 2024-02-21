@@ -7,9 +7,9 @@
         <!-- Container for the logo and mobile menu button -->
         <div class="flex flex-row items-center justify-between p-4">
             <!-- Brand logo with styling for uppercase text, font size, and conditional color for dark mode -->
-            <img src="{% static 'img/logo.png' %}" alt="logo" width="50" height="40"
+             <a href="/"><img src="{% static 'img/logo.png' %}" alt="logo" width="50" height="40"
                  class="d-inline-block align-text-top">
-
+            </a>
             <a href="/"
                class="text-lg font-semibold tracking-widest text-gray-900 uppercase rounded-lg dark-mode:text-white
                focus:outline-none focus:shadow-outline">TCSP
@@ -45,14 +45,14 @@
             <!-- Navigation links with responsive design and hover effects for light/dark mode -->
             <!-- Each link has padding, margin, font styling, rounded borders, and conditional backgrounds for hover states and dark mode -->
             <a class="px-4 py-2 mt-2 text-sm font-semibold text-gray-900 bg-gray-200 rounded-lg dark-mode:bg-gray-700 dark-mode:hover:bg-gray-600 dark-mode:focus:bg-gray-600 dark-mode:focus:text-white dark-mode:hover:text-white dark-mode:text-gray-200 md:mt-0 hover:text-gray-900 focus:text-gray-900 hover:bg-gray-200 focus:bg-gray-200 focus:outline-none focus:shadow-outline"
-               href="/swims/">Public Swims</a>
+              href="{% url 'swims:product_list' %}" >Public Swims</a>
             <!-- Additional navigation links... -->
             <a class="px-4 py-2 mt-2 text-sm font-semibold bg-transparent rounded-lg dark-mode:bg-transparent dark-mode:hover:bg-gray-600 dark-mode:focus:bg-gray-600 dark-mode:focus:text-white dark-mode:hover:text-white dark-mode:text-gray-200 md:mt-0 md:ml-4 hover:text-gray-900 focus:text-gray-900 hover:bg-gray-200 focus:bg-gray-200 focus:outline-none focus:shadow-outline"
                href="{% url 'users:profile' %}">My Account</a>
             <a class="px-4 py-2 mt-2 text-sm font-semibold bg-transparent rounded-lg dark-mode:bg-transparent dark-mode:hover:bg-gray-600 dark-mode:focus:bg-gray-600 dark-mode:focus:text-white dark-mode:hover:text-white dark-mode:text-gray-200 md:mt-0 md:ml-4 hover:text-gray-900 focus:text-gray-900 hover:bg-gray-200 focus:bg-gray-200 focus:outline-none focus:shadow-outline"
-               href="{% url 'about' %}>About</a>
+               href="{% url 'about' %}">About</a>
             <a class="px-4 py-2 mt-2 text-sm font-semibold bg-transparent rounded-lg dark-mode:bg-transparent dark-mode:hover:bg-gray-600 dark-mode:focus:bg-gray-600 dark-mode:focus:text-white dark-mode:hover:text-white dark-mode:text-gray-200 md:mt-0 md:ml-4 hover:text-gray-900 focus:text-gray-900 hover:bg-gray-200 focus:bg-gray-200 focus:outline-none focus:shadow-outline"
-               href="#">Contact</a>
+               href="{% url 'contact' %}" >Contact</a>
             <!-- Dropdown component with its own 'open' state for showing/hiding content -->
             <div @click.away="open = false" class="relative" x-data="{ open: false }">
                 <!-- Dropdown trigger button -->

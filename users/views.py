@@ -8,6 +8,10 @@ from django.contrib import messages
 from allauth.account.views import EmailVerificationSentView
 from django.http import HttpResponse
 from .forms import UserForm, UserProfileForm
+from django.contrib.auth import get_user_model
+
+# Get the custom user model
+user = get_user_model()
 
 
 @login_required
@@ -44,17 +48,10 @@ def hijack_redirect(request, user_id):
     # Redirect to the home page or any other desired URL
     return redirect('home')  # Replace 'home' with the name of your home page URL pattern
 
-# To save Swimling
 
-# def add_swimling(request):
-#     if request.method == "POST":
-#         form = SwimlingForm(request.POST)
-#         if form.is_valid():
-#             form.save()  # Save the Swimling instance to the database
-#             return redirect(
-#                 "success_url")  # Replace "success_url" with the URL you want to redirect to after successful form submission
-#     else:
-#         form = SwimlingForm()
-#     return render(request, "your_template.html", {"form": form})
+@login_required
+def view_swimlings(request):
+    # Query for swimlings associated with the currently logged-in user's guardian field
+    swimlings = Swimling.objects.filter(guardian=request.user)
 
-# views.py
+    return render(request, 'swimling_list.html', {'swimlings': swimlings})

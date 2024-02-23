@@ -9,6 +9,7 @@ from allauth.account.views import EmailVerificationSentView
 from django.http import HttpResponse
 from .forms import UserForm, UserProfileForm
 from django.contrib.auth import get_user_model
+from lessons_bookings.models import LessonEnrollment, Term
 
 # Get the custom user model
 user = get_user_model()
@@ -49,9 +50,38 @@ def hijack_redirect(request, user_id):
     return redirect('home')  # Replace 'home' with the name of your home page URL pattern
 
 
+
+
 @login_required
 def view_swimlings(request):
+    # Get the ID of the current term
+    current_term_id = Term.get_current_term_id()
+
     # Query for swimlings associated with the currently logged-in user's guardian field
     swimlings = Swimling.objects.filter(guardian=request.user)
 
-    return render(request, 'swimling_list.html', {'swimlings': swimlings})
+    # Prepare swimlings data including lesson registration status and lesson name for the current term
+    swimlings_data = []
+    for swimling in swimlings:
+        # Fetch lesson enrollments for the swimling in the current term
+        enrollments = LessonEnrollment.objects.filter(
+            swimling=swimling,
+            term_id=current_term_id
+        ).select_related('lesson')  # Ensure related lesson data is fetched efficiently
+
+        # Check if the swimling is registered for any lessons in the current term
+        is_registered_for_current_term = enrollments.exists()
+
+        # Get names of all lessons the swimling is registered for (assuming there could be more than one)
+        lesson_names = [enrollment.lesson.name for enrollment in enrollments]
+
+        # Append swimling and their registration status and registered lesson names to the list
+        swimlings_data.append({
+            'swimling': swimling,
+            'is_registered_for_current_term': is_registered_for_current_term,
+            'registered_lessons': lesson_names  # List of lesson names
+        })
+
+    return render(request, 'swimling_list.html', {'swimlings': swimlings_data})
+
+

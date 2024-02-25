@@ -1,47 +1,17 @@
 {% extends '_base.html' %}
 
 {% block content %}
-<div class="container mx-auto px-4 py-6">
-    <h2 class="text-xl font-semibold mb-4">My Swimlings</h2>
-    {% if swimlings %}
-    <table class="min-w-full table-auto border-collapse border border-gray-200">
-        <thead class="bg-gray-100">
-            <tr>
-                <th class="border border-gray-300 px-4 py-2 text-left">Name</th>
-                <th class="border border-gray-300 px-4 py-2 text-left">Notes</th>
-                <th class="border border-gray-300 px-4 py-2 text-left">Registration Status</th>
-                <th class="border border-gray-300 px-4 py-2 text-left">Registered Lessons</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for item in swimlings %}
-            <tr class="hover:bg-gray-50">
-                <td class="border border-gray-300 px-4 py-2">{{ item.swimling.first_name }} {{ item.swimling.last_name }}</td>
-                <td class="border border-gray-300 px-4 py-2">{{ item.swimling.notes }}</td>
-                <td class="border border-gray-300 px-4 py-2">
-                    {% if item.is_registered_for_current_term %}
-                    <span class="text-green-600 font-semibold">Registered for current term</span>
-                    {% else %}
-                    <span class="text-red-600">Not registered for current term</span>
-                    {% endif %}
-                </td>
-                <td class="border border-gray-300 px-4 py-2">
-                    {% if item.registered_lessons %}
-                    {{ item.registered_lessons|join:", " }}
-                    {% else %}
-                    N/A
-                    {% endif %}
-                </td>
-            </tr>
-            {% empty %}
-            <tr>
-                <td colspan="4" class="border border-gray-300 px-4 py-2 text-center">No swimlings found.</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    {% else %}
-    <p>No swimlings found.</p>
-    {% endif %}
-</div>
+    <div class="container mx-auto px-4 py-6">
+        <h2 class="text-xl font-semibold mb-4">My Swimlings</h2>
+        {% if swimlings %}
+            <div id="swimlings_table">
+                {% include 'users/partials/swimlings_table.html' %}
+            </div>
+        {% else %}
+            <p>No swimlings found.</p>
+        {% endif %}
+    </div>
+    <div>
+        {% include 'users/partials/new_swimling_form.html' %}
+    </div>
 {% endblock %}

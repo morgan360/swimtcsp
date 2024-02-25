@@ -1,7 +1,8 @@
 from django import forms
 from allauth.account.forms import SignupForm
-from django.contrib.auth.models import Group,User
-from .models import UserProfile
+from django.contrib.auth.models import Group, User
+from .models import UserProfile, Swimling
+
 
 class CustomSignupForm(SignupForm):
     first_name = forms.CharField(max_length=150, required=True)
@@ -26,6 +27,7 @@ class CustomSignupForm(SignupForm):
         # Return the user instance
         return user
 
+
 # Update Profile
 class UserForm(forms.ModelForm):
     class Meta:
@@ -37,3 +39,20 @@ class UserProfileForm(forms.ModelForm):
     class Meta:
         model = UserProfile
         fields = ('notes',)
+
+
+class NewSwimlingForm(forms.ModelForm):
+    class Meta:
+        model = Swimling
+        fields = ['first_name', 'last_name', 'dob', 'sco_role_num', 'notes']
+        widgets = {
+            'dob': forms.DateInput(attrs={'type': 'date'}),
+            'notes': forms.Textarea(attrs={'rows': 4}),
+        }
+        labels = {
+            'first_name': 'First Name',
+            'last_name': 'Last Name',
+            'dob': 'Date of Birth',
+            'sco_role_num': 'School Role Number',
+            'notes': 'Additional Notes'
+        }

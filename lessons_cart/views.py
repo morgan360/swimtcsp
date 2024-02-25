@@ -3,7 +3,8 @@ from django.views.decorators.http import require_POST
 from lessons.models import Product
 from users.models import Swimling
 from .cart import Cart
-from .forms import CartAddProductForm, NewSwimlingForm
+from .forms import CartAddProductForm
+from users.forms import NewSwimlingForm
 from django.contrib.auth.decorators import login_required
 
 @login_required

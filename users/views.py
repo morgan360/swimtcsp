@@ -7,9 +7,11 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from allauth.account.views import EmailVerificationSentView
 from django.http import HttpResponse
-from .forms import UserForm, UserProfileForm
+from .forms import UserForm, UserProfileForm, NewSwimlingForm
 from django.contrib.auth import get_user_model
 from lessons_bookings.models import LessonEnrollment, Term
+from django.template.loader import render_to_string
+from django.shortcuts import get_object_or_404
 
 # Get the custom user model
 user = get_user_model()
@@ -50,8 +52,6 @@ def hijack_redirect(request, user_id):
     return redirect('home')  # Replace 'home' with the name of your home page URL pattern
 
 
-
-
 @login_required
 def view_swimlings(request):
     # Get the ID of the current term
@@ -85,3 +85,79 @@ def view_swimlings(request):
     return render(request, 'swimling_list.html', {'swimlings': swimlings_data})
 
 
+@login_required
+def edit_swimling(request, id):
+    swimling = get_object_or_404(Swimling, id= id, guardian=request.user)  # Ensure the user is the guardian
+
+    if request.method == 'POST':
+        form = NewSwimlingForm(request.POST, instance=swimling)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Swimling updated successfully.')
+            return redirect('users:view-swimlings')  # Redirect to the list of swimlings or a confirmation page
+    else:
+        form = NewSwimlingForm(instance=swimling)
+
+    return render(request, 'edit_swimling.html', {'form': form, 'swimling': swimling})
+
+
+@login_required
+def add_new_swimling(request):
+    # when form is subbmitted
+    if request.method == 'POST':
+        form = NewSwimlingForm(request.POST)
+        if form.is_valid():
+            new_swimling = form.save(commit=False)
+            new_swimling.guardian = request.user
+            new_swimling.save()
+            print("saved new swimling")
+            # Fetch updated swimlings for the dropdown
+            current_term_id = Term.get_current_term_id()
+
+            # Query for swimlings associated with the currently logged-in user's guardian field
+            swimlings = Swimling.objects.filter(guardian=request.user)
+
+            # Prepare swimlings data including lesson registration status and lesson name for the current term
+            swimlings_data = []
+            for swimling in swimlings:
+                # Fetch lesson enrollments for the swimling in the current term
+                enrollments = LessonEnrollment.objects.filter(
+                    swimling=swimling,
+                    term_id=current_term_id
+                ).select_related('lesson')  # Ensure related lesson data is fetched efficiently
+
+                # Check if the swimling is registered for any lessons in the current term
+                is_registered_for_current_term = enrollments.exists()
+
+                # Get names of all lessons the swimling is registered for (assuming there could be more than one)
+                lesson_names = [enrollment.lesson.name for enrollment in enrollments]
+
+                # Append swimling and their registration status and registered lesson names to the list
+                swimlings_data.append({
+                    'swimling': swimling,
+                    'is_registered_for_current_term': is_registered_for_current_term,
+                    'registered_lessons': lesson_names  # List of lesson names
+                })
+
+            # success message
+            messages.success(request, 'Swimling added successfully.')
+            # Render the partial template for the dropdown
+            rendered_html = render_to_string('users/partials/swimlings_table.html', {'swimlings': swimlings_data},
+                                             request=request)
+
+            # Respond with the rendered HTML for HTMX to swap
+            return HttpResponse(rendered_html)
+        # *** form not valid ***
+        else:
+            if "HX-Request" in request.headers:
+                # If form is invalid during an HTMX request, return the form with errors
+                context = {'form': form}
+                html = render_to_string('partials/new_swimling_form.html', context, request=request)
+                return HttpResponse(html, status=400)
+            else:
+                # For non-HTMX, render the form with errors within the context of a full page
+                return render(request, 'partials/new_swimling_form.html', {'form': form})
+    # If form not submitted
+    else:
+        form = NewSwimlingForm()
+        return render(request, 'partials/new_swimling_form.html', {'form': form})

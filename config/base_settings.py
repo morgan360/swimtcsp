@@ -118,6 +118,7 @@ TEMPLATES = [
                 # Mine
                 'utils.context_processors.get_term',
                 'utils.context_processors.footer_message',
+                # 'utils.context_processors.current_term',
             ],
         },
     },

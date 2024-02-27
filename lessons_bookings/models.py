@@ -6,6 +6,7 @@ from users.models import Swimling
 from django.utils.formats import date_format
 from django.utils import timezone
 
+
 # from lessons_orders.models import Order
 # Because of circular references had to use string references instead: 'lessons_orders.Order'
 
@@ -37,35 +38,26 @@ class Term(models.Model):
         return current_term.id if current_term else None
 
     def concatenated_term(self):
-        formatted_start_date = date_format(self.start_date, "SHORT_DATE_FORMAT")
-        formatted_end_date = date_format(self.end_date, "SHORT_DATE_FORMAT")
-        return f"({self.id}) - {formatted_start_date} - {formatted_end_date}"
+        formatted_start_date = self.start_date.strftime('%d %b %Y')  # ISO format
+        formatted_end_date = self.end_date.strftime('%d %b %Y')
+        return f"({self.id}) - {formatted_start_date} ~ {formatted_end_date}"
 
     def determine_phase(self):
         today = timezone.now().date()
-        current_term_id = Term.get_current_term_id()  # Get the current term id
-        if self.start_date <= today < self.booking_date:
-            return f'Booking for Current Term - Term ({current_term_id})'
-        elif self.booking_date <= today < self.rebooking_date:
-            return f'Rebooking for Next Term - Term ({current_term_id + 1})'
-        elif self.rebooking_date <= today <= self.end_date:
-            return f'Booking for Next Term -  Term ({current_term_id + 1})'
-        else:
-            return 'Outside Term'
+        current_term_id = Term.get_current_term_id()
 
-    def determine_next_phase(self):
-        today = timezone.now().date()
-        current_term_id = Term.get_current_term_id()  # Get the current term id
-        if self.start_date <= today < self.booking_date:
-            return f'ReBooking for Next Term - Term ({current_term_id+ 1}) starts on {self.rebooking_date}'
-        elif self.booking_date <= today < self.rebooking_date:
-            return f'Rebooking for Next Term - Term ({current_term_id + 1})'
-        elif self.rebooking_date <= today <= self.end_date:
-            return f'Rebooking for  -  Term ({current_term_id + 1} ends on {self.booking_date})'
+        if self.start_date <= today < self.rebooking_date:
+            return f'BK'
+        elif self.rebooking_date <= today < self.booking_date:
+            return f'RB'
+        elif self.booking_date <= today <= self.end_date:
+            return f'BN'
         else:
-            return 'Outside Term'
+            return 'Outside Term Dates'
+
 
     def get_phase_code(self):
+
         today = timezone.now().date()
         current_term_id = Term.get_current_term_id()
 

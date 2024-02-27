@@ -1,6 +1,7 @@
 # Table of contents
 
-* [deploying\_site](README.md)
+* [BOIP](README.md)
+* [deploying\_site](<README (1).md>)
   * [Import\_Export](deploying\_site/import\_export.md)
 * [Programming](<README (2).md>)
   * [Tailwind CSS](programming/tailwind-css.md)
@@ -14,7 +15,7 @@
   * [Commands](programming/commands.md)
 * [Problems](problems/README.md)
   * [CSS not loading for Admin when DEBUG = False](problems/reverse-statix-etc-problems.md)
-* [Admin](<README (1).md>)
+* [Admin](<README (1) (1).md>)
   * [Accessing Management](admin/accessing-management.md)
 * [Apps](apps.md)
 * [To Do List](to-do-list.md)

@@ -25,4 +25,4 @@ There are 3 integration modes available for the Hosted Payment Page:
 
 **3. Embedded** iFrame (a customisable payment page where fonts/colours may be changed), embedded in a container within the merchant site;
 
-\
+merchant ID: 100121\

@@ -1,6 +1,7 @@
 # Table of contents
 
-* [BOIP](README.md)
+* [Start a New Site](README.md)
+* [BOIP](<README (3).md>)
 * [deploying\_site](<README (1).md>)
   * [Import\_Export](deploying\_site/import\_export.md)
 * [Programming](<README (2).md>)

@@ -1,7 +1,8 @@
 # Table of contents
 
 * [Start a New Django Project](README.md)
-* [BOIP](<README (3).md>)
+* [BOIP](boip/README.md)
+  * [Ngrok](boip/ngrok.md)
 * [deploying\_site](<README (1).md>)
   * [Import\_Export](deploying\_site/import\_export.md)
 * [Programming](<README (2).md>)

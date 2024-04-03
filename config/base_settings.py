@@ -264,7 +264,13 @@ STRIPE_PUBLISHABLE_KEY = str(os.getenv('STRIPE_PUBLISHABLE_KEY'))
 STRIPE_SECRET_KEY = str(os.getenv('STRIPE_SECRET_KEY'))
 STRIPE_WEBHOOK_SECRET = str(os.getenv('STRIPE_WEBHOOK_SECRET'))
 STRIPE_API_VERSION = '2022-08-01'
-
+BOIPA_MERCHANT_ID=100121
+BRAND_ID=1001210000
+BOIPA_PASSWORD='qWGEJQQAkhROSTGpwS5O'
+BOIPA_TOKEN_URL="https://apiuat.test.boipapaymentgateway.com/token"
+BOIPA_PAYMENT_URL='https://apiuat.test.boipapaymentgateway.com/payments'
+HPP_FORM='https://cashierui-apiuat.test.boipapaymentgateway.com/'
+NGROK ='https://tcsp-morganmck.eu.pythonanywhere.com/'
 FOOTER_MESSAGE = "Base Version"
 # How many records can you upload
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 12000

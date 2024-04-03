@@ -43,13 +43,18 @@
     <tbody>
     {% for item in swimlings %}
         <tr class="hover:bg-gray-50">
-            <td class="border border-gray-300 px-4 py-2">{{ item.swimling.first_name }} {{ item.swimling.last_name }}</td>
             <td class="border border-gray-300 px-4 py-2">
-                {% if current_phase_id == "RB" %}
-                    <button type="button"
-                            class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
-                        Rebooking
-                    </button>
+                {% if current_phase_id == "RB" and item.is_registered_for_current_term %}
+                    <!-- Begin form for rebooking -->
+                    <form method="post" action="{% url 'lessons_cart:cart_add' product.id|default:'0' %}"">
+                        {% csrf_token %}
+                        <!-- Assuming you have a way to get next_term_id for the rebooking -->
+{#                        <input type="hidden" name="next_term_id" value="{{ next_term_id }}">#}
+                        <button type="submit"
+                                class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                            Rebooking
+                        </button>
+                    </form>
                 {% else %}
                     <button type="button"
                             class="bg-gray-500 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"

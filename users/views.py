@@ -12,7 +12,7 @@ from django.contrib.auth import get_user_model
 from lessons_bookings.models import LessonEnrollment, Term
 from django.template.loader import render_to_string
 from django.shortcuts import get_object_or_404
-
+from utils.context_processors import get_term_info
 # Get the custom user model
 user = get_user_model()
 
@@ -103,6 +103,7 @@ def edit_swimling(request, id):
 
 @login_required
 def add_new_swimling(request):
+    term_data = get_term_info(request)
     # when form is subbmitted
     if request.method == 'POST':
         form = NewSwimlingForm(request.POST)
@@ -128,6 +129,15 @@ def add_new_swimling(request):
 
                 # Check if the swimling is registered for any lessons in the current term
                 is_registered_for_current_term = enrollments.exists()
+                if term_data['next_term_id'] is not None:
+                    # Check for next term's enrollment for the same course
+                    enrollments_next_term = LessonEnrollment.objects.filter(
+                        swimling=swimling,
+                        term_id=next_term_id,
+                        lesson__in=[enrollment.lesson for enrollment in enrollments_current_term]
+                    ).select_related('lesson')
+                    # Determine if the swimling is registered for the next term for the same course
+                    is_registered_for_next_term_same_course = enrollments_next_term.exists()
 
                 # Get names of all lessons the swimling is registered for (assuming there could be more than one)
                 lesson_names = [enrollment.lesson.name for enrollment in enrollments]
@@ -136,6 +146,7 @@ def add_new_swimling(request):
                 swimlings_data.append({
                     'swimling': swimling,
                     'is_registered_for_current_term': is_registered_for_current_term,
+                    'is_registered_for_next_term_same_course': is_registered_for_next_term_same_course,
                     'registered_lessons': lesson_names  # List of lesson names
                 })
 

@@ -7,7 +7,7 @@ from django.utils import timezone
 from django.utils.formats import date_format
 
 
-def get_term(request: HttpRequest) -> Dict[str, str]:
+def get_term_info(request: HttpRequest) -> Dict[str, str]:
     """
     Context processor to retrieve the current term, its current phase, and the next phase.
 
@@ -18,8 +18,6 @@ def get_term(request: HttpRequest) -> Dict[str, str]:
     - Dictionary with keys 'current_term', 'current_phase', and 'next_phase' associated to the current term's string
       representation, its current phase, and the next phase, or messages indicating no current term or phases not found, respectively.
     """
-
-def get_term(request: HttpRequest) -> Dict[str, str]:
     today = timezone.now().date()
     # Initialize all variables to ensure they have default values
     current_term_id = None

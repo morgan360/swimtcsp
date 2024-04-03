@@ -45,6 +45,8 @@ urlpatterns = [
     path('timetable/', include('timetable.urls')),
     path('hijack/', include('hijack.urls')),
     path('reports/', include('reports.urls')),
+    # BOIPA
+    path('boipa/', include('boipa.urls')),
 ]
 # Serve static and media files during development
 if settings.DEBUG:

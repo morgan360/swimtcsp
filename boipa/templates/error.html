@@ -1,0 +1,22 @@
+{% extends '_base.html' %}
+
+{% block title %}Error Occurred{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex flex-col items-center justify-center bg-gray-100">
+    <div class="max-w-md w-full bg-white rounded-lg shadow-md p-6">
+        <h2 class="text-xl font-semibold text-gray-900">Error</h2>
+        <p class="mt-4 text-sm text-gray-600">
+            We're sorry, but something went wrong. Please try again later.
+        </p>
+        {% if error_message %}
+            <div class="mt-3 text-sm text-red-500">
+                {{ error_message }}
+            </div>
+        {% endif %}
+        <div class="mt-6">
+            <a href="{% url 'home' %}" class="text-indigo-600 hover:text-indigo-500">Go back to the homepage</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

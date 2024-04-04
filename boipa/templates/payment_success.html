@@ -1,0 +1,16 @@
+<!-- templates/payment_success.html -->
+{% extends '_base.html' %}
+{% load static %}
+{% block title %}BOIPA | Payment Success{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-100 flex flex-col items-center justify-center">
+    <div class="bg-white p-8 rounded-lg shadow-md max-w-md mx-auto">
+        <h1 class="text-2xl font-bold text-green-600 mb-4">Payment Success</h1>
+        <p class="mb-2">Your payment has been successfully processed.</p>
+        <p class="mb-2"><span class="font-semibold">Order ID:</span> {{ order_ref }}</p>
+        <p class="mb-4"><span class="font-semibold">Status:</span> {{ result }}</p>
+        <a href="{% url 'home' %}" class="inline-block bg-blue-500 text-white font-semibold px-6 py-2 rounded hover:bg-blue-600 transition ease-in-out duration-150">Return to Home</a>
+    </div>
+</div>
+{% endblock %}

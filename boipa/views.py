@@ -53,8 +53,9 @@ def get_boipa_session_token():
         "currency": "EUR",  # Example currency
         "amount": "100.00",  # Example amount for AUTH or PURCHASE
         "merchantTxId": order_id,  # Your internal order ID
-        "merchantLandingPageUrl": NGROK + "/payment-response/",  # General callback URL for customer redirection
-        "merchantNotificationUrl": NGROK + "/payment-notification/",  # Server-to-server notification URL(important
+        "merchantLandingPageUrl": NGROK + "/boipa/payment-response/",  # General callback URL for customer redirection
+        "merchantNotificationUrl": NGROK + "/boipa/payment-notification/",  # Server-to-server notification URL(
+        # important
         # in case user makes a mess)
         "merchantLandingPageRedirectMethod": "GET",  # Ensure redirects use GET
     }

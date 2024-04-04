@@ -2,7 +2,8 @@ from decimal import Decimal
 from django.conf import settings
 from swims.models import PublicSwimProduct, PriceVariant
 from django.shortcuts import render
-
+from django.shortcuts import get_object_or_404
+from datetime import date, datetime
 
 class Cart(object):
     """
@@ -23,19 +24,38 @@ class Cart(object):
                 variation = int(variation)
                 yield product_id, variation, quantity
 
-    def add(self, product_id, variation_list, quantity_list):
-        product = str(product_id)
-        # Iterate through each variant
-        i = 0
-        self.cart[product] = {}
-        for variation in variation_list:
-            self.cart[product][variation] = quantity_list[i]
-            i += 1
-        self.save()
+    def add(self, product_id, variation_list, quantity_list, next_occurrence_date):
+        """
+            Adds a product and its variations to the cart.
 
-    def save(self):
-        # mark the session as "modified" to make sure it gets saved
-        self.session.modified = True
+            Parameters:
+            - product_id (str): The ID of the product to add.
+            - variation_list (list): A list of variation IDs for the product.
+            - quantity_list (list): A list of quantities corresponding to each variation.
+            - next_occurrence_date (date): The next occurrence date for the product.
+
+            Each product in the cart is stored with its variations, each variation's quantity,
+            and the next occurrence date of the product.
+            """
+        product_str = str(product_id)
+        next_occurrence_date_str = next_occurrence_date.strftime('%Y-%m-%d')
+
+        # Initialize the product in the cart if not already present
+        if product_str not in self.cart:
+            self.cart[product_str] = {'variations': {}, 'next_occurrence_date': next_occurrence_date_str}
+        else:
+            # Ensure variations key exists even if the product is already in the cart
+            if 'variations' not in self.cart[product_str]:
+                self.cart[product_str]['variations'] = {}
+            # Update the next occurrence date in case it's a repeated addition/updated info
+            self.cart[product_str]['next_occurrence_date'] = next_occurrence_date_str
+
+        # Iterate through each variation and quantity
+        for variation, quantity in zip(variation_list, quantity_list):
+            # Here, safely access 'variations' since it's ensured to exist above
+            self.cart[product_str]['variations'][str(variation)] = quantity
+
+        self.save()
 
     def remove(self, product_id):
         product_id = str(product_id)
@@ -54,35 +74,49 @@ class Cart(object):
         del self.session[settings.CART_SESSION_ID]
         self.save()
 
-    def cart_retrieve(self, request=None):
-        """
-            Iterate over the items in the cart and get the products
-            """
-        self.request = request
-        if len(self.cart)==0:
-            context = {
-                'empty': True,
-            }
-        else:
-            product_str = next(iter(self.cart))
-            product_id = int(product_str)
 
-            product = PublicSwimProduct.objects.get(id=product_id)
-            # retrieve all the variatiions in cart
-            variation_ids = list(self.cart[product_str].keys())
-            variation_table = []
-            total = 0
-            for variation_str in variation_ids:
-                variation_id = int(variation_str)
-                variant = PriceVariant.objects.get(id=variation_id)
-                variant_name = variant.variant
-                price = variant.price
-                quantity = self.cart[product_str][variation_str]
-                sub_total = price * quantity
-                total += sub_total
-                table = [variant_name, price, quantity, sub_total]
-                variation_table.append(table)
-            context = {'product': product, 'variation_table': variation_table, 'total': total}
+
+    def cart_retrieve(self):
+        """
+        Retrieves the single product in the cart, along with its variations, quantities,
+        and the total cost.
+        """
+        if not self.cart:
+            return {'empty': True}
+
+        # Assuming there is only one product in the cart.
+        product_str = next(iter(self.cart))
+        product_id = int(product_str)
+        product = get_object_or_404(PublicSwimProduct, id=product_id)
+
+        # Retrieve all the variations in the cart for this product.
+        variation_ids = self.cart[product_str].get('variations', {})
+        variation_table = []
+        total = 0
+
+        for variation_id, quantity in variation_ids.items():
+            variation = get_object_or_404(PriceVariant, id=variation_id)
+            price = variation.price
+            sub_total = price * quantity
+            total += sub_total
+            variation_table.append([variation.variant, price, quantity, sub_total])
+
+        # Assuming 'next_occurrence_date' is directly accessible in the product's cart data.
+        next_occurrence_date_str = self.cart[product_str].get('next_occurrence_date', None)
+
+        if next_occurrence_date_str is not None:
+            next_occurrence_date = datetime.strptime(next_occurrence_date_str, '%Y-%m-%d').date()
+        else:
+            next_occurrence_date = None
+
+        context = {
+            'product': product,
+            'variation_table': variation_table,
+            'total': total,
+            'next_occurrence_date': next_occurrence_date,
+            'empty': False,
+        }
+
         return context
 
     def __len__(self):
@@ -94,3 +128,9 @@ class Cart(object):
     def clear_cart(self):
         self.cart = {}
         self.session[settings.CART_SESSION_ID] = {}
+
+    def save(self):
+        """
+        Save the cart into the session.
+        """
+        self.session.modified = True

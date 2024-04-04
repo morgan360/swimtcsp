@@ -46,7 +46,7 @@ urlpatterns = [
     path('hijack/', include('hijack.urls')),
     path('reports/', include('reports.urls')),
     # BOIPA
-    path('boipa/', include('boipa.urls')),
+    path('boipa/', include(('boipa.urls', 'boipa'), namespace='boipa')),  # Note the namespace argument
 ]
 # Serve static and media files during development
 if settings.DEBUG:

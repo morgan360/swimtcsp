@@ -3,8 +3,7 @@ from swims.models import PublicSwimProduct, PriceVariant
 from .cart import Cart
 from .forms import CartAddProductForm
 from django.urls import reverse
-
-
+from utils.date_utils import get_next_occurrence
 from django.http import HttpResponseBadRequest
 from django.shortcuts import get_object_or_404, redirect
 
@@ -28,7 +27,8 @@ def add_to_cart(request, product_id):
                 quantity_list.append(quantity)
         # Optionally, handle the case where quantity_str is None
         # For example, skip adding this variation or set a default quantity
-    cart.add(product.id, variation_list, quantity_list)
+    next_occurrence = get_next_occurrence(product.day_of_week)
+    cart.add(product.id, variation_list, quantity_list, next_occurrence)
     return redirect('swims_cart:cart_detail')
 
 

@@ -15,7 +15,7 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from .models import PaymentNotification
 from django.http import QueryDict
-
+from django.urls import reverse
 # Load environment variables
 load_dotenv()
 
@@ -34,51 +34,82 @@ timestamp = time.strftime("%Y%m%d%H%M%S")
 order_id = f"{base_order_id}_{timestamp}"
 
 
-def home(request):
-    # Render the home page. Additional context can be passed if needed.
-    return render(request, 'home.html')
-
-
-def get_boipa_session_token():
-    url = BOIPA_TOKEN_URL  # UAT URL, change for production
-    headers = {'Content-Type': 'application/x-www-form-urlencoded'}
+def initiate_boipa_payment_session(request, total_price, order_ref):
+    """
+    Initiates a payment session with BOIPA for a given product and total price.
+    Redirects the user to the BOIPA payment page.
+    """
+    # Construct the payload with your details
     payload = {
-        "merchantId": settings.BOIPA_MERCHANT_ID,
-        "password": settings.BOIPA_PASSWORD,
-        "action": "AUTH",  # Based on the operation you're performing
-        "timestamp": int(time.time() * 1000),  # Current time in milliseconds
-        "allowOriginUrl": NGROK,  # Your ngrok URL for CORS
+        "merchantId": BOIPA_MERCHANT_ID,
+        "password": BOIPA_PASSWORD,
+        "action": "AUTH",  # Change as needed
+        "timestamp": str(int(time.time() * 1000)),
+        "allowOriginUrl": NGROK,  # The URL BOIPA should allow origin from
         "channel": "ECOM",
-        "country": "IE",  # Example country code
-        "currency": "EUR",  # Example currency
-        "amount": "100.00",  # Example amount for AUTH or PURCHASE
-        "merchantTxId": order_id,  # Your internal order ID
-        "merchantLandingPageUrl": NGROK + "/boipa/payment-response/",  # General callback URL for customer redirection
-        "merchantNotificationUrl": NGROK + "/boipa/payment-notification/",  # Server-to-server notification URL(
-        # important
-        # in case user makes a mess)
-        "merchantLandingPageRedirectMethod": "GET",  # Ensure redirects use GET
+        "country": "IE",  # Example: IE for Ireland
+        "currency": "EUR",
+        "amount": str(total_price),
+        "merchantTxId": str(order_ref),  # Example: product ID as transaction ID
+        "merchantLandingPageUrl": NGROK + reverse('boipa:payment_response'),
+        "merchantNotificationUrl": NGROK + reverse('boipa:payment_notification'),
+        "merchantLandingPageRedirectMethod": "GET",
     }
 
-    response = requests.post(url, data=payload, headers=headers)
+    # Send the request to BOIPA to initiate the payment session
+    response = requests.post(BOIPA_TOKEN_URL, data=payload, headers={'Content-Type': 'application/x-www-form-urlencoded'})
     if response.status_code == 200:
-        return response.json().get('token')
+        # Extract the session token from the response
+        session_token = response.json().get('token')
+        # Construct the payment URL
+        payment_url = f"{PAYMENT_FORM_URL}?token={session_token}&merchantId={BOIPA_MERCHANT_ID}&integrationMode=Standalone"
+        # Redirect the user to the BOIPA payment page
+        return redirect(payment_url)
     else:
-        # Handle error
-        print(f"Error obtaining session token: {response.text}")
-        return None
+        # Handle error (e.g., display an error message)
+        return render(request, 'error.html', {'error_message': 'Failed to initiate payment session.'})
 
 
-def load_payment_form(request):
-    token = get_boipa_session_token()
-    if token is None:
-        return render(request, 'error.html', {'error': 'Unable to obtain session token.'})
+# def get_boipa_session_token():
+#     url = BOIPA_TOKEN_URL  # UAT URL, change for production
+#     headers = {'Content-Type': 'application/x-www-form-urlencoded'}
+#     payload = {
+#         "merchantId": settings.BOIPA_MERCHANT_ID,
+#         "password": settings.BOIPA_PASSWORD,
+#         "action": "AUTH",  # Based on the operation you're performing
+#         "timestamp": int(time.time() * 1000),  # Current time in milliseconds
+#         "allowOriginUrl": NGROK,  # Your ngrok URL for CORS
+#         "channel": "ECOM",
+#         "country": "IE",  # Example country code
+#         "currency": "EUR",  # Example currency
+#         "amount": "100.00",  # Example amount for AUTH or PURCHASE
+#         "merchantTxId": order_id,  # Your internal order ID
+#         "merchantLandingPageUrl": NGROK + "/boipa/payment-response/",  # General callback URL for customer redirection
+#         "merchantNotificationUrl": NGROK + "/boipa/payment-notification/",  # Server-to-server notification URL(
+#         # important
+#         # in case user makes a mess)
+#         "merchantLandingPageRedirectMethod": "GET",  # Ensure redirects use GET
+#     }
 
-    # Construct the HPP URL with the obtained token and include integrationMode
-    hpp_url = HPP_FORM + f"?token={token}&merchantId={settings.BOIPA_MERCHANT_ID}&integrationMode=Standalone"
+    # response = requests.post(url, data=payload, headers=headers)
+    # if response.status_code == 200:
+    #     return response.json().get('token')
+    # else:
+    #     # Handle error
+    #     print(f"Error obtaining session token: {response.text}")
+    #     return None
 
-    # Redirect user to the HPP URL
-    return redirect(hpp_url)
+
+# def load_payment_form(request):
+#     token = get_boipa_session_token()
+#     if token is None:
+#         return render(request, 'error.html', {'error': 'Unable to obtain session token.'})
+#
+#     # Construct the HPP URL with the obtained token and include integrationMode
+#     hpp_url = HPP_FORM + f"?token={token}&merchantId={settings.BOIPA_MERCHANT_ID}&integrationMode=Standalone"
+#
+#     # Redirect user to the HPP URL
+#     return redirect(hpp_url)
 
 
 def error_view(request):
@@ -87,35 +118,24 @@ def error_view(request):
     return render(request, 'error.html', {'error_message': error_message})
 
 
+# Also in views.py
+
 def payment_response(request):
-    # Assuming 'result' is a parameter indicating the payment outcome
+    """
+    Handles the payment response from BOIPA.
+    """
     result = request.GET.get('result')
-    order_ref = request.GET.get('merchantTxId')
+    merchant_tx_id = request.GET.get('merchantTxId')
 
     if result == "success":
-        # Logic for successful payment
-        context = {
-            'title': "Payment Success",
-            'message': "Your payment has been successfully processed.",
-            'order_ref': order_ref,
-            'result': result,
-        }
-        return render(request, 'payment_success.html', context)
-
+        # Payment was successful
+        return render(request, 'payment_success.html', {'merchant_tx_id': merchant_tx_id})
     elif result == "failure":
-        # Logic for failed payment
-        message = request.GET.get('message')  # Assuming a failure message is passed
-        context = {
-            'title': "Payment Failure",
-            'message': f"Payment failed. Reason: {message}",
-            'order_ref': order_ref,
-            'result': result,
-        }
-        return render(request, 'payment_failure.html', context)
-
+        # Payment failed
+        return render(request, 'payment_failure.html', {'merchant_tx_id': merchant_tx_id})
     else:
-        # Handle unknown result
-        return render(request, 'error.html', {'message': "Unknown payment response."})
+        # Unrecognized result
+        return render(request, 'error.html', {'error_message': 'Unknown payment response.'})
 
 
 @csrf_exempt  # Disable CSRF protection for this endpoint

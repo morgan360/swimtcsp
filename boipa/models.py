@@ -1,4 +1,5 @@
 from django.db import models
+from swims_orders.models import Order
 
 class PaymentNotification(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='notifications')

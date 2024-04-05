@@ -126,7 +126,6 @@ TEMPLATES = [
     },
 ]
 
-AXES_LOCKOUT_TEMPLATE = 'account/lockout.html'
 
 
 WSGI_APPLICATION = 'core.wsgi.application'
@@ -259,8 +258,10 @@ ACCOUNT_FORMS = {
 
 # AXES PARAMETERS
 AXES_FAILURE_LIMIT = 5  # Number of attempts before lockout
-AXES_LOCKOUT_TEMPLATE = 'your_lockout_template.html'  # Optional: Custom template to show on lockout
+# AXES_LOCKOUT_TEMPLATE = 'your_lockout_template.html'  # Optional: Custom template to show on lockout
 AXES_USERNAME_FORM_FIELD = 'login'
+
+AXES_LOCKOUT_TEMPLATE = 'account/lockout.html'
 
 # How cart sessions are stored
 CART_SESSION_ID = 'cart'

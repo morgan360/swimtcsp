@@ -117,7 +117,7 @@ def payment_notification(request):
             order = Order.objects.get(id=order_id)  # Assuming merchantTxId is the Order ID
             order.txId = txId
             order.payment_status  = status
-            if status == 'SET_FOR_CAPTURE':
+            if status == 'SET_FOR_CAPTURE' or status == 'CAPTURED':
                 order.paid=True
             else:
                 order.paid = False

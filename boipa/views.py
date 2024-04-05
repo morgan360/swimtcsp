@@ -103,16 +103,16 @@ def payment_notification(request):
         data = QueryDict(request.body)
 
         # Extracting the necessary information
-        txId = data.get('txId')
-        merchantTxId = data.get('merchantTxId')
-        status = data.get('status')
+        # txId = data.get('txId')
+        # merchantTxId = data.get('merchantTxId')
+        # status = data.get('status')
 
         # Attempt to identify the corresponding order using merchantTxId
         try:
-            order = Order.objects.get(id=merchantTxId)  # Assuming merchantTxId is the Order ID
-            # Update the order payment status based on the notification
-            order.payment_status = status
-            order.save()
+            # order = Order.objects.get(id=merchantTxId)  # Assuming merchantTxId is the Order ID
+            # # Update the order payment status based on the notification
+            # order.payment_status = status
+            # order.save()
 
             # Log or perform additional actions as needed
 
@@ -133,8 +133,7 @@ def payment_notification(request):
                 customerId=data.get('customerId'),
                 acquirerCurrency=data.get('acquirerCurrency'),
                 paymentSolutionId=data.get('paymentSolutionId'),
-                status=status,
-            )
+                status=data.get('status'),            )
 
             return HttpResponse("Notification processed successfully", status=200)
         except Order.DoesNotExist:

@@ -125,7 +125,7 @@ def payment_notification(request):
                 currency=data.get('currency'),
                 action=data.get('action'),
                 # Assuming auth_code and other details are extracted correctly from paymentSolutionDetails or similar
-                auth_code=data.get('auth_code'),
+                # auth_code=data.get('auth_code'),
                 acquirer=data.get('acquirer'),
                 acquirerAmount=data.get('acquirerAmount'),
                 merchantId=data.get('merchantId'),

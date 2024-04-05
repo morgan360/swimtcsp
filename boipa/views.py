@@ -14,6 +14,7 @@ from django.views.decorators.http import require_GET
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from .models import PaymentNotification
+from swims_orders.models import Order
 from django.http import QueryDict
 from django.urls import reverse
 # Load environment variables
@@ -70,48 +71,6 @@ def initiate_boipa_payment_session(request, total_price, order_ref):
         return render(request, 'error.html', {'error_message': 'Failed to initiate payment session.'})
 
 
-# def get_boipa_session_token():
-#     url = BOIPA_TOKEN_URL  # UAT URL, change for production
-#     headers = {'Content-Type': 'application/x-www-form-urlencoded'}
-#     payload = {
-#         "merchantId": settings.BOIPA_MERCHANT_ID,
-#         "password": settings.BOIPA_PASSWORD,
-#         "action": "AUTH",  # Based on the operation you're performing
-#         "timestamp": int(time.time() * 1000),  # Current time in milliseconds
-#         "allowOriginUrl": NGROK,  # Your ngrok URL for CORS
-#         "channel": "ECOM",
-#         "country": "IE",  # Example country code
-#         "currency": "EUR",  # Example currency
-#         "amount": "100.00",  # Example amount for AUTH or PURCHASE
-#         "merchantTxId": order_id,  # Your internal order ID
-#         "merchantLandingPageUrl": NGROK + "/boipa/payment-response/",  # General callback URL for customer redirection
-#         "merchantNotificationUrl": NGROK + "/boipa/payment-notification/",  # Server-to-server notification URL(
-#         # important
-#         # in case user makes a mess)
-#         "merchantLandingPageRedirectMethod": "GET",  # Ensure redirects use GET
-#     }
-
-    # response = requests.post(url, data=payload, headers=headers)
-    # if response.status_code == 200:
-    #     return response.json().get('token')
-    # else:
-    #     # Handle error
-    #     print(f"Error obtaining session token: {response.text}")
-    #     return None
-
-
-# def load_payment_form(request):
-#     token = get_boipa_session_token()
-#     if token is None:
-#         return render(request, 'error.html', {'error': 'Unable to obtain session token.'})
-#
-#     # Construct the HPP URL with the obtained token and include integrationMode
-#     hpp_url = HPP_FORM + f"?token={token}&merchantId={settings.BOIPA_MERCHANT_ID}&integrationMode=Standalone"
-#
-#     # Redirect user to the HPP URL
-#     return redirect(hpp_url)
-
-
 def error_view(request):
     # Example error handling logic
     error_message = "An unexpected error has occurred."
@@ -141,44 +100,47 @@ def payment_response(request):
 @csrf_exempt  # Disable CSRF protection for this endpoint
 def payment_notification(request):
     if request.method == 'POST':
-        # Parse the URL-encoded form data
         data = QueryDict(request.body)
 
-        # Now, you can access the values using the same dictionary-like interface
-        txId = data.get('txId')# The unique identifier for the transaction in the BOIPA Gateway
-        merchantTxId = data.get('merchantTxId')# The merchant’s reference for the transaction provided in the
-        country = data.get('country')
-        amount = data.get('amount')
-        currency = data.get('currency')
-        action = data.get('action')
-        auth_code = data.get('auth_code') # Extracted from paymentSolutionDetails
-        acquirer = data.get('acquirer')
-        acquirerAmount = data.get('acquirerAmount')
-        merchantId = data.get('merchantId')
-        brandId = data.get('brandId')
-        customerId = data.get('customerId')
-        acquirerCurrency = data.get(' acquirerCurrency')
-        paymentSolutionId = data.get('paymentSolutionId')
+        # Extracting the necessary information
+        txId = data.get('txId')
+        merchantTxId = data.get('merchantTxId')
         status = data.get('status')
 
-        # Proceed with your logic
+        # Attempt to identify the corresponding order using merchantTxId
+        try:
+            order = Order.objects.get(id=merchantTxId)  # Assuming merchantTxId is the Order ID
+            # Update the order payment status based on the notification
+            order.payment_status = status
+            order.save()
 
-        # You can adjust the fields based on what's most relevant to your needs
-        # Store the collected data in the database
-        PaymentNotification.objects.create(
-            txId=txId,
-            merchantTxId = merchantTxId,
-            country = country,
-            amount = amount,
-            currency = currency,
-            action = action,
-            auth_code = auth_code,
-            acquirer = acquirer,
-            acquirerAmount = acquirerAmount,
-            merchantId =merchantId,
-            brandId = brandId,
-            customerId = customerId,
-            acquirerCurrency = acquirerCurrency,
-            paymentSolutionId = paymentSolutionId,
-            status = status,
-        )
+            # Log or perform additional actions as needed
+
+            # Create a payment notification record
+            PaymentNotification.objects.create(
+                txId=txId,
+                merchantTxId=merchantTxId,
+                country=data.get('country'),
+                amount=data.get('amount'),
+                currency=data.get('currency'),
+                action=data.get('action'),
+                # Assuming auth_code and other details are extracted correctly from paymentSolutionDetails or similar
+                auth_code=data.get('auth_code'),
+                acquirer=data.get('acquirer'),
+                acquirerAmount=data.get('acquirerAmount'),
+                merchantId=data.get('merchantId'),
+                brandId=data.get('brandId'),
+                customerId=data.get('customerId'),
+                acquirerCurrency=data.get('acquirerCurrency'),
+                paymentSolutionId=data.get('paymentSolutionId'),
+                status=status,
+            )
+
+            return HttpResponse("Notification processed successfully", status=200)
+        except Order.DoesNotExist:
+            # Handle case where the order does not exist
+            return HttpResponse("Order not found", status=400)
+
+    else:
+        # If not a POST request, indicate it's an invalid request method
+        return HttpResponse("Invalid request method", status=405)

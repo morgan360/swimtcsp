@@ -1,10 +1,12 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from swims_cart.forms import CartAddProductForm
 from .models import PublicSwimCategory, PublicSwimProduct, PriceVariant
+from swims_orders.models import Order, OrderItem
 from django.utils import timezone
 from datetime import timedelta
 from utils.date_utils import get_next_occurrence
 from django.urls import reverse
+from django.contrib.auth.decorators import login_required
 import time
 from .forms import ParticipantQuantityForm
 # Assume a function to create BOIPA payment session, replace with your actual function
@@ -36,6 +38,7 @@ def product_list(request, category_slug=None):
                   'swims/product/list.html',
                   context)
 
+@login_required
 def product_detail(request, id, slug):
     product = get_object_or_404(PublicSwimProduct, id=id, slug=slug, available=True)
     price_variants = PriceVariant.objects.filter(product=product)
@@ -44,16 +47,36 @@ def product_detail(request, id, slug):
     if request.method == 'POST':
         # Calculate total amount based on selected quantities and variant prices
         total_amount = 0
+        order_items = []
         for variant in price_variants:
             quantity = int(request.POST.get(f'quantity_{variant.id}', 0))
-            total_amount += quantity * variant.price
+            if quantity > 0:
+                total_amount += quantity * variant.price
+                order_items.append((variant, quantity))
 
-        # Generate a unique order reference
-        timestamp = time.strftime("%Y%m%d%H%M%S")
-        order_ref = f"{product.slug}_{timestamp}"
+        if total_amount > 0:
+            # Calculate the next occurrence date for the product
+            today = timezone.now().date()
+            next_occurrence_date = get_next_occurrence(product.day_of_week)
 
-        # Redirect to payment initiation with total amount and order reference
-        return redirect(reverse('boipa:initiate_payment_session', kwargs={'order_ref': order_ref, 'total_price': str(total_amount)}))
+            # Create Order and OrderItem objects
+            order = Order.objects.create(
+                user=request.user,
+                product=product,
+                booking=next_occurrence_date,  # Save the next occurrence date to the booking field
+                paid=False
+            )
+            for variant, quantity in order_items:
+                OrderItem.objects.create(order=order, variant=variant, quantity=quantity)
+
+            # Generate a unique order reference using the order ID
+            order_ref = f"{order.id}_{time.strftime('%Y%m%d%H%M%S')}"
+
+            # Redirect to payment initiation with total amount and order reference
+            return redirect(reverse('boipa:initiate_payment_session', kwargs={'order_ref': order_ref, 'total_price': str(total_amount)}))
+        else:
+            # Handle the case where no items are selected (e.g., show an error message)
+            pass
 
     context = {
         'product': product,
@@ -61,5 +84,4 @@ def product_detail(request, id, slug):
         'quantities': quantities,
     }
     return render(request, 'swims/product/detail.html', context)
-
 

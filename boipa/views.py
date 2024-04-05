@@ -100,7 +100,8 @@ def payment_response(request):
 def payment_notification(request):
     if request.method == 'POST':
         data = QueryDict(request.body)
-
+        payment_solution_details_str = data.get('paymentSolutionDetails', '{}')
+        payment_solution_details = json.loads(payment_solution_details_str)
         # Extracting the necessary information
         txId = data.get('txId')
         merchantTxId = data.get('merchantTxId')
@@ -114,11 +115,13 @@ def payment_notification(request):
         # Attempt to identify the corresponding order using merchantTxId
         try:
             order = Order.objects.get(id=order_id)  # Assuming merchantTxId is the Order ID
-            # Update the order payment status based on the notification
-            order.payment_status = status
+            order.txId = txId
+            order.payment_status  = status
+            if status == 'SET_FOR_CAPTURE':
+                order.paid=True
+            else:
+                order.paid = False
             order.save()
-
-            # Log or perform additional actions as needed
 
             # Create a payment notification record
             PaymentNotification.objects.create(

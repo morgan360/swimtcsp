@@ -30,12 +30,11 @@ BOIPA_TOKEN_URL = os.getenv('BOIPA_TOKEN_URL')  # URL to obtain the session toke
 PAYMENT_FORM_URL = os.getenv('HPP_FORM')  # URL for the payment form
 NGROK = os.getenv('NGROK')  # For ip tunnel from BOIPA
 HPP_FORM = os.getenv('HPP_FORM')
-base_order_id = "TCSP005"
 timestamp = time.strftime("%Y%m%d%H%M%S")
-order_id = f"{base_order_id}_{timestamp}"
 
 
-def initiate_boipa_payment_session(request, total_price, order_ref):
+
+def initiate_boipa_payment_session(request, order_ref, total_price):
     """
     Initiates a payment session with BOIPA for a given product and total price.
     Redirects the user to the BOIPA payment page.
@@ -109,15 +108,16 @@ def payment_notification(request):
 
         # Attempt to identify the corresponding order using merchantTxId
         try:
-            # order = Order.objects.get(id=merchantTxId)  # Assuming merchantTxId is the Order ID
-            # # Update the order payment status based on the notification
-            # order.payment_status = status
-            # order.save()
+            order = Order.objects.get(id=merchantTxId)  # Assuming merchantTxId is the Order ID
+            # Update the order payment status based on the notification
+            order.payment_status = status
+            order.save()
 
             # Log or perform additional actions as needed
 
             # Create a payment notification record
             PaymentNotification.objects.create(
+                order=order,
                 txId=txId,
                 merchantTxId=merchantTxId,
                 country=data.get('country'),

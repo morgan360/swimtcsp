@@ -19,15 +19,6 @@ class SwimOrderItemInline(admin.TabularInline):
     model = OrderItem
 
 
-def order_payment(obj):
-    url = obj.get_stripe_url()
-    if obj.stripe_id:
-        html = f'<a href="{url}" target="_blank">{obj.stripe_id}</a>'
-        return mark_safe(html)
-    return ''
-
-
-order_payment.short_description = 'Stripe payment'
 
 
 def export_to_csv(modeladmin, request, queryset):

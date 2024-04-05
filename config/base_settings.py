@@ -125,7 +125,8 @@ TEMPLATES = [
     },
 ]
 
-AXES_LOCKOUT_TEMPLATE = 'lockout.html'
+AXES_LOCKOUT_TEMPLATE = 'account/lockout.html'
+
 
 WSGI_APPLICATION = 'core.wsgi.application'
 

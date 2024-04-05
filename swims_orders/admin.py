@@ -49,7 +49,7 @@ export_to_csv.short_description = 'Export to CSV'
 @admin.register(Order)
 class SwimOrderAdmin(ImportExportModelAdmin):
     resource_class = OrderResource
-    list_display = ['id', 'get_product_name', 'short_booking_day', 'booking', 'paid', order_payment, 'user', 'created']
+    list_display = ['id', 'get_product_name', 'short_booking_day', 'booking', 'paid', 'user', 'created']
     list_filter = ['booking', 'paid', 'booking']
     inlines = [SwimOrderItemInline]
     actions = [export_to_csv]

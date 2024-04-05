@@ -145,10 +145,20 @@ def payment_notification(request):
         data = QueryDict(request.body)
 
         # Now, you can access the values using the same dictionary-like interface
+        txId = data.get('txId')# The unique identifier for the transaction in the BOIPA Gateway
+        merchantTxId = data.get('merchantTxId')# The merchant’s reference for the transaction provided in the
         country = data.get('country')
         amount = data.get('amount')
-        txId = data.get('txId')
-        merchantTxId = data.get('merchantTxId')
+        currency = data.get('currency')
+        action = data.get('action')
+        auth_code = data.get('auth_code') # Extracted from paymentSolutionDetails
+        acquirer = data.get('acquirer')
+        acquirerAmount = data.get('acquirerAmount')
+        merchantId = data.get('merchantId')
+        brandId = data.get('brandId')
+        customerId = data.get('customerId')
+        acquirerCurrency = data.get(' acquirerCurrency')
+        paymentSolutionId = data.get('paymentSolutionId')
         status = data.get('status')
 
         # Proceed with your logic
@@ -156,9 +166,19 @@ def payment_notification(request):
         # You can adjust the fields based on what's most relevant to your needs
         # Store the collected data in the database
         PaymentNotification.objects.create(
-            country=country,
-            amount=amount,
             txId=txId,
-            merchantTxId=merchantTxId,
-            status=status,
+            merchantTxId = merchantTxId,
+            country = country,
+            amount = amount,
+            currency = currency,
+            action = action,
+            auth_code = auth_code,
+            acquirer = acquirer,
+            acquirerAmount = acquirerAmount,
+            merchantId =merchantId,
+            brandId = brandId,
+            customerId = customerId,
+            acquirerCurrency = acquirerCurrency,
+            paymentSolutionId = paymentSolutionId,
+            status = status,
         )

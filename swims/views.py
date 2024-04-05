@@ -70,7 +70,7 @@ def product_detail(request, id, slug):
                 OrderItem.objects.create(order=order, variant=variant, quantity=quantity)
 
             # Generate a unique order reference using the order ID
-            order_ref = f"{order.id}}"
+            order_ref = order.id
 
             # Redirect to payment initiation with total amount and order reference
             return redirect(reverse('boipa:initiate_payment_session', kwargs={'order_ref': order_ref, 'total_price': str(total_amount)}))

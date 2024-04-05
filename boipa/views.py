@@ -103,8 +103,8 @@ def payment_notification(request):
         data = QueryDict(request.body)
 
         # Extracting the necessary information
-        # txId = data.get('txId')
-        # merchantTxId = data.get('merchantTxId')
+        txId = data.get('txId')
+        merchantTxId = data.get('merchantTxId')
         # status = data.get('status')
 
         # Attempt to identify the corresponding order using merchantTxId

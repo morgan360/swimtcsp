@@ -42,7 +42,7 @@ def product_list(request, category_slug=None):
 def product_detail(request, id, slug):
     product = get_object_or_404(PublicSwimProduct, id=id, slug=slug, available=True)
     price_variants = PriceVariant.objects.filter(product=product)
-    quantities = range(1, 11)  # Assuming you allow up to 10 of each variant
+    quantities = range(0, 6)  # Assuming you allow up to 10 of each variant
 
     if request.method == 'POST':
         # Calculate total amount based on selected quantities and variant prices
@@ -78,10 +78,25 @@ def product_detail(request, id, slug):
             # Handle the case where no items are selected (e.g., show an error message)
             pass
 
+    next_occurrence_date = get_next_occurrence(product.day_of_week)
     context = {
+        'next_occurrence_date':next_occurrence_date,
         'product': product,
         'price_variants': price_variants,
         'quantities': quantities,
     }
     return render(request, 'swims/product/detail.html', context)
 
+
+def calculate_total(request):
+    print(request.POST)  # Add this to check what's being posted
+    total = 0
+    for key, value in request.POST.items():
+        if key.startswith('quantity_'):
+            variant_id = key.split('_')[1]
+            quantity = int(value)
+            variant = PriceVariant.objects.get(id=variant_id)
+            total += variant.price * quantity
+
+    context = {'total': total}
+    return render(request, 'swims/partials/total_price.html', context)

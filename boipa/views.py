@@ -100,9 +100,7 @@ def payment_response(request):
 def payment_notification(request):
     if request.method == 'POST':
         data = QueryDict(request.body)
-        payment_solution_details_str = data.get('paymentSolutionDetails', '{}')
-        payment_solution_details = json.loads(payment_solution_details_str)
-        # Extracting the necessary information
+# Extracting the necessary information
         txId = data.get('txId')
         merchantTxId = data.get('merchantTxId')
         status = data.get('status')

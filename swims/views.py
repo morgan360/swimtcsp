@@ -64,7 +64,8 @@ def product_detail(request, id, slug):
                 user=request.user,
                 product=product,
                 booking=next_occurrence_date,  # Save the next occurrence date to the booking field
-                paid=False
+                paid=False,
+                amount = total_amount,
             )
             for variant, quantity in order_items:
                 OrderItem.objects.create(order=order, variant=variant, quantity=quantity)

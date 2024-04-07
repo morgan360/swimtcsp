@@ -4,10 +4,8 @@ from django.conf import settings
 from django.shortcuts import render, redirect, reverse, \
     get_object_or_404
 from lessons_orders.models import Order
-from utils.webhooks import stripe_webhook
-# create the Stripe instance
-stripe.api_key = settings.STRIPE_SECRET_KEY
-stripe.api_version = settings.STRIPE_API_VERSION
+from django.shortcuts import render, redirect, get_object_or_404
+from boipa.views import initiate_boipa_payment_session
 
 
 def payment_process(request):
@@ -15,43 +13,14 @@ def payment_process(request):
     order = get_object_or_404(Order, id=order_id)
 
     if request.method == 'POST':
-        success_url = request.build_absolute_uri(
-            reverse('lessons_payment:completed'))
-        cancel_url = request.build_absolute_uri(
-            reverse('lessons_payment:canceled'))
-        order_type = 'lessons'
-        # Stripe checkout session data
-        session_data = {
-            'mode': 'payment',
-            'client_reference_id': order.id,
-            'success_url': success_url,
-            'cancel_url': cancel_url,
-            'metadata': {
-                'order_type': order_type,  # Include order_type as metadata
-            },
-            'line_items': []
-        }
-        # add order items to the Stripe checkout session
-        for item in order.items.all():
-            session_data['line_items'].append({
-                'price_data': {
-                    'unit_amount': int(item.price * Decimal('100')),
-                    'currency': 'eur',
-                    'product_data': {
-                        'name': item.product.name,
-                    },
-                },
-                'quantity': item.quantity,
-            })
+        total_price = order.get_total_cost()  # Assuming get_total_cost is a method that calculates the total cost
+        order_ref = order_id  # Generate a unique order reference
 
-        # create Stripe checkout session
-        session = stripe.checkout.Session.create(**session_data)
-
-        # redirect to Stripe payment form
-        return redirect(session.url, code=303)
-
+        # Redirect the user to the BOIPA payment page
+        return initiate_boipa_payment_session(request, order_ref, total_price)
     else:
-        return render(request, 'payment/process.html', locals())
+        # Render your payment form template if not a POST request
+        return render(request, 'payment/process.html', {'order': order})
 
 
 def payment_completed(request):

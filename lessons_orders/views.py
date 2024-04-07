@@ -40,7 +40,6 @@ def order_create(request):
 def order_created(order_id):
     # Retrieve the order object based on the provided order_id
     order = Order.objects.get(id=order_id)
-    # Perform any additional actions or processing for the order creation
-    # For example, you can send email notifications, update inventory, etc.
+    # Not used yet might be necessary for emails etc..
     # Return a success message or any relevant data
     return f"Order {order_id} created successfully!"

@@ -12,7 +12,9 @@ class Order(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
     paid = models.BooleanField(default=False)
-    stripe_id = models.CharField(max_length=250, blank=True)
+    txId = models.CharField(max_length=250, blank=True)
+    payment_status = models.CharField(max_length=100, blank=True)
+    amount = models.DecimalField(max_digits=4, decimal_places=2, default=0)
 
     class Meta:
         ordering = ['-created']

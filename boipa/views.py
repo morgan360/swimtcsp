@@ -13,8 +13,9 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
-from .models import PaymentNotification
-from swims_orders.models import Order
+from .models import SwimOrderPaymentNotification, LessonOrderPaymentNotification
+from swims_orders.models import Order as SwimOrder
+from lessons_orders.models import Order as LessonOrder
 from django.http import QueryDict
 from django.urls import reverse
 # Load environment variables
@@ -105,47 +106,84 @@ def payment_notification(request):
         merchantTxId = data.get('merchantTxId')
         status = data.get('status')
         try:
-            order_id = int(merchantTxId)
+            source_prefix, order_id_str = merchantTxId.split("_", 1)
+            order_id = int(order_id_str)
         except ValueError:
             # If conversion fails, respond with an error indicating bad data
             return HttpResponse("Invalid order ID format", status=400)
 
-        # Attempt to identify the corresponding order using merchantTxId
-        try:
-            order = Order.objects.get(id=order_id)  # Assuming merchantTxId is the Order ID
-            order.txId = txId
-            order.payment_status  = status
-            if status == 'SET_FOR_CAPTURE' or status == 'CAPTURED':
-                order.paid=True
-            else:
-                order.paid = False
-            order.save()
+        if source_prefix == 'swims':
+            try:
+                order = SwimOrder.objects.get(id=order_id)  # Assuming merchantTxId is the Order ID
+                order.txId = txId
+                order.payment_status = status
+                if status == 'SET_FOR_CAPTURE' or status == 'CAPTURED':
+                    order.paid = True
+                else:
+                    order.paid = False
+                order.save()
 
-            # Create a payment notification record
-            PaymentNotification.objects.create(
-                order=order,
-                txId=txId,
-                merchantTxId=merchantTxId,
-                country=data.get('country'),
-                amount=data.get('amount'),
-                currency=data.get('currency'),
-                action=data.get('action'),
-                # Assuming auth_code and other details are extracted correctly from paymentSolutionDetails or similar
-                # auth_code=data.get('auth_code'),
-                acquirer=data.get('acquirer'),
-                acquirerAmount=data.get('acquirerAmount'),
-                merchantId=data.get('merchantId'),
-                brandId=data.get('brandId'),
-                customerId=data.get('customerId'),
-                acquirerCurrency=data.get('acquirerCurrency'),
-                paymentSolutionId=data.get('paymentSolutionId'),
-                status=data.get('status'),            )
+                # Create a payment notification record
+                SwimOrderPaymentNotification.objects.create(
+                    order=order,
+                    txId=txId,
+                    merchantTxId=merchantTxId,
+                    country=data.get('country'),
+                    amount=data.get('amount'),
+                    currency=data.get('currency'),
+                    action=data.get('action'),
+                    # Assuming auth_code and other details are extracted correctly from paymentSolutionDetails or similar
+                    # auth_code=data.get('auth_code'),
+                    acquirer=data.get('acquirer'),
+                    acquirerAmount=data.get('acquirerAmount'),
+                    merchantId=data.get('merchantId'),
+                    brandId=data.get('brandId'),
+                    customerId=data.get('customerId'),
+                    acquirerCurrency=data.get('acquirerCurrency'),
+                    paymentSolutionId=data.get('paymentSolutionId'),
+                    status=data.get('status'), )
 
-            return HttpResponse("Notification processed successfully", status=200)
-        except Order.DoesNotExist:
-            # Handle case where the order does not exist
-            return HttpResponse("Order not found", status=400)
+                return HttpResponse("Notification processed successfully", status=200)
+            except Order.DoesNotExist:
+                # Handle case where the order does not exist
+                return HttpResponse("Order not found", status=400)
 
-    else:
-        # If not a POST request, indicate it's an invalid request method
-        return HttpResponse("Invalid request method", status=405)
+        elif source_prefix == 'lessons':
+            try:
+                order = LessonOrder.objects.get(id=order_id)  # Assuming merchantTxId is the Order ID
+                # order.txId = txId
+                # order.payment_status = status
+                # if status == 'SET_FOR_CAPTURE' or status == 'CAPTURED':
+                #     order.paid = True
+                # else:
+                #     order.paid = False
+                # order.save()
+
+                # Create a payment notification record
+                LessonOrderPaymentNotification.objects.create(
+                    order=order,
+                    txId=txId,
+                    merchantTxId=merchantTxId,
+                    country=data.get('country'),
+                    amount=data.get('amount'),
+                    currency=data.get('currency'),
+                    action=data.get('action'),
+                    # Assuming auth_code and other details are extracted correctly from paymentSolutionDetails or similar
+                    # auth_code=data.get('auth_code'),
+                    acquirer=data.get('acquirer'),
+                    acquirerAmount=data.get('acquirerAmount'),
+                    merchantId=data.get('merchantId'),
+                    brandId=data.get('brandId'),
+                    customerId=data.get('customerId'),
+                    acquirerCurrency=data.get('acquirerCurrency'),
+                    paymentSolutionId=data.get('paymentSolutionId'),
+                    status=data.get('status'), )
+
+                return HttpResponse("Notification processed successfully", status=200)
+            except Order.DoesNotExist:
+                # Handle case where the order does not exist
+                return HttpResponse("Order not found", status=400)
+
+        else:
+            # If not a POST request, indicate it's an invalid request method
+            return HttpResponse("Invalid request method", status=405)

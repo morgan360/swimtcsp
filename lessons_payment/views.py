@@ -14,7 +14,7 @@ def payment_process(request):
 
     if request.method == 'POST':
         total_price = order.get_total_cost()  # Assuming get_total_cost is a method that calculates the total cost
-        order_ref = order_id  # Generate a unique order reference
+        order_ref = f"lessons_{order_id}"  # Generate a unique order reference
 
         # Redirect the user to the BOIPA payment page
         return initiate_boipa_payment_session(request, order_ref, total_price)

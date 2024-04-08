@@ -17,7 +17,8 @@ def payment_process(request):
         order_ref = f"lessons_{order.id}"  # Generate a unique order reference
 
         # Redirect the user to the BOIPA payment page
-        return initiate_boipa_payment_session(request, order_ref, total_price)
+        return redirect(reverse('boipa:initiate_payment_session',
+                                kwargs={'order_ref': order_ref, 'total_price': str(total_price)}))
     else:
         # Render your payment form template if not a POST request
         return render(request, 'payment/process.html', {'order': order})

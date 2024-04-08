@@ -151,13 +151,13 @@ def payment_notification(request):
         elif source_prefix == 'lessons':
             try:
                 order = LessonOrder.objects.get(id=order_id)  # Assuming merchantTxId is the Order ID
-                # order.txId = txId
-                # order.payment_status = status
-                # if status == 'SET_FOR_CAPTURE' or status == 'CAPTURED':
-                #     order.paid = True
-                # else:
-                #     order.paid = False
-                # order.save()
+                order.txId = txId
+                order.payment_status = status
+                if status == 'SET_FOR_CAPTURE' or status == 'CAPTURED':
+                    order.paid = True
+                else:
+                    order.paid = False
+                order.save()
 
                 # Create a payment notification record
                 LessonOrderPaymentNotification.objects.create(

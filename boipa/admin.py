@@ -17,7 +17,6 @@ class LessonOrderPaymentNotificationAdmin(admin.ModelAdmin):
 
 admin.site.register(LessonOrderPaymentNotification, LessonOrderPaymentNotificationAdmin)
 
-
 class SchoolOrderPaymentNotificationAdmin(admin.ModelAdmin):
     list_display = (
         'txId',  'merchantTxId', 'amount', 'status')

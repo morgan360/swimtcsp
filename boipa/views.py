@@ -42,6 +42,8 @@ def initiate_boipa_payment_session(request, order_ref, total_price):
     Initiates a payment session with BOIPA for a given product and total price.
     Redirects the user to the BOIPA payment page.
     """
+    print(total_price)
+    print(order_ref)
     # Construct the payload with your details
     payload = {
         "merchantId": BOIPA_MERCHANT_ID,
@@ -58,7 +60,7 @@ def initiate_boipa_payment_session(request, order_ref, total_price):
         "merchantNotificationUrl": NGROK + reverse('boipa:payment_notification'),
         "merchantLandingPageRedirectMethod": "GET",
     }
-
+    print(payload)
     # Send the request to BOIPA to initiate the payment session
     response = requests.post(BOIPA_TOKEN_URL, data=payload, headers={'Content-Type': 'application/x-www-form-urlencoded'})
     if response.status_code == 200:

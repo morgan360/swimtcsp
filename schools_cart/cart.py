@@ -1,6 +1,6 @@
 from decimal import Decimal
 from django.conf import settings
-from lessons.models import Product
+from schools.models import ScoLessons
 from users.models import Swimling
 
 
@@ -18,29 +18,23 @@ class Cart:
 
     def __iter__(self):
         """
-        Iterate over the items in the cart and get the products
-        from the database.
+        Iterate over the items in the cart and get the products from the database.
         """
         product_ids = self.cart.keys()
-        # get the product objects (details from DB) and add them to the cart.
-        # Only for IDs retrieved from session data(cart)
-        products = Product.objects.filter(id__in=product_ids)
-        # Make a copy of the cart
+        products = ScoLessons.objects.filter(id__in=product_ids)
+
         cart = self.cart.copy()
-        # loop through the product info retrieved from DB
+
         for product in products:
-            cart[str(product.id)]['product'] = product
-            cart[str(product.id)]['quantity'] = 1
-        # retrieve product_id
-        for item in cart.values():
-            # product_id = item.get('product_id')  # Retrieve the product ID
-            # if product_id:
-            #     product = Product.objects.get(id=product_id)
-            # item['product'] = product
-            item['price'] = Decimal(item['price'])
-            item['total_price'] = item['price'] * item['quantity']
-            item['swimling'] = item['swimling']
-            yield item
+            product_id = str(product.id)
+            # Ensure the product object is added without overwriting quantity
+            if product_id in cart:
+                cart[product_id]['product'] = product
+                # Assume 'quantity' has been set correctly when the item was added
+                cart[product_id]['price'] = Decimal(cart[product_id]['price'])
+                cart[product_id]['total_price'] = cart[product_id]['price'] * cart[product_id].get('quantity', 1)
+                # Directly retrieve 'swimling' assuming it's set correctly during 'add'
+                yield cart[product_id]
 
     def __len__(self):
         """
@@ -50,19 +44,26 @@ class Cart:
 
     def add(self, product, swimling, quantity=1):
         """
-        Add a product and swimling to the cart.
+        Add a product and swimling to the cart or update its quantity.
         """
         product_id = str(product.id)
-        swimling_id = str(swimling.id)  # Get the swimling's ID
+        swimling_id = str(swimling.id)  # Convert swimling ID to string
 
-        if product_id not in self.cart:
+        if product_id in self.cart:
+            # Product exists in the cart, update the quantity
+            self.cart[product_id]['quantity'] += quantity
+        else:
+            # Product does not exist, add it to the cart
             self.cart[product_id] = {
+                'quantity': quantity,  # Initialize quantity for new items
                 'price': str(product.price),
                 'swimling': swimling_id,  # Store the swimling ID
             }
 
+        # Always update price and swimling ID in case they have changed
         self.cart[product_id]['price'] = str(product.price)
         self.cart[product_id]['swimling'] = swimling_id
+
         self.save()
 
     def save(self):

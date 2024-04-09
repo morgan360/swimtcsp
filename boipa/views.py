@@ -13,9 +13,10 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
-from .models import SwimOrderPaymentNotification, LessonOrderPaymentNotification
+from .models import SwimOrderPaymentNotification, LessonOrderPaymentNotification, SchoolOrderPaymentNotification
 from swims_orders.models import Order as SwimOrder
 from lessons_orders.models import Order as LessonOrder
+from schools_orders.models import Order as SchoolOrder
 from django.http import QueryDict
 from django.urls import reverse
 # Load environment variables
@@ -184,6 +185,41 @@ def payment_notification(request):
                 # Handle case where the order does not exist
                 return HttpResponse("Order not found", status=400)
 
+        elif source_prefix == 'schools':
+            try:
+                order = SchoolOrder.objects.get(id=order_id)  # Assuming merchantTxId is the Order ID
+                order.txId = txId
+                order.payment_status = status
+                if status == 'SET_FOR_CAPTURE' or status == 'CAPTURED':
+                    order.paid = True
+                else:
+                    order.paid = False
+                order.save()
+
+                # Create a payment notification record
+                SchoolOrderPaymentNotification.objects.create(
+                    order=order,
+                    txId=txId,
+                    merchantTxId=merchantTxId,
+                    country=data.get('country'),
+                    amount=data.get('amount'),
+                    currency=data.get('currency'),
+                    action=data.get('action'),
+                    # Assuming auth_code and other details are extracted correctly from paymentSolutionDetails or similar
+                    # auth_code=data.get('auth_code'),
+                    acquirer=data.get('acquirer'),
+                    acquirerAmount=data.get('acquirerAmount'),
+                    merchantId=data.get('merchantId'),
+                    brandId=data.get('brandId'),
+                    customerId=data.get('customerId'),
+                    acquirerCurrency=data.get('acquirerCurrency'),
+                    paymentSolutionId=data.get('paymentSolutionId'),
+                    status=data.get('status'), )
+
+                return HttpResponse("Notification processed successfully", status=200)
+            except Order.DoesNotExist:
+                # Handle case where the order does not exist
+                return HttpResponse("Order not found", status=400)
         else:
             # If not a POST request, indicate it's an invalid request method
             return HttpResponse("Invalid request method", status=405)

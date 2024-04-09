@@ -16,7 +16,7 @@ def cart_add(request, product_id):
         cd = form.cleaned_data
         swimling = cd['swimling']
         cart.add(product=product, swimling=swimling)
-        return redirect('schools_cart:cart_detail')
+        return redirect('schools_cart:sco_cart_detail')
     else:
         # Handle invalid form (optional: return an error message)
         return redirect('some_error_handling_view')
@@ -27,7 +27,7 @@ def cart_remove(request, product_id):
     cart = Cart(request)
     product = get_object_or_404(ScoLessons, id=product_id)
     cart.remove(product)
-    return redirect('schools_cart:cart_detail')
+    return redirect('schools_cart:sco_cart_detail')
 
 
 def cart_detail(request):

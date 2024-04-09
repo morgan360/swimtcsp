@@ -37,7 +37,8 @@
                     </div>
                     <div class="w-1/5 px-2 flex justify-center mb-2">€{{ item.price }}</div>
                     <div class="w-1/5 px-2 flex justify-center mb-2">
-                        <form action="{% url 'lessons_cart:cart_remove' product_id=product.id %}" method="post" class="inline">
+                        <form action="{% url 'schools_cart:cart_remove' product_id=product.id %}" method="post"
+                              class="inline">
                             {% csrf_token %}
                             <button type="submit" class="px-4 py-2 bg-yellow-400 hover:bg-yellow-500 text-white font-bold rounded">Remove</button>
                         </form>
@@ -51,11 +52,13 @@
         </div>
         <div class="flex mt-3">
             <div class="w-1/5">
-                <a href="{% url 'lessons:lesson_list' %}" class="px-4 py-2 bg-green-500 hover:bg-green-600 text-white font-bold rounded">Continue shopping</a>
+                <a href="{% url 'schools:school_list' %}" class="px-4 py-2 bg-green-500 hover:bg-green-600 text-white
+                font-bold rounded">Continue shopping</a>
             </div>
 
             <div class="w-1/5">
-                <a href="{% url 'lessons_orders:order_create' %}" class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white font-bold rounded">Checkout</a>
+                <a href="{% url 'schools_orders:order_create' %}" class="px-4 py-2 bg-blue-500 hover:bg-blue-600
+                text-white font-bold rounded">Checkout</a>
             </div>
         </div>
     </div>

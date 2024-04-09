@@ -1,16 +1,16 @@
 from django.urls import reverse
 from django.shortcuts import render, redirect
 from .models import Order, OrderItem
-from lessons.models import Product
-from lessons_cart.cart import Cart
+from schools.models import ScoLessons
+from schools_cart.cart import Cart
 from django.contrib.auth.decorators import login_required
-from lessons_bookings.models import Term
-from utils.terms_utils import get_current_term
+from schools_bookings.models import ScoTerm
+from utils.terms_utils import get_current_sco_term
 
 
 @login_required
 def order_create(request):
-    current_term_instance = get_current_term()
+    current_term_instance = get_current_sco_term()
     cart = Cart(request)
     order = Order.objects.create(user=request.user)
     for item in cart:
@@ -34,7 +34,7 @@ def order_create(request):
     request.session['order_id'] = order.id
 
     # Redirect for payment
-    return redirect(reverse('lessons_payment:process'))
+    return redirect(reverse('schools_payment:payment_process'))
 
 
 def order_created(order_id):

@@ -1,6 +1,6 @@
 from datetime import date
 from lessons_bookings.models import Term
-
+from schools_bookings.models import ScoTerm
 
 def get_current_term():
     today = date.today()
@@ -20,3 +20,9 @@ def get_next_term():
     if current_term:
         return Term.objects.filter(id=current_term.id + 1).first()
     return none
+
+
+def get_current_sco_term():
+    today = date.today()
+    current_sco_term = ScoTerm.objects.filter(start_date__lte=today, end_date__gte=today).first()
+    return current_sco_term

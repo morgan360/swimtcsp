@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import SwimOrderPaymentNotification, LessonOrderPaymentNotification
+from .models import SwimOrderPaymentNotification, LessonOrderPaymentNotification, SchoolOrderPaymentNotification
 
 
 class SwimOrderPaymentNotificationAdmin(admin.ModelAdmin):
@@ -15,5 +15,15 @@ class LessonOrderPaymentNotificationAdmin(admin.ModelAdmin):
         'txId',  'merchantTxId', 'amount', 'status')
     search_fields = ('txId', 'merchantTxId', 'amount', 'status')
 
-
 admin.site.register(LessonOrderPaymentNotification, LessonOrderPaymentNotificationAdmin)
+
+
+class SchoolOrderPaymentNotificationAdmin(admin.ModelAdmin):
+    list_display = (
+        'txId',  'merchantTxId', 'amount', 'status')
+    search_fields = ('txId', 'merchantTxId', 'amount', 'status')
+
+admin.site.register(SchoolOrderPaymentNotification, SchoolOrderPaymentNotificationAdmin)
+
+
+

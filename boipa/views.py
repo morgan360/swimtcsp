@@ -19,6 +19,7 @@ from lessons_orders.models import Order as LessonOrder
 from schools_orders.models import Order as SchoolOrder
 from django.http import QueryDict
 from django.urls import reverse
+from lessons_bookings.utils.enrollment import handle_lessons_enrollment
 # Load environment variables
 load_dotenv()
 
@@ -156,6 +157,8 @@ def payment_notification(request):
                 order.payment_status = status
                 if status == 'SET_FOR_CAPTURE' or status == 'CAPTURED':
                     order.paid = True
+                    # Enroll in the lesson
+                    handle_lessons_enrollment(order)
                 else:
                     order.paid = False
                 order.save()

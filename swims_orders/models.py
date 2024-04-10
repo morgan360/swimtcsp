@@ -16,7 +16,7 @@ class Order(models.Model):
     paid = models.BooleanField(default=False)
     txId = models.CharField(max_length=250, blank=True)
     payment_status = models.CharField(max_length=100, blank=True)
-    amount = models.DecimalField(max_digits=4, decimal_places=2)
+    amount = models.DecimalField(max_digits=8, decimal_places=2)
 
     class Meta:
         ordering = ['-created']

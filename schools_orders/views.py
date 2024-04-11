@@ -10,6 +10,7 @@ from utils.terms_utils import get_current_sco_term
 
 @login_required
 def order_create(request):
+
     current_term_instance = get_current_sco_term()
     cart = Cart(request)
     order = Order.objects.create(user=request.user)

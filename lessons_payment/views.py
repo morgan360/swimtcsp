@@ -1,5 +1,4 @@
 from decimal import Decimal
-import stripe
 from django.conf import settings
 from django.shortcuts import render, redirect, reverse, \
     get_object_or_404
@@ -13,8 +12,17 @@ def payment_process(request):
     order = get_object_or_404(Order, id=order_id)
 
     if request.method == 'POST':
-        total_price = order.get_total_cost()  # Assuming get_total_cost is a method that calculates the total cost
-        order_ref = f"lessons_{order.id}"  # Generate a unique order reference
+        # Assuming get_total_cost is a method that calculates the total cost
+        total_price = order.get_total_cost()
+
+        # Update the order with the total amount
+
+
+        order.amount = total_price
+        order.save()  # Don't forget to save the order after updating
+
+        # Generate a unique order reference
+        order_ref = f"lessons_{order.id}"
 
         # Redirect the user to the BOIPA payment page
         return redirect(reverse('boipa:initiate_payment_session',

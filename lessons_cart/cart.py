@@ -50,19 +50,19 @@ class Cart:
 
     def add(self, product, swimling, quantity=1):
         """
-        Add a product and swimling to the cart.
+        Add a product and swimling to the cart or update the quantity.
         """
         product_id = str(product.id)
-        swimling_id = str(swimling.id)  # Get the swimling's ID
+        swimling_id = str(swimling.id)
 
-        if product_id not in self.cart:
+        if product_id in self.cart:
+            self.cart[product_id]['quantity'] += quantity
+        else:
             self.cart[product_id] = {
+                'quantity': quantity,
                 'price': str(product.price),
-                'swimling': swimling_id,  # Store the swimling ID
+                'swimling': swimling_id,
             }
-
-        self.cart[product_id]['price'] = str(product.price)
-        self.cart[product_id]['swimling'] = swimling_id
         self.save()
 
     def save(self):

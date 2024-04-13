@@ -39,33 +39,45 @@ def payment_canceled(request):
 # Create your views here.
 
 
+login_required
+
+
 def order_create(request):
+    if 'cart' not in request.session or not request.session['cart']:
+        return HttpResponse("No items in cart.", status=400)
+
     current_term_instance = get_current_term()
     cart = Cart(request)
     order = Order.objects.create(user=request.user)
+    total_price = Decimal('0.00')
+
     for item in cart:
-        swimling_id = int(item['swimling'])  # Convert the ID to an integer
+        product_id = item.get('product_id')
+        if not product_id:
+            continue  # Skip items without a product ID
+
+        product = get_object_or_404(Product, id=product_id)
+        price = Decimal(item['price'])
+        quantity = int(item['quantity'])
+        swimling_id = int(item['swimling'])
+
         OrderItem.objects.create(
             order=order,
-            product=item['product'],
-            price=item['price'],
-            quantity=item['quantity'],
-            swimling_id=swimling_id,  # Assign the swimling ID
-            term=current_term_instance  # Use the Term instance
+            product=product,
+            price=price,
+            quantity=quantity,
+            swimling_id=swimling_id,
+            term=current_term_instance
         )
+        total_price += price * quantity
 
-    # Clear the cart
+    order.amount = total_price
+    order.save()
+
     cart.clear()
-
-    # Call the order_created function
-    # order_created(order.id) # Turned Off
-
-    # Set the order in the session
     request.session['order_id'] = order.id
 
-    # Redirect for payment
     return order.id
-
 
 def order_created(order_id):
     # Retrieve the order object based on the provided order_id

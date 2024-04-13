@@ -39,14 +39,14 @@
                     </div>
                     <div class="w-1/5 px-2 flex justify-center mb-2">€{{ item.price }}</div>
                     <div class="w-1/5 px-2 flex justify-center mb-2">
-                        <form action="{% url 'lessons_cart:cart_remove' product_id=product.id %}" method="post"
-                              class="inline">
-                            {% csrf_token %}
-                            <button type="submit"
-                                    class="px-4 py-2 bg-yellow-400 hover:bg-yellow-500 text-white font-bold rounded">
-                                Remove
-                            </button>
-                        </form>
+{#                        <form action="{% url 'lessons_cart:cart_remove' product_id=product.id %}" method="post"#}
+{#                              class="inline">#}
+{#                            {% csrf_token %}#}
+{#                            <button type="submit"#}
+{#                                    class="px-4 py-2 bg-yellow-400 hover:bg-yellow-500 text-white font-bold rounded">#}
+{#                                Remove#}
+{#                            </button>#}
+{#                        </form>#}
                     </div>
                 </div>
             {% endwith %}

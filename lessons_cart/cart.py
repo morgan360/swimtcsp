@@ -18,29 +18,24 @@ class Cart:
 
     def __iter__(self):
         """
-        Iterate over the items in the cart and get the products
-        from the database.
+        Iterate over the items in the cart and get the products from the database.
+        Enhances performance by reducing the number of database queries.
         """
-        product_ids = self.cart.keys()
-        # get the product objects (details from DB) and add them to the cart.
-        # Only for IDs retrieved from session data(cart)
+        product_ids = list(self.cart.keys())  # Gather all product IDs from the cart
         products = Product.objects.filter(id__in=product_ids)
-        # Make a copy of the cart
-        cart = self.cart.copy()
-        # loop through the product info retrieved from DB
-        for product in products:
-            cart[str(product.id)]['product'] = product
-            cart[str(product.id)]['quantity'] = 1
-        # retrieve product_id
-        for item in cart.values():
-            # product_id = item.get('product_id')  # Retrieve the product ID
-            # if product_id:
-            #     product = Product.objects.get(id=product_id)
-            # item['product'] = product
-            item['price'] = Decimal(item['price'])
-            item['total_price'] = item['price'] * item['quantity']
-            item['swimling'] = item['swimling']
-            yield item
+        products_dict = {str(product.id): product for product in products}
+
+        for item_id, item in self.cart.items():
+            product = products_dict.get(item_id)
+            if product:
+                yield {
+                    'product_id': item_id,
+                    'product': product,
+                    'quantity': item['quantity'],
+                    'price': Decimal(item['price']),
+                    'total_price': Decimal(item['price']) * item['quantity'],
+                    'swimling': item['swimling'],
+                }
 
     def __len__(self):
         """
@@ -51,25 +46,29 @@ class Cart:
     def add(self, product, swimling, quantity=1):
         """
         Add a product and swimling to the cart or update the quantity.
+        This method sets the quantity to 1 if the product is added for the first time,
+        or increments the quantity by 1 each time the same product is added again.
         """
         product_id = str(product.id)
         swimling_id = str(swimling.id)
 
-        # Check if the product already exists in the cart
         if product_id in self.cart:
-            # If the product is already in the cart, safely increment the quantity
-            self.cart[product_id].setdefault('quantity', 0)
-            self.cart[product_id]['quantity'] += quantity
+            # If the product is already in the cart, increment the quantity
+            if 'quantity' in self.cart[product_id]:
+                self.cart[product_id]['quantity'] += quantity
+            else:
+                self.cart[product_id]['quantity'] = quantity
         else:
-            # If the product is not in the cart, initialize it with the given quantity and details
+            # If the product is not in the cart, create a new entry with quantity set to 1
             self.cart[product_id] = {
                 'quantity': quantity,
-                'price': str(product.price),  # Store price as a string to avoid serialization issues
-                'swimling': swimling_id,  # Store the swimling ID associated with this product
+                'price': str(product.price),
+                'swimling': swimling_id,
             }
 
         # Save the cart changes to the session
-        self.save()
+            self.save()
+
 
     def remove(self, product):
         """
@@ -87,3 +86,9 @@ class Cart:
 
     def get_total_price(self):
         return sum(Decimal(item['price']) for item in self.cart.values())
+
+    def save(self):
+        """
+        Mark the session as 'modified' to make sure it gets saved by Django.
+        """
+        self.session.modified = True

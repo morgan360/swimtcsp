@@ -19,9 +19,8 @@ class Cart:
     def __iter__(self):
         """
         Iterate over the items in the cart and get the products from the database.
-        Enhances performance by reducing the number of database queries.
         """
-        product_ids = list(self.cart.keys())  # Gather all product IDs from the cart
+        product_ids = self.cart.keys()
         products = Product.objects.filter(id__in=product_ids)
         products_dict = {str(product.id): product for product in products}
 
@@ -31,9 +30,10 @@ class Cart:
                 yield {
                     'product_id': item_id,
                     'product': product,
-                    'quantity': item['quantity'],
+                    'quantity': item.get('quantity', 1),  # Default to 1 if quantity is missing
                     'price': Decimal(item['price']),
-                    'total_price': Decimal(item['price']) * item['quantity'],
+                    'total_price': Decimal(item['price']) * item.get('quantity', 1),
+                    # Calculate using a default quantity of 1
                     'swimling': item['swimling'],
                 }
 
@@ -46,28 +46,22 @@ class Cart:
     def add(self, product, swimling, quantity=1):
         """
         Add a product and swimling to the cart or update the quantity.
-        This method sets the quantity to 1 if the product is added for the first time,
-        or increments the quantity by 1 each time the same product is added again.
         """
         product_id = str(product.id)
         swimling_id = str(swimling.id)
 
         if product_id in self.cart:
             # If the product is already in the cart, increment the quantity
-            if 'quantity' in self.cart[product_id]:
-                self.cart[product_id]['quantity'] += quantity
-            else:
-                self.cart[product_id]['quantity'] = quantity
+            self.cart[product_id]['quantity'] = self.cart[product_id].get('quantity', 0) + quantity
         else:
-            # If the product is not in the cart, create a new entry with quantity set to 1
+            # If the product is not in the cart, create a new entry with all details
             self.cart[product_id] = {
                 'quantity': quantity,
                 'price': str(product.price),
                 'swimling': swimling_id,
             }
 
-        # Save the cart changes to the session
-            self.save()
+        self.save()
 
 
     def remove(self, product):

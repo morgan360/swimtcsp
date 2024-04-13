@@ -27,21 +27,25 @@
                 </div>
                 <div class="mt-4">
                     <!-- Form to add to cart -->
-                    <form method="post" action="{% url 'lessons_cart:cart_add' product.id %}">
-                        {% csrf_token %}
-                        <div id= "swimling_dropdown" class="form-group w-1/3 pb-3">
-                            <label for="id_swimling">Select Swimling</label>
-                            <select name="swimling" id="id_swimling"
-                                    class="form-control block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md text-black">
-                                {% for swimling in swimlings %}
-                                    <option value="{{ swimling.id }}" class="text-black">{{ swimling }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <input type="submit" value="Add to Cart"
-                               class="btn btn-primary w-1/3">
-                    </form>
 
+                    {% if product and product.id %}
+                        <form method="post" action="{% url 'lessons_cart:cart_add' product.id %}">
+                            {% csrf_token %}
+                            <div id="swimling_dropdown" class="form-group w-1/3 pb-3">
+                                <label for="id_swimling">Select Swimling</label>
+                                <select name="swimling" id="id_swimling"
+                                        class="form-control block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md text-black">
+                                    {% for swimling in swimlings %}
+                                        <option value="{{ swimling.id }}" class="text-black">{{ swimling }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <input type="submit" value="Add to Cart"
+                                   class="btn btn-primary w-1/3">
+                        </form>
+                    {% else %}
+                        <p>Product is not available.</p>
+                    {% endif %}
                 </div>
                 <hr class="my-4">
                 <div id="swimling-form-container">

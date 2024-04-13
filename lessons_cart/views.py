@@ -10,6 +10,7 @@ from django.contrib.auth.decorators import login_required
 @login_required
 @require_POST
 def cart_add(request, product_id):
+    print('help',product_id)
     cart = Cart(request)
     product = get_object_or_404(Product, id=product_id)
     form = CartAddProductForm(user=request.user, data=request.POST)  # Corrected form instantiation
@@ -24,7 +25,7 @@ def cart_add(request, product_id):
 
 
 @require_POST
-def cart_remove(request, product_id):
+def cart_remove(request, product_id=3374):
     cart = Cart(request)
     product = get_object_or_404(Product, id=product_id)
     cart.remove(product)
@@ -44,4 +45,3 @@ def cart_detail(request):
         item['swimling'] = swimling
 
     return render(request, 'lessons_cart/detail.html', {'cart': cart, 'swimlings': swimlings})
-

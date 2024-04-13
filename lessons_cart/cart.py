@@ -55,19 +55,21 @@ class Cart:
         product_id = str(product.id)
         swimling_id = str(swimling.id)
 
+        # Check if the product already exists in the cart
         if product_id in self.cart:
+            # If the product is already in the cart, safely increment the quantity
+            self.cart[product_id].setdefault('quantity', 0)
             self.cart[product_id]['quantity'] += quantity
         else:
+            # If the product is not in the cart, initialize it with the given quantity and details
             self.cart[product_id] = {
                 'quantity': quantity,
-                'price': str(product.price),
-                'swimling': swimling_id,
+                'price': str(product.price),  # Store price as a string to avoid serialization issues
+                'swimling': swimling_id,  # Store the swimling ID associated with this product
             }
-        self.save()
 
-    def save(self):
-        # Mark the session as "modified" to ensure it gets saved
-        self.session.modified = True
+        # Save the cart changes to the session
+        self.save()
 
     def remove(self, product):
         """

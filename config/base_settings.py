@@ -69,7 +69,6 @@ INSTALLED_APPS = [
     'lessons',
     'lessons_cart',
     'lessons_orders',
-    # 'lessons_payment',
     'swims',
     'swims_cart',
     'swims_orders',

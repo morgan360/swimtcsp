@@ -6,42 +6,62 @@ from .cart import Cart
 from .forms import CartAddProductForm
 from users.forms import NewSwimlingForm
 from django.contrib.auth.decorators import login_required
+from django.conf import settings
+from decimal import Decimal
+from django.contrib import messages
 
 @login_required
 @require_POST
 def cart_add(request, product_id):
-    print('help',product_id)
     cart = Cart(request)
     product = get_object_or_404(Product, id=product_id)
-    form = CartAddProductForm(user=request.user, data=request.POST)  # Corrected form instantiation
+    form = CartAddProductForm(user=request.user, data=request.POST)
+
     if form.is_valid():
-        cd = form.cleaned_data
-        swimling = cd['swimling']
-        cart.add(product=product, swimling=swimling)
+        swimling = form.cleaned_data['swimling']
+        swimling_id = swimling.id
+
+        # Call the add method with the correct parameters
+        cart.add(product=product, swimling_id=swimling_id)
+
+        messages.success(request, "Item successfully added to cart.")
         return redirect('lessons_cart:cart_detail')
     else:
-        # Handle invalid form (optional: return an error message)
+        messages.error(request, "There was an error with your form submission.")
         return redirect('some_error_handling_view')
 
 
+@login_required
 @require_POST
-def cart_remove(request, product_id=3374):
+def cart_remove(request, product_id, swimling_id):
     cart = Cart(request)
-    product = get_object_or_404(Product, id=product_id)
-    cart.remove(product)
+    try:
+        # Assuming your cart uses a combined key for product and swimling or separate handling
+        cart_key = f"{product_id}_{swimling_id}"
+        cart.remove(cart_key)  # Updated remove function to accept the combined key
+        messages.success(request, "Item removed from cart.")
+    except KeyError:
+        messages.error(request, "Item not found in cart.")
     return redirect('lessons_cart:cart_detail')
-
 
 def cart_detail(request):
     cart = Cart(request)
-    swimlings = []  # List to store retrieved swimling objects
+    cart_items = []
+    total_price = Decimal('0.00')  # Initialize total price
 
-    for item in cart:
-        swimling_id = item['swimling']
+    for item_id, item_data in cart.cart.items():
+        product_id, swimling_id = item_id.split('_')
+        product = Product.objects.get(id=product_id)
         swimling = Swimling.objects.get(id=swimling_id)
-        swimlings.append(swimling)  # Append retrieved swimling object to the list
+        item_total = Decimal(item_data['price']) * item_data['quantity']
+        total_price += item_total  # Update total price
 
-        # You can also update the cart item with the retrieved swimling
-        item['swimling'] = swimling
+        cart_items.append({
+            'product_id': product_id,
+            'product': product,
+            'price': item_data['price'],
+            'swimling': swimling,
+            'total_price': item_total
+        })
 
-    return render(request, 'lessons_cart/detail.html', {'cart': cart, 'swimlings': swimlings})
+    return render(request, 'lessons_cart/detail.html', {'cart': cart_items, 'total_price': total_price})

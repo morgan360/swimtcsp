@@ -6,15 +6,8 @@ from users.models import Swimling
 
 class Cart:
     def __init__(self, request):
-        """
-        Initialize the cart.
-        """
         self.session = request.session
-        cart = self.session.get(settings.CART_SESSION_ID)
-        if not cart:
-            # save an empty cart in the session
-            cart = self.session[settings.CART_SESSION_ID] = {}
-        self.cart = cart
+        self.cart = self.session.get(settings.CART_SESSION_ID, {})
 
     def __iter__(self):
         """
@@ -30,48 +23,47 @@ class Cart:
                 yield {
                     'product_id': item_id,
                     'product': product,
-                    'quantity': item.get('quantity', 1),  # Default to 1 if quantity is missing
+                    'quantity': item.get('quantity', 1),  # Ensure quantity is always set
                     'price': Decimal(item['price']),
                     'total_price': Decimal(item['price']) * item.get('quantity', 1),
-                    # Calculate using a default quantity of 1
                     'swimling': item['swimling'],
                 }
 
-    def __len__(self):
-        """
-        Count all items in the cart.
-        """
-        return len(self.cart)
 
-    def add(self, product, swimling, quantity=1):
+    def add(self, product, swimling_id, quantity=1):
         """
-        Add a product and swimling to the cart or update the quantity.
+        Add a product to the cart or update its quantity.
         """
-        product_id = str(product.id)
-        swimling_id = str(swimling.id)
+        product_id = str(product.id)  # Ensure the product ID is a string for consistent key usage
+        cart_key = f"{product_id}_{swimling_id}"  # Create a unique key for the product and swimling combination
 
-        if product_id in self.cart:
-            # If the product is already in the cart, increment the quantity
-            self.cart[product_id]['quantity'] = self.cart[product_id].get('quantity', 0) + quantity
+        if cart_key in self.cart:
+            # Product already in the cart, increment quantity
+            self.cart[cart_key]['quantity'] += quantity
         else:
-            # If the product is not in the cart, create a new entry with all details
-            self.cart[product_id] = {
+            # Product not in the cart, add it
+            self.cart[cart_key] = {
                 'quantity': quantity,
-                'price': str(product.price),
-                'swimling': swimling_id,
+                'price': str(product.price),  # Store price as a string for potential serialization issues
+                'swimling_id': swimling_id,  # Store the swimling ID
             }
 
-        self.save()
+        self.save()  # Make sure to save the cart changes to the session
 
+    def save(self):
+        # Save the cart to the session
+        self.session[settings.CART_SESSION_ID] = self.cart
+        self.session.modified = True  # Notify Django that the session has changed
 
-    def remove(self, product):
+    def remove(self, cart_key):
         """
-        Remove a product from the cart.
+        Remove an item from the cart using the combined cart_key.
         """
-        product_id = str(product.id)
-        if product_id in self.cart:
-            del self.cart[product_id]
-            self.save()
+        if cart_key in self.cart:
+            del self.cart[cart_key]
+            self.save()  # Make sure to save the cart changes to the session
+        else:
+            raise KeyError("Item not found in cart.")
 
     def clear(self):
         # remove cart from session
@@ -81,8 +73,14 @@ class Cart:
     def get_total_price(self):
         return sum(Decimal(item['price']) for item in self.cart.values())
 
-    def save(self):
+    # def save(self):
+    #     # update the session with new cart data
+    #     self.session[settings.CART_SESSION_ID] = self.cart
+    #     # mark the session as "modified" to make sure it gets saved
+    #     self.session.modified = True
+
+    def __len__(self):
         """
-        Mark the session as 'modified' to make sure it gets saved by Django.
+        Count all items in the cart.
         """
-        self.session.modified = True
+        return len(self.cart)

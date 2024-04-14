@@ -60,7 +60,7 @@ def initiate_boipa_payment_session(request, order_ref, total_price):
         "merchantNotificationUrl": NGROK + reverse('boipa:payment_notification'),
         "merchantLandingPageRedirectMethod": "GET",
     }
-    print(payload)
+    print('PAYLOAD',payload)
     # Send the request to BOIPA to initiate the payment session
     response = requests.post(BOIPA_TOKEN_URL, data=payload, headers={'Content-Type': 'application/x-www-form-urlencoded'})
     if response.status_code == 200:

@@ -70,7 +70,7 @@ def payment_process(request):
 
     order.amount = total_price
     order.save()
-    handle_lessons_enrollment(order)
+    # handle_lessons_enrollment(order)
     cart.clear()
     request.session['order_id'] = order.id
 

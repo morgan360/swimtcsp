@@ -96,14 +96,14 @@ def payment_response(request):
         elif source_prefix == "schools":
             order = SchoolOrder.objects.get(id=order_id)
 
-            order.paid = True
-            order.save()
+        order.paid = True
+        order.save()
 
         # Payment was successful
-        return render(request, 'payment_success.html', {'merchant_tx_id': merchantTxId})
+        return render(request, 'payment_success.html', {'order_ref ': merchantTxId})
     elif result == "failure":
         # Payment failed
-        return render(request, 'payment_failure.html', {'merchant_tx_id': merchantTxId})
+        return render(request, 'payment_failure.html', {'order_ref ': merchantTxId})
     else:
         # Unrecognized result
         return render(request, 'error.html', {'error_message': 'Unknown payment response.'})

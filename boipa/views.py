@@ -101,11 +101,11 @@ def payment_response(request):
         order.save()
 
         # Payment was successful
-        return render(request, 'payment_success.html', {'order_ref': order_ref})
+        return render(request, 'payment_success.html', {'order_ref': order_ref, 'message':result})
 
     elif result == "failure":
         # Payment failed
-        return render(request, 'payment_failure.html', {'order_ref ': order_ref})
+        return render(request, 'payment_failure.html', {'order_ref ': order_ref, 'message':result})
     else:
         # Unrecognized result
         return render(request, 'error.html', {'error_message': 'Unknown payment response.'})

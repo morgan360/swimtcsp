@@ -84,8 +84,9 @@ def payment_response(request):
     """
     result = request.GET.get('result')
     merchantTxId = request.GET.get('merchantTxId')
-    source_prefix, order_id_str = merchantTxId.split("_", 1)
     order_ref = merchantTxId
+    source_prefix, order_id_str = merchantTxId.split("_", 1)
+
     order_id = int(order_id_str)
 
     if result == "success":
@@ -100,10 +101,11 @@ def payment_response(request):
         order.save()
 
         # Payment was successful
-        return render(request, 'payment_success.html', {'order_ref ': merchantTxId})
+        return render(request, 'payment_success.html', {'order_ref': order_ref})
+
     elif result == "failure":
         # Payment failed
-        return render(request, 'payment_failure.html', {'order_ref ': merchantTxId})
+        return render(request, 'payment_failure.html', {'order_ref ': order_ref})
     else:
         # Unrecognized result
         return render(request, 'error.html', {'error_message': 'Unknown payment response.'})

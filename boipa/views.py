@@ -55,7 +55,7 @@ def initiate_boipa_payment_session(request, order_ref, total_price):
         "country": "IE",  # Example: IE for Ireland
         "currency": "EUR",
         "amount": str(total_price),
-        "merchantTxId": str(order_ref),  # Example: product ID as transaction ID
+        "merchantTxId": order_ref,  # Example: product ID as transaction ID
         "merchantLandingPageUrl": NGROK + reverse('boipa:payment_response'),
         "merchantNotificationUrl": NGROK + reverse('boipa:payment_notification'),
         "merchantLandingPageRedirectMethod": "GET",
@@ -74,8 +74,6 @@ def initiate_boipa_payment_session(request, order_ref, total_price):
     else:
         # Handle error (e.g., display an error message)
         return render(request, 'error.html', {'error_message': 'Failed to initiate payment session.'})
-
-
 
 
 # Also in views.py
@@ -102,10 +100,10 @@ def payment_response(request):
             order.save()
 
         # Payment was successful
-        return render(request, 'payment_success.html', {'merchant_tx_id': merchant_tx_id})
+        return render(request, 'payment_success.html', {'merchant_tx_id': merchantTxId})
     elif result == "failure":
         # Payment failed
-        return render(request, 'payment_failure.html', {'merchant_tx_id': merchant_tx_id})
+        return render(request, 'payment_failure.html', {'merchant_tx_id': merchantTxId})
     else:
         # Unrecognized result
         return render(request, 'error.html', {'error_message': 'Unknown payment response.'})

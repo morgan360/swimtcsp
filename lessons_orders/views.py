@@ -13,23 +13,6 @@ from django.conf import settings
 from boipa.views import initiate_boipa_payment_session
 from lessons_bookings.utils.enrollment import handle_lessons_enrollment
 
-# def payment_process(request):
-#     order_id = order_create(request)
-#     order = get_object_or_404(Order, id=order_id)
-#     # Update the order with the total amount
-#
-#     total_price = order.get_total_cost()
-#     order.amount = total_price
-#     order.save()  # Don't forget to save the order after updating
-#
-#     # Generate a unique order reference
-#     order_ref = f"lessons_{order_id}"
-#     print(order_ref)
-#
-#     # Redirect the user to the BOIPA payment page
-#     return redirect(reverse('boipa:initiate_payment_session',
-#                             kwargs={'order_ref': order_ref, 'total_price': str(total_price)}))
-
 def payment_completed(request):
     return render(request, 'payment/completed.html')
 
@@ -39,47 +22,47 @@ def payment_canceled(request):
 
 
 
-@login_required
 def payment_process(request):
     if 'cart' not in request.session or not request.session['cart']:
         return HttpResponse("No items in cart.", status=400)
 
-    current_term_instance = get_current_term()
     cart = Cart(request)
+    if not cart.cart:
+        return HttpResponse("No items in cart.", status=400)  # Extra check if cart is indeed empty
 
-    order = Order.objects.create(user=request.user)
-    total_price = Decimal('0.00')
+    try:
+        order = Order.objects.create(user=request.user)
+        total_price = Decimal('0.00')
 
-    for item_key, item_data in cart.cart.items():
-        product_id, swimling_id = item_key.split('_')
-        product = get_object_or_404(Product, id=product_id)
-        swimling = get_object_or_404(Swimling, id=swimling_id)
+        for item_key, item_data in cart.cart.items():
+            product_id, swimling_id = item_key.split('_')
+            product = get_object_or_404(Product, id=product_id)
+            swimling = get_object_or_404(Swimling, id=swimling_id)
+            quantity = item_data.get('quantity', 1)
+            price = Decimal(item_data['price'])
 
-        quantity = item_data.get('quantity', 1)
-        price = Decimal(item_data['price'])
+            OrderItem.objects.create(
+                order=order,
+                product=product,
+                price=price,
+                quantity=quantity,
+                swimling=swimling,
+                term=get_current_term()
+            )
+            total_price += price * quantity  # Ensure price is multiplied by quantity
 
-        OrderItem.objects.create(
-            order=order,
-            product=product,
-            price=price,
-            quantity=quantity,
-            swimling=swimling,
-            term=current_term_instance
-        )
-        total_price += price
+        order.amount = total_price
+        order.save()
 
-    order.amount = total_price
-    order.save()
-    # handle_lessons_enrollment(order)
-    cart.clear()
-    request.session['order_id'] = order.id
+        cart.clear()  # Clear the cart after all order processing is done
+        request.session['order_id'] = order.id
 
-    order_ref = f"lessons_{order.id}"
-    print(order_ref)
+        order_ref = f"lessons_{order.id}"
+        return redirect(reverse('boipa:initiate_payment_session', kwargs={'order_ref': order_ref, 'total_price': str(total_price)}))
+    except Exception as e:
+        # Handle possible exceptions that could occur during order processing
+        return HttpResponse(f"An error occurred: {str(e)}", status=500)
 
-    # Redirect the user to the BOIPA payment page
-    return redirect(reverse('boipa:initiate_payment_session',
-                            kwargs={'order_ref': order_ref, 'total_price': str(total_price)}))
 
 def order_created(order_id):
     # Retrieve the order object based on the provided order_id

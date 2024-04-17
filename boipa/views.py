@@ -84,10 +84,10 @@ def payment_response(request):
     """
     result = request.GET.get('result')
     merchantTxId = request.GET.get('merchantTxId')
-    order_ref = merchantTxId
     source_prefix, order_id_str = merchantTxId.split("_", 1)
 
     order_id = int(order_id_str)
+    order_ref = order_id
 
     if result == "success":
         if source_prefix == "swim":

@@ -16,6 +16,7 @@ class Order(models.Model):
     payment_status = models.CharField(max_length=100, blank=True)
     amount = models.DecimalField(max_digits=8, decimal_places=2, null = True)
 
+
     class Meta:
         ordering = ['-created']
         indexes = [
@@ -44,6 +45,9 @@ class OrderItem(models.Model):
     swimling = models.ForeignKey(Swimling,
                                  related_name='swimling',
                                  on_delete=models.CASCADE)
+    class Meta:
+        unique_together = ('order', 'product', 'swimling')
+
 
     def __str__(self):
         return str(self.id)

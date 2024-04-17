@@ -29,26 +29,22 @@ class Cart:
                     'swimling': item['swimling'],
                 }
 
-
     def add(self, product, swimling_id, quantity=1):
         """
-        Add a product to the cart or update its quantity.
+        Add a product to the cart or update it if already present.
+        Since the quantity is always 1, it replaces any existing item.
         """
         product_id = str(product.id)  # Ensure the product ID is a string for consistent key usage
         cart_key = f"{product_id}_{swimling_id}"  # Create a unique key for the product and swimling combination
 
-        if cart_key in self.cart:
-            # Product already in the cart, increment quantity
-            self.cart[cart_key]['quantity'] += quantity
-        else:
-            # Product not in the cart, add it
-            self.cart[cart_key] = {
-                'quantity': quantity,
-                'price': str(product.price),  # Store price as a string for potential serialization issues
-                'swimling_id': swimling_id,  # Store the swimling ID
-            }
+        # Product not in the cart, add it, or replace it if it already exists
+        self.cart[cart_key] = {
+            'quantity': 1,  # Always set quantity to 1
+            'price': str(product.price),  # Store price as a string for serialization issues
+            'swimling_id': swimling_id,  # Store the swimling ID
+        }
 
-        self.save()  # Make sure to save the cart changes to the session
+        self.save()
 
     def save(self):
         # Save the cart to the session

@@ -7,7 +7,6 @@ import logging
 
 payments_logger = logging.getLogger('payments')
 
-
 def get_boipa_session_token(order_ref, total_price):
     try:
         amount = Decimal(f"{total_price:.2f}")
@@ -31,7 +30,6 @@ def get_boipa_session_token(order_ref, total_price):
             "merchantChallengeInd": "01",
             "merchantDecReqInd": "N",
             "freeText": "Optional extra transaction info",
-            # "brandId": None,  # Include this if differentiating between brands in the same merchant account
         }
 
         payments_logger.debug("Sending payload to API: %s", {k: v for k, v in payload.items() if k != 'password'})
@@ -39,8 +37,10 @@ def get_boipa_session_token(order_ref, total_price):
         if response.status_code == 200:
             return response.json().get('token')
         else:
-            payments_logger.error("Error obtaining session token: HTTP Status %s: %s", response.status_code,
-                                  response.text)
+            error_message = response.text
+            payments_logger.error("Failed to obtain session token: HTTP Status %s: %s", response.status_code, error_message)
+            # Handle specific HTTP errors e.g., 400, 401, 500, etc.
+            handle_http_errors(response.status_code, error_message)
             return None
     except requests.RequestException as e:
         payments_logger.error("Network-related error when obtaining session token: %s", str(e))
@@ -48,3 +48,13 @@ def get_boipa_session_token(order_ref, total_price):
     except Exception as e:
         payments_logger.error("Unexpected error when obtaining session token: %s", str(e))
         return None
+
+def handle_http_errors(status_code, message):
+    if status_code == 401:
+        # Handle unauthorized error
+        payments_logger.error("Authorization failed")
+    elif status_code == 500:
+        # Handle server error
+        payments_logger.error("Server error encountered")
+    # Additional specific error handling can be added here
+

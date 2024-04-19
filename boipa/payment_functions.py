@@ -2,7 +2,6 @@ import requests
 import time
 from decimal import Decimal
 from django.urls import reverse
-from .models import SimpleOrder
 from django.conf import settings
 import logging
 

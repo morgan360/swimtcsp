@@ -2,6 +2,24 @@ from config.base_settings import *
 from dotenv import load_dotenv
 import os
 import logging
+import environ
+
+# Build paths inside the project like this: BASE_DIR / 'subdir'.
+BASE_DIR = Path(__file__).resolve().parent.parent
+# SECURITY WARNING: don't run with debug turned on in production!
+DEBUG = True
+# Initialize environ
+env = environ.Env()
+# Reading .env file
+env_file = os.path.join(BASE_DIR, '.env')
+env.read_env(env_file)  # Provide the path to the .env file
+
+# Environment variables
+BOIPA_MERCHANT_ID = env('BOIPA_MERCHANT_ID')
+BOIPA_PASSWORD = env('BOIPA_PASSWORD')
+BOIPA_TOKEN_URL = env('BOIPA_TOKEN_URL')
+HPP_FORM = env('HPP_FORM')
+NGROK = env('NGROK', default='http://localhost:4040')
 
 load_dotenv()  # loads the configs from .env
 

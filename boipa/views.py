@@ -23,60 +23,23 @@ from django.http import QueryDict
 from django.urls import reverse
 from lessons_bookings.utils.enrollment import handle_lessons_enrollment
 from django.db import transaction
-
-# Load environment variables
-load_dotenv()
+from .payment_functions import get_boipa_session_token  # If external functions are used
+from django.conf import settings
 
 # Initialize logging
 payments_logger = logging.getLogger('payments')
 
-# Environment variables
-BOIPA_MERCHANT_ID = os.getenv('BOIPA_MERCHANT_ID')
-BOIPA_PASSWORD = os.getenv('BOIPA_PASSWORD')
-BOIPA_TOKEN_URL = os.getenv('BOIPA_TOKEN_URL')  # URL to obtain the session token
-PAYMENT_FORM_URL = os.getenv('HPP_FORM')  # URL for the payment form
-NGROK = os.getenv('NGROK')  # For ip tunnel from BOIPA
-HPP_FORM = os.getenv('HPP_FORM')
-timestamp = time.strftime("%Y%m%d%H%M%S")
-
 
 def initiate_boipa_payment_session(request, order_ref, total_price):
-    """
-    Initiates a payment session with BOIPA for a given product and total price.
-    Redirects the user to the BOIPA payment page.
-    """
-    print(total_price)
-    print(order_ref)
-    # Construct the payload with your details
-    payload = {
-        "merchantId": BOIPA_MERCHANT_ID,
-        "password": BOIPA_PASSWORD,
-        "action": "AUTH",  # Change as needed
-        "timestamp": str(int(time.time() * 1000)),
-        "allowOriginUrl": NGROK,  # The URL BOIPA should allow origin from
-        "channel": "ECOM",
-        "country": "IE",  # Example: IE for Ireland
-        "currency": "EUR",
-        "amount": str(total_price),
-        "merchantTxId": order_ref,  # Example: product ID as transaction ID
-        "merchantLandingPageUrl": NGROK + reverse('boipa:payment_response'),
-        "merchantNotificationUrl": NGROK + reverse('boipa:payment_notification'),
-        "merchantLandingPageRedirectMethod": "GET",
-    }
-    print('PAYLOAD', payload)
-    # Send the request to BOIPA to initiate the payment session
-    response = requests.post(BOIPA_TOKEN_URL, data=payload,
-                             headers={'Content-Type': 'application/x-www-form-urlencoded'})
-    if response.status_code == 200:
-        # Extract the session token from the response
-        session_token = response.json().get('token')
-        # Construct the payment URL
-        payment_url = f"{PAYMENT_FORM_URL}?token={session_token}&merchantId={BOIPA_MERCHANT_ID}&integrationMode=Standalone"
-        # Redirect the user to the BOIPA payment page
-        return redirect(payment_url)
-    else:
-        # Handle error (e.g., display an error message)
-        return render(request, 'error.html', {'error_message': 'Failed to initiate payment session.'})
+    token = get_boipa_session_token(order_ref, total_price)
+    if token is None:
+        return render(request, 'error.html', {'error': 'Unable to obtain session token.'})
+
+    # Construct the HPP URL with the obtained token and include integrationMode
+    hpp_url = settings.HPP_FORM + f"?token={token}&merchantId={settings.BOIPA_MERCHANT_ID}&integrationMode=Standalone"
+
+    # Redirect user to the HPP URL
+    return redirect(hpp_url)
 
 
 # Also in views.py
@@ -91,14 +54,15 @@ def payment_response(request):
 
     if result == "success":
         # Payment was successful
-        return render(request, 'payment_success.html', {'order_ref': merchantTxId, 'message':result})
+        return render(request, 'payment_success.html', {'order_ref': merchantTxId, 'message': result})
 
     elif result == "failure":
         # Payment failed
-        return render(request, 'payment_failure.html', {'order_ref ': merchantTxId, 'message':result})
+        return render(request, 'payment_failure.html', {'order_ref ': merchantTxId, 'message': result})
     else:
         # Unrecognized result
         return render(request, 'error.html', {'error_message': 'Unknown payment response.'})
+
 
 ###### Notifications #######
 
@@ -176,12 +140,12 @@ def payment_notification(request):
                     acquirerCurrency=data.get('acquirerCurrency'),
                     paymentSolutionId=data.get('paymentSolutionId'),
                     status=data.get('status'),
-                     )
+                )
                 return HttpResponse('Payment processed successfully', status=200)
 
         elif source_prefix == 'schools':
             data = QueryDict(request.body)
-            order_obj =SchoolOrder.objects.get(id=order_id)
+            order_obj = SchoolOrder.objects.get(id=order_id)
             # Create a payment notification record
             SchoolOrderPaymentNotification.objects.create(
                 order=order_obj,

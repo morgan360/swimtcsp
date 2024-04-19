@@ -30,13 +30,24 @@ from django.conf import settings
 payments_logger = logging.getLogger('payments')
 
 
+@require_POST  # Ensures this view only handles POST requests
 def initiate_boipa_payment_session(request, order_ref, total_price):
+    """
+    Initiates a payment session for BOIPA with the given order reference and total price.
+    Redirects to the BOIPA Hosted Payment Page (HPP) if successful, otherwise shows an error page.
+
+    Args:
+    request: HttpRequest object.
+    order_ref: String, a unique identifier for the order.
+    total_price: Decimal, the total price of the transaction.
+    """
     token = get_boipa_session_token(order_ref, total_price)
     if token is None:
+        logger.error(f"Failed to obtain session token for order_ref {order_ref}")
         return render(request, 'error.html', {'error': 'Unable to obtain session token.'})
 
     # Construct the HPP URL with the obtained token and include integrationMode
-    hpp_url = settings.HPP_FORM + f"?token={token}&merchantId={settings.BOIPA_MERCHANT_ID}&integrationMode=Standalone"
+    hpp_url = f"{settings.HPP_FORM}?token={token}&merchantId={settings.BOIPA_MERCHANT_ID}&integrationMode=Standalone"
 
     # Redirect user to the HPP URL
     return redirect(hpp_url)

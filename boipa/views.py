@@ -25,12 +25,12 @@ from lessons_bookings.utils.enrollment import handle_lessons_enrollment
 from django.db import transaction
 from .payment_functions import get_boipa_session_token  # If external functions are used
 from django.conf import settings
-
+from decimal import Decimal
 # Initialize logging
 payments_logger = logging.getLogger('payments')
 
 
-@require_POST  # Ensures this view only handles POST requests
+# @require_POST  # Ensures this view only handles POST requests
 def initiate_boipa_payment_session(request, order_ref, total_price):
     """
     Initiates a payment session for BOIPA with the given order reference and total price.
@@ -41,9 +41,10 @@ def initiate_boipa_payment_session(request, order_ref, total_price):
     order_ref: String, a unique identifier for the order.
     total_price: Decimal, the total price of the transaction.
     """
+    total_price = Decimal(total_price)
     token = get_boipa_session_token(order_ref, total_price)
     if token is None:
-        logger.error(f"Failed to obtain session token for order_ref {order_ref}")
+        payments_logger.error(f"Failed to obtain session token for order_ref {order_ref}")
         return render(request, 'error.html', {'error': 'Unable to obtain session token.'})
 
     # Construct the HPP URL with the obtained token and include integrationMode

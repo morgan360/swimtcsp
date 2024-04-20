@@ -4,11 +4,12 @@ BASE SETTINGS
 
 from pathlib import Path
 import os
+from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-from dotenv import load_dotenv
+
 
 load_dotenv()  # loads the configs from .env
 DB_PASSWORD = str(os.getenv('DB_PASSWORD')),

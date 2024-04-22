@@ -37,7 +37,6 @@ INSTALLED_APPS = [
     # pre installed
     'django.contrib.admin',
     'django.contrib.auth',
-
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
@@ -48,10 +47,7 @@ INSTALLED_APPS = [
     'allauth.socialaccount',  # Allauth
     'allauth.socialaccount.providers.google',  # Allauth
     'allauth.socialaccount.providers.facebook',  # Allauth
-    # "bootstrap5",
-    # 'django_bootstrap_icons',
     "crispy_forms",
-    # "crispy_bootstrap5",
     'import_export',
     "phonenumber_field",
     'django_filters',
@@ -71,9 +67,9 @@ INSTALLED_APPS = [
     'lessons_cart',
     'lessons_orders',
     'swims',
-    'swims_cart',
+    # 'swims_cart',
     'swims_orders',
-    'swims_payment',
+    # 'swims_payment',
     'lessons_bookings',
     'timetable',
     'reports',
@@ -265,10 +261,6 @@ AXES_LOCKOUT_TEMPLATE = 'account/lockout.html'
 
 # How cart sessions are stored
 CART_SESSION_ID = 'cart'
-STRIPE_PUBLISHABLE_KEY = str(os.getenv('STRIPE_PUBLISHABLE_KEY'))
-STRIPE_SECRET_KEY = str(os.getenv('STRIPE_SECRET_KEY'))
-STRIPE_WEBHOOK_SECRET = str(os.getenv('STRIPE_WEBHOOK_SECRET'))
-STRIPE_API_VERSION = '2022-08-01'
 BOIPA_MERCHANT_ID=100121
 BRAND_ID=1001210000
 BOIPA_PASSWORD='qWGEJQQAkhROSTGpwS5O'

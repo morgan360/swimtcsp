@@ -46,11 +46,6 @@ class Cart:
 
         self.save()
 
-    def save(self):
-        # Save the cart to the session
-        self.session[settings.CART_SESSION_ID] = self.cart
-        self.session.modified = True  # Notify Django that the session has changed
-
     def remove(self, cart_key):
         """
         Remove an item from the cart using the combined cart_key.
@@ -69,14 +64,14 @@ class Cart:
     def get_total_price(self):
         return sum(Decimal(item['price']) for item in self.cart.values())
 
-    # def save(self):
-    #     # update the session with new cart data
-    #     self.session[settings.CART_SESSION_ID] = self.cart
-    #     # mark the session as "modified" to make sure it gets saved
-    #     self.session.modified = True
 
     def __len__(self):
         """
         Count all items in the cart.
         """
         return len(self.cart)
+
+    def save(self):
+        # Save the cart to the session
+        self.session[settings.CART_SESSION_ID] = self.cart
+        self.session.modified = True

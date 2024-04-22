@@ -1,14 +1,9 @@
 from decimal import Decimal
 import stripe
 from django.conf import settings
-from django.shortcuts import render, redirect, reverse,\
-                             get_object_or_404
+from django.shortcuts import render, redirect, reverse, \
+    get_object_or_404
 from swims_orders.models import Order
-from utils.webhooks import stripe_webhook
-
-# create the Stripe instance
-stripe.api_key = settings.STRIPE_SECRET_KEY
-stripe.api_version = settings.STRIPE_API_VERSION
 
 
 def payment_process(request):
@@ -39,14 +34,11 @@ def payment_process(request):
                     'currency': 'eur',
                     'unit_amount': int(price * Decimal('100')),  # Convert to cents
                     'product_data': {
-                        'name':item.variant.product.name,  # Use the product name from each item
+                        'name': item.variant.product.name,  # Use the product name from each item
                     },
                 },
                 'quantity': item.quantity,
             })
-
-        # Create Stripe checkout session
-        session = stripe.checkout.Session.create(**session_data)
 
         # Redirect to Stripe payment form
         return redirect(session.url, code=303)
@@ -65,5 +57,3 @@ def payment_completed(request):
 
 def payment_canceled(request):
     return render(request, 'swims_payment/canceled.html')
-
-

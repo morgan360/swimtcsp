@@ -1,7 +1,7 @@
 """
 BASE SETTINGS
 """
-
+SESSION_SAVE_EVERY_REQUEST = True
 from pathlib import Path
 import os
 from dotenv import load_dotenv

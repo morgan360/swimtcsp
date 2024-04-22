@@ -45,6 +45,7 @@ def payment_response(request):
 
 @csrf_exempt
 def payment_notification(request):
+    payments_logger.debug(f"Received payment NOTIFICATION: {request.GET.dict()}")
     if request.method != 'POST':
         return HttpResponse("Invalid request method", status=405)
 
@@ -52,6 +53,10 @@ def payment_notification(request):
     merchantTxId = data.get('merchantTxId')
     if not merchantTxId:
         return HttpResponse("Missing merchantTxId", status=400)
+    source_prefix, order_id_str = merchantTxId.split("_", 1)
+    order_id = int(order_id_str)
+
+    # Update Order
 
     try:
         source_prefix, order_id_str = merchantTxId.split("_", 1)
@@ -70,6 +75,8 @@ def payment_notification(request):
         try:
             with transaction.atomic():
                 order = OrderModel.objects.get(id=order_id)
+                order.paid = True
+                order.save()
                 notification = NotificationModel.objects.create(
                     order=order,
                     txId=data.get('txId', ''),

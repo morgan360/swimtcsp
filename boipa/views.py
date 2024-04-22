@@ -50,8 +50,15 @@ def payment_notification(request):
 
     data = QueryDict(request.body)
     merchantTxId = data.get('merchantTxId')
-    source_prefix, order_id_str = merchantTxId.split("_", 1)
-    order_id = int(order_id_str)
+    if not merchantTxId:
+        return HttpResponse("Missing merchantTxId", status=400)
+
+    try:
+        source_prefix, order_id_str = merchantTxId.split("_", 1)
+        order_id = int(order_id_str)
+    except (ValueError, IndexError):
+        return HttpResponse("Invalid merchantTxId format", status=400)
+
     model_map = {
         'swims': (SwimOrder, SwimOrderPaymentNotification),
         'lessons': (LessonOrder, LessonOrderPaymentNotification),
@@ -60,11 +67,31 @@ def payment_notification(request):
 
     if source_prefix in model_map:
         OrderModel, NotificationModel = model_map[source_prefix]
-        with transaction.atomic():
-            order = OrderModel.objects.get(id=order_id)
-            order.paid = True
-            order.save()
-            NotificationModel.objects.create(order=order, **data.dict())
-        return HttpResponse('Payment processed successfully', status=200)
+        try:
+            with transaction.atomic():
+                order = OrderModel.objects.get(id=order_id)
+                notification = NotificationModel.objects.create(
+                    order=order,
+                    txId=data.get('txId', ''),
+                    merchantTxId=data.get('merchantTxId', ''),
+                    country=data.get('country', ''),
+                    amount=data.get('amount', None),
+                    currency=data.get('currency', ''),
+                    action=data.get('action', ''),
+                    auth_code=data.get('auth_code', ''),
+                    acquirer=data.get('acquirer', ''),
+                    acquirerAmount=data.get('acquirerAmount', None),
+                    merchantId=data.get('merchantId', ''),
+                    brandId=data.get('brandId', ''),
+                    customerId=data.get('customerId', ''),
+                    acquirerCurrency=data.get('acquirerCurrency', ''),
+                    paymentSolutionId=data.get('paymentSolutionId', None),
+                    status=data.get('status', '')
+                )
+                return HttpResponse('Payment processed successfully', status=200)
+        except OrderModel.DoesNotExist:
+            return HttpResponse("Order not found", status=404)
+        except Exception as e:
+            return HttpResponse(f"Error processing payment: {str(e)}", status=500)
 
     return HttpResponse("Source prefix not recognized", status=400)

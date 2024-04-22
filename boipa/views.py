@@ -23,7 +23,7 @@ def initiate_boipa_payment_session(request, order_ref, total_price):
     Redirects to the BOIPA Hosted Payment Page (HPP) if successful.
     """
     total_price = Decimal(total_price)
-    token = get_boipa_session_token(order_ref, total_price)
+    token = get_boipa_session_token(request, order_ref, total_price)
     if token is None:
         payments_logger.error(f"Failed to obtain session token for order_ref {order_ref}")
         return render(request, 'error.html', {'error': 'Unable to obtain session token.'})

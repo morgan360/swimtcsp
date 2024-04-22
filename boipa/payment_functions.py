@@ -8,7 +8,7 @@ import logging
 payments_logger = logging.getLogger('payments')
 
 
-def get_boipa_session_token(order_ref, total_price):
+def get_boipa_session_token(request, order_ref, total_price):
     try:
         amount = Decimal(f"{total_price:.2f}")
         ip_address = get_client_ip(request)

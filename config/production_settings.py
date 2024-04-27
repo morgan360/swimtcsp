@@ -28,8 +28,11 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'morganmck$swimtcsp',
         'USER': 'morganmck',
-        'PASSWORD': os.getenv("DB_PASSWORD"),
+        'PASSWORD': os.getenv("DB_PASSWORD"),  # Ensures the password is read from environment variables
         'HOST': 'morganmck.mysql.eu.pythonanywhere-services.com',
+        'OPTIONS': {
+            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+        },  # Make sure to close the OPTIONS dictionary correctly
     }
 }
 

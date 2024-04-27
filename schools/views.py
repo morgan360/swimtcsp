@@ -3,65 +3,37 @@ from django.shortcuts import render, get_object_or_404
 from schools_cart.forms import CartAddProductForm, NewSwimlingForm
 from django.template.loader import render_to_string
 from django.http import JsonResponse
-from .models import ScoProgram, ScoCategory, ScoLessons
+from .models import ScoProgram, ScoCategory, ScoLessons, ScoSchool
 from users.models import Swimling
 import django_filters
-from .filters import ProductFilter
 from django.core.paginator import Paginator
 from django.http import HttpResponse
 from django.shortcuts import render, redirect
 from django.contrib import messages
+from django.db.models import Q
+from .filters import LessonFilter
 
 
 # Get Lesson list for public lessons  Active=1
 def school_list(request):
-    days = ScoLessons.objects.values_list('day_of_week', flat=True).distinct()
-    day_choices = [(day, dict(ScoLessons.DAY_CHOICES)[day]) for day in days]
-    sco_programs = ScoProgram.objects.all()
-    active_lessons = ScoLessons.objects.filter(active=True)
-    paginator = Paginator(active_lessons,  8)  # Show 10 lessons per page
-    page_number = request.GET.get('page')  # Get the page number from the request
-    page_obj = paginator.get_page(page_number)  # Get the page object
+    sco_filter = LessonFilter(request.GET, queryset=ScoLessons.objects.all())
 
-    return render(request, 'schools/products/sco_lessons.html', {'page_obj': page_obj, 'programs':  sco_programs,
-                                                             'days': day_choices})
+    if request.headers.get('HX-Request'):  # Check for HTMX request
+        # Return only the part of the page that contains the filtered results
+        return render(request, 'schools/partials/_lesson_list.html', {
+            'lessons': sco_filter.qs
+        })
 
-
-def update_school_list(request):
-    program_id = request.GET.get('program')
-    day = request.GET.get('day')
-
-    # Initialize query
-    query = ScoLessons.objects.filter(active=True)
-
-    # Apply filters if valid values are provided
-    if program_id not in [None, '', 'null', 'undefined']:
-        try:
-            program_id = int(program_id)
-            query = query.filter(category__program_id=program_id)
-        except ValueError:
-            # Handle the error if program_id is not a valid integer
-            pass
-
-    if day not in [None, '', 'null', 'undefined']:
-        try:
-            day = int(day)
-            query = query.filter(day_of_week=day)
-        except ValueError:
-            # Handle the error if day is not a valid integer
-            pass
-
-    # Execute the query
-    active_lessons = query
-    paginator = Paginator(active_lessons, 8)  # Show 10 lessons per page
-    page_number = request.GET.get('page')  # Get the page number from the request
-    page_obj = paginator.get_page(page_number)  # Get the page object
-    return render(request, 'partials/schools_list.html', {'page_obj': page_obj, })
+    # Return the full page for non-AJAX requests
+    return render(request, 'schools/products/sco_lessons.html', {
+        'form': sco_filter.form,
+        'lessons': sco_filter.qs
+    })
 
 
 @login_required
-def school_detail(request, slug):
-    product = get_object_or_404(ScoLessons, slug=slug)
+def school_detail(request, pk):
+    product = get_object_or_404(ScoLessons, pk=pk)
     form = NewSwimlingForm()
     cart_product_form = CartAddProductForm(user=request.user)  # Instantiate the form
     swimlings = Swimling.objects.filter(guardian=request.user)  # Assuming association via guardian
@@ -119,12 +91,12 @@ def add_new_swimling(request):
 
 # Success view
 def swimling_success(request):
-    return render(request, 'lessons/success.html')
+    return render(request, 'schools/success.html')
 
 
 # Failure view
 def swimling_failure(request):
-    return render(request, 'lessons/failure.html')
+    return render(request, 'schools/failure.html')
 
 
 def load_new_swimling_form(request, product_slug):

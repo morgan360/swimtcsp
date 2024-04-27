@@ -1,5 +1,4 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from swims_cart.forms import CartAddProductForm
 from .models import PublicSwimCategory, PublicSwimProduct, PriceVariant
 from swims_orders.models import Order, OrderItem
 from django.utils import timezone
@@ -11,6 +10,8 @@ import time
 from .forms import ParticipantQuantityForm
 # Assume a function to create BOIPA payment session, replace with your actual function
 from boipa.views import initiate_boipa_payment_session
+
+
 def product_list(request, category_slug=None):
     category = None
     categories = PublicSwimCategory.objects.all()

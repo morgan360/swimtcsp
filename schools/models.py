@@ -4,10 +4,12 @@ from datetime import time
 from django.db.models.signals import pre_save
 from django.dispatch import receiver
 from django.utils.text import slugify
+from enum import Enum
+
 
 # School Information
 class ScoSchool(models.Model):
-    sco_name = models.CharField(max_length=50, default='', blank=True)
+    name = models.CharField(max_length=50, default='', blank=True)
     roll_num = models.CharField(max_length=7, default='', blank=True)
     add1 = models.CharField(max_length=50, default='', blank=True)
     add2 = models.CharField(max_length=50, default='', blank=True)
@@ -17,20 +19,10 @@ class ScoSchool(models.Model):
     email = models.EmailField(max_length=50, default='', blank=True)
     notes = models.TextField(blank=True, null=True)
 
-    def __str__ (self):
-        return self.sco_name
+    def __str__(self):
+        return self.name
 
 
-
-# Different schools
-# class ScoArea(models.Model):
-#     name = models.CharField(max_length=100, null=True, blank=True)
-#
-#     def __str__(self):
-#         return self.name
-
-
-# A Program is a collection of Lessons
 class ScoProgram(models.Model):
     name = models.CharField(max_length=100, null=True, blank=True)
 
@@ -61,6 +53,20 @@ class ScoCategory(models.Model):
                        args=[self.slug])
 
 
+class Weekday(Enum):
+    MONDAY = 0
+    TUESDAY = 1
+    WEDNESDAY = 2
+    THURSDAY = 3
+    FRIDAY = 4
+    SATURDAY = 5
+    SUNDAY = 6
+
+    @classmethod
+    def choices(cls):
+        return [(key.value, key.name.title()) for key in cls]
+
+
 #     Lessons
 class ScoLessons(models.Model):
     name = models.CharField(max_length=100, null=True, blank=True)
@@ -69,17 +75,7 @@ class ScoLessons(models.Model):
     slug = models.SlugField(max_length=200, blank=True)
     start_time = models.TimeField(blank=True, default=time(hour=8, minute=0))
     end_time = models.TimeField(blank=True, default=time(hour=9, minute=0))
-
-    DAY_CHOICES = [
-        (0, 'Monday'),
-        (1, 'Tuesday'),
-        (2, 'Wednesday'),
-        (3, 'Thursday'),
-        (4, 'Friday'),
-        (5, 'Saturday'),
-        (6, 'Sunday'),
-    ]
-    day_of_week = models.PositiveSmallIntegerField(choices=DAY_CHOICES)
+    day_of_week = models.PositiveSmallIntegerField(choices=Weekday.choices())
     num_places = models.IntegerField(null=True)
     num_weeks = models.IntegerField(null=True)
     price = models.DecimalField(max_digits=10, decimal_places=2, null=True, )
@@ -102,8 +98,10 @@ class ScoLessons(models.Model):
         super().save(*args, **kwargs)
 
     def generate_name(self):
-        return f"{self.category} - " \
-               f"{dict(self.DAY_CHOICES).get(self.day_of_week)} - {self.start_time.strftime('%H:%M')} to {self.end_time.strftime('%H:%M')}"
+        day_name = Weekday(self.day_of_week).name  # Access the name attribute of the enum
+        start_time_str = self.start_time.strftime('%H:%M')
+        end_time_str = self.end_time.strftime('%H:%M')
+        return f"{self.category} - {day_name} - {start_time_str} to {end_time_str}"
 
     class Meta:
         verbose_name = 'School Lessons'
@@ -161,5 +159,3 @@ def update_category_slug(sender, instance, **kwargs):
             queryset = ScoCategory.objects.filter(slug__iexact=instance.slug)
             if instance.pk:
                 queryset = queryset.exclude(pk=instance.pk)
-
-

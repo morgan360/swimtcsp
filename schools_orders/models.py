@@ -3,19 +3,19 @@ from schools.models import ScoLessons
 from django.conf import settings
 from django.contrib.auth.models import User
 from users.models import Swimling
+
+
 # from lessons_bookings.models import Term
 
 
-
 class Order(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE,related_name='schools_orders')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='schools_orders')
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
     paid = models.BooleanField(default=False)
-    stripe_id = models.CharField(max_length=250, blank=True)
     txId = models.CharField(max_length=250, blank=True)
     payment_status = models.CharField(max_length=100, blank=True)
-    amount = models.DecimalField(max_digits=8, decimal_places=2)
+    amount = models.DecimalField(max_digits=8, decimal_places=2, null=True)
 
     class Meta:
         ordering = ['-created']

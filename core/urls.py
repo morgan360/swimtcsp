@@ -26,12 +26,8 @@ urlpatterns = [
     path('', include('lessons_bookings.urls', namespace='lessons_bookings')),
     # Swims
     path('swims/', include('swims.urls', namespace='swims')),
-    path('swims_cart/',
-         include('swims_cart.urls', namespace='swims_cart')),
     path('swims_orders/',
          include('swims_orders.urls', namespace='swims_orders')),
-    path('swims_payment/',
-         include('swims_payment.urls', namespace='swims_payment')),
     # Schools
     path('schools/', include('schools.urls', namespace='schools')),
     path('schools_cart/', include('schools_cart.urls', namespace='schools_cart')),

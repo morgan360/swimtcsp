@@ -2,7 +2,6 @@ from django.urls import reverse
 from django.shortcuts import render, redirect
 from .models import Order, OrderItem
 from swims.models import PublicSwimProduct, PriceVariant
-from swims_cart.cart import Cart
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 from datetime import timedelta

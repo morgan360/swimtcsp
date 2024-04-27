@@ -1,0 +1,54 @@
+{% if lessons %}
+<div class="container mx-auto px-4 sm:px-6 lg:px-8 mt-5">
+    <div class="flex justify-center">
+        <div class="w-full lg:w-11/12 bg-white shadow-md rounded my-6">
+            <table class="min-w-full leading-normal">
+                <thead>
+                    <tr>
+                        <th scope="col" class="px-6 py-3 bg-gray-100 text-left text-xs font-medium text-gray-800 uppercase tracking-wider">
+                            Name
+                        </th>
+                        <th scope="col" class="px-6 py-3 bg-gray-100 text-left text-xs font-medium text-gray-800 uppercase tracking-wider">
+                            Price
+                        </th>
+                        <th scope="col" class="px-6 py-3 bg-gray-100 text-left text-xs font-medium text-gray-800 uppercase tracking-wider">
+                            School
+                        </th>
+                        <th scope="col" class="px-6 py-3 bg-gray-100 text-left text-xs font-medium text-gray-800 uppercase tracking-wider">
+                            Actions
+                        </th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for lesson in lessons %}
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {{ lesson.generate_name }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                           € {{ lesson.price | floatformat:2 }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {{ lesson.school }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <a href="{% url 'schools:school_detail' lesson.pk %}" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                                Book Now
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% else %}
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8 mt-5">
+        <div class="flex justify-center">
+            <div class="w-full lg:w-11/12 bg-white shadow-md rounded my-6 p-6">
+                <p class="text-gray-900 text-sm">No lessons found.</p>
+            </div>
+        </div>
+    </div>
+{% endif %}

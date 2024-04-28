@@ -20,7 +20,7 @@ BOIPA_MERCHANT_ID = env('BOIPA_MERCHANT_ID')
 BOIPA_PASSWORD = env('BOIPA_PASSWORD')
 BOIPA_TOKEN_URL = env('BOIPA_TOKEN_URL')
 HPP_FORM = env('HPP_FORM')
-NGROK = env('NGROK', default='http://localhost:4040')
+NGROK = env('NGROK')
 SECRET_KEY = env('SECRET_KEY')
 DJANGO_SETTINGS_MODULE = env('DJANGO_SETTINGS_MODULE')
 BRAND_ID = env('BRAND_ID')
@@ -29,7 +29,16 @@ BOIPA_PAYMENT_URL = env('BOIPA_PAYMENT_URL')
 CART_SESSION_ID = 'cart'
 
 DATABASES = {
-    'default': env.db('DATABASE_URL', default=f"mysql://morganmck:{env('DB_PASSWORD')}@morganmck.mysql.eu.pythonanywhere-services.com/morganmck$swimtcsp")
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'morganmck$swimtcsp',
+        'USER': 'morganmck',
+        'PASSWORD': env('DB_PASSWORD'),
+        'HOST': 'morganmck.mysql.eu.pythonanywhere-services.com',
+        'OPTIONS': {
+            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+        },
+    }
 }
 
 ALLOWED_HOSTS = ['tcsp-morganmck.eu.pythonanywhere.com']

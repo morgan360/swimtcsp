@@ -51,7 +51,7 @@ EMAIL_HOST_USER = 'morganmcknight@gmail.com'
 EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD')  # Use environment variable for security
 
 PAYMENTS_LOG_FILE_PATH = '/home/morganmck/swimtcsp/logs/payments.log'
-
+ROOT_URLCONF = 'core.urls'
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,

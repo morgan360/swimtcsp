@@ -20,7 +20,7 @@ BOIPA_PASSWORD = env('BOIPA_PASSWORD')
 BOIPA_TOKEN_URL = env('BOIPA_TOKEN_URL')
 HPP_FORM = env('HPP_FORM')
 NGROK = env('NGROK', default='http://localhost:4040')
-
+CART_SESSION_ID = 'cart'
 load_dotenv()  # loads the configs from .env
 
 DATABASES = {
@@ -36,7 +36,7 @@ DATABASES = {
     }
 }
 
-DEBUG = False
+
 ALLOWED_HOSTS = ['tcsp-morganmck.eu.pythonanywhere.com']
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'

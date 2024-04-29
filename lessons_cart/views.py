@@ -57,9 +57,13 @@ def cart_detail(request):
     for item_key, item_data in cart.cart.items():
         try:
             product_id, swimling_id = item_key.split('_')
-            # Safely retrieve product and swimling or log and skip if not found
-            product = get_object_or_404(Product, id=product_id)
-            swimling = get_object_or_404(Swimling, id=swimling_id)
+            product = Product.objects.filter(id=product_id).first()
+            swimling = Swimling.objects.filter(id=swimling_id).first()
+
+            if not product or not swimling:
+                logger.error(f"Product or Swimling not found for IDs: Product ID {product_id}, Swimling ID {swimling_id}")
+                continue  # Skip this item and move to the next one
+
             item_total = Decimal(item_data['price']) * item_data['quantity']
             total_price += item_total  # Update total price
 
@@ -72,12 +76,11 @@ def cart_detail(request):
             })
         except ValueError as e:
             logger.error(f"Error splitting item_key '{item_key}': {str(e)}")
-        except Http404 as e:
-            logger.error(f"Product or Swimling not found: {str(e)}")
         except Exception as e:
             logger.error(f"Unexpected error processing cart item '{item_key}': {str(e)}")
 
     if not cart_items:
         logger.info("No valid items in the cart to display.")
 
+    logger.debug(f"Cart details compiled. Total price: {total_price}, Number of items: {len(cart_items)}")
     return render(request, 'lessons_cart/detail.html', {'cart_items': cart_items, 'total_price': total_price})

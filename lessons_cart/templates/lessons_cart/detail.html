@@ -6,7 +6,7 @@
 {% block content %}
 <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
     <h1 class="text-center text-white text-2xl font-bold my-4">Your shopping cart</h1>
-    {% if cart %}
+    {% if cart_items %}
         <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
             <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
             <tr>
@@ -46,7 +46,7 @@
             </a>
         </div>
     {% else %}
-        <div class="text-center">Your cart is empty.</div>
+        <div class="text-center">Your schools cart is empty.</div>
     {% endif %}
 </div>
 {% endblock %}

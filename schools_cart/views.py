@@ -7,6 +7,7 @@ from .forms import CartAddProductForm, NewSwimlingForm
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from decimal import Decimal
+from django.http import Http404
 import logging
 # Create a logger object
 logger = logging.getLogger('cart')

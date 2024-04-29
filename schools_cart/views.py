@@ -53,10 +53,12 @@ def cart_detail(request):
     total_price = Decimal('0.00')
 
     logger.debug("Compiling cart details.")
+    logger.debug(f"Cart contents: {cart.cart.items()}")  # Log the contents of the cart
 
     for item_key, item_data in cart.cart.items():
         try:
             product_id, swimling_id = item_key.split('_')
+            logger.debug(f"Processing item with product ID {product_id} and swimling ID {swimling_id}")
         except ValueError:
             logger.error(f"Invalid cart item key format: {item_key}")
             continue
@@ -65,23 +67,26 @@ def cart_detail(request):
             logger.error(f"Swimling ID missing for cart item key {item_key}")
             continue
 
-        product = get_object_or_404(ScoLessons, id=product_id)
-        swimling = get_object_or_404(Swimling, id=swimling_id)
-        item_total = Decimal(item_data['price']) * item_data['quantity']
-        total_price += item_total
+        try:
+            product = get_object_or_404(ScoLessons, id=product_id)
+            swimling = get_object_or_404(Swimling, id=swimling_id)
+            item_total = Decimal(item_data['price']) * item_data['quantity']
+            total_price += item_total
 
-        cart_items.append({
-            'product_id': product_id,
-            'product': product,
-            'swimling': swimling,
-            'swimling_id': swimling_id,
-            'price': item_data['price'],
-            'total_price': item_total
-        })
+            cart_items.append({
+                'product_id': product_id,
+                'product': product,
+                'swimling': swimling,
+                'swimling_id': swimling_id,
+                'price': item_data['price'],
+                'total_price': item_total
+            })
+        except Exception as e:
+            logger.error(f"Error processing item {item_key}: {str(e)}")
+            continue  # Optionally skip this item and continue with others
 
     logger.debug(f"Total price of the cart is {total_price}")
     return render(request, 'schools_cart/detail.html', {'cart': cart_items, 'total_price': total_price})
-
 
 @login_required
 @require_POST

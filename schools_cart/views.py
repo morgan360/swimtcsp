@@ -20,7 +20,8 @@ def cart_add(request, product_id):
     cart = Cart(request)
     try:
         # Assuming you are fetching an ID from the request to query the database
-        product_id = request.GET.get('product_id')  # or another way you might be getting the product ID
+        # product_id = request.GET.get('product_id')  # or another way you might be getting the product ID
+        logger.debug(f"Attempting to retrive product {product_id} from ScoLessons")
         product = ScoLessons.objects.get(id=product_id)
     except ScoLessons.DoesNotExist:
         # Log the error and handle it

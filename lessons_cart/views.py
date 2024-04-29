@@ -11,7 +11,6 @@ from decimal import Decimal
 from django.contrib import messages
 from django.http import Http404
 import logging
-
 logger = logging.getLogger('cart')
 
 @login_required
@@ -49,36 +48,35 @@ def cart_remove(request, product_id, swimling_id):
     return redirect('lessons_cart:cart_detail')
 
 def cart_detail(request):
-    cart = Cart(request)  # Assuming Cart is a class managing the session cart
+    cart = Cart(request)
     cart_items = []
-    total_price = Decimal('0.00')  # Initialize total price
+    total_price = Decimal('0.00')
 
-    logger.debug("Compiling cart details.")
-
+    valid_items = {}
     for item_key, item_data in cart.cart.items():
+        product_id, swimling_id = item_key.split('_')
         try:
-            product_id, swimling_id = item_key.split('_')
-            # Safely retrieve product and swimling or log and skip if not found
-            product = get_object_or_404(Product, id=product_id)
-            swimling = get_object_or_404(Swimling, id=swimling_id)
+            product = Product.objects.get(id=product_id)
+            swimling = Swimling.objects.get(id=swimling_id)
             item_total = Decimal(item_data['price']) * item_data['quantity']
-            total_price += item_total  # Update total price
+            total_price += item_total
 
+            valid_items[item_key] = item_data  # Add valid item back to cart
             cart_items.append({
                 'product_id': product_id,
                 'product': product,
-                'price': item_data['price'],
                 'swimling': swimling,
+                'price': item_data['price'],
                 'total_price': item_total
             })
-        except ValueError as e:
-            logger.error(f"Error splitting item_key '{item_key}': {str(e)}")
-        except Http404 as e:
-            logger.error(f"Product or Swimling not found: {str(e)}")
-        except Exception as e:
-            logger.error(f"Unexpected error processing cart item '{item_key}': {str(e)}")
+        except Product.DoesNotExist:
+            messages.error(request, f"Product with ID {product_id} not found and has been removed from your cart.")
 
-    if not cart_items:
-        logger.info("No valid items in the cart to display.")
+    # Update cart with only valid items
+    cart.cart = valid_items
+    cart.save()  # Assuming there's a method to save/update the cart in the session
 
-    return render(request, 'lessons_cart/detail.html', {'cart_items': cart_items, 'total_price': total_price})
+    return render(request, 'lessons_cart/detail.html', {
+        'cart_items': cart_items,
+        'total_price': total_price
+    })

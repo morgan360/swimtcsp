@@ -9,6 +9,9 @@ from django.contrib.auth.decorators import login_required
 from django.conf import settings
 from decimal import Decimal
 from django.contrib import messages
+import logging
+
+logger = logging.getLogger('cart')
 
 @login_required
 @require_POST
@@ -45,23 +48,36 @@ def cart_remove(request, product_id, swimling_id):
     return redirect('lessons_cart:cart_detail')
 
 def cart_detail(request):
-    cart = Cart(request)
+    cart = Cart(request)  # Assuming Cart is a class managing the session cart
     cart_items = []
     total_price = Decimal('0.00')  # Initialize total price
 
-    for item_id, item_data in cart.cart.items():
-        product_id, swimling_id = item_id.split('_')
-        product = Product.objects.get(id=product_id)
-        swimling = Swimling.objects.get(id=swimling_id)
-        item_total = Decimal(item_data['price']) * item_data['quantity']
-        total_price += item_total  # Update total price
+    logger.debug("Compiling cart details.")
 
-        cart_items.append({
-            'product_id': product_id,
-            'product': product,
-            'price': item_data['price'],
-            'swimling': swimling,
-            'total_price': item_total
-        })
+    for item_key, item_data in cart.cart.items():
+        try:
+            product_id, swimling_id = item_key.split('_')
+            # Safely retrieve product and swimling or log and skip if not found
+            product = get_object_or_404(Product, id=product_id)
+            swimling = get_object_or_404(Swimling, id=swimling_id)
+            item_total = Decimal(item_data['price']) * item_data['quantity']
+            total_price += item_total  # Update total price
 
-    return render(request, 'lessons_cart/detail.html', {'cart': cart_items, 'total_price': total_price})
+            cart_items.append({
+                'product_id': product_id,
+                'product': product,
+                'price': item_data['price'],
+                'swimling': swimling,
+                'total_price': item_total
+            })
+        except ValueError as e:
+            logger.error(f"Error splitting item_key '{item_key}': {str(e)}")
+        except Http404 as e:
+            logger.error(f"Product or Swimling not found: {str(e)}")
+        except Exception as e:
+            logger.error(f"Unexpected error processing cart item '{item_key}': {str(e)}")
+
+    if not cart_items:
+        logger.info("No valid items in the cart to display.")
+
+    return render(request, 'lessons_cart/detail.html', {'cart_items': cart_items, 'total_price': total_price})

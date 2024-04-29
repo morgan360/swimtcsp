@@ -55,7 +55,8 @@ EMAIL_HOST_USER = 'morganmcknight@gmail.com'  # Your Gmail email address
 EMAIL_HOST_PASSWORD = 'rkjxohiawwncphgp'  # Your Gmail password or an app password
 EMAIL_USE_SSL = False
 
-PAYMENTS_LOG_FILE_PATH =  '/home/morganmck/swimtcsp/logs/payments.log'
+PAYMENTS_LOG_FILE_PATH = '/home/morganmck/swimtcsp/logs/payments.log'
+CART_LOG_FILE_PATH = '/home/morganmck/swimtcsp/logs/cart.log'
 
 LOGGING = {
     'version': 1,
@@ -65,6 +66,12 @@ LOGGING = {
             'level': 'DEBUG',
             'class': 'logging.FileHandler',
             'filename': PAYMENTS_LOG_FILE_PATH,
+            'formatter': 'detailed',
+        },
+        'cart_file': {  # New handler for cart logging
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': CART_LOG_FILE_PATH,
             'formatter': 'detailed',
         },
         'console': {
@@ -87,7 +94,12 @@ LOGGING = {
         'payments': {
             'handlers': ['payments_file'],
             'level': 'DEBUG',
-            'propagate': False,  # Prevent the payment logs from propagating to the root logger
+            'propagate': False,
+        },
+        'cart': {  # New logger for the cart
+            'handlers': ['cart_file'],
+            'level': 'DEBUG',
+            'propagate': False,
         },
     },
 }

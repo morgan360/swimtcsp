@@ -57,6 +57,8 @@ EMAIL_USE_SSL = False
 
 PAYMENTS_LOG_FILE_PATH = '/home/morganmck/swimtcsp/logs/payments.log'
 CART_LOG_FILE_PATH = '/home/morganmck/swimtcsp/logs/cart.log'
+APP_LOG_FILE_PATH = '/home/morganmck/swimtcsp/logs/app.log'
+
 
 LOGGING = {
     'version': 1,
@@ -68,10 +70,16 @@ LOGGING = {
             'filename': PAYMENTS_LOG_FILE_PATH,
             'formatter': 'detailed',
         },
-        'cart_file': {  # New handler for cart logging
+        'cart_file': {  # Handler for cart logging
             'level': 'DEBUG',
             'class': 'logging.FileHandler',
             'filename': CART_LOG_FILE_PATH,
+            'formatter': 'detailed',
+        },
+        'app_file': {  # New handler for application-wide logging
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': APP_LOG_FILE_PATH,  # Path defined earlier
             'formatter': 'detailed',
         },
         'console': {
@@ -96,8 +104,13 @@ LOGGING = {
             'level': 'DEBUG',
             'propagate': False,
         },
-        'cart': {  # New logger for the cart
+        'cart': {
             'handlers': ['cart_file'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+        'application': {  # New logger for general application logging
+            'handlers': ['app_file', 'console'],
             'level': 'DEBUG',
             'propagate': False,
         },

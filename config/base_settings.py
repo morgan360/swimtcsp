@@ -92,7 +92,7 @@ MIDDLEWARE = [
     'hijack.middleware.HijackUserMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django_browser_reload.middleware.BrowserReloadMiddleware',
-
+    'utils.middleware.SetSessionExpiryMiddleware', # Mine
 ]
 
 

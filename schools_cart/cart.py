@@ -76,3 +76,11 @@ class Cart:
         self.session[settings.CART_SESSION_ID] = self.cart
         self.session.modified = True
 
+    def clean(self):
+        """Remove items that do not have a valid product."""
+        for item_key in list(self.cart.keys()):
+            product_id, swimling_id = map(int, item_key.split('_'))
+            if not ScoLessons.objects.filter(id=product_id).exists():
+                del self.cart[item_key]
+            self.save()
+

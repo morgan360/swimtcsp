@@ -17,7 +17,19 @@ logger = logging.getLogger('cart')
 def cart_add(request, product_id):
     logger.debug(f"Attempting to add product {product_id} to the cart for user {request.user.id}")
     cart = Cart(request)
-    product = get_object_or_404(ScoLessons, id=product_id)
+    try:
+        # Assuming you are fetching an ID from the request to query the database
+        product_id = request.GET.get('product_id')  # or another way you might be getting the product ID
+        product = ScoLessons.objects.get(id=product_id)
+    except ScoLessons.DoesNotExist:
+        # Log the error and handle it
+        logger.error(f"Product with ID {product_id} not found.")
+        raise Http404("Product not found")
+    except ValueError:
+        # This handles cases where the product_id is None or an invalid integer
+        logger.error("Invalid product ID provided.")
+        raise Http404("Invalid product ID")
+
     form = CartAddProductForm(user=request.user, data=request.POST)
 
     if form.is_valid():
@@ -34,13 +46,18 @@ def cart_add(request, product_id):
 
 
 def cart_detail(request):
-    cart = Cart(request)
+    cart = Cart(request)  # Assuming Cart is a class managing the session cart
     cart_items = []
     total_price = Decimal('0.00')
+
     logger.debug("Compiling cart details.")
 
     for item_key, item_data in cart.cart.items():
-        product_id, swimling_id = item_key.split('_')
+        try:
+            product_id, swimling_id = item_key.split('_')
+        except ValueError:
+            logger.error(f"Invalid cart item key format: {item_key}")
+            continue
 
         if not swimling_id:
             logger.error(f"Swimling ID missing for cart item key {item_key}")
@@ -62,7 +79,6 @@ def cart_detail(request):
 
     logger.debug(f"Total price of the cart is {total_price}")
     return render(request, 'schools_cart/detail.html', {'cart': cart_items, 'total_price': total_price})
-
 
 
 @login_required

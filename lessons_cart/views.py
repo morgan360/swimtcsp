@@ -9,6 +9,7 @@ from django.contrib.auth.decorators import login_required
 from django.conf import settings
 from decimal import Decimal
 from django.contrib import messages
+from django.http import Http404
 import logging
 
 logger = logging.getLogger('cart')

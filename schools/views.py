@@ -1,8 +1,9 @@
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, get_object_or_404
-from schools_cart.forms import CartAddProductForm, NewSwimlingForm
 from django.template.loader import render_to_string
 from django.http import JsonResponse
+from users.forms import NewSwimlingForm
+from shopping_cart.forms import CartAddProductForm
 from .models import ScoProgram, ScoCategory, ScoLessons, ScoSchool
 from users.models import Swimling
 import django_filters

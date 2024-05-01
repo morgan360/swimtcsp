@@ -4,7 +4,7 @@ from django.shortcuts import render, redirect, reverse, \
 from .models import Order, OrderItem
 from lessons.models import Product
 from users.models import Swimling
-from lessons_cart.cart import Cart
+from shopping_cart.cart import Cart
 from django.contrib.auth.decorators import login_required
 from lessons_bookings.models import Term
 from utils.terms_utils import get_current_term

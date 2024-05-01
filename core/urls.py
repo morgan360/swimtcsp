@@ -7,7 +7,7 @@ from timetable.admin import events_site
 from custom_admins.lessonsadmin import lessons_admin_site
 from custom_admins.usersadmin import users_admin_site
 from custom_admins.swimsadmin import swims_admin_site
-from test_area import urls as test_area_urls
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -19,8 +19,6 @@ urlpatterns = [
     # Lessons
     path('lessons/',
          include('lessons.urls', namespace='lessons')),
-    path('lessons_cart/',
-         include('lessons_cart.urls', namespace='lessons_cart')),
     path('lessons_orders/',
          include('lessons_orders.urls', namespace='lessons_orders')),
     path('', include('lessons_bookings.urls', namespace='lessons_bookings')),
@@ -30,10 +28,8 @@ urlpatterns = [
          include('swims_orders.urls', namespace='swims_orders')),
     # Schools
     path('schools/', include('schools.urls', namespace='schools')),
-    path('schools_cart/', include('schools_cart.urls', namespace='schools_cart')),
     path('schools_orders/',
          include('schools_orders.urls', namespace='schools_orders')),
-    path('schools_payment/', include('schools_payment.urls', namespace='schools_payment')),
     path('', include('schools_bookings.urls', namespace='schools_bookings')),
 
    # Shopping
@@ -60,8 +56,6 @@ urlpatterns += [path('lessonsadmin/', lessons_admin_site.urls),
                 path('usersadmin/', users_admin_site.urls),
                 path('swimsadmin/', swims_admin_site.urls)
                 ]
-# Add Admin Sites
-urlpatterns += [path('test_area/', include(test_area_urls))]
 # add auto reload
 urlpatterns += [path('__reload__/', include('django_browser_reload.urls'))]
 

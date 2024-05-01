@@ -1,7 +1,7 @@
 from django.urls import reverse
 from .models import Order, OrderItem
 from schools.models import ScoLessons
-from schools_cart.cart import Cart
+from shopping_cart.cart import Cart
 from django.contrib.auth.decorators import login_required
 from schools_bookings.models import ScoTerm
 from utils.terms_utils import get_current_sco_term

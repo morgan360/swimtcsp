@@ -77,6 +77,7 @@ INSTALLED_APPS = [
     'schools_cart',
     'schools_orders',
     'schools_payment',
+    'shopping_cart',
     'boipa',
 ]
 

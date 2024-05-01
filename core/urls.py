@@ -35,6 +35,10 @@ urlpatterns = [
          include('schools_orders.urls', namespace='schools_orders')),
     path('schools_payment/', include('schools_payment.urls', namespace='schools_payment')),
     path('', include('schools_bookings.urls', namespace='schools_bookings')),
+
+   # Shopping
+    path('shopping_cart/', include('shopping_cart.urls', namespace='shopping_cart')),
+
     # Others
     path('timetable/', include('timetable.urls')),
     path('hijack/', include('hijack.urls')),

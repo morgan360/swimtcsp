@@ -3,7 +3,7 @@ from schools.models import ScoLessons
 from django.conf import settings
 from django.contrib.auth.models import User
 from users.models import Swimling
-
+from decimal import Decimal
 
 # from lessons_bookings.models import Term
 
@@ -15,7 +15,7 @@ class Order(models.Model):
     paid = models.BooleanField(default=False)
     txId = models.CharField(max_length=250, blank=True)
     payment_status = models.CharField(max_length=100, blank=True)
-    amount = models.DecimalField(max_digits=8, decimal_places=2, null=True)
+    amount = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
 
     class Meta:
         ordering = ['-created']

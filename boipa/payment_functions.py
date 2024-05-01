@@ -33,6 +33,10 @@ def get_boipa_session_token(request, order_ref, total_price):
             "merchantChallengeInd": "01",
             "merchantDecReqInd": "N",
             "freeText": "Optional extra transaction info",
+            # New fields with dummy data
+            'customerAddressStreet': "123 Fake Street",
+            'customerAddressCity': "Dublin",
+            'customerAddressPostalCode': "D02 X285",
         }
 
         payments_logger.debug("Sending payload to API: %s", {k: v for k, v in payload.items() if k != 'password'})

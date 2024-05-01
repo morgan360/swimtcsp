@@ -1,0 +1,16 @@
+2024-05-01 12:55:45,516 DEBUG payment_functions Sending payload to API:
+{'merchantId': '100121', 'action': 'PURCHASE', 'timestamp': 1714564545514,
+'allowOriginUrl': 'https://tcsp-morganmck.eu.pythonanywhere.com/',
+'channel': 'ECOM', 'country': 'IE', 'currency': 'EUR', 'amount': '102.50',
+'merchantTxId': 'lesson_117',
+'merchantLandingPageUrl': 'https://tcsp-morganmck.eu.pythonanywhere.com//boipa/payment-response/',
+'merchantNotificationUrl': 'https://tcsp-morganmck.eu.pythonanywhere.com//boipa/payment-notification/',
+ 'merchantLandingPageRedirectMethod': 'GET',
+ 'userDevice': 'DESKTOP', 'customerIPAddress': '80.233.38.51',
+ 'merchantChallengeInd': '01',
+ 'merchantDecReqInd': 'N', 'freeText': 'Optional extra transaction info'}
+
+
+
+2024-05-01 12:56:15,338 DEBUG views Received payment Notification: {'country': 'IE', 'amount': '102.50', 'acquirerTxId': '41DACBECA35A455A9493EBDFC4B37DBB', 'errorMessage': 'Error response from Payment Provider: 88 - Cryptographic failure', 'txId': '12519687', 'language': 'en', 'acquirer': 'EVO Templeogue College Swim. Pool', 'acquirerAmount': '102.50', 'myriadFlowId': 'api-67WauI', 'merchantId': '100121', 'brandId': '1001210000', 'freeText': 'Optional extra transaction info', 'merchantTxId': 'lesson_117', 'customerId': 'Nn2ntb6oZnYiYengEOAF', 'acquirerCurrency': 'EUR', 'action': 'PURCHASE', 'paymentSolutionId': '500', 'currency': 'EUR', 'pan': '5625802114419795', 'status': 'DECLINED', 'originalTxId': 'null'}
+2024-05-01 12:56:16,355 DEBUG views Received payment response: {'merchantTxId': 'lesson_117', 'txId': '12519687', 'currency': 'EUR', 'amount': '102.5', 'result': 'failure'}

@@ -66,8 +66,8 @@ def payment_notification(request):
 
     model_map = {
         'swims': (SwimOrder, SwimOrderPaymentNotification),
-        'lessons': (LessonOrder, LessonOrderPaymentNotification),
-        'schools': (SchoolOrder, SchoolOrderPaymentNotification),
+        'lesson': (LessonOrder, LessonOrderPaymentNotification),
+        'school': (SchoolOrder, SchoolOrderPaymentNotification),
     }
 
     if source_prefix in model_map:

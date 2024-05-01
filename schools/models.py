@@ -114,8 +114,8 @@ class ScoLessons(models.Model):
 
     def __str__(self):
         start_time_formatted = self.start_time.strftime("%H:%M %p")
-        day_of_week = dict(self.DAY_CHOICES).get(self.day_of_week)
-        return f"{self.category} {day_of_week} {start_time_formatted}"
+        day_of_week = Weekday(self.day_of_week).name  # Use Enum to get the day name
+        return f"{self.category} - {day_of_week} - {start_time_formatted}"
 
     def get_num_sold(self):
         from schools_bookings.models import ScoEnrollment

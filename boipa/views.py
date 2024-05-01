@@ -11,8 +11,9 @@ from .models import (
     SwimOrderPaymentNotification, LessonOrderPaymentNotification, SchoolOrderPaymentNotification,
     SwimOrder, LessonOrder, SchoolOrder
 )
+from lessons_bookings.utils.enrollment import handle_lessons_enrollment
+from schools_bookings.utils.enrollment import handle_schools_enrollment
 from .payment_functions import get_boipa_session_token  # External function
-
 # Initialize logging
 payments_logger = logging.getLogger('payments')
 
@@ -43,6 +44,9 @@ def payment_response(request):
     return render(request, 'error.html', {'error_message': 'Unknown payment response.'})
 
 
+from django.http import JsonResponse
+
+
 @csrf_exempt
 def payment_notification(request):
     payments_logger.debug(f"Received payment Notification: {request.POST.dict()}")
@@ -53,10 +57,6 @@ def payment_notification(request):
     merchantTxId = data.get('merchantTxId')
     if not merchantTxId:
         return HttpResponse("Missing merchantTxId", status=400)
-    source_prefix, order_id_str = merchantTxId.split("_", 1)
-    order_id = int(order_id_str)
-
-    # Update Order
 
     try:
         source_prefix, order_id_str = merchantTxId.split("_", 1)
@@ -66,18 +66,19 @@ def payment_notification(request):
 
     model_map = {
         'swims': (SwimOrder, SwimOrderPaymentNotification),
-        'lesson': (LessonOrder, LessonOrderPaymentNotification),
-        'school': (SchoolOrder, SchoolOrderPaymentNotification),
+        'lesson': (LessonOrder, LessonOrderPaymentNotification, handle_lessons_enrollment),
+        'school': (SchoolOrder, SchoolOrderPaymentNotification, handle_schools_enrollment),
     }
 
     if source_prefix in model_map:
-        OrderModel, NotificationModel = model_map[source_prefix]
+        OrderModel, NotificationModel, enrollment_func = model_map[source_prefix]
         try:
             with transaction.atomic():
                 order = OrderModel.objects.get(id=order_id)
                 order.paid = True
                 order.txId = data.get('txId', '')
                 order.save()
+
                 notification = NotificationModel.objects.create(
                     order=order,
                     txId=data.get('txId', ''),
@@ -96,6 +97,10 @@ def payment_notification(request):
                     paymentSolutionId=data.get('paymentSolutionId', None),
                     status=data.get('status', '')
                 )
+
+                # Call the enrollment function if the order is paid successfully
+                enrollment_func(order)
+
                 return HttpResponse('Payment processed successfully', status=200)
         except OrderModel.DoesNotExist:
             return HttpResponse("Order not found", status=404)

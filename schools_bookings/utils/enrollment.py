@@ -1,10 +1,10 @@
 from django.db import transaction
 from lessons_orders.models import Order, OrderItem
-from lessons_bookings.models import LessonEnrollment
+from schools_bookings.models import ScoEnrollment
 
 
-def handle_lessons_enrollment(order):
-    print( 'lesson_enrollment')
+def handle_schools_enrollment(order):
+    print( 'schools_enrollment')
     try:
         with transaction.atomic():  # Ensures atomicity of the database operations
             # Retrieve relevant order items
@@ -17,7 +17,7 @@ def handle_lessons_enrollment(order):
                 term = order_item.term
 
                 # Create LessonEnrollment record for the current order item
-                LessonEnrollment.objects.create(
+                ScoEnrollment.objects.create(
                     swimling=swimling,
                     lesson=lesson,
                     term=term,

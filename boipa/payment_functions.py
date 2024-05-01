@@ -5,8 +5,8 @@ from django.urls import reverse
 from django.conf import settings
 import logging
 
-payments_logger = logging.getLogger('payments')
 
+payments_logger = logging.getLogger('payments')
 
 def get_boipa_session_token(request, order_ref, total_price):
     try:

@@ -110,6 +110,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 # Mine
                 'utils.context_processors.get_term_info',
+                'utils.context_processors.term_status_for_active_schools',
                 'utils.context_processors.footer_message',
                 # 'utils.context_processors.current_term',
             ],

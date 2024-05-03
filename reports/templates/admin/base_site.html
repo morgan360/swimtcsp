@@ -6,7 +6,7 @@
 <h1 id="site-name"><a href="{% url 'admin:index' %}">{{ site_header|default:_('Django administration') }}</a></h1>
 {% if user.is_anonymous %}
   {% include "admin/color_theme_toggle.html" %}
-    <a href="{% url 'show_todays_date' %}">Today's Date</a>
+    <a href="{% url 'term_information' %}">Term Information</a>
 {% endif %}
 {% endblock %}
 

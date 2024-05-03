@@ -1,6 +1,7 @@
 from datetime import datetime
 from django.utils import formats
 from lessons_bookings.models import Term  # Import your Term model
+from schools_bookings.models import ScoTerm  # Import your Term model
 from django.http import HttpRequest
 from typing import Dict
 from django.utils import timezone
@@ -86,7 +87,7 @@ def get_term_info(request: HttpRequest) -> Dict[str, str]:
         'current_term_id': current_term_id,
         'current_term': term_string,
         'next_term_id': next_term_id,
-        'next_term':  next_term_string,
+        'next_term': next_term_string,
         'previous_term_id': previous_term_id,
         'previous_term': previous_term_string,
         'start_date': start_date,
@@ -104,3 +105,53 @@ def get_term_info(request: HttpRequest) -> Dict[str, str]:
 def footer_message(request):
     from django.conf import settings
     return {'FOOTER_MESSAGE': settings.FOOTER_MESSAGE}
+
+
+def term_status_for_active_schools(request):
+    today = timezone.now().date()
+    # Fetch all terms for schools that have at least one term
+    terms = ScoTerm.objects.filter(
+        school_id__in=ScoTerm.objects.values_list('school_id', flat=True).distinct()
+    ).select_related('school')  # Optimized to fetch school data in the same query
+
+    school_status = {}
+
+    for term in terms:
+        school_id = term.school_id
+        # Checking if the term is currently active based on the date
+        if term.start_date <= today <= term.end_date:
+            school_status[school_id] = {
+                'school_name': term.school.name,
+                'term_status': 'active',
+                'term_start_date': term.start_date,
+                'term_end_date': term.end_date,
+                'term_id': term.id,
+                'is_active': term.is_active  # Include the active status of the term
+            }
+        else:
+            # Check for future terms
+            future_terms = ScoTerm.objects.filter(
+                school_id=school_id, start_date__gt=today).order_by('start_date')
+            if future_terms.exists():
+                next_term = future_terms.first()
+                school_status[school_id] = {
+                    'school_name': next_term.school.name,
+                    'term_status': 'planned',
+                    'term_start_date': next_term.start_date,
+                    'term_end_date': next_term.end_date,
+                    'term_id': next_term.id,
+                    'is_active': next_term.is_active  # Include the active status of the term
+                }
+            else:
+                # If no future terms and not already listed as active
+                if school_id not in school_status:
+                    school_status[school_id] = {
+                        'school_name': term.school.name,
+                        'term_status': 'not planned',
+                        'term_start_date': None,
+                        'term_end_date': None,
+                        'term_id': None,
+                        'is_active': False  # Since no active or planned terms are found, set is_active to False
+                    }
+
+    return {'school_term_status': school_status}

@@ -108,7 +108,8 @@ class LessonEnrollmentAdmin(ImportExportMixin, admin.ModelAdmin):
 
 class TermAdmin(ImportExportMixin, admin.ModelAdmin):
     resource_class = TermResource
-    list_display = ['id', 'start_date', 'end_date', 'booking_start_date', 'booking_end_date', 'assessment_date',
+    list_display = ['id', 'is_active',  'start_date', 'end_date', 'booking_start_date', 'booking_end_date',
+                    'assessment_date',
                     'school', 'changed_by']
     # Exclude the 'changed_by' field from the form fields
     exclude = ('changed_by',)

@@ -77,18 +77,18 @@ def class_list_view(request):
     })
 
 
-def show_todays_date(request):
+def term_information(request):
     # Fetch unique School objects referred in ScoTerm
     unique_schools = ScoSchool.objects.filter(
         id__in=ScoTerm.objects.values_list('school_id', flat=True).distinct()
-    ).order_by('sco_name')
+    ).order_by('name')
 
     schools_info = []
     for school in unique_schools:
         current_term = ScoTerm.get_current_term_for_school(school.id)
         if current_term:
             schools_info.append({
-                'name': school.sco_name,
+                'name': school.name,
                 'current_term_id': current_term.id,  # Assuming you still want the ID
                 'start_date': current_term.start_date,
                 'end_date': current_term.end_date,
@@ -101,8 +101,10 @@ def show_todays_date(request):
                 'start_date': None,
                 'end_date': None,
             })
+    # term_data = get_term_info()
+    # test=term_data['next_phase']
 
-    return render(request, 'reports/todays_date.html', {
+    return render(request, 'reports/term_information.html', {
         'today': today,
         # 'current_term': current_term_string,
         # 'previous_term': previous_term_string,

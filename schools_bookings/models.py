@@ -16,6 +16,7 @@ class ScoTerm(models.Model):
     booking_start_date = models.DateField()
     booking_end_date = models.DateField()
     assessment_date = models.DateField(null=True, blank=True)
+    is_active = models.BooleanField(default=False)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
     changed_by = models.ForeignKey(
@@ -44,6 +45,11 @@ class ScoTerm(models.Model):
     def __str__(self):
         return f"{self.id}"
 
+    def save(self, *args, **kwargs):
+        if self.is_active:
+            # Set all other terms for the school to not active
+            ScoTerm.objects.filter(school=self.school, is_active=True).exclude(pk=self.pk).update(is_active=False)
+        super().save(*args, **kwargs)
 
 # Contains all the bookings that have being confirmed
 class ScoEnrollment(models.Model):

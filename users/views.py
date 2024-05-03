@@ -53,10 +53,11 @@ def hijack_redirect(request, user_id):
 
 
 @login_required
-def view_swimlings(request):
+def swimling_mgmt(request):
     # Get the ID of the current term
     current_term_id = Term.get_current_term_id()
-
+    term_data = get_term_info(request)
+    current_term = term_data['current_term']
     # Query for swimlings associated with the currently logged-in user's guardian field
     swimlings = Swimling.objects.filter(guardian=request.user)
 
@@ -78,11 +79,13 @@ def view_swimlings(request):
         # Append swimling and their registration status and registered lesson names to the list
         swimlings_data.append({
             'swimling': swimling,
+            'rebooking_date':  term_data['rebooking_date'],
+            'booking_date':  term_data['booking_date'],
             'is_registered_for_current_term': is_registered_for_current_term,
             'registered_lessons': lesson_names  # List of lesson names
         })
 
-    return render(request, 'swimling_list.html', {'swimlings': swimlings_data})
+    return render(request, 'swimling_mgmt.html', {'swimlings': swimlings_data})
 
 
 @login_required

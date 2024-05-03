@@ -7,7 +7,7 @@ app_name = "users"
 
 urlpatterns = [
     path("profile/", views.update_profile, name="profile"),
-    path("view_swimlings/", views.view_swimlings, name="view-swimlings"),
+    path("swimling_mgmt/", views.swimling_mgmt, name="swimling_mgmt"),
     path('edit_swimling/<int:id>/', views.edit_swimling, name='edit-swimling'),
     path('add_new_swimling/', views.add_new_swimling, name='add_new_swimling'),
     path('accounts/', include('allauth.urls')),

@@ -7,17 +7,10 @@
 {% endblock %}
 
 {% block content %}
-
-{#    <p>Today is: {{ today }}</p>#}
-{#    <p>Start Date is: {{start_date }}</p>#}
-{#    <p>The current term is: {{ current_term }}</p>#}
-{#    <p>The current phase is: {{ current_phase }}</p>#}
-{#    <p>The Next phase is: {{ next_phase }}</p>#}
-{#    <p>Current_term_id is: {{ current_term_id }}</p>#}
     <div class="module">
-        <h2>Important Dates</h2>
-        <table class="table table-bordered">
-            <thead class="thead-light">
+        <h2>Term Dates</h2>
+        <table class="table">
+            <thead>
             <tr>
                 <th scope="col">Date Type</th>
                 <th scope="col">Date</th>
@@ -48,20 +41,39 @@
                 <td>Next Phase</td>
                 <td>{{ next_phase }}</td>
             </tr>
+            </tbody>
+        </table>
 
-            {% for school in schools_info %}
+        <h2>School Dates</h2>
+
+        <table class="table">
+            <thead>
+            <tr>
+                <th scope="col">School</th>
+                <th scope="col">Term</th>
+                <th scope="col">Status</th>
+                <th scope="col">Starts</th>
+                <th scope="col">Ends</th>
+                <th scope="col">Booking?</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for school_id, status in school_term_status.items %}
                 <tr>
-                    <td>{{ school.name }} - Current Term:</td> <td> ({{ school.current_term_id }})
-                    {{ school.start_date }} -  {{ school.end_date }}</td>
+                    <td>{{ status.school_name }}</td>
+                    <td>{{ status.term_id }}</td>
+                    <td>{{ status.term_status }}</td>
+                    <td>{{ status.term_start_date }}</td>
+                    <td>{{ status.term_end_date }}</td>
+                    <td>{{ status.is_active}}</td>
                 </tr>
             {% endfor %}
             </tbody>
         </table>
-    </div>
+     </div>
     <!-- Link to Print Class Lists -->
-    <div class="module mt-3">
-        <a href="{% url 'class_list_view' %}" class="btn btn-primary">Print Class Lists</a>
-    </div>
+        <div class="module">
+            <a href="{% url 'class_list_view' %}" class="button">Print Class Lists</a>
+        </div>
+
 {% endblock %}
-
-

@@ -1,0 +1,57 @@
+<table class="min-w-full table-auto border-collapse border border-gray-200">
+    <thead class="bg-blue-900">
+    <tr>
+        <th class="border border-gray-300 px-4 py-2 text-left">Name</th>
+        <th class="border border-gray-300 px-4 py-2 text-left">Booking</th>
+        <th class="border border-gray-300 px-4 py-2 text-left">Registered This Term</th>
+        <th class="border border-gray-300 px-4 py-2 text-left">Registered Next Term</th>
+    </tr>
+    </thead>
+    <tbody>
+            <!-- List of currently registered swimlings -->
+    {% for item in swimlings %}
+        <tr class="hover:bg-gray-50">
+        <td class="border border-gray-300 px-4 py-2">{{ item.swimling.first_name }} {{ item.swimling.last_name }}</td>
+            <td class="border border-gray-300 px-4 py-2">
+            <!-- Check if Rebooking Phase -->
+                {% if current_phase_id == "RB" and item.is_registered_for_current_term %}
+                    <!-- Begin form for rebooking -->
+                    <form method="post" action="{% url 'shopping_cart:cart_add' product.id|default:'0' %}">
+                        {% csrf_token %}
+                        <!-- Assuming you have a way to get next_term_id for the rebooking -->
+                       <input type="hidden" name="next_term_id" value="{{ next_term_id }}">
+                        <button type="submit"
+                                class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                            Book
+                        </button>
+                    </form>
+                {% else %}
+                    <button type="button"
+                            class="bg-gray-500 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                            disabled>
+                        Book
+                    </button>
+                {% endif %}
+            </td>
+            <td class="border border-gray-300 px-4 py-2">
+                {% if item.is_registered_for_current_term %}
+                    <span class="text-green-600 font-semibold"> {{ item.registered_lessons|join:", " }}</span>
+                {% else %}
+                    <span class="text-red-600">Not registered for current term</span>
+                {% endif %}
+            </td>
+            <td class="border border-gray-300 px-4 py-2">
+                {% if item.registered_lessons %}
+                    {{ item.registered_lessons|join:", " }}
+                {% else %}
+                    N/A
+                {% endif %}
+            </td>
+        </tr>
+    {% empty %}
+        <tr>
+            <td colspan="4" class="border border-gray-300 px-4 py-2 text-center">No swimlings found.</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>

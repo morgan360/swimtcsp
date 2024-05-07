@@ -1,0 +1,17 @@
+{% extends '_base.html' %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
+    <h2 class="text-xl leading-tight text-white my-4">
+        Enroll <span class="text-orange-500 font-bold">{{ swimling }}</span> into a Swimming Lesson at
+        {{ school.name }}<br>
+        <p  class = "font-semibold mt-8">Select a Swimming Lesson</p>
+    </h2>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.lesson }}
+        <button type="submit" class="mt-3 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4
+        rounded">Pay Now</button>
+    </form>
+</div>
+{% endblock %}

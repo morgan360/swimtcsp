@@ -4,7 +4,7 @@ from django.forms import formset_factory
 from django.contrib.auth.forms import UserCreationForm
 from users.models import Swimling, User
 from django.contrib.auth import get_user_model
-
+from schools.models import ScoLessons
 
 # Define a form to ask if the user wants to add another swimling
 class AddAnotherSwimlingForm(forms.Form):
@@ -19,6 +19,7 @@ class UserRegistrationForm(UserCreationForm):
         model = get_user_model()
         fields = ['first_name', 'last_name', 'email', 'mobile_phone']
 
+
 # Password fields are inherited
 
 class SwimlingRegistrationForm(forms.ModelForm):
@@ -31,4 +32,4 @@ class SwimlingRegistrationForm(forms.ModelForm):
         self.fields['first_name'].widget.attrs.update({'class': 'form-control'})
         self.fields['last_name'].widget.attrs.update({'class': 'form-control'})
 
-# SwimlingFormSet = formset_factory(SwimlingRegistrationForm, extra=3, max_num=5)
+

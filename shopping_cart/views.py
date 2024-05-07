@@ -2,10 +2,10 @@ from django.shortcuts import render, redirect, reverse, \
     get_object_or_404
 from django.views.decorators.http import require_POST
 from lessons.models import Product
-from schools.models import ScoLessons
+from schools.models import ScoLessons, ScoSchool
 from users.models import Swimling
 from .cart import Cart
-from .forms import CartAddProductForm, NewSwimlingForm
+from .forms import CartAddProductForm, NewSwimlingForm, DirectOrderForm
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from decimal import Decimal
@@ -119,10 +119,10 @@ def payment_process(request):
 
     if cart_type == 'lesson':
         order = LessonOrder.objects.create(user=request.user)
-        total_price =process_order_items(cart, LessonOrderItem, order, Product, get_current_term)
+        total_price = process_order_items(cart, LessonOrderItem, order, Product, get_current_term)
     elif cart_type == 'school':
         order = SchoolOrder.objects.create(user=request.user)
-        total_price =process_order_items(cart, SchoolOrderItem, order, ScoLessons, get_current_sco_term)
+        total_price = process_order_items(cart, SchoolOrderItem, order, ScoLessons, get_current_sco_term)
     else:
         return HttpResponse("Invalid product type in cart.", status=400)
 
@@ -166,3 +166,47 @@ def order_created(order_id):
     # Not used yet might be necessary for emails etc..
     # Return a success message or any relevant data
     return f"Order {order_id} created successfully!"
+
+
+def direct_order(request, swimling_id, school_id):
+    """Takes a booking from the Swimling panel for a particular swimling in a particular school and allows
+    the user to choose a course from that school."""
+    swimling = get_object_or_404(Swimling, id=swimling_id)
+    school = get_object_or_404(ScoSchool, id=school_id)
+    if request.method == 'POST':
+        form = DirectOrderForm(request.POST, school_id=school_id)
+        if form.is_valid():
+            # Extract the selected course from the form
+            selected_course = form.cleaned_data['lesson']
+            total_price = selected_course.price  # Assuming the 'ScoLessons' model has a 'price' field
+
+            # Create the main order
+            order = SchoolOrder.objects.create(
+                user=request.user,
+                school=school,
+                amount=total_price
+            )
+
+            # Create an order item associated with the order
+            order_item = SchoolOrderItem.objects.create(
+                order=order,
+                swimling=swimling,
+                product = selected_course,
+                price=total_price,
+                quantity=1  # Assuming a quantity of 1 for simplicity
+            )
+
+            order_ref = f"school_{order.id}"
+
+            # Redirect to initiate payment session with the total price and order reference
+            return redirect('boipa:initiate_payment_session', order_ref=order_ref, total_price=str(total_price))
+    else:
+        form = DirectOrderForm(school_id=school_id)
+
+    return render(request, 'direct_order.html', {
+        'form': form,
+        'swimling': swimling,
+        'school': school,
+        'school_id': school_id
+    })
+

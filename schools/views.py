@@ -104,3 +104,6 @@ def load_new_swimling_form(request, product_slug):
     form = NewSwimlingForm()
     product = ScoLessons.get(slug=product_slug)  # Retrieve the product based on the slug
     return render(request, 'partials/new_swimling_form.html', {'form': form, 'product': product})
+
+
+

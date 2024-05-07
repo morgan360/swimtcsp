@@ -1,5 +1,5 @@
 from django.db import models
-from schools.models import ScoLessons
+from schools.models import ScoLessons, ScoSchool
 from django.conf import settings
 from django.contrib.auth.models import User
 from users.models import Swimling
@@ -16,6 +16,7 @@ class Order(models.Model):
     txId = models.CharField(max_length=250, blank=True)
     payment_status = models.CharField(max_length=100, blank=True)
     amount = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
+    school = models.ForeignKey(ScoSchool, on_delete=models.CASCADE, related_name='orders', null=True, blank=True)
 
     class Meta:
         ordering = ['-created']

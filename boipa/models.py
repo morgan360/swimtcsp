@@ -3,6 +3,7 @@ from swims_orders.models import Order as SwimOrder
 from lessons_orders.models import Order as LessonOrder
 from schools_orders.models import Order as SchoolOrder
 
+
 class SwimOrderPaymentNotification(models.Model):
     order = models.ForeignKey(SwimOrder, on_delete=models.CASCADE, related_name='notifications')
     # Other fields specific to the payment notification...
@@ -21,10 +22,12 @@ class SwimOrderPaymentNotification(models.Model):
     acquirerCurrency = models.CharField(max_length=3, null=True, blank=True)
     paymentSolutionId = models.IntegerField(null=True, blank=True)
     status = models.CharField(max_length=50, null=True, blank=True)
-        # Additional fields as required
+    errorMessage = models.TextField(blank=True, null=True)
 
-    def __str__(self):
-        return f"Notification {self.txId} for SwimOrder {self.order.id}"
+
+def __str__(self):
+    return f"Notification {self.txId} for SwimOrder {self.order.id}"
+
 
 class LessonOrderPaymentNotification(models.Model):
     order = models.ForeignKey(LessonOrder, on_delete=models.CASCADE, related_name='notifications')
@@ -45,6 +48,7 @@ class LessonOrderPaymentNotification(models.Model):
     acquirerCurrency = models.CharField(max_length=3, null=True, blank=True)
     paymentSolutionId = models.IntegerField(null=True, blank=True)
     status = models.CharField(max_length=50, null=True, blank=True)
+    errorMessage = models.TextField(blank=True, null=True)
 
     # Additional fields as required
 
@@ -71,6 +75,7 @@ class SchoolOrderPaymentNotification(models.Model):
     acquirerCurrency = models.CharField(max_length=3, null=True, blank=True)
     paymentSolutionId = models.IntegerField(null=True, blank=True)
     status = models.CharField(max_length=50, null=True, blank=True)
+    errorMessage = models.TextField(blank=True, null=True)
 
     # Additional fields as required
 

@@ -95,7 +95,8 @@ def payment_notification(request):
                     customerId=data.get('customerId', ''),
                     acquirerCurrency=data.get('acquirerCurrency', ''),
                     paymentSolutionId=data.get('paymentSolutionId', None),
-                    status=data.get('status', '')
+                    status=data.get('status', ''),
+                    errorMessage = data.get('errorMessage', 'No error message provided'),
                 )
 
                 # Call the enrollment function if the order is paid successfully

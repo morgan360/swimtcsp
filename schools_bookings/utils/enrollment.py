@@ -1,5 +1,5 @@
 from django.db import transaction
-from lessons_orders.models import Order, OrderItem
+from schools_orders.models import Order, OrderItem
 from schools_bookings.models import ScoEnrollment
 
 

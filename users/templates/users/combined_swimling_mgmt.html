@@ -1,0 +1,20 @@
+{% extends '_base.html' %}
+
+{% block content %}
+    <div class="container mx-auto p-4">
+        <h1 class="text-xl font-bold text-center mb-4">Swimling Management Dashboard</h1>
+
+        <!-- Include Swimling Management Section -->
+        <section id="swimling-management">
+            {% include 'users/partials/swimlings_table.html' %}
+        </section>
+
+        <section id="normal-lessons" class="mt-10">
+            {% include 'users/partials/rebooking_table.html' %}
+        </section>
+
+        <section id="school-lessons">
+            {% include 'users/partials/school_table.html' %}
+        </section>
+    </div>
+{% endblock %}

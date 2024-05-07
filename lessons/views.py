@@ -84,7 +84,7 @@ def product_list(request):
 
     return render(request, 'lessons/products/list_filter.html', {'filter': filter})
 
-
+# Gives user the option to add new swimmer to portfolio
 def add_new_swimling(request):
     if request.method == 'POST':
         form = NewSwimlingForm(request.POST)

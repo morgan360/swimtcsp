@@ -1,11 +1,10 @@
 from django.shortcuts import render, redirect
-from django import forms
-from .models import UserProfile, User, Swimling
-from django.contrib.auth.models import User
+from django.urls import reverse
+from .models import Swimling
+from schools_bookings.models import ScoEnrollment
 from django.db import transaction
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from allauth.account.views import EmailVerificationSentView
 from django.http import HttpResponse
 from .forms import UserForm, UserProfileForm, NewSwimlingForm
 from django.contrib.auth import get_user_model
@@ -13,9 +12,36 @@ from lessons_bookings.models import LessonEnrollment, Term
 from django.template.loader import render_to_string
 from django.shortcuts import get_object_or_404
 from utils.context_processors import get_term_info
+from utils.context_processors import term_status_for_active_schools
+from . helpers import fetch_swimling_management_data, fetch_normal_lessons_data, fetch_school_lessons_data
 # Get the custom user model
 user = get_user_model()
 
+
+####### NEW COMBINED VIEW FOR SWIM MGMT PANEL#########
+@login_required
+def combined_swimling_mgmt(request):
+    current_term_id = Term.get_current_term_id()
+    term_data = get_term_info(request)
+    school_term_status = term_status_for_active_schools(request)
+
+    # Fetch swimling data
+    swimling_management_data = fetch_swimling_management_data(request.user)
+
+    # Fetch normal lessons
+    normal_lessons_data = fetch_normal_lessons_data(request.user, current_term_id)
+# Fetch normal lessons
+    school_lessons_data = fetch_school_lessons_data(request.user)
+
+    context = {
+        'swimling_management_data': swimling_management_data,
+        'normal_lessons': normal_lessons_data,
+        'school_lessons_data': school_lessons_data,
+        'term_data': term_data  # if you need to pass this to the template
+    }
+
+    return render(request, 'users/combined_swimling_mgmt.html', context)
+######################
 
 @login_required
 @transaction.atomic
@@ -51,117 +77,40 @@ def hijack_redirect(request, user_id):
     # Redirect to the home page or any other desired URL
     return redirect('home')  # Replace 'home' with the name of your home page URL pattern
 
-
-@login_required
-def swimling_mgmt(request):
-    # Get the ID of the current term
-    current_term_id = Term.get_current_term_id()
-    term_data = get_term_info(request)
-    current_term = term_data['current_term']
-    # Query for swimlings associated with the currently logged-in user's guardian field
-    swimlings = Swimling.objects.filter(guardian=request.user)
-
-    # Prepare swimlings data including lesson registration status and lesson name for the current term
-    swimlings_data = []
-    for swimling in swimlings:
-        # Fetch lesson enrollments for the swimling in the current term
-        enrollments = LessonEnrollment.objects.filter(
-            swimling=swimling,
-            term_id=current_term_id
-        ).select_related('lesson')  # Ensure related lesson data is fetched efficiently
-
-        # Check if the swimling is registered for any lessons in the current term
-        is_registered_for_current_term = enrollments.exists()
-
-        # Get names of all lessons the swimling is registered for (assuming there could be more than one)
-        lesson_names = [enrollment.lesson.name for enrollment in enrollments]
-
-        # Append swimling and their registration status and registered lesson names to the list
-        swimlings_data.append({
-            'swimling': swimling,
-            'rebooking_date':  term_data['rebooking_date'],
-            'booking_date':  term_data['booking_date'],
-            'is_registered_for_current_term': is_registered_for_current_term,
-            'registered_lessons': lesson_names  # List of lesson names
-        })
-
-    return render(request, 'swimling_mgmt.html', {'swimlings': swimlings_data})
-
-
 @login_required
 def edit_swimling(request, id):
-    swimling = get_object_or_404(Swimling, id= id, guardian=request.user)  # Ensure the user is the guardian
+    swimling = get_object_or_404(Swimling, id=id, guardian=request.user)  # Ensure the user is the guardian
 
     if request.method == 'POST':
         form = NewSwimlingForm(request.POST, instance=swimling)
         if form.is_valid():
             form.save()
             messages.success(request, 'Swimling updated successfully.')
-            return redirect('users:view-swimlings')  # Redirect to the list of swimlings or a confirmation page
+            return redirect('users:combined_swimling_mgmt')  # Redirect to the list of swimlings or a confirmation page
     else:
         form = NewSwimlingForm(instance=swimling)
 
     return render(request, 'edit_swimling.html', {'form': form, 'swimling': swimling})
 
-
-@login_required
+#  Add a new swimmer to users portfolio
 def add_new_swimling(request):
-    term_data = get_term_info(request)
-    # when form is subbmitted
     if request.method == 'POST':
         form = NewSwimlingForm(request.POST)
         if form.is_valid():
             new_swimling = form.save(commit=False)
             new_swimling.guardian = request.user
             new_swimling.save()
-            print("saved new swimling")
+
             # Fetch updated swimlings for the dropdown
-            current_term_id = Term.get_current_term_id()
-
-            # Query for swimlings associated with the currently logged-in user's guardian field
-            swimlings = Swimling.objects.filter(guardian=request.user)
-
-            # Prepare swimlings data including lesson registration status and lesson name for the current term
-            swimlings_data = []
-            for swimling in swimlings:
-                # Fetch lesson enrollments for the swimling in the current term
-                enrollments = LessonEnrollment.objects.filter(
-                    swimling=swimling,
-                    term_id=current_term_id
-                ).select_related('lesson')  # Ensure related lesson data is fetched efficiently
-
-                # Check if the swimling is registered for any lessons in the current term
-                is_registered_for_current_term = enrollments.exists()
-                if term_data['next_term_id'] is not None:
-                    # Check for next term's enrollment for the same course
-                    enrollments_next_term = LessonEnrollment.objects.filter(
-                        swimling=swimling,
-                        term_id=next_term_id,
-                        lesson__in=[enrollment.lesson for enrollment in enrollments_current_term]
-                    ).select_related('lesson')
-                    # Determine if the swimling is registered for the next term for the same course
-                    is_registered_for_next_term_same_course = enrollments_next_term.exists()
-
-                # Get names of all lessons the swimling is registered for (assuming there could be more than one)
-                lesson_names = [enrollment.lesson.name for enrollment in enrollments]
-
-                # Append swimling and their registration status and registered lesson names to the list
-                swimlings_data.append({
-                    'swimling': swimling,
-                    'is_registered_for_current_term': is_registered_for_current_term,
-                    'is_registered_for_next_term_same_course': is_registered_for_next_term_same_course,
-                    'registered_lessons': lesson_names  # List of lesson names
-                })
-
+            swimling_management_data = fetch_swimling_management_data(request.user)
             # success message
             messages.success(request, 'Swimling added successfully.')
             # Render the partial template for the dropdown
-            rendered_html = render_to_string('users/partials/swimlings_table.html', {'swimlings': swimlings_data},
+            rendered_html = render_to_string('users/partials/swimlings_table.html', {'swimling_management_data':swimling_management_data},
                                              request=request)
 
             # Respond with the rendered HTML for HTMX to swap
             return HttpResponse(rendered_html)
-        # *** form not valid ***
         else:
             if "HX-Request" in request.headers:
                 # If form is invalid during an HTMX request, return the form with errors
@@ -171,7 +120,14 @@ def add_new_swimling(request):
             else:
                 # For non-HTMX, render the form with errors within the context of a full page
                 return render(request, 'partials/new_swimling_form.html', {'form': form})
-    # If form not submitted
+
     else:
         form = NewSwimlingForm()
         return render(request, 'partials/new_swimling_form.html', {'form': form})
+
+
+
+def load_new_swimling_form(request, product_slug):
+    form = NewSwimlingForm()
+    product = Product.objects.get(slug=product_slug)  # Retrieve the product based on the slug
+    return render(request, 'partials/new_swimling_form.html', {'form': form, 'product': product})

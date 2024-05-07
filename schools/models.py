@@ -10,7 +10,7 @@ from enum import Enum
 # School Information
 class ScoSchool(models.Model):
     name = models.CharField(max_length=50, default='', blank=True)
-    roll_num = models.CharField(max_length=7, default='', blank=True)
+    sco_role_num = models.CharField(max_length=7, default='',  unique=True, blank=True)
     add1 = models.CharField(max_length=50, default='', blank=True)
     add2 = models.CharField(max_length=50, default='', blank=True)
     add3 = models.CharField(max_length=50, default='', blank=True)

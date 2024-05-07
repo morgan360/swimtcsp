@@ -1,6 +1,6 @@
 <div x-data="{ showModal: false }">
     <!-- Button to open the modal -->
-    <button @click="showModal = true" class=" ml-0 mt-4 bg-blue-500 text-white font-bold py-2 px-4 rounded">
+<button @click="showModal = true" class=" ml-0 mt-4 bg-blue-500 text-white font-bold py-2 px-4 rounded">
         Add new Swimling
     </button>
 
@@ -22,7 +22,7 @@
                         </h3>
                         <form action="{% url 'users:add_new_swimling' %}" method="POST"
                               hx-post="{% url 'users:add_new_swimling' %}"
-                              hx-target="#swimlings_table"
+                              hx-target="#swimling-management"
                               hx-swap="innerHTML"
                               hx-after-swap="showModal = false">
 

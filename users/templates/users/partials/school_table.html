@@ -1,57 +1,50 @@
+<h1 class ="flex justify-center text-2xl my-4">School Registrations & Booking</h1>
+
 <table class="min-w-full table-auto border-collapse border border-gray-200">
     <thead class="bg-blue-900">
-    <tr>
-        <th class="border border-gray-300 px-4 py-2 text-left">Name</th>
-        <th class="border border-gray-300 px-4 py-2 text-left">Booking</th>
-        <th class="border border-gray-300 px-4 py-2 text-left">Registered This Term</th>
-        <th class="border border-gray-300 px-4 py-2 text-left">Registered Next Term</th>
-    </tr>
+        <tr>
+            <th class="border border-gray-300 px-4 py-2 text-left">Name</th>
+            <th class="border border-gray-300 px-4 py-2 text-left">Booking</th>
+            <th class="border border-gray-300 px-4 py-2 text-left">Registered This Term</th>
+            <th class="border border-gray-300 px-4 py-2 text-left">Term Information</th>
+            <th class="border border-gray-300 px-4 py-2 text-left">School Name</th>
+        </tr>
     </thead>
     <tbody>
-            <!-- List of currently registered swimlings -->
-    {% for item in swimlings %}
+        {% for item in school_lessons_data %}
         <tr class="hover:bg-gray-50">
-        <td class="border border-gray-300 px-4 py-2">{{ item.swimling.first_name }} {{ item.swimling.last_name }}</td>
+            <td class="border border-gray-300 px-4 py-2">{{ item.first_name }} {{ item.last_name }}</td>
             <td class="border border-gray-300 px-4 py-2">
-            <!-- Check if Rebooking Phase -->
-                {% if current_phase_id == "RB" and item.is_registered_for_current_term %}
-                    <!-- Begin form for rebooking -->
-                    <form method="post" action="{% url 'shopping_cart:cart_add' product.id|default:'0' %}">
-                        {% csrf_token %}
-                        <!-- Assuming you have a way to get next_term_id for the rebooking -->
-                       <input type="hidden" name="next_term_id" value="{{ next_term_id }}">
-                        <button type="submit"
-                                class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
-                            Book
-                        </button>
-                    </form>
+                {% if current_phase_id == "RB" and item.is_registered_sco %}
+                <form method="post" action="{% url 'shopping_cart:cart_add' item.next_term_id|default:'0' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">Book Now</button>
+                </form>
                 {% else %}
-                    <button type="button"
-                            class="bg-gray-500 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-                            disabled>
-                        Book
-                    </button>
+                <button type="button" class="bg-gray-500 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" disabled>Closed</button>
                 {% endif %}
             </td>
             <td class="border border-gray-300 px-4 py-2">
-                {% if item.is_registered_for_current_term %}
-                    <span class="text-green-600 font-semibold"> {{ item.registered_lessons|join:", " }}</span>
+                {% if item.is_registered_sco %}
+                <span class="text-green-600 font-semibold">{{ item.registered_lessons_sco|join:", " }}</span>
                 {% else %}
-                    <span class="text-red-600">Not registered for current term</span>
+                <span class="text-red-600">Not registered for current term</span>
                 {% endif %}
             </td>
             <td class="border border-gray-300 px-4 py-2">
-                {% if item.registered_lessons %}
-                    {{ item.registered_lessons|join:", " }}
+                {% if item.school_term_info %}
+                Active from {{ item.school_term_info.term_start_date|date:"Y-m-d" }} to {{ item.school_term_info.term_end_date|date:"Y-m-d" }}
                 {% else %}
-                    N/A
+                N/A
                 {% endif %}
             </td>
+            <td class="border border-gray-300 px-4 py-2">{{ item.school_name }}</td>
         </tr>
-    {% empty %}
+        {% empty %}
         <tr>
-            <td colspan="4" class="border border-gray-300 px-4 py-2 text-center">No swimlings found.</td>
+            <td colspan="5" class="border border-gray-300 px-4 py-2 text-center">No swimlings found in school programs.</td>
         </tr>
-    {% endfor %}
+        {% endfor %}
     </tbody>
 </table>
+<hr class="border-t-4 border-blue-300 my-10">

@@ -3,36 +3,38 @@
 {% load widget_tweaks %} <!-- Load Django Widget Tweaks -->
 
 {% block content %}
-<div class="container mx-auto px-4 py-8">
-    <h2 class="text-center text-2xl font-bold mb-6">Edit Swimling</h2>
-    <form method="post" class="w-full max-w-lg">
-        {% csrf_token %}
-        {% for field in form %}
-            <div class="mb-4">
-                <label for="{{ field.id_for_label }}" class="block text-white text-sm font-bold mb-2">
-                    {{ field.label }}
-                </label>
-                <!-- Use render_field to add Tailwind CSS classes -->
-                {% render_field field class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" %}
-                {% if field.help_text %}
-                    <p class="text-gray-600 text-xs italic">{{ field.help_text }}</p>
-                {% endif %}
-                {% if field.errors %}
-                    {% for error in field.errors %}
-                        <p class="text-red-500 text-xs italic">{{ error }}</p>
-                    {% endfor %}
-                {% endif %}
+    <div class="container mx-auto px-4 py-8">
+        <h2 class="text-center text-2xl font-bold mb-6">Edit Swimling</h2>
+        <form method="post" class="w-full max-w-lg">
+            {% csrf_token %}
+            {% for field in form %}
+                <div class="mb-4">
+                    <label for="{{ field.id_for_label }}" class="block text-white text-sm font-bold mb-2">
+                        {{ field.label }}
+                    </label>
+                    <!-- Use render_field to add Tailwind CSS classes -->
+                    {% render_field field class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" %}
+                    {% if field.help_text %}
+                        <p class="text-gray-600 text-xs italic">{{ field.help_text }}</p>
+                    {% endif %}
+                    {% if field.errors %}
+                        {% for error in field.errors %}
+                            <p class="text-red-500 text-xs italic">{{ error }}</p>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+            {% endfor %}
+            <div class="flex items-center justify-between">
+                <button type="submit"
+                        class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                    Update Swimling
+                </button>
+                <!-- edit_swimling.html -->
+                <a href="{% url 'users:combined_swimling_mgmt' %}"
+                   class="inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800">
+                    Cancel
+                </a>
             </div>
-        {% endfor %}
-        <div class="flex items-center justify-between">
-            <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
-                Update Swimling
-            </button>
-            <a href="{% url 'users:view-swimlings' %}" class="inline-block align-baseline font-bold text-sm
-            text-blue-500 hover:text-blue-800">
-                Cancel
-            </a>
-        </div>
-    </form>
-</div>
+        </form>
+    </div>
 {% endblock %}

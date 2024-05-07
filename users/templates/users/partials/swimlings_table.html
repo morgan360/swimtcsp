@@ -1,36 +1,55 @@
-{# Swimling Center #}
-<table class="min-w-1/2 table-auto border-collapse border border-gray-200">
-    <thead class="bg-blue-900">
-    <tr>
-        <th class="border border-gray-300 px-4 py-2 text-left">Name</th>
-        <th class="border border-gray-300 px-4 py-2 text-left">DOB</th>
-        <th class="border border-gray-300 px-4 py-2 text-left">Notes</th>
-        <th class="border border-gray-300 px-4 py-2 text-left">School ID</th>
-        <th class="border border-gray-300 px-4 py-2 text-left">Actions</th> <!-- New header for actions column -->
-    </tr>
-    </thead>
-    <tbody>
-    {% for item in swimlings %}
-        <tr class="hover:bg-gray-50">
-            <td class="border border-gray-300 px-4 py-2">{{ item.swimling.first_name }} {{ item.swimling.last_name }}</td>
-            <td class="border border-gray-300 px-4 py-2">{{ item.swimling.dob }}</td>
-            <td class="border border-gray-300 px-4 py-2">{{ item.swimling.notes }}</td>
-            <td class="border border-gray-300 px-4 py-2">{{ item.swimling.sco_role_num }}</td>
-            <td class="border border-gray-300 px-4 py-2 text-center">
-                <!-- Edit button -->
-                <a href="{% url 'users:edit-swimling' item.swimling.id %}" class="px-4 py-2 bg-blue-500
-                            text-white font-bold rounded hover:bg-blue-700">Edit</a>
-            </td>
-        </tr>
-    {% empty %}
+<!-- Swimling Panel -->
+{% if messages %}
+    <div class="bg-blue-100 border-t border-b border-blue-500 text-blue-700 px-4 py-3" role="alert">
+        {% for message in messages %}
+            <p class="font-bold">{{ message.tags|capfirst }}</p>
+            <p>{{ message }}</p>
+        {% endfor %}
+    </div>
+{% endif %}
+<div class="overflow-x-auto">
+    <table class="min-w-full table-auto border-collapse border border-gray-200">
+        <thead class="bg-blue-900">
         <tr>
-            <td colspan="4" class="border border-gray-300 px-4 py-2 text-center">No swimlings found.</td>
+            <th class="border border-gray-300 px-4 py-2 text-left text-white">Name</th>
+            <th class="border border-gray-300 px-4 py-2 text-left text-white">DOB</th>
+            <th class="border border-gray-300 px-4 py-2 text-left text-white">Notes</th>
+            <th class="border border-gray-300 px-4 py-2 text-left text-white">School ID</th>
+            <th class="border border-gray-300 px-4 py-2 text-left text-white">Actions</th>
         </tr>
-    {% endfor %}
-    </tbody>
-</table>
-   <div class="flex justify-left ml-0">
+        </thead>
+        <tbody>
+        {% for item in swimling_management_data %}
+            <tr class="hover:bg-gray-50">
+                <td class="border border-gray-300 px-4 py-2">{{ item.first_name }} {{ item.last_name }}</td>
+                <td class="border border-gray-300 px-4 py-2">
+                    {% if item.dob %}
+                        {{ item.dob|date:"Y-m-d" }}
+                    {% else %}
+                        Not provided
+                    {% endif %}
+                </td>
+                <td class="border border-gray-300 px-4 py-2">{{ item.notes }}</td>
+                <td class="border border-gray-300 px-4 py-2">{{ item.sco_role_num }}</td>
+                <td class="border border-gray-300 px-4 py-2 text-center">
+                    <a href="{% url 'users:edit-swimling' id=item.id %}"
+                       class="px-4 py-2 bg-blue-500 text-white font-bold rounded hover:bg-blue-700 cursor-pointer transition duration-300 ease-in-out"
+                       title="Edit Swimling">
+                        Edit
+                    </a>
+                </td>
+            </tr>
+        {% empty %}
+            <tr>
+                <td colspan="5" class="border border-gray-300 px-4 py-2 text-center">No swimlings found.</td>
+            </tr>
+        {% endfor %}
+
+        </tbody>
+    </table>
+</div>
+<div class="flex justify-left mt-4">
     {% include 'users/partials/new_swimling_form.html' %}
 </div>
-
+<hr class="border-t-4 border-blue-300 my-10">
 

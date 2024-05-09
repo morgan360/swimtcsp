@@ -17,7 +17,8 @@
             <td class="border border-gray-300 px-4 py-2">
                 {% if item.school_term_info.term_status == 'Active' %}
                     <!-- Ensure the URL is built using the term ID -->
-                        <form method="post" action="{% url 'shopping_cart:direct_order' item.id item.school_id %}">
+                        <form method="post" action="
+{% url 'shopping_cart:direct_order' item.id item.school_id item.active_term %}">
                         {% csrf_token %}
                         <button type="submit"
                                 class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">

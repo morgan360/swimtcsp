@@ -14,6 +14,7 @@ from django.urls import reverse
 from lessons_orders.models import Order as LessonOrder, OrderItem as LessonOrderItem
 from schools_orders.models import Order as SchoolOrder, OrderItem as SchoolOrderItem
 from lessons_bookings.models import Term
+from schools_bookings.models import ScoTerm
 from utils.terms_utils import get_current_term
 from utils.terms_utils import get_current_sco_term
 from django.conf import settings
@@ -168,18 +169,19 @@ def order_created(order_id):
     return f"Order {order_id} created successfully!"
 
 
-def direct_order(request, swimling_id, school_id):
+def direct_order(request, swimling_id, school_id, active_term):
     """Takes a booking from the Swimling panel for a particular swimling in a particular school and allows
     the user to choose a course from that school."""
     swimling = get_object_or_404(Swimling, id=swimling_id)
     school = get_object_or_404(ScoSchool, id=school_id)
+    term_instance = get_object_or_404(ScoTerm, pk=active_term)
     if request.method == 'POST':
         form = DirectOrderForm(request.POST, school_id=school_id)
         if form.is_valid():
             # Extract the selected course from the form
             selected_course = form.cleaned_data['lesson']
             total_price = selected_course.price  # Assuming the 'ScoLessons' model has a 'price' field
-
+            term=term_instance
             # Create the main order
             order = SchoolOrder.objects.create(
                 user=request.user,
@@ -193,7 +195,8 @@ def direct_order(request, swimling_id, school_id):
                 swimling=swimling,
                 product = selected_course,
                 price=total_price,
-                quantity=1  # Assuming a quantity of 1 for simplicity
+                quantity=1,  # Assuming a quantity of 1 for simplicity
+                term=term
             )
 
             order_ref = f"school_{order.id}"

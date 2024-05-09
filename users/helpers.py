@@ -64,18 +64,26 @@ def fetch_school_lessons_data(user):
     # Fetch all schools
     schools = ScoSchool.objects.all()
     school_ids = {school.sco_role_num: school for school in schools}
-    # print(school_ids)
+
+    # Debugging prints
+    print(f"Total schools: {schools.count()}")
 
     # Fetch all active school terms indexed by school sco_role_num
     active_school_terms = ScoTerm.objects.filter(is_active=True).select_related('school')
     active_terms_by_school = {term.school.sco_role_num: term for term in active_school_terms if term.school}
-    # print(active_school_terms)
+
+    # Debugging prints
+    print(f"Active school terms: {active_school_terms.count()}")
+
     # Fetch all swimlings that are associated with any school
     swimlings = Swimling.objects.filter(
         guardian=user,
         sco_role_num__in=school_ids.keys()
     )
-    # print(swimlings)
+
+    # Debugging prints
+    print(f"Swimlings under user: {swimlings.count()}")
+
     # Container for the school lessons data
     school_lessons_data = []
 
@@ -84,7 +92,10 @@ def fetch_school_lessons_data(user):
         school = school_ids.get(swimling.sco_role_num)
         active_term = active_terms_by_school.get(swimling.sco_role_num)
 
-        # Check enrollments in the active term for this school
+        # Debugging prints
+        if not active_term:
+            print(f"No active term for sco_role_num: {swimling.sco_role_num}")
+
         enrollments = ScoEnrollment.objects.filter(
             swimling=swimling,
             term=active_term
@@ -103,14 +114,15 @@ def fetch_school_lessons_data(user):
             'registered_lessons_sco': [enrollment.lesson.name for enrollment in enrollments],
             'school_name': school.name if school else "Not associated with a school",
             'school_id': school.id if school else None,
-            'active_term_id': active_term.id if active_term else None,  # Ensure this line is correct
+            'active_term_id': active_term.id if active_term else None,
+            'active_term': active_term,
             'school_term_info': {
                 'term_status': 'Active' if active_term and active_term.is_active else 'Inactive',
                 'term_start_date': active_term.start_date if active_term else None,
                 'term_end_date': active_term.end_date if active_term else None
             }
         }
-        print(active_term)
+
         school_lessons_data.append(entry)
 
     return school_lessons_data

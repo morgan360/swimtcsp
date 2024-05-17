@@ -16,8 +16,7 @@
             <td class="border border-gray-300 px-4 py-2">{{ item.first_name }} {{ item.last_name }}</td>
             <td class="border border-gray-300 px-4 py-2">
                 {% if item.school_term_info.term_status == 'Active' %}
-                    <!-- Ensure the URL is built using the term ID -->
-                        <form method="post" action="
+                    <form method="post" action="
 {% url 'shopping_cart:direct_order' item.id item.school_id item.active_term %}">
                         {% csrf_token %}
                         <button type="submit"

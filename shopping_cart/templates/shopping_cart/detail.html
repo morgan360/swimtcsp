@@ -1,11 +1,11 @@
 {% extends "_base.html" %}
 {% load static %}
 
-{% block title %}Your shopping cart{% endblock %}
+{% block title %}Your Shopping Cart{% endblock %}
 
 {% block content %}
 <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
-    <h1 class="text-center text-white text-2xl font-bold my-4">Your shopping cart</h1>
+    <h1 class="text-center text-white text-2xl font-bold my-4">Your Shopping Cart</h1>
     {% if cart_items %}
         <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
             <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
@@ -13,6 +13,7 @@
                 <th scope="col" class="py-3 px-6">Product</th>
                 <th scope="col" class="py-3 px-6">Price</th>
                 <th scope="col" class="py-3 px-6">Swimling</th>
+                <th scope="col" class="py-3 px-6">Lesson Details</th>
                 <th scope="col" class="py-3 px-6">Remove</th>
             </tr>
             </thead>
@@ -23,9 +24,18 @@
                     <td class="py-4 px-6">€{{ item.price }}</td>
                     <td class="py-4 px-6">{{ item.swimling.first_name }} {{ item.swimling.last_name }}</td>
                     <td class="py-4 px-6">
-                      <form action="
-{% url 'shopping_cart:cart_remove' product_id=item.product_id type=item.type swimling_id=item.swimling.id %}"
-                            method="post">
+                        {% if item.swimling.registered_lessons %}
+                            <ul>
+                                {% for lesson in item.swimling.registered_lessons %}
+                                    <li>{{ lesson.name }} (ID: {{ lesson.id }})</li>
+                                {% endfor %}
+                            </ul>
+                        {% else %}
+                            No lessons registered
+                        {% endif %}
+                    </td>
+                    <td class="py-4 px-6">
+                        <form action="{% url 'shopping_cart:cart_remove' product_id=item.product_id type=item.type swimling_id=item.swimling.id %}" method="post">
                             {% csrf_token %}
                             <button type="submit" class="text-white bg-red-500 hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50 rounded px-4 py-2">
                                 Remove
@@ -37,19 +47,18 @@
             </tbody>
             <tfoot>
                 <tr class="bg-gray-100 dark:bg-gray-700">
-                    <td colspan="3" class="text-right font-bold py-4 px-6">Total Price:</td>
+                    <td colspan="4" class="text-right font-bold py-4 px-6">Total Price:</td>
                     <td class="font-bold py-4 px-6">€{{ total_price }}</td>
                 </tr>
             </tfoot>
         </table>
         <div class="flex justify-end mt-4">
-            <a href="{% url 'shopping_cart:payment_process' %}" class="bg-blue-500 hover:bg-blue-700 text-white
-            font-bold py-2 px-4 rounded">
+            <a href="{% url 'shopping_cart:payment_process' %}" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
                 Pay Now
             </a>
         </div>
     {% else %}
-        <div class="text-center">Your schools cart is empty.</div>
+        <div class="text-center">Your shopping cart is empty.</div>
     {% endif %}
 </div>
 {% endblock %}

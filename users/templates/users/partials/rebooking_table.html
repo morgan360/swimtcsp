@@ -1,4 +1,4 @@
-<h1 class ="flex justify-center text-2xl my-4">Currently Registered & ReBooking</h1>
+<h1 class="flex justify-center text-2xl my-4">Currently Registered & ReBooking</h1>
 
 <table class="min-w-full table-auto border-collapse border border-gray-200">
     <thead class="bg-blue-900">
@@ -16,17 +16,26 @@
             <td class="border border-gray-300 px-4 py-2">{{ item.first_name }} {{ item.last_name }}</td>
             <td class="border border-gray-300 px-4 py-2">
                 <!-- Check if Rebooking Phase -->
-                {% if current_phase_id == "RB" and item.is_registered_for_current_term %}
-                    <!-- Begin form for rebooking -->
-                    <form method="post" action="{% url 'shopping_cart:cart_add' product.id|default:'0' %}">
-                        {% csrf_token %}
-                        <!-- Assuming you have a way to get next_term_id for the rebooking -->
-                        <input type="hidden" name="next_term_id" value="{{ next_term_id }}">
-                        <button type="submit"
-                                class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
-                            Rebooking
-                        </button>
-                    </form>
+                {% if True %} <!-- Make this dynamic as needed -->
+                    {% if item.registered_lessons %}
+                        <!-- Iterate through each registered lesson for rebooking options -->
+                        {% for lesson in item.registered_lessons %}
+                            {% if item.swimling_id and lesson.id %}
+                                <!-- Begin form for rebooking -->
+                                <form method="post" action="{% url 'shopping_cart:review_rebooking' item.swimling_id lesson.id %}">
+                                    {% csrf_token %}
+                                    <button type="submit"
+                                            class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                                        Rebook
+                                    </button>
+                                </form>
+                            {% else %}
+                                <span class="text-red-600">Invalid Rebooking Data</span>
+                            {% endif %}
+                        {% endfor %}
+                    {% else %}
+                        <span class="text-red-600">No Lessons Available</span>
+                    {% endif %}
                 {% else %}
                     <button type="button"
                             class="bg-gray-500 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
@@ -37,19 +46,21 @@
             </td>
             <td class="border border-gray-300 px-4 py-2">
                 {% if item.is_registered %}
-                    <span class="text-green-600 font-semibold">{{ item.registered_lessons|join:", " }}</span>
+                    {% for lesson in item.registered_lessons %}
+                        {{ lesson.name }}{% if not forloop.last %}, {% endif %}
+                    {% endfor %}
                 {% else %}
                     <span class="text-red-600">Not registered for current term</span>
                 {% endif %}
             </td>
             <td class="border border-gray-300 px-4 py-2">
-                {% if item.is_registered_for_current_term %}
-                    <span class="text-green-600 font-semibold"> {{ item.registered_lessons|join:", " }}</span>
+                <!-- Assuming you have a mechanism to determine next term registration -->
+                {% if item.is_registered_next_term %}
+                    <span class="text-green-600 font-semibold">Registered for Next Term</span>
                 {% else %}
                     <span class="text-red-600">Not registered for next term</span>
                 {% endif %}
             </td>
-
         </tr>
     {% empty %}
         <tr>

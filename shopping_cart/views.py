@@ -1,3 +1,5 @@
+from django.contrib import messages
+from django.conf import settings
 from django.shortcuts import render, redirect, reverse, \
     get_object_or_404
 from django.views.decorators.http import require_POST
@@ -7,7 +9,6 @@ from users.models import Swimling
 from .cart import Cart
 from .forms import CartAddProductForm, NewSwimlingForm, DirectOrderForm
 from django.contrib.auth.decorators import login_required
-from django.contrib import messages
 from decimal import Decimal
 from django.http import Http404
 from django.urls import reverse
@@ -15,9 +16,7 @@ from lessons_orders.models import Order as LessonOrder, OrderItem as LessonOrder
 from schools_orders.models import Order as SchoolOrder, OrderItem as SchoolOrderItem
 from lessons_bookings.models import Term
 from schools_bookings.models import ScoTerm
-from utils.terms_utils import get_current_term
-from utils.terms_utils import get_current_sco_term
-from django.conf import settings
+from utils.terms_utils import get_current_term, get_current_sco_term, get_next_term
 from boipa.views import initiate_boipa_payment_session
 from lessons_bookings.utils.enrollment import handle_lessons_enrollment
 from django.http import HttpResponse
@@ -181,7 +180,7 @@ def direct_order(request, swimling_id, school_id, active_term):
             # Extract the selected course from the form
             selected_course = form.cleaned_data['lesson']
             total_price = selected_course.price  # Assuming the 'ScoLessons' model has a 'price' field
-            term=term_instance
+            term = term_instance
             # Create the main order
             order = SchoolOrder.objects.create(
                 user=request.user,
@@ -193,7 +192,7 @@ def direct_order(request, swimling_id, school_id, active_term):
             order_item = SchoolOrderItem.objects.create(
                 order=order,
                 swimling=swimling,
-                product = selected_course,
+                product=selected_course,
                 price=total_price,
                 quantity=1,  # Assuming a quantity of 1 for simplicity
                 term=term
@@ -213,3 +212,51 @@ def direct_order(request, swimling_id, school_id, active_term):
         'school_id': school_id
     })
 
+
+def review_rebooking(request, swimling_id, product_id):
+    """Displays the order details for review before confirming."""
+    swimling = get_object_or_404(Swimling, id=swimling_id)
+    lesson = get_object_or_404(Product, id=product_id)
+
+    if request.method == 'POST':
+        # Redirect to the confirmation view
+        return redirect('shopping_cart:confirm_rebooking', swimling_id=swimling_id, product_id=product_id)
+
+    return render(request, 'shopping_cart/direct_rebooking.html', {
+        'swimling': swimling,
+        'lesson': lesson,
+    })
+
+def confirm_rebooking(request, swimling_id, product_id):
+    """Handles the final order submission and initiates the payment process."""
+    swimling = get_object_or_404(Swimling, id=swimling_id)
+    lesson = get_object_or_404(Product, id=product_id)
+
+    if request.method == 'POST':
+        total_price = lesson.price
+        next_term = get_next_term()
+        print('term', next_term)
+
+        # Create the main order
+        order = LessonOrder.objects.create(
+            user=request.user,
+            amount=total_price
+        )
+
+        # Create an order item associated with the order
+        order_item = LessonOrderItem.objects.create(
+            order=order,
+            swimling=swimling,
+            product=lesson,
+            price=total_price,
+            quantity=1,  # Assuming a quantity of 1 for simplicity
+            term=next_term
+        )
+
+        order_ref = f"lesson_{order.id}"
+
+        # Redirect to initiate payment session with the total price and order reference
+        return redirect('boipa:initiate_payment_session', order_ref=order_ref, total_price=str(total_price))
+
+    # Optionally handle GET requests or any other logic
+    return redirect('shopping_cart:review_rebooking', swimling_id=swimling_id, product_id=product_id)

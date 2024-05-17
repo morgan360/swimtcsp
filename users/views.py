@@ -30,17 +30,19 @@ def combined_swimling_mgmt(request):
 
     # Fetch normal lessons
     normal_lessons_data = fetch_normal_lessons_data(request.user, current_term_id)
-# Fetch normal lessons
+
+    # Fetch school lessons
     school_lessons_data = fetch_school_lessons_data(request.user)
 
     context = {
         'swimling_management_data': swimling_management_data,
         'normal_lessons': normal_lessons_data,
         'school_lessons_data': school_lessons_data,
-        'term_data': term_data  # if you need to pass this to the template
+        'term_data': term_data  # Additional context data
     }
 
     return render(request, 'users/combined_swimling_mgmt.html', context)
+
 ######################
 
 @login_required

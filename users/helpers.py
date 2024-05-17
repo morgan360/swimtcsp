@@ -40,8 +40,11 @@ def fetch_normal_lessons_data(user, current_term_id):
             term_id=current_term_id
         ).select_related('lesson')
 
-        # Extract lesson names from enrollments
-        normal_lesson_names = [enrollment.lesson.name for enrollment in normal_enrollments]
+        # Extract lesson names and IDs from enrollments
+        normal_lessons = [{
+            'name': enrollment.lesson.name,
+            'id': enrollment.lesson.id
+        } for enrollment in normal_enrollments]
 
         # Determine registration status
         is_registered = normal_enrollments.exists()
@@ -51,7 +54,7 @@ def fetch_normal_lessons_data(user, current_term_id):
             'swimling_id': swimling.id,
             'first_name': swimling.first_name,
             'last_name': swimling.last_name,
-            'registered_lessons': normal_lesson_names,
+            'registered_lessons': normal_lessons,  # This now includes lesson names and IDs
             'is_registered': is_registered
         }
 

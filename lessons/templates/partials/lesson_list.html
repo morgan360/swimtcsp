@@ -1,44 +1,58 @@
+<!-- templates/partials/lesson_list.html -->
 {% load static %}
 
-{% block content %}
-    <div class="bg-blue-500 p-3">
-        <h1 class="text-2xl text-white text-center">Public Swim Lessons</h1>
+<div class="bg-blue-500 p-3">
+    <h1 class="text-2xl text-white text-center">Public Swim Lessons</h1>
+</div>
+
+<!-- Display current term information -->
+<div class="text-gray-700 bg-blue-50 p-4 mb-6 rounded-lg">
+    <div class="flex flex-wrap justify-between">
+        <span><strong>Term:</strong> {{ current_term }}</span>
+        <span><strong>Start Date:</strong> {{ start_date }}</span>
+        <span><strong>End Date:</strong> {{ end_date }}</span>
     </div>
-    <div class="container mx-auto mt-8">
-        <div class="row">
-            <div class="col-md-11">
-                <table class="table table-striped">
-                    <thead>
+</div>
+
+<div class="container mx-auto mt-8">
+    <div class="overflow-x-auto">
+        <table class="min-w-full bg-white">
+            <thead>
+                <tr>
+                    <th class="px-4 py-2 border-b-2 border-gray-200 bg-gray-100 text-left text-sm leading-4 font-semibold text-gray-600">Lessons</th>
+                    <th class="px-4 py-2 border-b-2 border-gray-200 bg-gray-100 text-left text-sm leading-4 font-semibold text-gray-600">Spaces</th>
+                    <th class="px-4 py-2 border-b-2 border-gray-200 bg-gray-100 text-left text-sm leading-4 font-semibold text-gray-600">Places Left</th>
+                    <th class="px-4 py-2 border-b-2 border-gray-200 bg-gray-100 text-left text-sm leading-4 font-semibold text-gray-600">Action</th>
+                </tr>
+            </thead>
+            <tbody class="text-gray-700 bg-white">
+                {% for lesson_info in page_obj %}
                     <tr>
-                        <th>Lessons</th>
-                        <th>Spaces</th>
-                        <th>Places left</th>
-                        <th>Lessons</th>
+                        <td class="px-4 py-2 border-b border-gray-200">{{ lesson_info.lesson.name }}</td>
+                        <td class="px-4 py-2 border-b border-gray-200">{{ lesson_info.num_places }}</td>
+                        <td class="px-4 py-2 border-b border-gray-200">
+                            {% if lesson_info.is_full %}
+                                <span class="text-red-600 font-semibold">Full</span>
+                            {% else %}
+                                <span>{{ lesson_info.remaining_spaces }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-4 py-2 border-b border-gray-200">
+                            {% if lesson_info.remaining_spaces > 0 %}
+                                <a href="{% url 'lessons:product_detail' id=lesson_info.lesson.id %}" class="inline-block px-4 py-2 bg-blue-500 text-white font-semibold text-sm rounded hover:bg-blue-600">Book Now</a>
+                            {% else %}
+                                <a href="{% url 'waiting_list:join_waiting_list' product_id=lesson_info.lesson.id %}" class="inline-block px-4 py-2 bg-yellow-500 text-white font-semibold text-sm rounded hover:bg-yellow-600">Join Waiting List</a>
+                            {% endif %}
+                        </td>
                     </tr>
-                    </thead>
-                    <tbody>
-                    {% for lesson in page_obj %}
-                        <tr>
-                            <td>{{ lesson.name }}</td>
-                            <td>{{ lesson.num_places }}</td>
-                            <td>
-                                {% if lesson.remaining_spaces <= 0 %}
-                                    <p>Full</p>
-                                {% else %}
-                                    <p>{{ lesson.remaining_spaces }}</p>
-                                {% endif %}
-                            </td>
-                            <td><a href="{% url 'lessons:product_detail' slug=lesson.slug %}" class="btn btn-info
-                          btn-sm">Book Now</a></td>
-                        </tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
-    <!-- Pagination Navigation with Tailwind -->
-   <nav aria-label="Page navigation" class="flex justify-center mt-4">
+</div>
+
+<!-- Pagination Navigation with Tailwind -->
+<nav aria-label="Page navigation" class="flex justify-center mt-4">
     <ul class="inline-flex -space-x-px">
         {% if page_obj.has_previous %}
             <li>
@@ -75,5 +89,3 @@
         {% endif %}
     </ul>
 </nav>
-
-{% endblock %}

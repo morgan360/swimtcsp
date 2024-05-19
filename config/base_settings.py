@@ -75,6 +75,7 @@ INSTALLED_APPS = [
     'schools_orders',
     'shopping_cart',
     'boipa',
+    'waiting_list',
 ]
 
 MIDDLEWARE = [

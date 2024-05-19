@@ -1,0 +1,31 @@
+<table class="min-w-full table-auto border-collapse border border-gray-200">
+    <thead class="text-white bg-blue-900">
+    <tr>
+        <th class="border border-gray-300 px-4 py-2 text-left">Swimling Name</th>
+        <th class="border border-gray-300 px-4 py-2 text-left">Requested Lesson</th>
+        <th class="border border-gray-300 px-4 py-2 text-left">Assigned Lesson</th>
+        <th class="border border-gray-300 px-4 py-2 text-left">Action</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for entry in waiting_list_data %}
+        <tr class="hover:bg-gray-50">
+            <td class="border border-gray-300 px-4 py-2">{{ entry.swimling_name }}</td>
+            <td class="border border-gray-300 px-4 py-2">{{ entry.requested_lesson }}</td>
+            <td class="border border-gray-300 px-4 py-2">{{ entry.assigned_lesson }}</td>
+            <td class="border border-gray-300 px-4 py-2">
+                {% if entry.can_book %}
+                    <a href="{% url 'lessons:product_detail' id=entry.assigned_lesson_id %}" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">Book Now</a>
+                {% else %}
+                    <span class="text-gray-500">Notification Pending</span>
+                {% endif %}
+            </td>
+        </tr>
+    {% empty %}
+        <tr>
+            <td colspan="4" class="border border-gray-300 px-4 py-2 text-center">No swimlings on the waiting list.</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+<hr class="border-t-4 border-blue-300 my-10">

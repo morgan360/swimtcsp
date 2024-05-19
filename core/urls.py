@@ -41,6 +41,8 @@ urlpatterns = [
     path('reports/', include('reports.urls')),
     # BOIPA
     path('boipa/', include(('boipa.urls', 'boipa'), namespace='boipa')),  # Note the namespace argument
+    # Waiting List
+    path('waiting-list/', include('waiting_list.urls')),
 ]
 # Serve static and media files during development
 if settings.DEBUG:

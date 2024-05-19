@@ -12,25 +12,46 @@ from django.core.paginator import Paginator
 from django.http import HttpResponse
 from django.shortcuts import render, redirect
 from django.contrib import messages
-
+from utils.terms_utils import get_current_term
 
 # Get Lesson list for (Public) and Active=1
 def lesson_list(request):
+    current_term = get_current_term()
+
     days = Product.objects.values_list('day_of_week', flat=True).distinct()
     day_choices = [(day, dict(Product.DAY_CHOICES)[day]) for day in days]
     programs = Program.objects.all()
     active_lessons = Product.objects.filter(active=True)
-    paginator = Paginator(active_lessons, 8)  # Show  8 lessons per page
+
+    lessons_info = []
+    for lesson in active_lessons:
+        lessons_info.append({
+            'lesson': lesson,
+            'num_places': lesson.num_places,
+            'remaining_spaces': lesson.remaining_spaces(current_term),
+            'is_full': lesson.is_full(current_term)
+        })
+
+    paginator = Paginator(lessons_info, 8)  # Show 8 lessons per page
     page_number = request.GET.get('page')  # Get the page number from the request
     page_obj = paginator.get_page(page_number)  # Get the page object
 
-    return render(request, 'lessons/products/lessons.html', {'page_obj': page_obj, 'programs': programs,
-                                                             'days': day_choices})
+    return render(request, 'lessons/products/lessons.html', {
+        'page_obj': page_obj,
+        'programs': programs,
+        'days': day_choices,
+        'current_term': current_term,
+    })
 
 
 def update_lesson_list(request):
+    current_term = get_current_term()
+
     program_id = request.GET.get('program')
     day = request.GET.get('day')
+
+    # Debugging: Log the received parameters
+    print(f"Received program_id: {program_id}, day: {day}")
 
     # Initialize query
     query = Product.objects.filter(active=True)
@@ -42,7 +63,7 @@ def update_lesson_list(request):
             query = query.filter(category__program_id=program_id)
         except ValueError:
             # Handle the error if program_id is not a valid integer
-            pass
+            print("Invalid program_id")
 
     if day not in [None, '', 'null', 'undefined']:
         try:
@@ -50,28 +71,38 @@ def update_lesson_list(request):
             query = query.filter(day_of_week=day)
         except ValueError:
             # Handle the error if day is not a valid integer
-            pass
+            print("Invalid day")
 
     # Execute the query
     active_lessons = query
-    paginator = Paginator(active_lessons, 8)  # Show 10 lessons per page
+
+    lessons_info = []
+    for lesson in active_lessons:
+        lessons_info.append({
+            'lesson': lesson,
+            'num_places': lesson.num_places,
+            'remaining_spaces': lesson.remaining_spaces(current_term),
+            'is_full': lesson.is_full(current_term)
+        })
+
+    paginator = Paginator(lessons_info, 8)  # Show 8 lessons per page
     page_number = request.GET.get('page')  # Get the page number from the request
     page_obj = paginator.get_page(page_number)  # Get the page object
-    return render(request, 'partials/lesson_list.html', {'page_obj': page_obj, })
 
+    return render(request, 'partials/lesson_list.html', {'page_obj': page_obj, 'current_term': current_term})
 
 @login_required
-def product_detail(request, slug):
-    product = get_object_or_404(Product, slug=slug)
+def product_detail(request, id):
+    product = get_object_or_404(Product, id=id)
     form = NewSwimlingForm()
-    cart_product_form = CartAddProductForm(user=request.user)  # Instantiate the form
+    cart_product_form = CartAddProductForm(user=request.user)
     swimlings = Swimling.objects.filter(guardian=request.user)  # Assuming association via guardian
 
     return render(request, 'lessons/products/detail.html', {
         'product': product,
         'cart_product_form': cart_product_form,
         'form': form,
-        'swimlings': swimlings,  # Pass swimlings to the template
+        'swimlings': swimlings,
     })
 
 

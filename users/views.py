@@ -13,12 +13,14 @@ from django.template.loader import render_to_string
 from django.shortcuts import get_object_or_404
 from utils.context_processors import get_term_info
 from utils.context_processors import term_status_for_active_schools
-from . helpers import fetch_swimling_management_data, fetch_normal_lessons_data, fetch_school_lessons_data
+from .helpers import fetch_swimling_management_data, fetch_normal_lessons_data, fetch_school_lessons_data, fetch_waiting_list_data
+from django.contrib.admin.views.decorators import staff_member_required
+
 # Get the custom user model
 user = get_user_model()
 
 
-####### NEW COMBINED VIEW FOR SWIM MGMT PANEL#########
+#######  COMBINED VIEW FOR SWIM MGMT PANEL#########
 @login_required
 def combined_swimling_mgmt(request):
     current_term_id = Term.get_current_term_id()
@@ -34,14 +36,20 @@ def combined_swimling_mgmt(request):
     # Fetch school lessons
     school_lessons_data = fetch_school_lessons_data(request.user)
 
+    # Fetch waiting list data
+    waiting_list_data = fetch_waiting_list_data(request.user)
+
     context = {
         'swimling_management_data': swimling_management_data,
         'normal_lessons': normal_lessons_data,
         'school_lessons_data': school_lessons_data,
-        'term_data': term_data  # Additional context data
+        'waiting_list_data': waiting_list_data,
+        'term_data': term_data,  # Additional context data
+        'school_term_status': school_term_status  # Additional context data
     }
 
     return render(request, 'users/combined_swimling_mgmt.html', context)
+
 
 ######################
 
@@ -79,6 +87,7 @@ def hijack_redirect(request, user_id):
     # Redirect to the home page or any other desired URL
     return redirect('home')  # Replace 'home' with the name of your home page URL pattern
 
+
 @login_required
 def edit_swimling(request, id):
     swimling = get_object_or_404(Swimling, id=id, guardian=request.user)  # Ensure the user is the guardian
@@ -94,6 +103,7 @@ def edit_swimling(request, id):
 
     return render(request, 'edit_swimling.html', {'form': form, 'swimling': swimling})
 
+
 #  Add a new swimmer to users portfolio
 def add_new_swimling(request):
     if request.method == 'POST':
@@ -108,7 +118,8 @@ def add_new_swimling(request):
             # success message
             messages.success(request, 'Swimling added successfully.')
             # Render the partial template for the dropdown
-            rendered_html = render_to_string('users/partials/swimlings_table.html', {'swimling_management_data':swimling_management_data},
+            rendered_html = render_to_string('users/partials/swimlings_table.html',
+                                             {'swimling_management_data': swimling_management_data},
                                              request=request)
 
             # Respond with the rendered HTML for HTMX to swap
@@ -128,8 +139,9 @@ def add_new_swimling(request):
         return render(request, 'partials/new_swimling_form.html', {'form': form})
 
 
-
 def load_new_swimling_form(request, product_slug):
     form = NewSwimlingForm()
     product = Product.objects.get(slug=product_slug)  # Retrieve the product based on the slug
     return render(request, 'partials/new_swimling_form.html', {'form': form, 'product': product})
+
+

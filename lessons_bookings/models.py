@@ -72,18 +72,17 @@ class Term(models.Model):
 
 
 # Contains all the bookings that have being confirmed
+# models.py
+
 class LessonEnrollment(models.Model):
-    lesson = models.ForeignKey(Product, on_delete=models.CASCADE)
+    lesson = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='enrollments')
     swimling = models.ForeignKey(Swimling, on_delete=models.CASCADE)
     term = models.ForeignKey(Term, on_delete=models.CASCADE)
     order = models.ForeignKey('lessons_orders.Order', on_delete=models.CASCADE, null=True, blank=True)
-    # notes will contain origional order id from woocommerce
     notes = models.TextField(null=True, blank=True)
-    # will contain origional date booked
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
-    changed_by = models.ForeignKey(settings.AUTH_USER_MODEL,
-                                   on_delete=models.SET_NULL, null=True, blank=True)
+    changed_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
 
     class Meta:
         indexes = [
@@ -92,8 +91,7 @@ class LessonEnrollment(models.Model):
         ordering = ['-term', 'lesson']
 
     def __str__(self):
-        return f'{self.lesson.name}, {str(self.term.id)}, ' \
-               f'{self.swimling.first_name}, {self.swimling.last_name}'
+        return f'{self.lesson.name}, {str(self.term.id)}, {self.swimling.first_name}, {self.swimling.last_name}'
 
 
 # Assign Instructors to Lessons for a term

@@ -1,0 +1,42 @@
+{% load static %}
+
+{% block content %}
+<div class="container mx-auto mt-8">
+    <h2 class="text-2xl font-bold mb-4">Manage Waiting List</h2>
+    <table class="table-auto w-full">
+        <thead>
+            <tr>
+                <th class="px-4 py-2">Swimling</th>
+                <th class="px-4 py-2">Product</th>
+                <th class="px-4 py-2">User</th>
+                <th class="px-4 py-2">Assigned Lesson</th>
+                <th class="px-4 py-2">Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for entry in waiting_list %}
+                <tr>
+                    <td class="border px-4 py-2">{{ entry.swimling.name }}</td>
+                    <td class="border px-4 py-2">{{ entry.product.name }}</td>
+                    <td class="border px-4 py-2">{{ entry.user.username }}</td>
+                    <td class="border px-4 py-2">
+                        <form method="post" action="{% url 'manage_waiting_list' %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="waiting_list_id" value="{{ entry.id }}">
+                            <select name="lesson_id" class="form-select mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+                                <option value="">Select a Lesson</option>
+                                {% for lesson in lessons %}
+                                    <option value="{{ lesson.id }}" {% if entry.assigned_lesson == lesson %}selected{% endif %}>
+                                        {{ lesson.name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                            <button type="submit" class="btn btn-primary mt-2">Assign and Notify</button>
+                        </form>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

@@ -1,3 +1,4 @@
+<!-- lessons/templates/lessons/products/lessons.html -->
 {% extends "_base.html" %}
 {% load static %}
 
@@ -31,9 +32,9 @@
                             hx-trigger="change"
                             hx-target="#lesson_list"
                     >
-                        <option value="" class ="text-black" >Select a Day</option>
+                        <option value="" class ="text-black">Select a Day</option>
                         {% for day_value, day_display in days %}
-                            <option value="{{ day_value }}" >{{ day_display }}</option>
+                            <option value="{{ day_value }}">{{ day_display }}</option>
                         {% endfor %}
                     </select>
                 </div>

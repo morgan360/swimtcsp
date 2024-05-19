@@ -95,21 +95,20 @@ class Product(models.Model):
         day_of_week = dict(self.DAY_CHOICES).get(self.day_of_week)
         return f"{self.category} {day_of_week} {start_time_formatted}"
 
-    def get_num_sold(self):
+    def get_num_sold(self, term):
         from lessons_bookings.models import LessonEnrollment
-        return LessonEnrollment.objects.filter(lesson=self).count()  # Count the number of related orders
+        return LessonEnrollment.objects.filter(lesson=self, term=term).count()
 
-    def get_num_left(self):
-        return self.num_places - self.get_num_sold()
+    def get_num_left(self, term):
+        return self.num_places - self.get_num_sold(term)
 
-    # new method
-    def remaining_spaces(self):
-        enrollments_count = self.lessonenrollment_set.count()
+    def remaining_spaces(self, term):
+        enrollments_count = self.enrollments.filter(term=term).count()
         return max(self.num_places - enrollments_count, 0)
 
-    @property
-    def is_full(self):
-        return self.remaining_spaces() == 0
+    def is_full(self, term):
+        return self.remaining_spaces(term) == 0
+
 
 # update name everytime fields are changed
 @receiver(pre_save, sender=Product)

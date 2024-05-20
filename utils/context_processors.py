@@ -1,7 +1,7 @@
 from datetime import datetime
 from django.utils import formats
-from lessons_bookings.models import Term  # Import your Term model
-from schools_bookings.models import ScoTerm  # Import your Term model
+from lessons_bookings.models import Term
+from schools_bookings.models import ScoTerm
 from django.http import HttpRequest
 from typing import Dict
 from django.utils import timezone
@@ -35,6 +35,7 @@ def get_term_info(request: HttpRequest) -> Dict[str, str]:
     next_phase_string = "Next phase not found"
     previous_term_string = "Previous term not found"
     next_term_string = "Next term not found"
+
     try:
         current_term_id = Term.get_current_term_id()
         if current_term_id is not None:
@@ -46,18 +47,18 @@ def get_term_info(request: HttpRequest) -> Dict[str, str]:
             booking_date = term.booking_date.strftime('%d %b %Y')
 
             # Checking for previous term
-            if Term.objects.filter(id=current_term_id - 1).exists():
-                previous_term_id = current_term_id - 1
-                previous_term = Term.objects.get(id=previous_term_id)
+            previous_term = Term.objects.filter(end_date__lt=term.start_date).order_by('-end_date').first()
+            if previous_term:
+                previous_term_id = previous_term.id
                 previous_term_string = previous_term.concatenated_term()
             else:
                 previous_term_id = None
                 previous_term_string = "Previous term not found"
 
             # Checking for next term
-            if Term.objects.filter(id=current_term_id + 1).exists():
-                next_term_id = current_term_id + 1
-                next_term = Term.objects.get(id=next_term_id)
+            next_term = Term.objects.filter(start_date__gt=term.end_date).order_by('start_date').first()
+            if next_term:
+                next_term_id = next_term.id
                 next_term_string = next_term.concatenated_term()
             else:
                 next_term_id = None
@@ -101,7 +102,7 @@ def get_term_info(request: HttpRequest) -> Dict[str, str]:
     }
 
 
-# Different Footor for each version production ,local
+# Different Footer for each version production, local
 def footer_message(request):
     from django.conf import settings
     return {'FOOTER_MESSAGE': settings.FOOTER_MESSAGE}

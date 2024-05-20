@@ -227,6 +227,7 @@ def review_rebooking(request, swimling_id, product_id):
         'lesson': lesson,
     })
 
+
 def confirm_rebooking(request, swimling_id, product_id):
     """Handles the final order submission and initiates the payment process."""
     swimling = get_object_or_404(Swimling, id=swimling_id)
@@ -260,3 +261,54 @@ def confirm_rebooking(request, swimling_id, product_id):
 
     # Optionally handle GET requests or any other logic
     return redirect('shopping_cart:review_rebooking', swimling_id=swimling_id, product_id=product_id)
+
+
+# Show order first
+def review_waiting_list_booking(request, swimling_id, product_id):
+    """Displays the order details for review before confirming for waiting list bookings."""
+    swimling = get_object_or_404(Swimling, id=swimling_id)
+    lesson = get_object_or_404(Product, id=product_id)
+
+    if request.method == 'POST':
+        # Redirect to the confirmation view
+        return redirect('shopping_cart:confirm_waiting_list_booking', swimling_id=swimling_id, product_id=product_id)
+
+    return render(request, 'shopping_cart/review_waiting_list_booking.html', {
+        'swimling': swimling,
+        'lesson': lesson,
+    })
+
+
+def confirm_waiting_list_booking(request, swimling_id, product_id):
+    """Handles the final order submission and initiates the payment process for waiting list bookings."""
+    swimling = get_object_or_404(Swimling, id=swimling_id)
+    lesson = get_object_or_404(Product, id=product_id)
+
+    if request.method == 'POST':
+        total_price = lesson.price
+        current_term = get_current_term()
+        print('term', current_term)
+
+        # Create the main order
+        order = LessonOrder.objects.create(
+            user=request.user,
+            amount=total_price
+        )
+
+        # Create an order item associated with the order
+        order_item = LessonOrderItem.objects.create(
+            order=order,
+            swimling=swimling,
+            product=lesson,
+            price=total_price,
+            quantity=1,  # Assuming a quantity of 1 for simplicity
+            term=current_term  # Use current term for waiting list bookings
+        )
+
+        order_ref = f"lesson_{order.id}"
+
+        # Redirect to initiate payment session with the total price and order reference
+        return redirect('boipa:initiate_payment_session', order_ref=order_ref, total_price=str(total_price))
+
+    # Optionally handle GET requests or any other logic
+    return redirect('shopping_cart:review_waiting_list_booking', swimling_id=swimling_id, product_id=product_id)

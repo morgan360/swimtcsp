@@ -135,13 +135,13 @@ def fetch_school_lessons_data(user):
 
 
 def fetch_waiting_list_data(user):
-    waiting_list_entries = WaitingList.objects.filter(user=user).select_related('product', 'swimling',
-                                                                                'assigned_lesson')
+    waiting_list_entries = WaitingList.objects.filter(user=user).select_related('product', 'swimling', 'assigned_lesson')
     waiting_list_data = []
 
     for entry in waiting_list_entries:
         waiting_list_data.append({
             'id': entry.id,
+            'swimling_id': entry.swimling.id,  # Include swimling_id here
             'swimling_name': f"{entry.swimling.first_name} {entry.swimling.last_name}",
             'requested_lesson': entry.product.name,
             'assigned_lesson': entry.assigned_lesson.name if entry.assigned_lesson else "Not assigned",

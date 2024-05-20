@@ -33,6 +33,10 @@ def fetch_normal_lessons_data(user, current_term_id):
     # Fetch all swimlings associated with the given user
     swimlings = Swimling.objects.filter(guardian=user).prefetch_related('lessonenrollment_set')
 
+    # Get the next term
+    current_term = Term.objects.get(id=current_term_id)
+    next_term = Term.objects.filter(start_date__gt=current_term.end_date).order_by('start_date').first()
+
     # Container for all the normal lessons data
     normal_lessons_data = []
 
@@ -49,8 +53,17 @@ def fetch_normal_lessons_data(user, current_term_id):
             'id': enrollment.lesson.id
         } for enrollment in normal_enrollments]
 
-        # Determine registration status
+        # Determine registration status for the current term
         is_registered = normal_enrollments.exists()
+
+        # Determine registration status for the next term
+        is_registered_next_term = False
+        if next_term:
+            next_term_enrollments = LessonEnrollment.objects.filter(
+                swimling=swimling,
+                term=next_term
+            )
+            is_registered_next_term = next_term_enrollments.exists()
 
         # Organize data for each swimling
         swimling_entry = {
@@ -58,7 +71,8 @@ def fetch_normal_lessons_data(user, current_term_id):
             'first_name': swimling.first_name,
             'last_name': swimling.last_name,
             'registered_lessons': normal_lessons,  # This now includes lesson names and IDs
-            'is_registered': is_registered
+            'is_registered': is_registered,
+            'is_registered_next_term': is_registered_next_term,
         }
 
         normal_lessons_data.append(swimling_entry)

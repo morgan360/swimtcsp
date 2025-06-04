@@ -3,39 +3,38 @@ __pycache__/
 *.py[cod]
 *$py.class
 
-# Django stuff:
+# Django
 *.log
 *.pot
 *.pyc
 local_settings.py
 db.sqlite3
-
-# Media files:
-#media/
-# Static files:
-#static/
-# Secret keys:
+*.sqlite3
 *.secret
 
-# Environment variables
-.env
+# Media & Static (uncomment if you want to ignore these in Git)
+# media/
+# static/
 
-# Development files:
-*.idea/
+# Environment Variables
+.env
+.env.*
+
+# IDE & Development Configs
+.idea/
 .vscode/
 *.pyproj
-*.pycproj
 *.suo
-*.ntvs*
 *.njsproj
 *.sln
-*.pycproj.user
 *.user
 *.coverage
-htmlcov/
 .coverage.xml
-.tox/
 .coverage/
+.tox/
+htmlcov/
+
+# Backup & patch files
 *.orig
 *.rej
 *.tmp
@@ -43,16 +42,30 @@ htmlcov/
 *.~*.*
 *~*
 
-# Dependency folders:
+# Virtual Environments
 venv/
 env/
-node_modules/
 
-# My Stuff
+# Node & Tailwind
+node_modules/
+dist/
+build/
+*.lock
+
+# Static build artifacts
+staticfiles/
+staticfiles_build/
+*.css.map
+*.js.map
+
+# Test and migration caches
+.cache/
+.pytest_cache/
+**/migrations/__pycache__/
+**/migrations/*.py[co]
+
+# Jupyter + project-specific files
 import_csv/
 .DS_Store
-swimtcsp/share/jupyter/lab/schemas/@jupyter-notebook/help-extension/
-swimtcsp/share/jupyter/lab/schemas/@jupyterlab/debugger-extension/
-swimtcsp/share/jupyter/lab/schemas/@jupyterlab/htmlviewer-extension/
-swimtcsp/share/jupyter/lab/schemas/@jupyterlab/toc-extension/
+swimtcsp/share/jupyter/lab/schemas/
 swimtcsp/home/management/

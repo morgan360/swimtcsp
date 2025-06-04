@@ -6,7 +6,7 @@
 * [Env Variables](programming/variables.md)
 * [Commands](programming/commands.md)
 * [New Project](broken-reference)
-* [Diagrams](swim.svg)
+* [Diagrams](../docs_restructured/assets/swim.svg)
 * [Problems](problems/reverse-statix-etc-problems.md)\
 
 

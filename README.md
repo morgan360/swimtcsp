@@ -4,6 +4,14 @@
 This is a Django-based web application designed for managing lessons, swims, schools, and online bookings for a swimming pool business. It includes user registration, e-commerce integration with Bank of Ireland Finance, custom admin dashboards, and HTMX/Tailwind/Alpine-based interactivity.
 
 ---
+📚 Looking for full developer documentation?
+See [docs/README.md](docs/README.md) for:
+- Architecture
+- Deployment (PythonAnywhere)
+- Tailwind/HTMX frontend setup
+- Git logs and to-dos
+
+
 
 ## 🌐 Live Features Overview
 

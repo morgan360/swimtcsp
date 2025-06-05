@@ -6,17 +6,33 @@ from users.models import Swimling
 from django.utils.formats import date_format
 from django.utils import timezone
 
+# ====================================
+# Models defined in this file:
+# ====================================
+# 1. Term
+#    - Represents a school term with booking/rebooking dates.
+#    - Includes methods for getting the current term and determining its booking phase.
+
+# 2. LessonEnrollment
+#    - Represents a confirmed enrollment of a swimling in a lesson for a specific term.
+#    - Linked to Product (lesson), Swimling, Term, and optionally an Order.
+#    - Indexed by (term, lesson, swimling) and ordered by term descending and lesson.
+
+# 3. LessonAssignment
+#    - Assigns an instructor (User in instructors group) to multiple lessons (Products) for a specific term.
+#    - Uses a many-to-many relationship with Product.
+# ====================================
 
 # from lessons_orders.models import Order
 # Because of circular references had to use string references instead: 'lessons_orders.Order'
 
 
 class Term(models.Model):
-    start_date = models.DateField()
-    end_date = models.DateField()
-    rebooking_date = models.DateField()
-    booking_date = models.DateField()
-    assessment_date = models.DateField(null=True, )
+    start_date = models.DateField(null=True, blank=True)
+    end_date = models.DateField(null=True, blank=True)
+    rebooking_date = models.DateField(null=True, blank=True)
+    booking_date = models.DateField(null=True, blank=True)
+    assessment_date = models.DateField(null=True, blank=True)  # already nullable
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
     changed_by = models.ForeignKey(

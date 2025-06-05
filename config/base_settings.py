@@ -1,18 +1,17 @@
 """
 BASE SETTINGS
 """
+import os
 SESSION_SAVE_EVERY_REQUEST = True
 from pathlib import Path
-import os
-from dotenv import load_dotenv
+from decouple import config
+
+SECRET_KEY = config('SECRET_KEY')
+DB_PASSWORD = config('DB_PASSWORD')  # no need for str(), config returns string
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
-
-
-load_dotenv()  # loads the configs from .env
-DB_PASSWORD = str(os.getenv('DB_PASSWORD')),
 
 # Set the URL prefix for static files
 STATIC_URL = '/static/'
@@ -28,7 +27,7 @@ MEDIA_URL = '/media/'
 # Specify the directory where uploaded media files are stored
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-SECRET_KEY = str(os.getenv('SECRET_KEY'))
+
 
 # Application definition
 
@@ -59,7 +58,7 @@ INSTALLED_APPS = [
     'tailwind',
     'theme', # where tailwind config stored
     'axes', # Login protection
-
+    'django_extensions', # For Documentation
     # My Apps
     'users',
     'home',
@@ -94,6 +93,14 @@ MIDDLEWARE = [
 ]
 
 
+REMOTE_TCSP_DB = {
+    'HOST': config('REMOTE_TCSP_DB_HOST'),
+    'PORT': config('REMOTE_TCSP_DB_PORT', cast=int),
+    'USER': config('REMOTE_TCSP_DB_USER'),
+    'PASSWORD': config('REMOTE_TCSP_DB_PASSWORD'),
+    'NAME': config('REMOTE_TCSP_DB_NAME'),
+    'CHARSET': config('REMOTE_TCSP_DB_CHARSET'),
+}
 
 ROOT_URLCONF = 'core.urls'
 

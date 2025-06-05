@@ -1,4 +1,4 @@
-from django.contrib import admin
+from django.contrib import admin, messages
 from django.contrib.admin import SimpleListFilter
 from import_export.admin import ImportExportMixin
 from .models import Term, LessonAssignment, LessonEnrollment
@@ -11,7 +11,7 @@ from custom_admins.lessonsadmin import lessons_admin_site
 from django_admin_listfilter_dropdown.filters import DropdownFilter, RelatedDropdownFilter, ChoiceDropdownFilter
 from django.utils.html import format_html
 from django.urls import reverse
-
+from utils.sync_terms import sync_terms_from_remote
 
 # LESSON ENROLLMENT
 # filters for the lesson list
@@ -121,13 +121,21 @@ class LessonAssignmentAdmin(admin.ModelAdmin):
 class TermAdmin(ImportExportMixin, admin.ModelAdmin):
     resource_class = TermResource
     list_display = ['id', 'start_date', 'end_date', 'rebooking_date', 'booking_date', 'assessment_date', 'changed_by']
-    # Exclude the 'changed_by' field from the form fields
     exclude = ('changed_by',)
+    actions = ['sync_terms_now']  # ✅ add the custom action
 
     def save_model(self, request, obj, form, change):
-        if not change:  # If it's a new object being added
+        if not change:
             obj.changed_by = request.user
         super().save_model(request, obj, form, change)
+
+    @admin.action(description="🔄 Sync Terms from Remote MySQL")
+    def sync_terms_now(self, request, queryset):
+        try:
+            sync_terms_from_remote()
+            self.message_user(request, "✅ Terms successfully synced from remote database.", messages.SUCCESS)
+        except Exception as e:
+            self.message_user(request, f"❌ Sync failed: {str(e)}", messages.ERROR)
 
 
 admin.site.register(Term, TermAdmin)

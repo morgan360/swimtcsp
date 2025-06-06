@@ -18,7 +18,7 @@ try:
     # 👇 You can put sync logic here or call sync_terms_from_remote()
     # Example placeholder:
     with conn.cursor() as cursor:
-        cursor.execute("SELECT COUNT(*) FROM wp_tcsp_terms")  # Replace with real table
+        cursor.execute("SELECT COUNT(*) FROM mor_terms")  # Replace with real table
         row_count = cursor.fetchone()
         print(f"📦 Remote DB has {row_count[0]} term records.")
 

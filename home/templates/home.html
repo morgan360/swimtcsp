@@ -1,43 +1,95 @@
-{% extends "_base.html" %}
+{% extends "base/_base.html" %}
 {% load static %}
-{% block content %}
-    <h1 class="text-center text-3xl md:text-5   md:text-5xl font-bold mt-28 ">Templeogue College Swimming Pool</h1>
- <div class="flex justify-around items-stretch h-screen">
-  <!-- Hero 1 -->
-  <div class="hero w-1/3 bg-cover bg-center relative" style="background-image: url('your-image-url-1.jpg');">
-    <div class="flex items-center h-full p-4">
-      <div class="text-white">
-        <h1 class="text-xl md:text-2xl font-bold">Public Swims</h1>
-        <p class="mt-2 text-sm md:text-lg">To book a public swim you need to register first. If you are already 
-            registered Log In above and select Public Swims.
-            .</p>
-        <a href="accounts/signup" class="mt-4 inline-block bg-blue-500 text-white font-semibold py-2 px-4 rounded-lg 
-        hover:bg-blue-700 transition-colors">Register</a>
-      </div>
-    </div>
-  </div>
-  <!-- Hero 2 -->
-  <div class="hero w-1/3 bg-cover bg-center relative" style="background-image: url('your-image-url-2.jpg');">
-    <div class="flex items-center h-full p-4">
-      <div class="text-white">
-        <h1 class="text-xl md:text-2xl font-bold">Swimming Lessons</h1>
-        <p class="mt-2 text-sm md:text-lg">To book Swimming Lessons you need to register first. If you are already 
-            registered Log In above and select Swimming Lessons.</p>
-        <a href="/register/" class="mt-4 inline-block bg-green-500 text-white font-semibold py-2 px-4 rounded-lg 
-        hover:bg-green-700 transition-colors">Register Lessons </a>
-      </div>
-    </div>
-  </div>
-  <!-- Hero 3 -->
-  <div class="hero w-1/3 bg-cover bg-center relative" style="background-image: url('your-image-url-3.jpg');">
-    <div class="flex items-center h-full p-4">
-      <div class="text-white">
-        <h1 class="text-xl md:text-2xl font-bold">Join Our Community</h1>
-        <p class="mt-2 text-sm md:text-lg">Be part of something bigger.</p>
-        <a href="#" class="mt-4 inline-block bg-red-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-red-700 transition-colors">Sign Up</a>
-      </div>
-    </div>
-  </div>
-</div>
-{% endblock content %}
 
+{% block title %}Welcome{% endblock %}
+
+{% block content %}
+<section class="hero is-medium mb-6"
+         style="background-image: url('{% static "img/pool_hero.jpg" %}');
+                background-size: cover;
+                background-position: center;
+                position: relative;
+                min-height: 450px;">
+
+  <!-- Dark overlay -->
+  <div style="position: absolute; inset: 0; background-color: rgba(0,0,0,0.45); z-index: 1;"></div>
+
+  <!-- Top: Main Heading -->
+  <div class="has-text-centered" style="position: absolute; top: 2rem; width: 100%; z-index: 2;">
+    <h1 class="title has-text-white is-size-2">Swimming is for Life</h1>
+  </div>
+
+  <!-- Optional spacing in the middle -->
+  <div class="hero-body" style="z-index: 0;"></div>
+
+  <!-- Bottom: Call to Action -->
+  <div class="has-text-centered" style="position: absolute; bottom: 1.5rem; width: 100%; z-index: 2;">
+    <a href="/accounts/signup/" class="button is-book is-medium">Join&nbsp;Today</a>
+  </div>
+
+</section>
+
+
+
+
+  <!-- 🏊 Feature Cards -->
+  <div class="columns is-multiline is-variable is-6">
+
+    <!-- Public Swims Card -->
+    <div class="column is-one-third">
+      <div class="card is-hoverable">
+        <div class="card-image">
+          <figure class="image is-4by3">
+            <img src="{% static 'img/laneswim2.jpeg' %}" alt="Public swim">
+          </figure>
+        </div>
+        <div class="card-content">
+          <h2 class="title is-4">Public Swims</h2>
+          <p>No membership needed — just book a slot and dive in.</p>
+        </div>
+        <footer class="card-footer">
+          <a href="/accounts/signup/" class="card-footer-item has-text-primary">Register</a>
+        </footer>
+      </div>
+    </div>
+
+    <!-- Lessons Card -->
+    <div class="column is-one-third">
+      <div class="card is-hoverable">
+        <div class="card-image">
+          <figure class="image is-4by3">
+            <img src="{% static 'img/swimming-goggles.jpg' %}" alt="Swimming lessons">
+          </figure>
+        </div>
+        <div class="card-content">
+          <h2 class="title is-4">Swimming Lessons</h2>
+          <p>Beginners to advanced, coached by Swim Ireland certified staff.</p>
+        </div>
+        <footer class="card-footer">
+          <a href="/register/" class="card-footer-item has-text-primary">Book&nbsp;Lessons</a>
+        </footer>
+      </div>
+    </div>
+
+    <!-- Community Card -->
+    <div class="column is-one-third">
+      <div class="card is-hoverable">
+        <div class="card-image">
+          <figure class="image is-4by3">
+            <img src="{% static 'img/home.jpg' %}" alt="Community events">
+          </figure>
+        </div>
+        <div class="card-content">
+          <h2 class="title is-4">Join Our Community</h2>
+          <p>Events, galas, charity swims — be part of something bigger.</p>
+        </div>
+        <footer class="card-footer">
+          <a href="#" class="card-footer-item has-text-primary">Sign&nbsp;Up</a>
+        </footer>
+      </div>
+    </div>
+
+  </div>
+
+</section>
+{% endblock %}

@@ -1,6 +1,7 @@
 # 🗂 TCSP Developer Documentation
 
-Welcome to the internal documentation for the TCSP Swimming Pool web platform. This site supports swimming lessons, school bookings, and public swim sessions — with integrated e-commerce, admin tools, and Tailwind-styled user interactions.
+Welcome to the internal documentation for the TCSP Swimming Pool web platform. This site supports swimming lessons, 
+school bookings, and public swim sessions — with integrated e-commerce, admin tools, and Bulma styled user interactions.
 
 ---
 
@@ -13,7 +14,7 @@ Welcome to the internal documentation for the TCSP Swimming Pool web platform. T
 ### 🧱 Architecture
 - [Django App Structure](architecture.md)
 - [Imported Libraries and Tools](architecture.md#django-apps)
-- [Frontend: Tailwind, Alpine, HTMX](frontend.md)
+- [Frontend: Bulma, Alpine, HTMX](frontend.md)
 
 ### 🛠 Development
 - [Admin Access & Management](admin/Restricting-management.md)

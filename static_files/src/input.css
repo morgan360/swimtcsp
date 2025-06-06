@@ -1,0 +1,19 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Your custom classes */
+.btn-large {
+  @apply bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded shadow;
+}
+
+.custom-h1 {
+  @apply text-center mb-4 text-4xl font-extrabold text-blue-800 px-4;
+}
+
+h2 {
+  @apply text-xl font-semibold text-gray-700;
+}
+body {
+  background-color: pink;
+}

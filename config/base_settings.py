@@ -20,7 +20,13 @@ STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static_files/')
 
 # Specify additional directories to search for static files
-STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
+import os
+
+STATICFILES_DIRS = [
+    BASE_DIR / "static",           # your global assets
+    BASE_DIR / "theme" / "static"  # tailwind output and input
+]
+
 
 MEDIA_URL = '/media/'
 
@@ -55,8 +61,6 @@ INSTALLED_APPS = [
     'hijack.contrib.admin',  # add to admin panel
     'widget_tweaks', # Allows adding css to fields in form templates directly
     'django_browser_reload',  # when debug load automaticaly browser
-    'tailwind',
-    'theme', # where tailwind config stored
     'axes', # Login protection
     'django_extensions', # For Documentation
     # My Apps

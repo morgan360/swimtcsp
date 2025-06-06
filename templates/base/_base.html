@@ -1,0 +1,58 @@
+{% load static %}
+<!doctype html>
+<html lang="en" x-data="{ dark: false }">
+
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+    {% block subhead %}{% endblock %}
+
+    <!-- SEO / Social -->
+    <meta property="og:title" content="Templeogue College Swimming Pool">
+    <meta property="og:description" content="Public swims, lessons, and school programs at Templeogue.">
+    <meta property="og:image" content="{% static 'img/og-image.jpg' %}">
+    <meta property="og:type" content="website">
+
+    <!-- Bulma CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/1.0.3/css/bulma.min.css">
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+
+    <!-- HTMX & Alpine -->
+    <script src="https://unpkg.com/htmx.org@1.9.10" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+
+    <title>{% block title %}TCSP Home{% endblock %}</title>
+</head>
+
+<body>
+
+    {# ✅ Include Navbar inside body #}
+    {% include "partials/_navbar.html" %}
+
+    <main class="section">
+        <div class="container">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    {# ✅ Optional per-page footer override #}
+    {% block footer %}
+        {% include "partials/_footer.html" %}
+    {% endblock %}
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const burger = document.querySelector('.navbar-burger');
+            const menu = document.getElementById(burger?.dataset.target);
+            if (burger && menu) {
+                burger.addEventListener('click', () => {
+                    burger.classList.toggle('is-active');
+                    menu.classList.toggle('is-active');
+                });
+            }
+        });
+    </script>
+
+</body>
+</html>

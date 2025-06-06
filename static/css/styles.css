@@ -1,12 +1,169 @@
-/* tailwind */
-.btn-large {
- @apply bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded shadow;
+/* 🌊 SwimTCSP Custom Styles (Bulma) */
+
+/* --- Color Variables --- */
+:root {
+  --primary-color: #00b5ad;
+  --accent-color: #00d1b2;
+  --school-color: #7957d5;
+  --danger-color: #ff3860;
+  --background-color: #f5f7fa;
+  --text-dark: #363636;
 }
 
-.custom-h1 {
-  @apply text-center   mb-4 text-4xl font-extrabold text-blue-800 px-4;
+/* --- Global Styles --- */
+body {
+  background-color: var(--background-color);
+  font-family: 'Segoe UI', Roboto, sans-serif;
+  color: var(--text-dark);
 }
 
-h2 {
-  @apply text-xl font-semibold text-gray-700;
+.section {
+  background-color: var(--background-color);
+  padding: 2rem 1.5rem;
+}
+
+/* --- Typography --- */
+.card-header-title {
+  font-weight: 600;
+  color: var(--text-dark);
+}
+
+/* --- Buttons --- */
+.button.is-book {
+  background-color: var(--primary-color);
+  color: white;
+  border-radius: 8px;
+  transition: background 0.3s;
+}
+
+.button.is-book:hover {
+  background-color: #009c96;
+}
+
+/* --- Tags --- */
+.tag.is-school {
+  background-color: var(--school-color);
+  color: white;
+}
+
+.tag.is-public {
+  background-color: var(--accent-color);
+  color: white;
+}
+
+.tag.is-lesson {
+  background-color: #ffdd57;
+  color: black;
+}
+
+.tag.is-admin {
+  background-color: var(--danger-color);
+  color: white;
+}
+
+/* --- Navbar --- */
+.navbar {
+  background-color: white;
+  border-bottom: 1px solid #ddd;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.navbar-item:hover {
+  background-color: #f0f0f0;
+}
+
+/* --- Hero Section (optional gradient override) --- */
+.hero {
+  background: linear-gradient(to bottom right, #00b5ad 0%, #00d1b2 100%);
+  color: white;
+}
+
+.hero .title,
+.hero .subtitle {
+  color: white;
+}
+
+/* --- Card/Box Enhancements --- */
+.box, .card {
+  background-color: white;
+  border-radius: 10px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  margin-bottom: 1.5rem;
+}
+
+/* --- Form Inputs & Focus States --- */
+input, textarea, select {
+  background-color: #fdfdfd;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+input:focus, textarea:focus, select:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 0.125em rgba(0, 181, 173, 0.25);
+}
+
+/* --- Social Login Buttons --- */
+.socialaccount_provider {
+  display: inline-block;
+  background-color: #e2e8f0;
+  color: #1d4ed8;
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  text-decoration: none;
+  font-weight: bold;
+  margin: 0.25rem 0;
+}
+
+.socialaccount_provider.google {
+  background-color: #db4437;
+  color: white;
+}
+
+.socialaccount_provider.facebook {
+  background-color: #4267B2;
+  color: white;
+}
+.footer {
+  font-size: 0.9rem;
+  border-top: 1px solid #e5e5e5;
+}
+.footer a:hover {
+  text-decoration: underline;
+}
+
+/* Navbar custom background */
+.navbar.is-header {
+  background-color: var(--primary-color); /* or choose #00a29e for variation */
+  color: white;
+}
+
+.navbar.is-header .navbar-item,
+.navbar.is-header .navbar-link {
+  color: white;
+}
+
+.navbar.is-header .navbar-item:hover,
+.navbar.is-header .navbar-link:hover {
+  background-color: rgba(255, 255, 255, 0.15);
+}
+.navbar .navbar-item strong {
+  color: white;
+  font-weight: 600;
+}
+.footer.is-site-footer {
+  background-color: #f0f2f5; /* soft grey background */
+  color: var(--text-dark);
+  padding: 2rem 1.5rem;
+  font-size: 0.95rem;
+  border-top: 1px solid #ddd;
+}
+
+.footer.is-site-footer a {
+  color: var(--primary-color);
+  text-decoration: none;
+}
+
+.footer.is-site-footer a:hover {
+  text-decoration: underline;
 }

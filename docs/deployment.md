@@ -21,6 +21,15 @@ To quit and save from bash terminal :wq
 git stash clear
 
 [Pythonanywher Set Variables](https://help.pythonanywhere.com/pages/environment-variables-for-web-apps/)
+## In Bash
+1. cd swimtcsp
+2. git pull (git merge origin/main)
+3. workon swimtcsp
+4. pip install -r requirements.txt
+5. python manage.py collectstatic
+6. wget -qO- https://whatsmyip.ie | grep IP #gets IP of pythonanywhere
+7. python3 test_connection.py (connection test: mac and pythonanywhere)
+
 
 #### Force Pull
 

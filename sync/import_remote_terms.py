@@ -1,6 +1,14 @@
-##!/usr/bin/env python3
+#!/usr/bin/env python3
+import os
+import csv
 import pymysql
 
+# ----------------------------
+# Output directory and file path
+# ----------------------------
+output_dir = "sync"
+os.makedirs(output_dir, exist_ok=True)
+csv_file_path = os.path.join(output_dir, "mor_terms.csv")
 
 # ----------------------------
 # Connect to Hosting Ireland MySQL
@@ -15,12 +23,21 @@ try:
     )
     print("✅ Connection successful!")
 
-    # 👇 You can put sync logic here or call sync_terms_from_remote()
-    # Example placeholder:
-    with conn.cursor() as cursor:
-        cursor.execute("SELECT COUNT(*) FROM mor_terms")  # Replace with real table
-        row_count = cursor.fetchone()
-        print(f"📦 Remote DB has {row_count[0]} term records.")
+    # ----------------------------
+    # Query and export to CSV
+    # ----------------------------
+    with conn.cursor(pymysql.cursors.DictCursor) as cursor:
+        cursor.execute("SELECT * FROM mor_terms")
+        rows = cursor.fetchall()
+
+        if rows:
+            with open(csv_file_path, "w", newline="", encoding="utf-8") as csvfile:
+                writer = csv.DictWriter(csvfile, fieldnames=rows[0].keys())
+                writer.writeheader()
+                writer.writerows(rows)
+            print(f"✅ Exported {len(rows)} records to {csv_file_path}")
+        else:
+            print("⚠️ No records found in mor_terms.")
 
     conn.close()
 

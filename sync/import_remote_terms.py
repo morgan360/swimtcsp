@@ -1,14 +1,6 @@
 ##!/usr/bin/env python3
-
-import os
-import django
 import pymysql
 
-# ----------------------------
-# Setup Django
-# ----------------------------
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'swimtcsp.settings')
-django.setup()
 
 # ----------------------------
 # Connect to Hosting Ireland MySQL

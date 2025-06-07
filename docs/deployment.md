@@ -45,6 +45,22 @@ git reset --hard origin/main
 # Import\_Export
 
 Note both schools and Lessons use the same categories and Programs. Load Programs before Categories
+## Current Process
+Next I want to do a similar process, that is importing all the users directly from the remote database, after making 
+changes to various fields. These changes are curreltly carried out during the following process.
+users Then  I want to export the database model to users.sql file and then create an import users for the deployment 
+site. 
+The process at the moment it is a complex process involving the following steps:
+1. I have an Jupyter Notebok cell which extracts all user data and puts it into a file users.csv.
+2. Then another cell (Updated Version for Batch) is run to deserilise the roles into a field Groups comma separated 
+   format  
+   and 
+   saves the users into four csv files,
+   so they can be imported in batches.
+3. Then from inside my project webapp I import (using import/export) each of the four csv files into my user model.
+ Note: when Importing users if a Group does not exist then it is created
+
+I want to streamline this process what info do you need.
 
 ## MySql Dump
 1. Import Data directly into local DB
@@ -52,11 +68,22 @@ Note both schools and Lessons use the same categories and Programs. Load Program
 3. git push
 4. Git pull
 5. import into Python Anywhere DB
-### Export from Mac
+### Export terms from Mac
 mysqldump -u swimuser -p'StrongPass!2025' --no-tablespaces swimtcsp lessons_bookings_term > exported_sql/mor_terms.sql
+#### Shortcut
 python manage.py export_terms_sql
 ### Import to Pythonanywhere
 mysql -u morganmck -p'Mongo@8899' -h morganmck.mysql.eu.pythonanywhere-services.com morganmck\$swimtcsp < import_sql/mor_terms.sql
+#### Shortcut
 python manage.py import_terms_sql
 
-
+# Importing and exporting User Data
+## Syncing users From Remote
+#### Shortcut
+python manage.py sync_users_from_remote
+## Exporting Users
+#### Shortcut
+python manage.py export_users_sql
+## Importing Users on Pythonanywhere
+#### Shortcut
+python manage.py import_users_sql

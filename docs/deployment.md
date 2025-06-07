@@ -77,13 +77,17 @@ mysql -u morganmck -p'Mongo@8899' -h morganmck.mysql.eu.pythonanywhere-services.
 #### Shortcut
 python manage.py import_terms_sql
 
-# Importing and exporting User Data
-## Syncing users From Remote
-#### Shortcut
+## Importing and exporting users/swimlings Data
+Note: these scripts are stored in users/managment/commands. To be done in order.
+### Syncing users From TCSP
+#### Shortcuts
 python manage.py sync_users_from_remote
-## Exporting Users
-#### Shortcut
+python manage.py import_swimlings_remote
+
+### Exporting Users
+#### Shortcuts
 python manage.py export_users_sql
+python manage.py export_swimlings_sql
 ## Importing Users on Pythonanywhere
-#### Shortcut
+#### Shortcuts
 python manage.py import_users_sql

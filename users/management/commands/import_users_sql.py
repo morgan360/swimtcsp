@@ -8,7 +8,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
         BASE_DIR = settings.BASE_DIR
-        sql_file_path = os.path.join(BASE_DIR, 'import_sql', 'users.sql')
+        sql_file_path = os.path.join(BASE_DIR, 'exported_sql', 'users.sql')
 
         # Update these with your actual PythonAnywhere DB credentials
         db_user = 'morganmck'

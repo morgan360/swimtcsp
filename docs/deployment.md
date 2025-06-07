@@ -45,3 +45,11 @@ git reset --hard origin/main
 # Import\_Export
 
 Note both schools and Lessons use the same categories and Programs. Load Programs before Categories
+
+## MySql Dump
+mysqldump -u swimuser -p'StrongPass!2025' --no-tablespaces swimtcsp lessons_bookings_term > import_sql/mor_terms.sql
+
+
+
+
+

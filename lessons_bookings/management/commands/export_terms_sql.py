@@ -10,7 +10,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
         BASE_DIR = settings.BASE_DIR
-        output_path = os.path.join(BASE_DIR, 'exported_sql', 'mor_terms.sql')
+        output_path = os.path.join(BASE_DIR, 'exported_sql', 'export_lessons_bookings.sql')
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
 
         # Local DB credentials for mysqldump

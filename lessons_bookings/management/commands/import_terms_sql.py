@@ -11,7 +11,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         # Path to your SQL file
         base_dir = settings.BASE_DIR  # Django project root
-        sql_file_path = os.path.join(base_dir, 'import_sql', 'mor_terms.sql')
+        sql_file_path = os.path.join(base_dir, 'exported_sql', 'export_lessons_bookings.sql')
 
         if not os.path.exists(sql_file_path):
             self.stderr.write(self.style.ERROR(f"❌ SQL file not found: {sql_file_path}"))

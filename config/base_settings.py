@@ -24,7 +24,6 @@ import os
 
 STATICFILES_DIRS = [
     BASE_DIR / "static",           # your global assets
-    BASE_DIR / "theme" / "static"  # tailwind output and input
 ]
 
 
@@ -175,7 +174,6 @@ DATE_FORMAT = 'd/m/Y'
 
 # You can also set the short date format
 SHORT_DATE_FORMAT = 'd/m/Y'
-TAILWIND_APP_NAME = 'theme'
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 

@@ -81,13 +81,23 @@ python manage.py import_terms_sql
 Note: these scripts are stored in users/managment/commands. To be done in order.
 ### Syncing users From TCSP
 #### Shortcuts
-python manage.py sync_users_from_remote
-python manage.py import_swimlings_remote
+1. python manage.py sync_users_from_remote
+2. python manage.py import_swimlings_remote
 
 ### Exporting Users
 #### Shortcuts
-python manage.py export_users_sql
-python manage.py export_swimlings_sql
-## Importing Users on Pythonanywhere
+1. python manage.py export_users_sql
+2. python manage.py export_swimlings_sql
+### Importing Swimlings on Pythonanywhere
 #### Shortcuts
-python manage.py import_users_sql
+1. python manage.py import_users_sq
+2. python manage.py import_swimlings_sql
+
+## Importing and exporting lessons Data
+This handles all three models together programs, categories, products
+#### Shortcuts
+1. python manage.py import_lessons_remote
+2. python manage.py export_lessons_sql
+#### Shortcuts
+1. 
+2. 

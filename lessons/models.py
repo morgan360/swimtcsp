@@ -50,8 +50,17 @@ class Product(models.Model):
     description = models.TextField(blank=True)
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
     slug = models.SlugField(max_length=200, blank=True)
-    start_time = models.TimeField(blank=True, default=time(hour=8, minute=0))
-    end_time = models.TimeField(blank=True, default=time(hour=9, minute=0))
+    # 08:00 and 09:00 are valid Python `datetime.time` objects
+    start_time = models.TimeField(
+        blank=True,
+        null=True,  # let DB accept NULL
+        default=time(hour=8, minute=0)
+    )
+    end_time = models.TimeField(
+        blank=True,
+        null=True,
+        default=time(hour=9, minute=0)
+    )
 
     DAY_CHOICES = [
         (0, 'Monday'),

@@ -47,10 +47,16 @@ git reset --hard origin/main
 Note both schools and Lessons use the same categories and Programs. Load Programs before Categories
 
 ## MySql Dump
+1. Import Data directly into local DB
+2. export as an sql file
+3. git push
+4. Git pull
+5. import into Python Anywhere DB
 ### Export from Mac
-mysqldump -u swimuser -p'StrongPass!2025' --no-tablespaces swimtcsp lessons_bookings_term > import_sql/mor_terms.sql
+mysqldump -u swimuser -p'StrongPass!2025' --no-tablespaces swimtcsp lessons_bookings_term > exported_sql/mor_terms.sql
+python manage.py export_terms_sql
 ### Import to Pythonanywhere
 mysql -u morganmck -p'Mongo@8899' -h morganmck.mysql.eu.pythonanywhere-services.com morganmck\$swimtcsp < import_sql/mor_terms.sql
-
+python manage.py import_terms_sql
 
 

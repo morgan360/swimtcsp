@@ -18,9 +18,6 @@ from datetime import timedelta
 class SwimOrderItemInline(admin.TabularInline):
     model = OrderItem
 
-
-
-
 def export_to_csv(modeladmin, request, queryset):
     opts = modeladmin.model._meta
     content_disposition = f'attachment; filename={opts.verbose_name}.csv'

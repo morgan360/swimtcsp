@@ -11,7 +11,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         # Path to the exported SQL file
         base_dir = settings.BASE_DIR
-        sql_file_path = os.path.join(base_dir, 'exported_sql', 'export_users.sql')
+        sql_file_path = os.path.join(base_dir, 'exported_sql', 'users.sql')
 
         if not os.path.exists(sql_file_path):
             self.stderr.write(self.style.ERROR(f"❌ SQL file not found: {sql_file_path}"))

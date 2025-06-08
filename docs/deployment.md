@@ -96,8 +96,9 @@ Note: these scripts are stored in users/managment/commands. To be done in order.
 ## Importing and exporting lessons Data
 This handles all three models together programs, categories, products
 #### Shortcuts
-1. python manage.py import_lessons_remote
-2. python manage.py export_lessons_sql
+1. python manage.py import_lessons_remote (Works Locally as well as remotly)
+2. python manage.py export_lessons_sql (Might not be necessary)
 #### Shortcuts
 1. 
-2. 
+## _Importing  lessons_bookings Data_
+1. python manage.py import_lessons_bookings_remote 

@@ -1,16 +1,14 @@
 from django.db import models
-from django.db.models.signals import pre_save, post_save
+from django.db.models.signals import pre_save
 from django.utils.text import slugify
 from django.urls import reverse
 from datetime import date
 from django.dispatch import receiver
 
 
-# Swim masters, aquafit etc
 class PublicSwimCategory(models.Model):
     name = models.CharField(max_length=100, null=True)
-    slug = models.SlugField(max_length=200,
-                            unique=True)
+    slug = models.SlugField(max_length=200, unique=True)
     description = models.TextField(blank=True)
 
     class Meta:
@@ -25,15 +23,14 @@ class PublicSwimCategory(models.Model):
         return self.name
 
     def get_absolute_url(self):
-        return reverse('swims:product_list_by_category',
-                       args=[self.slug])
+        return reverse('swims:product_list_by_category', args=[self.slug])
 
 
 class PublicSwimProduct(models.Model):
     name = models.CharField(max_length=100, null=True, blank=True)
     description = models.TextField(blank=True)
     category = models.ForeignKey(PublicSwimCategory, on_delete=models.CASCADE)
-    slug = models.SlugField(max_length=200, blank=True)
+    slug = models.SlugField(max_length=200, unique=True, blank=True)
     start_time = models.TimeField(blank=True)
     end_time = models.TimeField(blank=True)
     DAY_CHOICES = [
@@ -79,29 +76,28 @@ class PublicSwimProduct(models.Model):
     def create_default_variants(self):
         default_variants = ['Adult', 'Child', 'OAP', 'Student', 'Infant']
         for variant_name in default_variants:
-            # Check if the variant already exists for this product
             if not PriceVariant.objects.filter(product=self, variant=variant_name).exists():
                 PriceVariant.objects.create(
                     product=self,
                     variant=variant_name,
-                    price=9.0  # You can set different prices for each if needed
+                    price=9.0
                 )
 
 
 @receiver(pre_save, sender=PublicSwimProduct)
 def update_product_name_and_slug(sender, instance, **kwargs):
-    instance.name = instance.generate_name()
-    instance.slug = slugify(instance.name)
+    if not instance.name:
+        instance.name = instance.generate_name()
+    if not instance.slug:
+        instance.slug = slugify(instance.name)
+
+# Still commented (safe for remote sync)
+# @receiver(post_save, sender=PublicSwimProduct)
+# def create_default_variants(sender, instance, created, **kwargs):
+#     if created:
+#         instance.create_default_variants()
 
 
-@receiver(post_save, sender=PublicSwimProduct)
-def create_default_variants(sender, instance, created, **kwargs):
-    if created:
-        instance.create_default_variants()
-
-
-# Handle Varients for each product
-# Prices for OAP, Children etc.
 class PriceVariant(models.Model):
     VARIANT_CHOICES = [
         ('Adult', 'Adult'),
@@ -110,11 +106,9 @@ class PriceVariant(models.Model):
         ('Student', 'Student'),
         ('Infant', 'Infant'),
     ]
-    product = models.ForeignKey(PublicSwimProduct, on_delete=models.CASCADE,
-                                related_name='price_variants')
-    variant = models.CharField(max_length=10, choices=VARIANT_CHOICES,
-                               blank=True)
-    price = models.DecimalField(max_digits=10, decimal_places=2, null=True, )
+    product = models.ForeignKey(PublicSwimProduct, on_delete=models.CASCADE, related_name='price_variants')
+    variant = models.CharField(max_length=10, choices=VARIANT_CHOICES, blank=True)
+    price = models.DecimalField(max_digits=10, decimal_places=2, null=True)
 
     class Meta:
         unique_together = ('product', 'variant')

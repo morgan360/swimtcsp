@@ -102,3 +102,53 @@ This handles all three models together programs, categories, products
 1. 
 ## _Importing  lessons_bookings Data_
 1. python manage.py import_lessons_bookings_remote 
+## Public Swims
+The origional notebook is Swim TCSP Import CSVs.ipynb
+### Direction for ChatGPT
+Now I want to sync data from remote DB for Public Swims. First we will import the swims imformation in the app swims.
+There are three models:
+1. PublicSwimCategory, (name = models.CharField(max_length=100, null=True)
+    slug = models.SlugField(max_length=200,
+                            unique=True)
+    description = models.TextField(blank=True))
+2. PublicSwimProduct, (name = models.CharField(max_length=100, null=True, blank=True)
+    description = models.TextField(blank=True)
+    category = models.ForeignKey(PublicSwimCategory, on_delete=models.CASCADE)
+    slug = models.SlugField(max_length=200, blank=True)
+    start_time = models.TimeField(blank=True)
+    end_time = models.TimeField(blank=True)
+    DAY_CHOICES = [
+        (0, 'Monday'),
+        (1, 'Tuesday'),
+        (2, 'Wednesday'),
+        (3, 'Thursday'),
+        (4, 'Friday'),
+        (5, 'Saturday'),
+        (6, 'Sunday'),
+    ]
+    day_of_week = models.PositiveSmallIntegerField(choices=DAY_CHOICES)
+    num_places = models.IntegerField(null=True)
+    available = models.BooleanField(default=False)
+    created = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True))
+3. PriceVariant. (class PriceVariant(models.Model):
+    VARIANT_CHOICES = [
+        ('Adult', 'Adult'),
+        ('Child', 'Child'),
+        ('OAP', 'OAP'),
+        ('Student', 'Student'),
+        ('Infant', 'Infant'),
+    ]
+    product = models.ForeignKey(PublicSwimProduct, on_delete=models.CASCADE,
+                                related_name='price_variants')
+    variant = models.CharField(max_length=10, choices=VARIANT_CHOICES,
+                               blank=True)
+    price = models.DecimalField(max_digits=10, decimal_places=2, null=True, ))
+There are three tables involved at the 
+remote DB: 
+1. mor_events (id, event)
+2. mor_sessions_generic (`id`, `day_id`, `event_id`, `num_places`, `time_start`, `time_end`, `notes`, `active` )
+3. mor_generic_bookings (`wc_order_id as id`, `customer_id as user_id`, `session_id as product_id`, `session_date as booking`, `wc_order_id as stripe_id` (duplicate alias))
+4. mor_generic_bookings (wc_order_id as id`, `num_adults`, `num_children`, `num_senior`, `num_under3`)
+
+### SWIMS APP

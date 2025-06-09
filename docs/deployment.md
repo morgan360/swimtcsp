@@ -121,3 +121,10 @@ Models:
 3. ScoLessons
 #### Shortcut
 python manage.py sync_schools
+### Schools_bookings APP
+Models: 
+1. ScoTerm
+2. ScoEnrollment
+
+#### Shortcut
+python manage.py sync_school_bookings

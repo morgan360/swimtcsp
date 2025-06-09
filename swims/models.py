@@ -48,6 +48,7 @@ class PublicSwimProduct(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
     image = models.ImageField(upload_to='products/%Y/%m/%d', default='images/default_image.jpg')
+    external_id = models.IntegerField(null=True, blank=True, unique=True)
 
     def save(self, *args, **kwargs):
         if not self.name:

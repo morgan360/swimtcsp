@@ -23,7 +23,7 @@ class Command(BaseCommand):
     help = "Sync Public Swim categories, products, and price variants from remote DB"
 
     def handle(self, *args, **options):
-        self.stdout.write("🌐 Connecting to remote database...")
+        self.stdout.write("\U0001F310 Connecting to remote database...")
         conn = pymysql.connect(
             host=config('REMOTE_TCSP_DB_HOST'),
             port=config('REMOTE_TCSP_DB_PORT', cast=int),
@@ -69,22 +69,59 @@ class Command(BaseCommand):
                     slug = slugify(f"{category.slug}-{s['day_id']}-{time_str}")
                     name = f"{category.name} ({DAY_CHOICES.get(s['day_id'], 'Unknown')} {time_str})"
 
-                    product, created = PublicSwimProduct.objects.update_or_create(
-                        slug=slug,
-                        defaults={
-                            'name': name,
-                            'category': category,
-                            'start_time': start_time,
-                            'end_time': end_time,
-                            'day_of_week': s['day_id'],
-                            'num_places': s['num_places'],
-                            'available': bool(s['active']),
-                        }
-                    )
-                    product_map[s['id']] = product
+                    try:
+                        product = PublicSwimProduct.objects.get(external_id=s['id'])
+                        updated = False
 
-                    status = "🆕 Created" if created else "↻ Updated"
-                    self.stdout.write(f"{status}: {slug} (ID: {product.id})")
+                        if product.slug != slug:
+                            product.slug = slug
+                            updated = True
+
+                        product.name = name
+                        product.category = category
+                        product.start_time = start_time
+                        product.end_time = end_time
+                        product.day_of_week = s['day_id']
+                        product.num_places = s['num_places']
+                        product.available = bool(s['active'])
+                        product.save()
+
+                        product_map[s['id']] = product
+                        status = "↻ Updated"
+                        self.stdout.write(f"{status}: {slug} (ID: {product.id})")
+
+                    except PublicSwimProduct.DoesNotExist:
+                        # Fallback: look for existing product by slug
+                        existing = PublicSwimProduct.objects.filter(slug=slug).first()
+                        if existing:
+                            existing.external_id = s['id']
+                            existing.name = name
+                            existing.category = category
+                            existing.start_time = start_time
+                            existing.end_time = end_time
+                            existing.day_of_week = s['day_id']
+                            existing.num_places = s['num_places']
+                            existing.available = bool(s['active'])
+                            existing.save()
+                            product_map[s['id']] = existing
+                            self.stdout.write(f"🔗 Linked existing: {slug} → external_id {s['id']}")
+                        else:
+                            product = PublicSwimProduct.objects.create(
+                                external_id=s['id'],
+                                slug=slug,
+                                name=name,
+                                category=category,
+                                start_time=start_time,
+                                end_time=end_time,
+                                day_of_week=s['day_id'],
+                                num_places=s['num_places'],
+                                available=bool(s['active'])
+                            )
+                            product_map[s['id']] = product
+                            self.stdout.write(f"🆕 Created: {slug} (ID: {product.id})")
+
+                    except Exception as e:
+                        self.stdout.write(f"❌ Error syncing product ID {s['id']}: {e}")
 
                 self.stdout.write(f"✅ {len(product_map)} products synced.")
 

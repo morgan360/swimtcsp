@@ -118,6 +118,8 @@ LOGGING = {
 }
 
 
+# Allauth
+SITE_ID = 1
 
 
 FOOTER_MESSAGE = "Production Version"

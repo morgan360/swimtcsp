@@ -46,11 +46,13 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django.contrib.sites',  # Allauth
     # Installed Apps
-    'allauth',  # Allauth
-    'allauth.account',  # Allauth
-    'allauth.socialaccount',  # Allauth
-    'allauth.socialaccount.providers.google',  # Allauth
-    'allauth.socialaccount.providers.facebook',  # Allauth
+     # Core Allauth
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+
+    # Providers (optional)
+    'allauth.socialaccount.providers.google',
     "crispy_forms",
     'import_export',
     "phonenumber_field",
@@ -87,13 +89,18 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+
+    # ✅ REQUIRED for django-allauth v65+
+    'allauth.account.middleware.AccountMiddleware',
+
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'hijack.middleware.HijackUserMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django_browser_reload.middleware.BrowserReloadMiddleware',
-    'utils.middleware.SetSessionExpiryMiddleware', # Mine
+    'utils.middleware.SetSessionExpiryMiddleware',  # ✅ Your custom one
 ]
+
 
 
 REMOTE_TCSP_DB = {
@@ -188,8 +195,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Custom User Model
 AUTH_USER_MODEL = 'users.User'
 
-# Allauth
-SITE_ID = 2
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
 
@@ -251,6 +256,8 @@ SOCIALACCOUNT_PROVIDERS = {
 ACCOUNT_FORMS = {
     'signup': 'users.forms.CustomSignupForm',
 }
+SOCIALACCOUNT_ADAPTER = "users.adapters.AutoLinkSocialAccountAdapter"
+
 # # CrispyForms
 # CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 #

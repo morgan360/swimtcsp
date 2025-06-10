@@ -12,6 +12,9 @@ class CustomSignupForm(SignupForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['first_name'].required = True
+        self.fields['password1'].help_text = (
+            "Must be 8+ characters, not too common or all numbers."
+        )
 
     def save(self, request):
         # Call the parent save method to create the user instance

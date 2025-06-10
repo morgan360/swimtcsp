@@ -1,13 +1,33 @@
-{% extends "base_bootstrap.html" %}
+{% extends "base/_base.html" %}
 {% load static %}
 {% block content %}
-<div class="container">
-    <div class="row">
-        <div class="col-md-6 offset-md-3">
-            <div class="alert alert-success mt-4">
-                <p>Thank you for contacting us. Your message has been sent successfully.</p>
-            </div>
+<section class="section">
+  <div class="container">
+    <div class="columns is-centered">
+      <div class="column is-half">
+        <div class="notification is-primary animate__animated animate__fadeIn">
+          <div class="has-text-centered">
+            <span class="icon is-large mb-3">
+              <i class="fas fa-check-circle fa-2x"></i>
+            </span>
+            <h2 class="title is-4">Thank You!</h2>
+            <p class="subtitle">Your message has been sent successfully. We'll get back to you as soon as possible.</p>
+          </div>
         </div>
+
+        <div class="has-text-centered mt-5">
+          <a href="{% url 'home' %}" class="button is-book">
+            <span class="icon">
+              <i class="fas fa-home"></i>
+            </span>
+            <span>Return to Homepage</span>
+          </a>
+        </div>
+      </div>
     </div>
-</div>
+  </div>
+</section>
+
+<!-- Include Animate.css for animations -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
 {% endblock %}

@@ -167,3 +167,48 @@ input:focus, textarea:focus, select:focus {
 .footer.is-site-footer a:hover {
   text-decoration: underline;
 }
+/* Accordion styles */
+.is-rotate-180 {
+  transform: rotate(180deg);
+  transition: transform 0.2s ease;
+}
+
+.card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+}
+
+.has-shadow {
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+/* School icon container */
+.school-icon-container {
+  height: 200px;
+}
+/* Card header background colors */
+.card-header.is-public {
+  background-color: var(--accent-color);
+}
+
+.card-header.is-swim {
+  background-color: var(--primary-color);
+}
+
+.card-header.is-school {
+  background-color: var(--school-color);
+}
+
+/* Card header buttons to match backgrounds */
+.card-header.is-public .button,
+.card-header.is-swim .button,
+.card-header.is-school .button {
+  background-color: inherit;
+  border: none;
+  width: 100%;
+  color: white;
+}

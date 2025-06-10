@@ -1,3 +1,4 @@
+# This file is used to create custom template tags
 from django import template
 
 register = template.Library()
@@ -42,3 +43,7 @@ def user_role(user):
     ]).exists():
         return 'admin'
     return 'public'
+# Add this new filter function
+@register.filter(name='is_customer_user')
+def is_customer_user(user):
+    return user.groups.filter(name__iexact='customer').exists()

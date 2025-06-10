@@ -1,3 +1,5 @@
+
+{## This provides the navigation for whole site.#}
 {% load static %}
 {% load group_filters %}
 
@@ -17,7 +19,9 @@
 
   <div id="navbarMain" class="navbar-menu">
     <div class="navbar-start">
-      <a href="{% url 'swims:product_list' %}" class="navbar-item">Public Swims</a>
+      {% if user.is_authenticated and user|is_customer_user %}
+        <a href="{% url 'swims:product_list' %}" class="navbar-item">Public Swims</a>
+      {% endif %}
 
       {% if user|is_guardian_user %}
       <div class="navbar-item has-dropdown is-hoverable">

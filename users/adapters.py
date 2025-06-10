@@ -1,3 +1,5 @@
+# This is the file that contains the adapters for allauth to work with our custom user model, so that we cann link
+# social accounts to existing accounts in our user model.
 from allauth.socialaccount.adapter import DefaultSocialAccountAdapter
 from allauth.account.utils import perform_login
 from allauth.exceptions import ImmediateHttpResponse

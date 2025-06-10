@@ -1,55 +1,173 @@
 {% extends "base/_base.html" %}
-{#{% load static %}#}
 {% block content %}
-<div class="flex flex-wrap -mx-2 pl-2.5 pr-2.5">
-    <!-- First Accordion -->
-    <div x-data="{ open: false }" class=" text-blue-600  w-full md:w-1/3 px-2 py-2">
-        <button @click="open = !open" class="w-full px-4 py-2 text-left text-white bg-blue-500 hover:bg-blue-600 focus:outline-none">
-            <div class="flex justify-between items-center">
-                <span>Public Swims</span>
-                <svg :class="{'rotate-180': open}" class="h-5 w-5 transform transition-transform" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-                </svg>
-            </div>
-        </button>
-        <div x-show="open" x-collapse class="p-4 bg-white border border-gray-200">
-            <p>Public swims encompass a range of activities to suit everyone's needs. Family swims offer a playful environment for all ages, while lane swims provide a focused space for improving techniques and fitness. Early morning swims are perfect for those seeking a peaceful start to their day, and masters swimming challenges the more experienced with advanced training and competition. Aqua aerobics classes combine fun and fitness, making exercise enjoyable with minimal joint strain. This diverse offering ensures that regardless
-                of your age or skill level, there's an aquatic activity to engage and energize you.</p>
-        </div>
+<section class="section">
+  <div class="container">
+    <!-- Header Section (Simplified) -->
+    <div class="mb-5">
+      <h1 class="title is-2 has-text-centered">
+        <span class="icon-text">
+          <span class="icon">
+            <i class="fas fa-swimming-pool"></i>
+          </span>
+          <span>Welcome to TCSP</span>
+        </span>
+      </h1>
+      <p class="subtitle has-text-centered">Explore our aquatic programs and services</p>
     </div>
 
-    <!-- Second Accordion -->
-    <div x-data="{ open: false }" class=" text-blue-600  w-full md:w-1/3 px-2 py-2">
-        <button @click="open = !open" class="w-full px-4 py-2 text-left text-white bg-green-500 hover:bg-green-600 focus:outline-none">
-            <div class="flex justify-between items-center">
-                <span>Swimming Lessons</span>
-                <svg :class="{'rotate-180': open}" class="h-5 w-5 transform transition-transform" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-                </svg>
-            </div>
-        </button>
-        <div x-show="open" x-collapse class="p-4 bg-white border border-gray-200">
-            <p>Swimming lessons cater to learners of all ages and skill levels, from toddlers taking their first dip to adults perfecting their strokes. For children, lessons are structured around fun and safety, focusing on basic skills like floating, kicking, and gaining confidence in the water. As swimmers progress, instruction shifts towards refining technique, improving endurance, and introducing competitive strokes like freestyle, backstroke, breaststroke, and butterfly. Adult classes offer a supportive environment for beginners to overcome water apprehension and for more seasoned swimmers to enhance their efficiency and speed in the water. Specialized courses, such as private lessons, provide personalized attention to meet specific goals. Through these structured programs, swimming lessons not only
-                promote water safety but also encourage lifelong fitness and enjoyment of swimming.</p>
-        </div>
+    <!-- Introduction Text -->
+    <div class="content has-text-centered mb-5">
+      <p class="is-size-5">Choose from our variety of swimming programs designed for all ages and abilities.</p>
+      <div class="tags is-centered">
+        <span class="tag is-public is-medium">Family-Friendly</span>
+        <span class="tag is-lesson is-medium">Professional Instruction</span>
+        <span class="tag is-school is-medium">All Skill Levels</span>
+        <span class="tag is-admin is-medium">School Programs</span>
+      </div>
     </div>
 
-    <!-- Third Accordion -->
-    <div x-data="{ open: false }" class="w-full md:w-1/3 px-2 py-2">
-        <button @click="open = !open" class="w-full px-4 py-2 text-left text-white bg-red-500 hover:bg-red-600 focus:outline-none">
-            <div class="flex justify-between items-center">
-                <span>Schools</span>
-                <svg :class="{'rotate-180': open}" class="h-5 w-5 transform transition-transform" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-                </svg>
+    <!-- Accordion Cards with Animation -->
+    <div class="columns is-multiline is-variable is-3">
+      <!-- First Accordion -->
+      <div class="column is-one-third" x-data="{ open: false }">
+        <div class="card has-shadow animate__animated animate__fadeIn">
+          <div class="card-image">
+            <figure class="image is-3by2">
+              <img src="https://images.unsplash.com/photo-1560090995-01632a28895b?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60" alt="Public Swimming">
+            </figure>
+          </div>
+          <header class="card-header is-public">
+            <button @click="open = !open" class="card-header-title has-text-white is-justify-content-space-between button">
+              <span>Public Swims</span>
+              <span class="icon" :class="{'is-rotate-180': open}">
+                <i class="fas fa-angle-down"></i>
+              </span>
+            </button>
+          </header>
+          <div x-show="open" x-collapse class="card-content">
+            <div class="content">
+              <p>Public swims encompass a range of activities to suit everyone's needs. Family swims offer a playful environment for all ages, while lane swims provide a focused space for improving techniques and fitness.</p>
+              <a href="#" class="button is-book is-small">Learn More</a>
             </div>
-        </button>
-        <div x-show="open" x-collapse class="p-4 text-blue-600 bg-white border border-gray-200">
-            <p>Our schools program is available for 
-                participating schools. Lessons can be booked and paid for 
-                through our site.</p>
+          </div>
+          <footer class="card-footer" x-show="!open">
+            <a href="#" class="card-footer-item">Schedule</a>
+            <a href="#" class="card-footer-item">Book Now</a>
+          </footer>
         </div>
-    </div>
-</div>
+      </div>
 
+      <!-- Second Accordion -->
+      <div class="column is-one-third" x-data="{ open: false }">
+        <div class="card has-shadow animate__animated animate__fadeIn animate__delay-1s">
+          <div class="card-image">
+            <figure class="image is-3by2">
+              <img src="https://images.unsplash.com/photo-1540759786422-c60d5dc57d7b?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60" alt="Swimming Lessons">
+            </figure>
+          </div>
+          <header class="card-header is-swim">
+            <button @click="open = !open" class="card-header-title has-text-white is-justify-content-space-between button">
+              <span>Swimming Lessons</span>
+              <span class="icon" :class="{'is-rotate-180': open}">
+                <i class="fas fa-angle-down"></i>
+              </span>
+            </button>
+          </header>
+          <div x-show="open" x-collapse class="card-content">
+            <div class="content">
+              <p>Swimming lessons cater to learners of all ages and skill levels, from toddlers taking their first dip to adults perfecting their strokes. For children, lessons are structured around fun and safety.</p>
+              <a href="#" class="button is-book is-small">View Classes</a>
+            </div>
+          </div>
+          <footer class="card-footer" x-show="!open">
+            <a href="#" class="card-footer-item">Classes</a>
+            <a href="#" class="card-footer-item">Register</a>
+          </footer>
+        </div>
+      </div>
+
+      <!-- Third Accordion (Schools - without image) -->
+      <div class="column is-one-third" x-data="{ open: false }">
+        <div class="card has-shadow animate__animated animate__fadeIn animate__delay-2s">
+          <!-- Icon placeholder instead of image -->
+          <div class="card-image has-background-light school-icon-container">
+            <div class="is-flex is-justify-content-center is-align-items-center school-icon">
+              <span class="icon is-large">
+                <i class="fas fa-graduation-cap fa-4x"></i>
+              </span>
+            </div>
+          </div>
+          <header class="card-header is-school">
+            <button @click="open = !open" class="card-header-title has-text-white is-justify-content-space-between button">
+              <span>Schools</span>
+              <span class="icon" :class="{'is-rotate-180': open}">
+                <i class="fas fa-angle-down"></i>
+              </span>
+            </button>
+          </header>
+          <div x-show="open" x-collapse class="card-content">
+            <div class="content">
+              <p>Our schools program is available for participating schools. Lessons can be booked and paid for through our site.</p>
+              <a href="#" class="button is-book is-small">School Information</a>
+            </div>
+          </div>
+          <footer class="card-footer" x-show="!open">
+            <a href="#" class="card-footer-item">School Portal</a>
+            <a href="#" class="card-footer-item">Register School</a>
+          </footer>
+        </div>
+      </div>
+    </div>
+
+    <!-- Statistics Section -->
+    <div class="box has-background-light mt-6">
+      <h3 class="title is-4 has-text-centered mb-5">Why Choose Our Pool?</h3>
+      <div class="columns has-text-centered">
+        <div class="column">
+          <span class="icon is-large primary-icon">
+            <i class="fas fa-user-graduate fa-2x"></i>
+          </span>
+          <p class="heading">Certified Instructors</p>
+          <p class="title is-4">20+</p>
+        </div>
+        <div class="column">
+          <span class="icon is-large accent-icon">
+            <i class="fas fa-smile fa-2x"></i>
+          </span>
+          <p class="heading">Happy Swimmers</p>
+          <p class="title is-4">5,000+</p>
+        </div>
+        <div class="column">
+          <span class="icon is-large primary-icon">
+            <i class="fas fa-trophy fa-2x"></i>
+          </span>
+          <p class="heading">Years of Excellence</p>
+          <p class="title is-4">15</p>
+        </div>
+        <div class="column">
+          <span class="icon is-large school-icon">
+            <i class="fas fa-calendar-check fa-2x"></i>
+          </span>
+          <p class="heading">Weekly Classes</p>
+          <p class="title is-4">40+</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Call to Action -->
+    <div class="notification is-primary mt-5">
+      <div class="columns is-vcentered">
+        <div class="column is-8">
+          <p class="is-size-5">Ready to dive in? Join us today and start your swimming journey!</p>
+        </div>
+        <div class="column is-4 has-text-right">
+          <a href="{% url 'account_signup' %}" class="button is-white is-outlined is-medium">Get Started</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Include Animate.css for animations -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
 {% endblock content %}

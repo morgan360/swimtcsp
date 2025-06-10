@@ -119,7 +119,7 @@ LOGGING = {
 
 
 # Allauth
-SITE_ID = 1
+SITE_ID = 2
 
 
 FOOTER_MESSAGE = "Production Version"

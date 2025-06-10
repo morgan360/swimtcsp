@@ -18,10 +18,11 @@ from utils.terms_utils import get_current_term
 def lesson_list(request):
     current_term = get_current_term()
 
-    days = Product.objects.values_list('day_of_week', flat=True).distinct()
-    day_choices = [(day, dict(Product.DAY_CHOICES)[day]) for day in days]
+    # Instead of querying the database for day values, use the DAY_CHOICES directly
+    day_choices = Product.DAY_CHOICES
     programs = Program.objects.all()
     active_lessons = Product.objects.filter(active=True)
+
 
     lessons_info = []
     for lesson in active_lessons:

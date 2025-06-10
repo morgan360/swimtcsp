@@ -1,92 +1,179 @@
 {% load static %}
 
-<div class="bg-blue-500 p-3">
-    <h1 class="text-2xl text-white text-center">Public Swim Lessons</h1>
-</div>
+<section class="hero is-swim has-shadow">
+    <div class="hero-body">
+        <div class="container">
+            <h1 class="title has-text-centered">Public Swim Lessons</h1>
+        </div>
+    </div>
+</section>
 
-<!-- Display current term information -->
-<div class="text-gray-700 bg-blue-50 p-4 mb-6 rounded-lg">
-    <div class="flex flex-wrap justify-between">
-        <span><strong>Term:</strong> {{ current_term }}</span>
-        <span><strong>Start Date:</strong> {{ start_date }}</span>
-        <span><strong>End Date:</strong> {{ end_date }}</span>
+<!-- Term Information Card -->
+<div class="container">
+    <div class="box has-shadow mt-5">
+        <div>
+            <h2 class="title is-4 has-text-primary mb-4">Current Term Information</h2>
+            <div class="columns is-multiline">
+                <div class="column is-one-third">
+                    <div class="box has-background-primary-light">
+                        <div class="is-flex is-align-items-center">
+                            <span class="icon is-medium mr-3 has-background-primary-light has-text-primary p-2 is-rounded">
+                                <i class="fas fa-calendar-alt"></i>
+                            </span>
+                            <div>
+                                <span class="is-size-7 has-text-grey">Term</span>
+                                <p class="has-text-weight-medium">{{ current_term }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="column is-one-third">
+                    <div class="box has-background-primary-light">
+                        <div class="is-flex is-align-items-center">
+                            <span class="icon is-medium mr-3 has-background-primary-light has-text-primary p-2 is-rounded">
+                                <i class="fas fa-calendar-alt"></i>
+                            </span>
+                            <div>
+                                <span class="is-size-7 has-text-grey">Start Date</span>
+                                <p class="has-text-weight-medium">{{ start_date }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="column is-one-third">
+                    <div class="box has-background-primary-light">
+                        <div class="is-flex is-align-items-center">
+                            <span class="icon is-medium mr-3 has-background-primary-light has-text-primary p-2 is-rounded">
+                                <i class="fas fa-calendar-alt"></i>
+                            </span>
+                            <div>
+                                <span class="is-size-7 has-text-grey">End Date</span>
+                                <p class="has-text-weight-medium">{{ end_date }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
-<div class="container mx-auto mt-8">
-    <div class="overflow-x-auto">
-        <table class="min-w-full bg-white">
-            <thead>
-                <tr>
-                    <th class="px-4 py-2 border-b-2 border-gray-200 bg-gray-100 text-left text-sm leading-4 font-semibold text-gray-600">Lessons</th>
-                    <th class="px-4 py-2 border-b-2 border-gray-200 bg-gray-100 text-left text-sm leading-4 font-semibold text-gray-600">Price</th>
-                    <th class="px-4 py-2 border-b-2 border-gray-200 bg-gray-100 text-left text-sm leading-4 font-semibold text-gray-600">Spaces</th>
-                    <th class="px-4 py-2 border-b-2 border-gray-200 bg-gray-100 text-left text-sm leading-4 font-semibold text-gray-600">Places Left</th>
-                    <th class="px-4 py-2 border-b-2 border-gray-200 bg-gray-100 text-left text-sm leading-4 font-semibold text-gray-600">Action</th>
-                </tr>
-            </thead>
-            <tbody class="text-gray-700 bg-white">
-                {% for lesson_info in page_obj %}
+<!-- Lessons Table -->
+<div class="container mt-5">
+    <div class="box has-shadow">
+        <div class="table-container">
+            <table class="table is-fullwidth is-hoverable">
+                <thead>
                     <tr>
-                        <td class="px-4 py-2 border-b border-gray-200">{{ lesson_info.lesson.name }}</td>
-                        <td class="px-4 py-2 border-b border-gray-200">€{{ lesson_info.lesson.price }}</td>
-                        <td class="px-4 py-2 border-b border-gray-200">{{ lesson_info.num_places }}</td>
-                        <td class="px-4 py-2 border-b border-gray-200">
-                            {% if lesson_info.is_full %}
-                                <span class="text-red-600 font-semibold">Full</span>
-                            {% else %}
-                                <span>{{ lesson_info.remaining_spaces }}</span>
-                            {% endif %}
-                        </td>
-                        <td class="px-4 py-2 border-b border-gray-200">
-                            {% if lesson_info.remaining_spaces > 0 %}
-                                <a href="{% url 'lessons:product_detail' id=lesson_info.lesson.id %}" class="inline-block px-4 py-2 bg-blue-500 text-white font-semibold text-sm rounded hover:bg-blue-600">Book Now</a>
-                            {% else %}
-                                <a href="{% url 'waiting_list:join_waiting_list' product_id=lesson_info.lesson.id %}" class="inline-block px-4 py-2 bg-yellow-500 text-white font-semibold text-sm rounded hover:bg-yellow-600">Join Waiting List</a>
-                            {% endif %}
-                        </td>
+                        <th>Lessons</th>
+                        <th>Price</th>
+                        <th>Spaces</th>
+                        <th>Places Left</th>
+                        <th>Action</th>
                     </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    {% for lesson_info in page_obj %}
+                        <tr class="{% cycle '' 'has-background-light' %}">
+                            <td>
+                                <div class="has-text-weight-medium">{{ lesson_info.lesson.name }}</div>
+                            </td>
+                            <td>
+                                <div class="has-text-weight-medium">€{{ lesson_info.lesson.price }}</div>
+                            </td>
+                            <td>
+                                <div>{{ lesson_info.num_places }}</div>
+                            </td>
+                            <td>
+                                {% if lesson_info.is_full %}
+                                    <span class="tag is-danger is-light">Full</span>
+                                {% elif lesson_info.remaining_spaces <= 3 %}
+                                    <span class="tag is-warning is-light">Only {{ lesson_info.remaining_spaces }} left!</span>
+                                {% else %}
+                                    <span class="tag is-success is-light">{{ lesson_info.remaining_spaces }} available</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if lesson_info.remaining_spaces > 0 %}
+                                    <a href="{% url 'lessons:product_detail' id=lesson_info.lesson.id %}"
+                                       class="button is-book is-small">
+                                        <span class="icon is-small">
+                                            <i class="fas fa-ticket-alt"></i>
+                                        </span>
+                                        <span>Book Now</span>
+                                    </a>
+                                {% else %}
+                                    <a href="{% url 'waiting_list:join_waiting_list' product_id=lesson_info.lesson.id %}"
+                                       class="button is-warning is-small">
+                                        <span class="icon is-small">
+                                            <i class="fas fa-clock"></i>
+                                        </span>
+                                        <span>Join Waiting List</span>
+                                    </a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="5" class="has-text-centered py-6">
+                                <div class="is-flex is-flex-direction-column is-align-items-center">
+                                    <span class="icon is-large has-text-grey-light mb-3">
+                                        <i class="fas fa-inbox fa-3x"></i>
+                                    </span>
+                                    <span class="has-text-weight-medium has-text-grey is-size-5">No lessons available</span>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 
-<!-- Pagination Navigation with Tailwind -->
-<nav aria-label="Page navigation" class="flex justify-center mt-4">
-    <ul class="inline-flex -space-x-px">
-        {% if page_obj.has_previous %}
-            <li>
-                <a href="?page=1" class="py-2 px-3 ml-0 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700" aria-label="First">
-                    <span aria-hidden="true">&laquo;&laquo;</span>
-                </a>
-            </li>
-            <li>
-                <a href="?page={{ page_obj.previous_page_number }}" class="py-2 px-3 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700" aria-label="Previous">
-                    <span aria-hidden="true">&laquo;</span>
-                </a>
-            </li>
-        {% endif %}
+<!-- Pagination -->
+{% if page_obj.paginator.num_pages > 1 %}
+<div class="container mb-6 mt-5">
+    <div class="box has-shadow">
+        <nav class="pagination is-centered" role="navigation" aria-label="pagination">
+            {% if page_obj.has_previous %}
+                <a href="?page=1" class="pagination-previous">First</a>
+                <a href="?page={{ page_obj.previous_page_number }}" class="pagination-previous">Previous</a>
+            {% else %}
+                <a class="pagination-previous" disabled>First</a>
+                <a class="pagination-previous" disabled>Previous</a>
+            {% endif %}
 
-        {% for num in page_obj.paginator.page_range %}
-            <li>
-                <a href="?page={{ num }}" class="{% if page_obj.number == num %}py-2 px-3 leading-tight text-gray-500 bg-blue-500 text-white border border-blue-500 hover:bg-blue-600 hover:text-white{% else %}py-2 px-3 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700{% endif %}">
-                    {{ num }}
-                </a>
-            </li>
-        {% endfor %}
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}" class="pagination-next">Next</a>
+                <a href="?page={{ page_obj.paginator.num_pages }}" class="pagination-next">Last</a>
+            {% else %}
+                <a class="pagination-next" disabled>Next</a>
+                <a class="pagination-next" disabled>Last</a>
+            {% endif %}
 
-        {% if page_obj.has_next %}
-            <li>
-                <a href="?page={{ page_obj.next_page_number }}" class="py-2 px-3 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700" aria-label="Next">
-                    <span aria-hidden="true">&raquo;</span>
-                </a>
-            </li>
-            <li>
-                <a href="?page={{ page_obj.paginator.num_pages }}" class="py-2 px-3 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700" aria-label="Last">
-                    <span aria-hidden="true">&raquo;&raquo;</span>
-                </a>
-            </li>
-        {% endif %}
-    </ul>
-</nav>
+            <ul class="pagination-list">
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                        <li>
+                            <a class="pagination-link is-current" aria-current="page">{{ num }}</a>
+                        </li>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                        <li>
+                            <a href="?page={{ num }}" class="pagination-link">{{ num }}</a>
+                        </li>
+                    {% elif num == page_obj.number|add:'-3' or num == page_obj.number|add:'3' %}
+                        <li>
+                            <span class="pagination-ellipsis">&hellip;</span>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+            </ul>
+        </nav>
+
+        <div class="has-text-centered has-text-grey is-size-7 mt-3">
+            Showing page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+        </div>
+    </div>
+</div>
+{% endif %}

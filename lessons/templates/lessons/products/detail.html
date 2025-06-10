@@ -4,58 +4,119 @@
 {% block title %}
     {{ product.name }}
 {% endblock %}
+
 {% block content %}
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4"> <!-- Container equivalent -->
-        <div class="flex flex-wrap -mx-4"> <!-- Row equivalent -->
-            <div class="w-full sm:w-1/3 px-4"> <!-- Column for the image -->
-                <img src="{% if product.image %}{{ product.image.url }}{% else %}{% static 'img/no_image.png' %
-                }{% endif %}"
-                     class="img-fluid max-w-full h-auto">
-            </div>
-            <div class="w-full sm:w-2/3 px-4"> <!-- Column for the product details -->
-                <h3 class="text-xl font-semibold">{{ product.name }}</h3>
-                <h4 class="mt-2">
-                    <a href="{{ product.category.get_absolute_url }}" class="text-blue-500 hover:text-blue-700">
-                        {{ product.category }}
-                    </a>
-                </h4>
-                <div class="mt-2">
-                    <h4 class="text-lg font-semibold text-gray-900">€{{ product.price }}</h4>
-                    <p>Number of Places: {{ product.num_places }}</p>
-                    <p>Number Sold: {{ product.get_num_sold }}</p>
-                    <p>Number Left: {{ product.get_num_left }}</p>
-                </div>
-                <div class="mt-4">
-                    <!-- Form to add to cart -->
+    <section class="section">
+        <div class="container">
+            <div class="box has-shadow">
+                <div class="columns">
+                    <!-- Product Image -->
+                    <div class="column is-one-third">
+                        <div class="has-background-light p-4 is-rounded">
+                            <figure class="image is-4by3">
+                                <img src="{% if product.image %}{{ product.image.url }}{% else %}{% static 'img/no_image.png' %}{% endif %}"
+                                    alt="{{ product.name }}"
+                                    class="is-rounded">
+                            </figure>
+                        </div>
+                    </div>
 
-                    {% if product and product.id %}
-                        <form method="post" action="{% url 'shopping_cart:cart_add' product.id 'lesson' %}">
-                            {% csrf_token %}
-                            <div id="swimling_dropdown" class="form-group w-1/3 pb-3">
-                                <label for="id_swimling">Select Swimling</label>
-                                <select name="swimling" id="id_swimling"
-                                        class="form-control block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md text-black">
-                                    {% for swimling in swimlings %}
-                                        <option value="{{ swimling.id }}" class="text-black">{{ swimling }}</option>
-                                    {% endfor %}
-                                </select>
+                    <!-- Product Details -->
+                    <div class="column is-two-thirds">
+                        <div class="mb-5">
+                            <h1 class="title is-3">{{ product.name }}</h1>
+                            <div class="mt-2">
+                                <a href="{{ product.category.get_absolute_url }}" class="has-text-primary has-text-weight-medium">
+                                    {{ product.category }}
+                                </a>
                             </div>
-                            <input type="submit" value="Add to Cart"
-                                   class="btn btn-primary w-1/3">
-                        </form>
-                    {% else %}
-                        <p>Product is not available.</p>
-                    {% endif %}
-                </div>
-                <hr class="my-4">
-                <div id="swimling-form-container">
-                    {% include 'partials/new_swimling_form.html' %}
-                </div>
+                        </div>
 
-                <div class="mt-4">
-                    {{ product.description|linebreaks }}
+                        <!-- Price & Availability -->
+                        <div class="box has-background-light mb-5">
+                            <div class="is-flex is-justify-content-space-between is-align-items-center mb-3">
+                                <span class="title is-4">€{{ product.price }}</span>
+                                {% if product.get_num_left > 5 %}
+                                    <span class="tag is-success is-light">Available</span>
+                                {% elif product.get_num_left > 0 %}
+                                    <span class="tag is-warning is-light">Limited Availability</span>
+                                {% else %}
+                                    <span class="tag is-danger is-light">Sold Out</span>
+                                {% endif %}
+                            </div>
+
+                            <div class="columns is-mobile">
+                                <div class="column">
+                                    <p class="has-text-weight-medium">Places:</p>
+                                    <p>{{ product.num_places }}</p>
+                                </div>
+                                <div class="column">
+                                    <p class="has-text-weight-medium">Sold:</p>
+                                    <p>{{ product.get_num_sold }}</p>
+                                </div>
+                                <div class="column">
+                                    <p class="has-text-weight-medium">Remaining:</p>
+                                    <p>{{ product.get_num_left }}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Add to Cart Form -->
+                        <div class="mb-5">
+                            {% if product and product.id and product.get_num_left > 0 %}
+                                <form method="post" action="{% url 'shopping_cart:cart_add' product.id 'lesson' %}" class="mb-4">
+                                    {% csrf_token %}
+                                    <div class="field">
+                                        <label for="id_swimling" class="label is-small">Select Swimmer</label>
+                                        <div class="control">
+                                            <div class="select">
+                                                <select name="swimling" id="id_swimling">
+                                                    {% for swimling in swimlings %}
+                                                        <option value="{{ swimling.id }}">{{ swimling }}</option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="field">
+                                        <div class="control">
+                                            <button type="submit" class="button is-primary">
+                                                <span class="icon is-small">
+                                                    <i class="fas fa-shopping-cart"></i>
+                                                </span>
+                                                <span>Add to Cart</span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </form>
+                            {% else %}
+                                <div class="notification is-danger is-light">
+                                    <div class="is-flex">
+                                        <span class="icon mr-2">
+                                            <i class="fas fa-exclamation-circle"></i>
+                                        </span>
+                                        <div>
+                                            <p class="has-text-weight-medium">Sorry, this product is not available.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <hr class="my-5">
+
+                        <!-- Swimling Form Container -->
+                        <div id="swimling-form-container" class="mb-5">
+                            {% include 'partials/new_swimling_form.html' %}
+                        </div>
+
+                        <!-- Product Description -->
+                        <div class="content">
+                            {{ product.description|linebreaks }}
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
+    </section>
 {% endblock %}

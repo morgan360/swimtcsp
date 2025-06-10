@@ -1,97 +1,147 @@
 <div x-data="{ showModal: false }">
     <!-- Button to open the modal -->
-    <button @click="showModal = true" class="bg-blue-500 text-white font-bold py-2 px-4 rounded">
-        Add new Swimmer x
+    <button @click="showModal = true" class="button is-primary">
+        <span class="icon is-small">
+            <i class="fas fa-user-plus"></i>
+        </span>
+        <span>Add New Swimmer</span>
     </button>
 
-    <!-- Modal Structure -->
-    <div class="fixed z-10 inset-0 overflow-y-auto" style="display: none;" x-show="showModal" x-cloak>
-        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            <!-- Background overlay, show/hide based on modal state. -->
-            <div class="fixed inset-0 transition-opacity" aria-hidden="true" @click="showModal = false">
-                <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
-            </div>
+    <!-- Modal -->
+    <div class="modal" :class="{'is-active': showModal}" x-cloak>
+        <div class="modal-background" @click="showModal = false"></div>
 
-            <!-- Modal panel, show/hide based on modal state. -->
-            <div class="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6"
-                 role="dialog" aria-modal="true" aria-labelledby="modal-headline">
-                <div>
-                    <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                        <h3 class="text-lg leading-6 font-medium text-blue-700 text-center" id="modal-headline">
-                            Add New Swimling
-                        </h3>
-                        <form action="{% url 'lessons:add_new_swimling' %}" method="POST"
-                              hx-post="{% url 'lessons:add_new_swimling' %}"
-                              hx-target="#swimling_dropdown"
-                              hx-swap="outerHTML"
-                              hx-after-swap="showModal = false">
+        <div class="modal-card">
+            <!-- Modal Header -->
+            <header class="modal-card-head has-background-primary">
+                <p class="modal-card-title has-text-white">Add New Swimmer</p>
+                <button class="delete" aria-label="close" @click="showModal = false"></button>
+            </header>
 
-                            {% csrf_token %}
-                            <!-- First Name -->
-                            <div class="mb-4">
-                                <label for="id_first_name" class="block text-gray-700 text-sm font-bold mb-2">
-                                    First Name
+            <!-- Modal Body -->
+            <section class="modal-card-body">
+                <form action="{% url 'lessons:add_new_swimling' %}"
+                      method="POST"
+                      hx-post="{% url 'lessons:add_new_swimling' %}"
+                      hx-target="#swimling_dropdown"
+                      hx-swap="outerHTML"
+                      hx-indicator="#form-loading"
+                      hx-on::after-request="showModal = false">
+
+                    {% csrf_token %}
+
+                    <!-- Form Grid -->
+                    <div class="columns is-multiline">
+                        <!-- First Name -->
+                        <div class="column is-half">
+                            <div class="field">
+                                <label for="id_first_name" class="label is-small">
+                                    First Name*
                                 </label>
-                                <input type="text" name="first_name" id="id_first_name"
-                                       class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                                       placeholder="John">
+                                <div class="control">
+                                    <input type="text"
+                                           name="first_name"
+                                           id="id_first_name"
+                                           required
+                                           class="input"
+                                           placeholder="John">
+                                </div>
                             </div>
+                        </div>
 
-                            <!-- Last Name -->
-                            <div class="mb-4">
-                                <label for="id_last_name" class="block text-gray-700 text-sm font-bold mb-2">
-                                    Last Name
+                        <!-- Last Name -->
+                        <div class="column is-half">
+                            <div class="field">
+                                <label for="id_last_name" class="label is-small">
+                                    Last Name*
                                 </label>
-                                <input type="text" name="last_name" id="id_last_name"
-                                       class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                                       placeholder="Doe">
+                                <div class="control">
+                                    <input type="text"
+                                           name="last_name"
+                                           id="id_last_name"
+                                           required
+                                           class="input"
+                                           placeholder="Doe">
+                                </div>
                             </div>
+                        </div>
 
-                            <!-- Date of Birth -->
-                            <div class="mb-4">
-                                <label for="id_dob" class="block text-gray-700 text-sm font-bold mb-2">
-                                    Date of Birth
+                        <!-- Date of Birth -->
+                        <div class="column is-half">
+                            <div class="field">
+                                <label for="id_dob" class="label is-small">
+                                    Date of Birth*
                                 </label>
-                                <input type="date" name="dob" id="id_dob"
-                                       class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                                <div class="control has-icons-right">
+                                    <input type="date"
+                                           name="dob"
+                                           id="id_dob"
+                                           required
+                                           class="input">
+                                    <span class="icon is-small is-right">
+                                        <i class="fas fa-calendar-alt"></i>
+                                    </span>
+                                </div>
                             </div>
+                        </div>
 
-                            <!-- School Role Number -->
-                            <div class="mb-4">
-                                <label for="id_sco_role_num" class="block text-gray-700 text-sm font-bold mb-2">
+                        <!-- School Role Number -->
+                        <div class="column is-half">
+                            <div class="field">
+                                <label for="id_sco_role_num" class="label is-small">
                                     School Role Number
                                 </label>
-                                <input type="text" name="sco_role_num" id="id_sco_role_num"
-                                       class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                                       placeholder="12345">
+                                <div class="control">
+                                    <input type="text"
+                                           name="sco_role_num"
+                                           id="id_sco_role_num"
+                                           class="input"
+                                           placeholder="12345">
+                                </div>
                             </div>
+                        </div>
 
-                            <!-- Additional Notes -->
-                            <div class="mb-4">
-                                <label for="id_notes" class="block text-gray-700 text-sm font-bold mb-2">
+                        <!-- Additional Notes -->
+                        <div class="column is-full">
+                            <div class="field">
+                                <label for="id_notes" class="label is-small">
                                     Additional Notes
                                 </label>
-                                <textarea name="notes" id="id_notes"
-                                          class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                                          rows="4"
-                                          placeholder="Enter additional notes here..."></textarea>
+                                <div class="control">
+                                    <textarea name="notes"
+                                              id="id_notes"
+                                              rows="3"
+                                              class="textarea"
+                                              placeholder="Medical conditions, special requirements, or other important information..."></textarea>
+                                </div>
+                                <p class="help">Include any relevant information about the swimmer that instructors should know.</p>
                             </div>
-                            <div>
-                                <input @click="setTimeout(() => showModal = false, 500)" type="submit"
-                                       class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-                                       value="Submit"></div>
-                        </form>
+                        </div>
                     </div>
+                </form>
+            </section>
+
+            <!-- Modal Footer -->
+            <footer class="modal-card-foot">
+                <div id="form-loading" class="htmx-indicator mr-3">
+                    <span class="icon is-small has-text-primary">
+                        <i class="fas fa-spinner fa-spin"></i>
+                    </span>
+                    <span class="is-size-7 has-text-grey ml-1">Saving...</span>
                 </div>
-            </div>
-            <!-- Modal footer actions -->
-            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+
                 <button type="button"
-                        class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
-                        @click="showModal = false">
-                    Close
+                        @click="showModal = false"
+                        class="button">
+                    Cancel
                 </button>
-            </div>
+
+                <button type="submit"
+                        form="new-swimling-form"
+                        class="button is-primary">
+                    Add Swimmer
+                </button>
+            </footer>
         </div>
     </div>
 </div>

@@ -1,4 +1,4 @@
-{% extends "base_bootstrap.html" %}
+{% extends "base/_base.html" %}
 {% load static %}
 
 {% block title %}
@@ -6,43 +6,134 @@
 {% endblock %}
 
 {% block content %}
-    <div class="container">
-        <div class="row">
-            <div class="col-md-3">
-                <h3>Filters</h3>
-                <form method="get">
-                    {{ filter.form.as_p }}
-                    <button type="submit" class="btn btn-primary">Apply Filter</button>
-                </form>
+    <section class="py-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="mb-6">
+                <h1 class="text-2xl font-bold text-gray-900">
+                    {% if filter.q %}Filtered Products{% else %}All Products{% endif %}
+                </h1>
+                <p class="text-gray-600 mt-2">Browse our collection of swimming lessons and products</p>
             </div>
-            <div class="col-md-9">
-                <div id="main" class="product-list">
-                    <h1>{% if filter.q %}Filtered Products{% else %}All Products{% endif %}</h1>
-                    {% for product in filter.qs %}
-                        <div class="card mb-3">
-                            <div class="row g-0">
-                                <div class="col-md-4">
-                                    <a href="{{ product.get_absolute_url }}">
-                                        <img src="{% if product.image %}{{ product.image.url }}{% else %}{% static "img/no_image.png" %}{% endif %}"
-                                             class="img-fluid"
-                                             alt="{{ product.name }}">
-                                    </a>
+
+            <div class="flex flex-col md:flex-row gap-8">
+                <!-- Filters sidebar -->
+                <div class="w-full md:w-1/4">
+                    <div class="bg-white rounded-lg shadow-sm p-5 border border-gray-200 sticky top-20">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Filters</h3>
+
+                        <form method="get" class="space-y-4">
+                            {% for field in filter.form %}
+                                <div class="mb-4">
+                                    <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                                        {{ field.label }}
+                                    </label>
+
+                                    {% if field.field.widget.input_type == 'checkbox' %}
+                                        <div class="flex items-center">
+                                            {{ field }}
+                                            <span class="ml-2">{{ field.help_text }}</span>
+                                        </div>
+                                    {% else %}
+                                        {{ field.errors }}
+                                        {{ field }}
+                                        {% if field.help_text %}
+                                            <p class="mt-1 text-sm text-gray-500">{{ field.help_text }}</p>
+                                        {% endif %}
+                                    {% endif %}
                                 </div>
-                                <div class="col-md-8">
-                                    <div class="card-body">
-                                        <h5 class="card-title">
-                                            <a href="{{ product.get_absolute_url }}">{{ product.name }}</a>
-                                            <br>
-                                            €{{ product.price }}
-                                        </h5>
-                                        <p>Places Left: {{ product.get_num_left }}</p>
+                            {% endfor %}
+
+                            <div class="pt-2 flex space-x-2">
+                                <button type="submit"
+                                        class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                                    </svg>
+                                    Apply Filters
+                                </button>
+                                <a href="{% url 'lessons:all_products' %}"
+                                   class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                    Reset
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Product list -->
+                <div class="w-full md:w-3/4">
+                    <div id="main" class="product-list space-y-6">
+                        {% if filter.qs %}
+                            {% for product in filter.qs %}
+                                <div class="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-200 hover:shadow-md transition-shadow duration-300">
+                                    <div class="flex flex-col sm:flex-row">
+                                        <div class="w-full sm:w-1/3">
+                                            <a href="{{ product.get_absolute_url }}" class="block h-full">
+                                                <div class="h-48 sm:h-full bg-gray-200 overflow-hidden">
+                                                    <img src="{% if product.image %}{{ product.image.url }}{% else %}{% static 'img/no_image.png' %}{% endif %}"
+                                                        alt="{{ product.name }}"
+                                                        class="w-full h-full object-cover transition-transform duration-300 hover:scale-105">
+                                                </div>
+                                            </a>
+                                        </div>
+                                        <div class="w-full sm:w-2/3 p-5">
+                                            <div class="flex justify-between items-start">
+                                                <h2 class="text-xl font-semibold text-gray-900 hover:text-blue-600">
+                                                    <a href="{{ product.get_absolute_url }}">{{ product.name }}</a>
+                                                </h2>
+                                                <span class="text-lg font-bold text-gray-900">€{{ product.price }}</span>
+                                            </div>
+
+                                            <div class="mt-2">
+                                                <span class="text-sm px-2 py-1 bg-{% if product.get_num_left > 5 %}green-100 text-green-800{% elif product.get_num_left > 0 %}yellow-100 text-yellow-800{% else %}red-100 text-red-800{% endif %} rounded-full">
+                                                    {% if product.get_num_left > 5 %}
+                                                        {{ product.get_num_left }} places available
+                                                    {% elif product.get_num_left > 0 %}
+                                                        Only {{ product.get_num_left }} places left!
+                                                    {% else %}
+                                                        Sold Out
+                                                    {% endif %}
+                                                </span>
+                                            </div>
+
+                                            {% if product.category %}
+                                                <div class="mt-2">
+                                                    <a href="{{ product.category.get_absolute_url }}" class="text-sm text-blue-600 hover:text-blue-800">
+                                                        {{ product.category }}
+                                                    </a>
+                                                </div>
+                                            {% endif %}
+
+                                            <div class="mt-4 flex justify-between items-center">
+                                                <a href="{{ product.get_absolute_url }}"
+                                                   class="inline-flex items-center px-3 py-1.5 border border-blue-600 text-blue-600 rounded hover:bg-blue-600 hover:text-white transition-colors duration-200 text-sm font-medium">
+                                                    View Details
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                                                    </svg>
+                                                </a>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="bg-white rounded-lg shadow-sm p-8 text-center border border-gray-200">
+                                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                <h3 class="mt-2 text-lg font-medium text-gray-900">No products found</h3>
+                                <p class="mt-1 text-sm text-gray-500">Try adjusting your search or filter to find what you're looking for.</p>
+                                <div class="mt-6">
+                                    <a href="{% url 'lessons:all_products' %}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700">
+                                        Clear filters
+                                    </a>
+                                </div>
                             </div>
-                        </div>
-                    {% endfor %}
+                        {% endif %}
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
+    </section>
 {% endblock %}

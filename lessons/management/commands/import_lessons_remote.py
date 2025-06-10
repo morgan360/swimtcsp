@@ -17,7 +17,7 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        delete_existing = options.get('delete_existing', False)
+        delete_existing = options.get('delete-existing', False)
 
         if delete_existing:
             self.stdout.write("\n🗑️ Deleting existing data...")
@@ -66,6 +66,16 @@ class Command(BaseCommand):
                                 'slug': slugify(row['name'])
                             }
                         )
+
+                # IMPORTANT: First clean up any invalid day values in existing products
+                # This ensures any products not imported by this script are also fixed
+                self.stdout.write("\n🧹 Cleaning up any existing products with invalid day values...")
+                invalid_products = Product.objects.filter(day_of_week__gt=6)
+                for product in invalid_products:
+                    old_day = product.day_of_week
+                    product.day_of_week = 0  # Default to Monday
+                    product.save()
+                    self.stdout.write(f"  Fixed existing product ID {product.id}: day {old_day} -> 0 (Monday)")
 
                 # Import Lessons (must follow categories)
                 self.stdout.write("\n📚 Importing Lessons (Products)...")
@@ -163,6 +173,18 @@ class Command(BaseCommand):
                         # Force regenerate the name to ensure it's correct
                         product.name = product.generate_name()
                         product.save(update_fields=['name', 'slug'])
+
+                # After importing, verify that all products now have valid day values
+                remaining_invalid = Product.objects.filter(day_of_week__gt=6).count()
+                if remaining_invalid > 0:
+                    self.stdout.write(self.style.WARNING(
+                        f"\n⚠️ There are still {remaining_invalid} products with invalid day values!"))
+                    # List the remaining invalid products
+                    for product in Product.objects.filter(day_of_week__gt=6):
+                        self.stdout.write(f"  ID: {product.id}, Day: {product.day_of_week}, Name: {product.name}")
+                else:
+                    self.stdout.write(self.style.SUCCESS("\n✅ All products have valid day values."))
+
         finally:
             connection.close()
             self.stdout.write("🔒 Connection closed.")

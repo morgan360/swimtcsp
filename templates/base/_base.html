@@ -31,7 +31,7 @@
 <body>
 
     {# ✅ Include Navbar inside body #}
-    {% include "partials/_navbar.html" %}
+    {% include "partials/_navbar_2.html" %}
 
     <main class="section">
         <div class="container">
@@ -43,19 +43,5 @@
     {% block footer %}
         {% include "partials/_footer.html" %}
     {% endblock %}
-
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const burger = document.querySelector('.navbar-burger');
-            const menu = document.getElementById(burger?.dataset.target);
-            if (burger && menu) {
-                burger.addEventListener('click', () => {
-                    burger.classList.toggle('is-active');
-                    menu.classList.toggle('is-active');
-                });
-            }
-        });
-    </script>
-
 </body>
 </html>

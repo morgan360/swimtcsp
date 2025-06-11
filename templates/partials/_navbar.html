@@ -1,34 +1,38 @@
-
-{## This provides the navigation for whole site.#}
 {% load static %}
 {% load group_filters %}
 
-<nav class="navbar is-header has-shadow" role="navigation" aria-label="main navigation">
+<nav class="navbar is-header has-shadow" role="navigation" aria-label="main navigation" x-data="{ isOpen: false }">
   <div class="navbar-brand">
     <a class="navbar-item" href="/">
       <img src="{% static 'img/logo.png' %}" alt="Logo" width="40" height="40">
       <strong class="ml-2">TCSP</strong>
     </a>
 
-    <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" data-target="navbarMain">
+    <button
+       class="navbar-burger"
+       :class="{ 'is-active': isOpen }"
+       aria-label="menu"
+       aria-expanded="false"
+       @click="isOpen = !isOpen"
+       style="background: none; border: none;">
       <span aria-hidden="true"></span>
       <span aria-hidden="true"></span>
       <span aria-hidden="true"></span>
-    </a>
+    </button>
   </div>
 
-  <div id="navbarMain" class="navbar-menu">
+  <div id="navbarMain" class="navbar-menu" :class="{ 'is-active': isOpen }">
     <div class="navbar-start">
       {% if user.is_authenticated and user|is_customer_user %}
-        <a href="{% url 'swims:product_list' %}" class="navbar-item">Public Swims</a>
+        <a href="{% url 'swims:product_list' %}" class="navbar-item" @click="isOpen = false">Public Swims</a>
       {% endif %}
 
       {% if user|is_guardian_user %}
       <div class="navbar-item has-dropdown is-hoverable">
         <a class="navbar-link">Swimming Lessons</a>
         <div class="navbar-dropdown">
-          <a href="/lessons/lesson_list" class="navbar-item">Public Lessons</a>
-          <a href="{% url 'users:combined_swimling_mgmt' %}" class="navbar-item">Swimling Panel</a>
+          <a href="/lessons/lesson_list" class="navbar-item" @click="isOpen = false">Public Lessons</a>
+          <a href="{% url 'users:combined_swimling_mgmt' %}" class="navbar-item" @click="isOpen = false">Swimling Panel</a>
         </div>
       </div>
       {% endif %}
@@ -37,14 +41,14 @@
       <div class="navbar-item has-dropdown is-hoverable">
         <a class="navbar-link">School Lessons</a>
         <div class="navbar-dropdown">
-          <a href="/schools/school_list" class="navbar-item">School Bookings</a>
-          <a href="/school/register/" class="navbar-item">Register School</a>
+          <a href="/schools/school_list" class="navbar-item" @click="isOpen = false">School Bookings</a>
+          <a href="/school/register/" class="navbar-item" @click="isOpen = false">Register School</a>
         </div>
       </div>
       {% endif %}
 
-      <a href="{% url 'about' %}" class="navbar-item">About</a>
-      <a href="{% url 'contact' %}" class="navbar-item">Contact</a>
+      <a href="{% url 'about' %}" class="navbar-item" @click="isOpen = false">About</a>
+      <a href="{% url 'contact' %}" class="navbar-item" @click="isOpen = false">Contact</a>
     </div>
 
     <div class="navbar-end">
@@ -52,10 +56,10 @@
         <div class="navbar-item has-dropdown is-hoverable">
           <a class="navbar-link">My Account</a>
           <div class="navbar-dropdown is-right">
-            <a href="{% url 'users:profile' %}" class="navbar-item">Profile</a>
-            {% if user|is_guardian_user %}<a href="{% url 'users:combined_swimling_mgmt' %}" class="navbar-item">Swim Center</a>{% endif %}
+            <a href="{% url 'users:profile' %}" class="navbar-item" @click="isOpen = false">Profile</a>
+            {% if user|is_guardian_user %}<a href="{% url 'users:combined_swimling_mgmt' %}" class="navbar-item" @click="isOpen = false">Swim Center</a>{% endif %}
             <hr class="navbar-divider">
-            <a href="{% url 'account_logout' %}" class="navbar-item has-text-danger">Logout</a>
+            <a href="{% url 'account_logout' %}" class="navbar-item has-text-danger" @click="isOpen = false">Logout</a>
           </div>
         </div>
 
@@ -63,9 +67,9 @@
         <div class="navbar-item has-dropdown is-hoverable">
           <a class="navbar-link">Management</a>
           <div class="navbar-dropdown is-right">
-            <a href="/admin" class="navbar-item">Admin Panel</a>
-            <a href="/lessons_bookings/management/" class="navbar-item">Dashboard</a>
-            <a href="{% url 'term_information' %}" class="navbar-item">Analytics</a>
+            <a href="/admin" class="navbar-item" @click="isOpen = false">Admin Panel</a>
+            <a href="/lessons_bookings/management/" class="navbar-item" @click="isOpen = false">Dashboard</a>
+            <a href="{% url 'term_information' %}" class="navbar-item" @click="isOpen = false">Analytics</a>
           </div>
         </div>
         {% endif %}
@@ -73,8 +77,8 @@
       {% else %}
         <div class="navbar-item">
           <div class="buttons">
-            <a href="{% url 'account_signup' %}" class="button is-primary">Sign up</a>
-            <a href="{% url 'account_login' %}" class="button is-light">Log in</a>
+            <a href="{% url 'account_signup' %}" class="button is-primary" @click="isOpen = false">Sign up</a>
+            <a href="{% url 'account_login' %}" class="button is-light" @click="isOpen = false">Log in</a>
           </div>
         </div>
       {% endif %}

@@ -76,7 +76,7 @@ python manage.py export_terms_sql
 mysql -u morganmck -p'Mongo@8899' -h morganmck.mysql.eu.pythonanywhere-services.com morganmck\$swimtcsp < import_sql/mor_terms.sql
 #### Shortcut
 python manage.py import_terms_sql
-
+manage.py import_lessons_remote --delete-existing
 ## Importing and exporting users/swimlings Data
 Note: these scripts are stored in users/managment/commands. To be done in order.
 ### Syncing users From TCSP

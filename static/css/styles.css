@@ -72,6 +72,27 @@ body {
   background-color: #f0f0f0;
 }
 
+/* Navbar custom background */
+.navbar.is-header {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.navbar.is-header .navbar-item,
+.navbar.is-header .navbar-link {
+  color: white;
+}
+
+.navbar.is-header .navbar-item:hover,
+.navbar.is-header .navbar-link:hover {
+  background-color: rgba(255, 255, 255, 0.15);
+}
+
+.navbar .navbar-item strong {
+  color: white;
+  font-weight: 600;
+}
+
 /* --- Hero Section (optional gradient override) --- */
 .hero {
   background: linear-gradient(to bottom right, #00b5ad 0%, #00d1b2 100%);
@@ -124,35 +145,18 @@ input:focus, textarea:focus, select:focus {
   background-color: #4267B2;
   color: white;
 }
+
 .footer {
   font-size: 0.9rem;
   border-top: 1px solid #e5e5e5;
 }
+
 .footer a:hover {
   text-decoration: underline;
 }
 
-/* Navbar custom background */
-.navbar.is-header {
-  background-color: var(--primary-color); /* or choose #00a29e for variation */
-  color: white;
-}
-
-.navbar.is-header .navbar-item,
-.navbar.is-header .navbar-link {
-  color: white;
-}
-
-.navbar.is-header .navbar-item:hover,
-.navbar.is-header .navbar-link:hover {
-  background-color: rgba(255, 255, 255, 0.15);
-}
-.navbar .navbar-item strong {
-  color: white;
-  font-weight: 600;
-}
 .footer.is-site-footer {
-  background-color: #f0f2f5; /* soft grey background */
+  background-color: #f0f2f5;
   color: var(--text-dark);
   padding: 2rem 1.5rem;
   font-size: 0.95rem;
@@ -167,7 +171,8 @@ input:focus, textarea:focus, select:focus {
 .footer.is-site-footer a:hover {
   text-decoration: underline;
 }
-/* Accordion styles */
+
+/* --- Accordion styles --- */
 .is-rotate-180 {
   transform: rotate(180deg);
   transition: transform 0.2s ease;
@@ -190,6 +195,7 @@ input:focus, textarea:focus, select:focus {
 .school-icon-container {
   height: 200px;
 }
+
 /* Card header background colors */
 .card-header.is-public {
   background-color: var(--accent-color);
@@ -213,103 +219,29 @@ input:focus, textarea:focus, select:focus {
   color: white;
 }
 
-/* Simple mobile navbar fix */
+/* --- SINGLE MOBILE NAVBAR SECTION --- */
 @media screen and (max-width: 1023px) {
+  /* Ensure mobile menu displays properly */
   .navbar-menu.is-active {
     display: block !important;
     background-color: white;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   }
 
-  .navbar-menu .navbar-item {
-    color: #363636;
+  /* Mobile navbar text styling */
+  .navbar-menu.is-active .navbar-item,
+  .navbar-menu.is-active .navbar-link {
+    color: #363636 !important;
     padding: 0.75rem 1rem;
     border-bottom: 1px solid #f5f5f5;
   }
 
-  .navbar-menu .navbar-item:hover {
-    background-color: #f5f5f5;
-  }
-
-  .navbar-menu .navbar-link {
-    color: #363636;
-  }
-}
-/* Fix mobile navbar text visibility */
-@media screen and (max-width: 1023px) {
-  .navbar-menu .navbar-item {
-    color: #363636 !important;
-  }
-  
-  .navbar-menu .navbar-link {
-    color: #363636 !important;
-  }
-  
-  .navbar-menu .navbar-item:hover {
-    background-color: #f5f5f5;
-  }
-  
-  .navbar-menu .navbar-link:hover {
-    background-color: #f5f5f5;
-  }
-}
-/* Force mobile navbar text to be visible */
-@media screen and (max-width: 1023px) {
-  /* Target all navbar items in mobile */
-  .navbar-menu.is-active .navbar-item,
-  .navbar-menu.is-active .navbar-link,
-  .navbar-menu.is-active a.navbar-item,
-  .navbar-menu.is-active a.navbar-link {
-    color: #000000 !important;
-    background-color: transparent !important;
-  }
-  
-  /* Dropdown items */
-  .navbar-menu.is-active .navbar-dropdown .navbar-item,
-  .navbar-menu.is-active .navbar-dropdown a.navbar-item {
-    color: #000000 !important;
-  }
-  
-  /* Keep logout red */
-  .navbar-menu.is-active .has-text-danger {
-    color: #ff3860 !important;
-  }
-  
-  /* Buttons styling */
-  .navbar-menu.is-active .button.is-primary {
-    background-color: #3273dc !important;
-    color: white !important;
-  }
-  
-  .navbar-menu.is-active .button.is-light {
-    background-color: #f5f5f5 !important;
-    color: #363636 !important;
-  }
-}
-/* Navbar2 Mobile Fixes */
-@media screen and (max-width: 1023px) {
-  /* Ensure mobile menu is visible with proper text color */
-  .navbar-menu.is-active {
-    background-color: white;
-    color: #363636;
-  }
-  
-  .navbar-menu.is-active .navbar-item,
-  .navbar-menu.is-active .navbar-link {
-    color: #363636 !important;
-  }
-  
   .navbar-menu.is-active .navbar-item:hover,
   .navbar-menu.is-active .navbar-link:hover {
     background-color: #f5f5f5;
     color: #363636 !important;
   }
-  
-  /* Keep logout red */
-  .navbar-menu.is-active .has-text-danger {
-    color: #ff3860 !important;
-  }
-  
+
   /* Mobile dropdown styling */
   .navbar-menu.is-active .navbar-dropdown {
     position: static;
@@ -317,8 +249,25 @@ input:focus, textarea:focus, select:focus {
     padding-left: 1.5rem;
     background-color: #fafafa;
   }
-  
+
   .navbar-menu.is-active .navbar-dropdown .navbar-item {
     padding-left: 1.5rem;
+    color: #363636 !important;
+  }
+
+  /* Keep logout red */
+  .navbar-menu.is-active .has-text-danger {
+    color: #ff3860 !important;
+  }
+
+  /* Button styling in mobile */
+  .navbar-menu.is-active .button.is-primary {
+    background-color: #3273dc !important;
+    color: white !important;
+  }
+
+  .navbar-menu.is-active .button.is-light {
+    background-color: #f5f5f5 !important;
+    color: #363636 !important;
   }
 }

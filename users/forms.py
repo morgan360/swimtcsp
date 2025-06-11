@@ -1,7 +1,11 @@
 from django import forms
 from allauth.account.forms import SignupForm
-from django.contrib.auth.models import Group, User
+from django.contrib.auth.models import Group
+from django.contrib.auth import get_user_model
 from .models import UserProfile, Swimling
+
+# Get the custom user model
+User = get_user_model()
 
 
 class CustomSignupForm(SignupForm):
@@ -31,17 +35,52 @@ class CustomSignupForm(SignupForm):
         return user
 
 
-# Update Profile
+# Update Profile - NOW WITH USERNAME
 class UserForm(forms.ModelForm):
     class Meta:
         model = User
-        fields = ("first_name", "last_name")
+        fields = ("username", "first_name", "last_name")
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Add help text and styling
+        self.fields['username'].help_text = (
+            "Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only."
+        )
+        self.fields['username'].widget.attrs.update({
+            'placeholder': 'Enter your username'
+        })
+        self.fields['first_name'].widget.attrs.update({
+            'placeholder': 'Enter your first name'
+        })
+        self.fields['last_name'].widget.attrs.update({
+            'placeholder': 'Enter your last name'
+        })
+
+    def clean_username(self):
+        """Ensure username is unique (excluding current user)"""
+        username = self.cleaned_data['username']
+
+        # Get the current user instance
+        user_id = self.instance.pk if self.instance else None
+
+        # Check if username exists for other users
+        if User.objects.filter(username=username).exclude(pk=user_id).exists():
+            raise forms.ValidationError("A user with that username already exists.")
+
+        return username
 
 
 class UserProfileForm(forms.ModelForm):
     class Meta:
         model = UserProfile
         fields = ('notes',)
+        widgets = {
+            'notes': forms.Textarea(attrs={
+                'rows': 4,
+                'placeholder': 'Add any personal notes or preferences...'
+            }),
+        }
 
 
 class NewSwimlingForm(forms.ModelForm):

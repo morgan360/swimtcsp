@@ -21,6 +21,29 @@
 
         <h1 class="title has-text-centered">Login</h1>
 
+        <!-- QUICK LOGIN BUTTONS FOR YOUR TEST USERS -->
+        <div class="notification is-info">
+          <p class="has-text-weight-semibold">🚀 Quick Test Login</p>
+          <div class="buttons">
+            <button class="button is-link" onclick="quickLogin('public@acme.ie', 'public1234')">
+              <span class="icon"><i class="fas fa-user"></i></span>
+              <span>Public User</span>
+            </button>
+            <button class="button is-success" onclick="quickLogin('guardian@acme.ie', 'guardian1234')">
+              <span class="icon"><i class="fas fa-child"></i></span>
+              <span>Guardian</span>
+            </button>
+            <button class="button is-warning" onclick="quickLogin('bishopgalvin@acme.ie', 'bishopgalvin1234')">
+              <span class="icon"><i class="fas fa-school"></i></span>
+              <span>Bishop Galvin</span>
+            </button>
+            <button class="button is-info" onclick="quickLogin('zion@acme.ie', 'zion1234')">
+              <span class="icon"><i class="fas fa-graduation-cap"></i></span>
+              <span>Zion School</span>
+            </button>
+          </div>
+        </div>
+
         {% get_providers as socialaccount_providers %}
         {% if socialaccount_providers %}
           <div class="box has-text-centered">
@@ -85,5 +108,19 @@
 
   </div>
 </section>
+
+<script>
+function quickLogin(email, password) {
+  // Find the email/username field (it might be named 'login' in django-allauth)
+  const loginField = document.querySelector('input[name="login"]') || document.querySelector('input[type="email"]') || document.querySelector('input[type="text"]');
+  const passwordField = document.querySelector('input[name="password"]') || document.querySelector('input[type="password"]');
+
+  if (loginField && passwordField) {
+    loginField.value = email;
+    passwordField.value = password;
+    document.querySelector('form').submit();
+  }
+}
+</script>
 
 {% endblock %}

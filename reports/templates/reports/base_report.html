@@ -1,0 +1,43 @@
+{% extends "base/_base.html" %}
+{% load static %}
+
+{% block title %}Report | TCSP{% endblock %}
+
+{% block extra_css %}
+  <!-- DataTables CSS -->
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+  <style>
+    /* Optional: Add report-specific styles here */
+    .dataTables_wrapper .dataTables_filter {
+      float: right;
+      text-align: right;
+    }
+    .dataTables_wrapper .dataTables_paginate {
+      float: right;
+    }
+  </style>
+{% endblock %}
+
+{% block content %}
+  <section class="section">
+    <div class="container">
+      <div class="block">
+        <h1 class="title is-3">{% block report_title %}Untitled Report{% endblock %}</h1>
+      </div>
+
+      {% block report_filters %}
+      <!-- Optional filters can go here -->
+      {% endblock %}
+
+      {% block report_content %}
+      <!-- Child templates will inject DataTables here -->
+      {% endblock %}
+    </div>
+  </section>
+{% endblock %}
+
+{% block extra_js %}
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+  {% block report_js %}{% endblock %}
+{% endblock %}

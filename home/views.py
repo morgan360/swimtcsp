@@ -6,6 +6,7 @@ from django.template.loader import render_to_string
 from django.contrib.auth.decorators import user_passes_test
 from utils.user_in_group import user_in_group
 from django.contrib.auth.decorators import login_required
+from utils.terms_utils import get_current_term
 
 
 def contact_us(request):

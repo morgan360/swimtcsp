@@ -271,3 +271,38 @@ input:focus, textarea:focus, select:focus {
     color: #363636 !important;
   }
 }
+/* DataTables column alignment */
+th, td {
+  white-space: nowrap;
+}
+
+td.numeric {
+  text-align: right;
+}
+
+/* Utilization badge colors */
+span.utilization-tag {
+  font-weight: bold;
+}
+
+span.utilization-tag.low {
+  color: #48c774; /* Bulma green */
+}
+
+span.utilization-tag.medium {
+  color: #ffdd57; /* Bulma yellow */
+}
+
+span.utilization-tag.high {
+  color: #f14668; /* Bulma red */
+}
+
+/* Capacity status */
+.tag.full {
+  background-color: #f14668 !important;
+  color: white !important;
+}
+table.dataTable thead input.column-filter {
+  width: 100%;
+  box-sizing: border-box;
+}

@@ -8,5 +8,16 @@
   "scripts": {
     "tailwind:watch": "npx tailwindcss -i ./theme/static/src/input.css -o ./theme/static/css/tailwind.css --watch",
     "tailwind:build": "npx tailwindcss -i ./theme/static/src/input.css -o ./theme/static/css/tailwind.css --minify"
+  },
+  "dependencies": {
+    "datatables.net": "^2.3.2",
+    "datatables.net-bs5": "^2.3.2",
+    "datatables.net-buttons": "^3.2.3",
+    "datatables.net-buttons-bs5": "^3.2.3",
+    "datatables.net-buttons-dt": "^3.2.3",
+    "datatables.net-dt": "^2.3.2",
+    "datatables.net-responsive": "^3.0.4",
+    "datatables.net-responsive-bs5": "^3.0.4",
+    "datatables.net-responsive-dt": "^3.0.4"
   }
 }

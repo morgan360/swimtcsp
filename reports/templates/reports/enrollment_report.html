@@ -1,0 +1,147 @@
+{% extends 'reports/base_report.html' %}
+{% load static %}
+
+{% block report_title %}Enrollment Report{% endblock %}
+
+{% block report_filters %}
+    <!-- 🔄 Term Filter -->
+    <div class="box mb-5">
+        <div class="field is-grouped">
+            <div class="control"><label class="label">Select Term:</label></div>
+            <div class="control">
+                <div class="select">
+                    <select id="termFilter">
+                        {% if previous_term %}
+                            <option value="previous">{{ previous_term.concatenated_term }} (Previous)</option>
+                        {% endif %}
+                        {% if current_term %}
+                            <option value="current" selected>{{ current_term.concatenated_term }} (Current)</option>
+                        {% endif %}
+                        {% if next_term %}
+                            <option value="next">{{ next_term.concatenated_term }} (Next)</option>
+                        {% endif %}
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 📊 Summary Cards -->
+    <div class="columns is-multiline mb-5">
+        <div class="column is-3">
+            <div class="box has-text-centered"><p class="heading">Total Programs</p>
+                <p class="title is-4" id="totalPrograms">-</p></div>
+        </div>
+        <div class="column is-3">
+            <div class="box has-text-centered"><p class="heading">Total Enrollments</p>
+                <p class="title is-4 has-text-primary" id="totalEnrollments">-</p></div>
+        </div>
+        <div class="column is-3">
+            <div class="box has-text-centered"><p class="heading">Total Capacity</p>
+                <p class="title is-4" id="totalCapacity">-</p></div>
+        </div>
+        <div class="column is-3">
+            <div class="box has-text-centered"><p class="heading">Overall Utilization</p>
+                <p class="title is-4 has-text-info" id="overallUtilization">-</p></div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block report_content %}
+    <!-- 📋 Enrollment Table with column filters -->
+    <div class="box">
+        <div class="table-container">
+            <table id="enrollmentTable" class="table is-striped is-hoverable is-fullwidth">
+                <thead>
+                <tr>
+                    <th>Program</th>
+                    <th>Category</th>
+                    <th>Instructor</th>
+                    <th class="has-text-centered">Enrollments</th>
+                    <th class="has-text-centered">Capacity</th>
+                    <th class="has-text-centered">Spaces Left</th>
+                </tr>
+                <tr>
+                    <th><input type="text" placeholder="Filter program" class="input is-small column-filter"
+                               data-index="0"></th>
+                    <th><input type="text" placeholder="Filter category" class="input is-small column-filter"
+                               data-index="1"></th>
+                    <th><input type="text" placeholder="Filter instructor" class="input is-small column-filter"
+                               data-index="2"></th>
+                    <th></th>
+                    <th></th>
+                    <th></th>
+                    <th></th>
+                </tr>
+                </thead>
+            </table>
+        </div>
+    </div>
+{% endblock %}
+
+{% block report_js %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const table = $('#enrollmentTable').DataTable({
+                ajax: {
+                    url: '/reports/enrollment/data/',
+                    data: function (d) {
+                        d.term_filter = $('#termFilter').val();
+                    },
+                    dataSrc: function (json) {
+                        $('#totalPrograms').text(json.summary.total_programs || 0);
+                        $('#totalEnrollments').text(json.summary.total_enrollments || 0);
+                        $('#totalCapacity').text(json.summary.total_capacity || 0);
+                        $('#overallUtilization').text((json.summary.overall_utilization || 0) + '%');
+                        return json.data;
+                    }
+                },
+                columns: [
+                    {data: 'name'},
+                    {data: 'category'},
+                    {data: 'instructor'},
+                    {data: 'enrollments', className: 'has-text-centered'},
+                    {data: 'capacity', className: 'has-text-centered'},
+                    {data: 'spaces_left', className: 'has-text-centered'}
+                ],
+                searching: false,
+                order: [[3, 'desc']], // Order by enrollments
+                pageLength: 25,
+                responsive: true,
+                pagingType: 'simple_numbers',
+                dom:
+                    "<'columns is-vcentered mb-2'<'column is-6'l><'column is-6 has-text-right'p>>" +
+                    "<'table-responsive't>" +
+                    "<'columns mt-3'<'column is-6'i><'column is-6 has-text-right'p>>",
+                drawCallback: function () {
+                    $('.dataTables_paginate').addClass('pagination is-centered');
+                    $('.dataTables_paginate a').addClass('pagination-link');
+                    $('.dataTables_paginate .current').addClass('is-current');
+                },
+                initComplete: function () {
+                    $('#enrollmentTable thead tr:eq(1) th').each(function (i) {
+                        const isFilterable = [0, 1, 2].includes(i);
+                        if (isFilterable) {
+                            $(this).html('<input type="text" placeholder="Search" class="input is-small column-filter" style="width:100%"/>');
+                        } else {
+                            $(this).html('');
+                        }
+                    });
+
+                    $('#enrollmentTable thead').on('keyup change clear', '.column-filter', function () {
+                        const i = $(this).parent().index();
+                        if (table.column(i).search() !== this.value) {
+                            table.column(i).search(this.value).draw();
+                        }
+                    });
+                }
+            });
+
+// 🔄 Automatically reload on term change
+            $('#termFilter').on('change', function () {
+                table.ajax.reload();
+            });
+
+        });
+    </script>
+{% endblock %}

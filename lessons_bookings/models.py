@@ -53,6 +53,28 @@ class Term(models.Model):
         current_term = cls.objects.filter(start_date__lte=today, end_date__gte=today).first()
         return current_term.id if current_term else None
 
+    @classmethod
+    def get_current_term(cls):
+        today = timezone.now().date()
+        return cls.objects.filter(
+            start_date__lte=today,
+            end_date__gte=today
+        ).order_by('start_date').first()
+
+    @classmethod
+    def get_previous_term(cls):
+        today = timezone.now().date()
+        return cls.objects.filter(
+            end_date__lt=today
+        ).order_by('-end_date').first()
+
+    @classmethod
+    def get_next_term(cls):
+        today = timezone.now().date()
+        return cls.objects.filter(
+            start_date__gt=today
+        ).order_by('start_date').first()
+
     def concatenated_term(self):
         formatted_start_date = self.start_date.strftime('%d %b %Y')  # ISO format
         formatted_end_date = self.end_date.strftime('%d %b %Y')
@@ -71,9 +93,7 @@ class Term(models.Model):
         else:
             return 'Outside Term Dates'
 
-
     def get_phase_code(self):
-
         today = timezone.now().date()
         current_term_id = Term.get_current_term_id()
 

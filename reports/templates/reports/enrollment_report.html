@@ -7,7 +7,7 @@
     <!-- 🔄 Term Filter -->
     <div class="box mb-5">
         <div class="field is-grouped">
-            <div class="control"><label class="label">Select Term:</label></div>
+            <div class="control"><label class="class">Select Term:</label></div>
             <div class="control">
                 <div class="select">
                     <select id="termFilter">
@@ -62,13 +62,9 @@
                     <th class="has-text-centered">Spaces Left</th>
                 </tr>
                 <tr>
-                    <th><input type="text" placeholder="Filter program" class="input is-small column-filter"
-                               data-index="0"></th>
-                    <th><input type="text" placeholder="Filter category" class="input is-small column-filter"
-                               data-index="1"></th>
-                    <th><input type="text" placeholder="Filter instructor" class="input is-small column-filter"
-                               data-index="2"></th>
-                    <th></th>
+                    <th><input type="text" placeholder="Filter program" class="input is-small column-filter" data-index="0" onkeydown="event.stopPropagation();"></th>
+                    <th><input type="text" placeholder="Filter category" class="input is-small column-filter" data-index="1" onkeydown="event.stopPropagation();"></th>
+                    <th><input type="text" placeholder="Filter instructor" class="input is-small column-filter" data-index="2" onkeydown="event.stopPropagation();"></th>
                     <th></th>
                     <th></th>
                     <th></th>
@@ -104,44 +100,35 @@
                     {data: 'capacity', className: 'has-text-centered'},
                     {data: 'spaces_left', className: 'has-text-centered'}
                 ],
-                searching: false,
-                order: [[3, 'desc']], // Order by enrollments
+                {#searching: false,#}
+                order: [[3, 'desc']],
                 pageLength: 25,
                 responsive: true,
                 pagingType: 'simple_numbers',
-                dom:
-                    "<'columns is-vcentered mb-2'<'column is-6'l><'column is-6 has-text-right'p>>" +
-                    "<'table-responsive't>" +
-                    "<'columns mt-3'<'column is-6'i><'column is-6 has-text-right'p>>",
+                dom: "<'table-responsive't><'columns mt-3'<'column is-6'i><'column is-6 has-text-right'p>>",
                 drawCallback: function () {
                     $('.dataTables_paginate').addClass('pagination is-centered');
                     $('.dataTables_paginate a').addClass('pagination-link');
                     $('.dataTables_paginate .current').addClass('is-current');
                 },
                 initComplete: function () {
-                    $('#enrollmentTable thead tr:eq(1) th').each(function (i) {
-                        const isFilterable = [0, 1, 2].includes(i);
-                        if (isFilterable) {
-                            $(this).html('<input type="text" placeholder="Search" class="input is-small column-filter" style="width:100%"/>');
-                        } else {
-                            $(this).html('');
-                        }
-                    });
-
-                    $('#enrollmentTable thead').on('keyup change clear', '.column-filter', function () {
-                        const i = $(this).parent().index();
-                        if (table.column(i).search() !== this.value) {
-                            table.column(i).search(this.value).draw();
-                        }
+                    const api = this.api();
+                    api.columns([0, 1, 2]).every(function (index) {
+                        const column = this;
+                        const input = $(`.column-filter[data-index="${index}"]`);
+                        input.off('keyup change clear');
+                        input.on('keyup change clear', function () {
+                            if (column.search() !== this.value) {
+                                column.search(this.value).draw();
+                            }
+                        });
                     });
                 }
             });
 
-// 🔄 Automatically reload on term change
             $('#termFilter').on('change', function () {
                 table.ajax.reload();
             });
-
         });
     </script>
 {% endblock %}

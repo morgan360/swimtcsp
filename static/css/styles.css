@@ -306,3 +306,16 @@ table.dataTable thead input.column-filter {
   width: 100%;
   box-sizing: border-box;
 }
+.message-header.has-background-primary {
+  background-color: var(--primary-color);
+}
+.message-header.has-background-accent {
+  background-color: var(--accent-color);
+}
+.card-header.is-swim {
+  background-color: var(--primary-color); /* Teal */
+}
+
+.card-header.is-public {
+  background-color: var(--accent-color); /* Aqua */
+}

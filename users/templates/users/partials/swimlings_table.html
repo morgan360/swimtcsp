@@ -1,55 +1,57 @@
-<!-- Swimling Panel -->
+<!-- ✅ Flash Messages -->
 {% if messages %}
-    <div class="bg-blue-100 border-t border-b border-blue-500 text-blue-700 px-4 py-3" role="alert">
-        {% for message in messages %}
-            <p class="font-bold">{{ message.tags|capfirst }}</p>
-            <p>{{ message }}</p>
-        {% endfor %}
-    </div>
+  <div class="notification is-info">
+    {% for message in messages %}
+      <strong class="is-capitalized">{{ message.tags }}</strong><br>
+      {{ message }}
+    {% endfor %}
+  </div>
 {% endif %}
-<div class="overflow-x-auto">
-    <table class="min-w-full table-auto border-collapse border border-gray-200">
-        <thead class="bg-blue-900">
-        <tr>
-            <th class="border border-gray-300 px-4 py-2 text-left text-white">Name</th>
-            <th class="border border-gray-300 px-4 py-2 text-left text-white">DOB</th>
-            <th class="border border-gray-300 px-4 py-2 text-left text-white">Notes</th>
-            <th class="border border-gray-300 px-4 py-2 text-left text-white">School ID</th>
-            <th class="border border-gray-300 px-4 py-2 text-left text-white">Actions</th>
-        </tr>
-        </thead>
-        <tbody>
-        {% for item in swimling_management_data %}
-            <tr class="hover:bg-gray-50">
-                <td class="border border-gray-300 px-4 py-2">{{ item.first_name }} {{ item.last_name }}</td>
-                <td class="border border-gray-300 px-4 py-2">
-                    {% if item.dob %}
-                        {{ item.dob|date:"Y-m-d" }}
-                    {% else %}
-                        Not provided
-                    {% endif %}
-                </td>
-                <td class="border border-gray-300 px-4 py-2">{{ item.notes }}</td>
-                <td class="border border-gray-300 px-4 py-2">{{ item.sco_role_num }}</td>
-                <td class="border border-gray-300 px-4 py-2 text-center">
-                    <a href="{% url 'users:edit-swimling' id=item.id %}"
-                       class="px-4 py-2 bg-blue-500 text-white font-bold rounded hover:bg-blue-700 cursor-pointer transition duration-300 ease-in-out"
-                       title="Edit Swimling">
-                        Edit
-                    </a>
-                </td>
-            </tr>
-        {% empty %}
-            <tr>
-                <td colspan="5" class="border border-gray-300 px-4 py-2 text-center">No swimlings found.</td>
-            </tr>
-        {% endfor %}
 
-        </tbody>
-    </table>
+<!-- ✅ Swimling Table -->
+<div class="table-container">
+  <table class="table is-fullwidth is-bordered is-hoverable has-shadow">
+    <thead class="has-background-primary">
+      <tr>
+        <th class="has-text-white">Name</th>
+        <th class="has-text-white">DOB</th>
+        <th class="has-text-white">Notes</th>
+        <th class="has-text-white">School ID</th>
+        <th class="has-text-white has-text-centered">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for item in swimling_management_data %}
+      <tr>
+        <td>{{ item.first_name }} {{ item.last_name }}</td>
+        <td>
+          {% if item.dob %}
+            {{ item.dob|date:"Y-m-d" }}
+          {% else %}
+            <span class="has-text-grey-light">Not provided</span>
+          {% endif %}
+        </td>
+        <td>{{ item.notes }}</td>
+        <td>{{ item.sco_role_num }}</td>
+        <td class="has-text-centered">
+          <a href="{% url 'users:edit-swimling' id=item.id %}"
+             class="button is-book is-small" title="Edit Swimling">
+            Edit
+          </a>
+        </td>
+      </tr>
+    {% empty %}
+      <tr>
+        <td colspan="5" class="has-text-centered">No swimlings found.</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
 </div>
-<div class="flex justify-left mt-4">
-    {% include 'users/partials/new_swimling_form.html' %}
-</div>
-<hr class="border-t-4 border-blue-300 my-10">
 
+<!-- ✅ Inline Add Form (if kept visible here) -->
+<div class="mt-4">
+  {% include 'users/partials/new_swimling_form.html' %}
+</div>
+
+<hr class="my-6">

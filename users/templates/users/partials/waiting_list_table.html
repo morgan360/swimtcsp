@@ -1,31 +1,37 @@
-<table class="min-w-full table-auto border-collapse border border-gray-200">
-    <thead class="text-white bg-blue-900">
-    <tr>
-        <th class="border border-gray-300 px-4 py-2 text-left">Swimling Name</th>
-        <th class="border border-gray-300 px-4 py-2 text-left">Requested Lesson</th>
-        <th class="border border-gray-300 px-4 py-2 text-left">Assigned Lesson</th>
-        <th class="border border-gray-300 px-4 py-2 text-left">Action</th>
-    </tr>
+<div class="table-container">
+  <table class="table is-fullwidth is-bordered is-hoverable has-shadow">
+    <thead class="has-background-danger">
+      <tr>
+        <th class="has-text-white">Swimling Name</th>
+        <th class="has-text-white">Requested Lesson</th>
+        <th class="has-text-white">Assigned Lesson</th>
+        <th class="has-text-white">Action</th>
+      </tr>
     </thead>
     <tbody>
     {% for entry in waiting_list_data %}
-        <tr class="hover:bg-gray-50">
-            <td class="border border-gray-300 px-4 py-2">{{ entry.swimling_name }}</td>
-            <td class="border border-gray-300 px-4 py-2">{{ entry.requested_lesson }}</td>
-            <td class="border border-gray-300 px-4 py-2">{{ entry.assigned_lesson }}</td>
-            <td class="border border-gray-300 px-4 py-2">
-                {% if entry.can_book %}
-                    <a href="{% url 'shopping_cart:review_waiting_list_booking' entry.swimling_id entry.assigned_lesson_id %}" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">Book Now</a>
-                {% else %}
-                    <span class="text-gray-500">Notification Pending</span>
-                {% endif %}
-            </td>
-        </tr>
+      <tr>
+        <td>{{ entry.swimling_name }}</td>
+        <td>{{ entry.requested_lesson }}</td>
+        <td>{{ entry.assigned_lesson }}</td>
+        <td>
+          {% if entry.can_book %}
+            <a href="{% url 'shopping_cart:review_waiting_list_booking' entry.swimling_id entry.assigned_lesson_id %}"
+               class="button is-book is-small">
+              Book Now
+            </a>
+          {% else %}
+            <span class="has-text-grey">Notification Pending</span>
+          {% endif %}
+        </td>
+      </tr>
     {% empty %}
-        <tr>
-            <td colspan="4" class="border border-gray-300 px-4 py-2 text-center">No swimlings on the waiting list.</td>
-        </tr>
+      <tr>
+        <td colspan="4" class="has-text-centered">No swimlings on the waiting list.</td>
+      </tr>
     {% endfor %}
     </tbody>
-</table>
-<hr class="border-t-4 border-blue-300 my-10">
+  </table>
+</div>
+
+<hr class="my-6">

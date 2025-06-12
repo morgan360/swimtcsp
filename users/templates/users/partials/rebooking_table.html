@@ -1,70 +1,70 @@
-<table class="min-w-full table-auto border-collapse border border-gray-200">
-    <thead class="text-white bg-blue-900">
-    <tr>
-        <th class="border border-gray-300 px-4 py-2 text-left">Name</th>
-        <th class="border border-gray-300 px-4 py-2 text-left">Registered This Term</th>
-        <th class="border border-gray-300 px-4 py-2 text-left">Registered Next Term</th>
-        <th class="border border-gray-300 px-4 py-2 text-left">ReBooking*</th>
-    </tr>
+<div class="table-container">
+  <table class="table is-fullwidth is-bordered is-hoverable has-shadow">
+    <thead class="has-background-primary">
+      <tr>
+        <th class="has-text-white">Name</th>
+        <th class="has-text-white">Registered This Term</th>
+        <th class="has-text-white">Registered Next Term</th>
+        <th class="has-text-white">ReBooking*</th>
+      </tr>
     </thead>
     <tbody>
-    <!-- List of currently registered swimlings -->
     {% for item in normal_lessons %}
-        <tr class="hover:bg-gray-50">
-            <td class="border border-gray-300 px-4 py-2">{{ item.first_name }} {{ item.last_name }}</td>
-            <td class="border border-gray-300 px-4 py-2">
-                {% if item.is_registered %}
-                    {% for lesson in item.registered_lessons %}
-                        {{ lesson.name }}{% if not forloop.last %}, {% endif %}
-                    {% endfor %}
-                {% else %}
-                    <span class="text-red-600">Not registered for current term</span>
-                {% endif %}
-            </td>
-            <td class="border border-gray-300 px-4 py-2">
-                <!-- Assuming you have a mechanism to determine next term registration -->
-                {% if item.is_registered_next_term %}
-                    <span class="text-green-600 font-semibold">Registered for Next Term</span>
-                {% else %}
-                    <span class="text-red-600">Not registered for next term</span>
-                {% endif %}
-            </td>
-            <td class="border border-gray-300 px-4 py-2">
-                <!-- Check if Rebooking Phase -->
-                {% if True %} <!-- Make this dynamic as needed -->
-                    {% if item.registered_lessons %}
-                        <!-- Iterate through each registered lesson for rebooking options -->
-                        {% for lesson in item.registered_lessons %}
-                            {% if item.swimling_id and lesson.id %}
-                                <!-- Begin form for rebooking -->
-                                <form method="post" action="{% url 'shopping_cart:review_rebooking' item.swimling_id lesson.id %}">
-                                    {% csrf_token %}
-                                    <button type="submit"
-                                            class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
-                                        Rebook
-                                    </button>
-                                </form>
-                            {% else %}
-                                <span class="text-red-600">Invalid Rebooking Data</span>
-                            {% endif %}
-                        {% endfor %}
-                    {% else %}
-                        <span class="text-red-600">No Lessons Available</span>
-                    {% endif %}
-                {% else %}
-                    <button type="button"
-                            class="bg-gray-500 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-                            disabled>
-                        Closed
+      <tr>
+        <!-- Name -->
+        <td>{{ item.first_name }} {{ item.last_name }}</td>
+
+        <!-- Registered This Term -->
+        <td>
+          {% if item.is_registered %}
+            {% for lesson in item.registered_lessons %}
+              {{ lesson.name }}{% if not forloop.last %}, {% endif %}
+            {% endfor %}
+          {% else %}
+            <span class="has-text-danger">Not registered for current term</span>
+          {% endif %}
+        </td>
+
+        <!-- Registered Next Term -->
+        <td>
+          {% if item.is_registered_next_term %}
+            <span class="has-text-success has-text-weight-semibold">Registered for Next Term</span>
+          {% else %}
+            <span class="has-text-danger">Not registered for next term</span>
+          {% endif %}
+        </td>
+
+        <!-- Rebooking Button -->
+        <td>
+          {% if True %} {# Replace with actual condition for rebooking phase #}
+            {% if item.registered_lessons %}
+              {% for lesson in item.registered_lessons %}
+                {% if item.swimling_id and lesson.id %}
+                  <form method="post" action="{% url 'shopping_cart:review_rebooking' item.swimling_id lesson.id %}" class="mb-2">
+                    {% csrf_token %}
+                    <button type="submit" class="button is-book is-small">
+                      Rebook
                     </button>
+                  </form>
+                {% else %}
+                  <span class="has-text-danger">Invalid Rebooking Data</span>
                 {% endif %}
-            </td>
-        </tr>
+              {% endfor %}
+            {% else %}
+              <span class="has-text-danger">No Lessons Available</span>
+            {% endif %}
+          {% else %}
+            <button class="button is-small is-light" disabled>Closed</button>
+          {% endif %}
+        </td>
+      </tr>
     {% empty %}
-        <tr>
-            <td colspan="4" class="border border-gray-300 px-4 py-2 text-center">No swimlings found.</td>
-        </tr>
+      <tr>
+        <td colspan="4" class="has-text-centered">No swimlings found.</td>
+      </tr>
     {% endfor %}
     </tbody>
-</table>
-<hr class="border-t-4 border-blue-300 my-10">
+  </table>
+</div>
+
+<hr class="my-6">

@@ -1,57 +1,67 @@
 {% extends 'base/_base.html' %}
 
 {% block content %}
-<section class="section">
-  <div class="container">
-    <h1 class="title is-3 has-text-centered mb-6">Swimling Management Dashboard</h1>
+    <section class="section">
+        <div class="container">
+            <h1 class="title is-3 has-text-centered mb-6">Swimling Management Dashboard</h1>
 
-    <div x-data="{ openPanel: 'swimling' }" class="accordion">
+            <div x-data="{ openPanel: 'swimling' }" class="accordion">
 
-      <!-- 🏊‍♂️ Swimling Management -->
-      <article class="message has-shadow is-swim mb-5">
-        <div class="message-header has-background-primary has-text-white" @click="openPanel = (openPanel === 'swimling' ? null : 'swimling')">
-          <p>🏊‍♂️ Swimling Management</p>
-          <span class="icon"><i :class="openPanel === 'swimling' ? 'fas fa-angle-up' : 'fas fa-angle-down'"></i></span>
-        </div>
-        <div class="message-body" x-show="openPanel === 'swimling'" x-transition>
-          {% include 'users/partials/swimlings_table.html' %}
-        </div>
-      </article>
+                <!-- 🏊‍♂️ Swimling Management -->
+                <article class="message has-shadow is-swim mb-5">
+                    <div class="message-header has-background-primary has-text-white"
+                         @click="openPanel = (openPanel === 'swimling' ? null : 'swimling')">
+                        <p>🏊‍♂️ Swimling Management</p>
+                        <span class="icon"><i
+                                :class="openPanel === 'swimling' ? 'fas fa-angle-up' : 'fas fa-angle-down'"></i></span>
+                    </div>
+                    <div class="message-body" x-show="openPanel === 'swimling'" x-transition>
+                        <div id="swimling-management">
+                            {% include 'users/partials/swimlings_table.html' %}
+                        </div>
+                    </div>
+                </article>
 
-      <!-- 🔁 Lessons ReBooking -->
-      <article class="message has-shadow is-public mb-5">
-        <div class="message-header has-background-accent has-text-white" @click="openPanel = (openPanel === 'rebooking' ? null : 'rebooking')">
-          <p>🔁 Lessons ReBooking</p>
-          <span class="icon"><i :class="openPanel === 'rebooking' ? 'fas fa-angle-up' : 'fas fa-angle-down'"></i></span>
-        </div>
-        <div class="message-body" x-show="openPanel === 'rebooking'" x-transition>
-          {% include 'users/partials/rebooking_table.html' %}
-        </div>
-      </article>
+                <!-- 🔁 Lessons ReBooking -->
+                <article class="message has-shadow is-public mb-5">
+                    <div class="message-header has-background-accent has-text-white"
+                         @click="openPanel = (openPanel === 'rebooking' ? null : 'rebooking')">
+                        <p>🔁 Lessons ReBooking</p>
+                        <span class="icon"><i
+                                :class="openPanel === 'rebooking' ? 'fas fa-angle-up' : 'fas fa-angle-down'"></i></span>
+                    </div>
+                    <div class="message-body" x-show="openPanel === 'rebooking'" x-transition>
+                        {% include 'users/partials/rebooking_table.html' %}
+                    </div>
+                </article>
 
-      <!-- 🏫 School Booking -->
-      <article class="message has-shadow is-school mb-5">
-        <div class="message-header has-background-school has-text-white" @click="openPanel = (openPanel === 'school' ? null : 'school')">
-          <p>🏫 School Booking</p>
-          <span class="icon"><i :class="openPanel === 'school' ? 'fas fa-angle-up' : 'fas fa-angle-down'"></i></span>
-        </div>
-        <div class="message-body" x-show="openPanel === 'school'" x-transition>
-          {% include 'users/partials/school_table.html' %}
-        </div>
-      </article>
+                <!-- 🏫 School Booking -->
+                <article class="message has-shadow is-school mb-5">
+                    <div class="message-header has-background-school has-text-white"
+                         @click="openPanel = (openPanel === 'school' ? null : 'school')">
+                        <p>🏫 School Booking</p>
+                        <span class="icon"><i
+                                :class="openPanel === 'school' ? 'fas fa-angle-up' : 'fas fa-angle-down'"></i></span>
+                    </div>
+                    <div class="message-body" x-show="openPanel === 'school'" x-transition>
+                        {% include 'users/partials/school_table.html' %}
+                    </div>
+                </article>
 
-      <!-- ⏳ Waiting List -->
-      <article class="message has-shadow is-admin">
-        <div class="message-header has-background-danger has-text-white" @click="openPanel = (openPanel === 'waiting' ? null : 'waiting')">
-          <p>⏳ Waiting List</p>
-          <span class="icon"><i :class="openPanel === 'waiting' ? 'fas fa-angle-up' : 'fas fa-angle-down'"></i></span>
-        </div>
-        <div class="message-body" x-show="openPanel === 'waiting'" x-transition>
-          {% include 'users/partials/waiting_list_table.html' %}
-        </div>
-      </article>
+                <!-- ⏳ Waiting List -->
+                <article class="message has-shadow is-admin">
+                    <div class="message-header has-background-danger has-text-white"
+                         @click="openPanel = (openPanel === 'waiting' ? null : 'waiting')">
+                        <p>⏳ Waiting List</p>
+                        <span class="icon"><i
+                                :class="openPanel === 'waiting' ? 'fas fa-angle-up' : 'fas fa-angle-down'"></i></span>
+                    </div>
+                    <div class="message-body" x-show="openPanel === 'waiting'" x-transition>
+                        {% include 'users/partials/waiting_list_table.html' %}
+                    </div>
+                </article>
 
-    </div>
-  </div>
-</section>
+            </div>
+        </div>
+    </section>
 {% endblock %}

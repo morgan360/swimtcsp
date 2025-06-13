@@ -41,6 +41,8 @@ htmlcov/
 *.tmp.*
 *.~*.*
 *~*
+# Ignore Python virtual environments
+.venv/
 
 # Virtual Environments
 venv/

@@ -89,9 +89,16 @@ Note: these scripts are stored in users/managment/commands. To be done in order.
 1. python manage.py export_users_sql
 2. python manage.py export_swimlings_sql
 ### Importing Swimlings on Pythonanywhere
+#### To delete swimlings:
+DELETE FROM schools_orders_orderitem;
+DELETE FROM waiting_list_waitinglist;
+DELETE FROM users_swimling;
+ALTER TABLE users_swimling AUTO_INCREMENT = 1;
+
 #### Shortcuts
 1. python manage.py import_users_sq
 2. python manage.py import_swimlings_sql
+3. python manage.py create_test_users
 
 ## Importing and exporting lessons Data
 This handles all three models together programs, categories, products

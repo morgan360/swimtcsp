@@ -2,51 +2,86 @@
 {% load crispy_forms_tags %}
 
 {% block content %}
-<div class="container mx-auto mt-8">
-    <h2 class="text-xl font-bold">Print Class Lists</h2>
-    <form method="post" action="{% url 'class_print' %}">
-        {% csrf_token %}
-        <div class="flex flex-wrap mb-6 -mx-3 items-center">
-            <div class="w-full md:w-1/6 px-3 mb-6 md:mb-0">
-                <label for="id_category" class="block uppercase tracking-wide text-white text-xs font-bold mb-2
-                text-right pr-4">Category:</label>
-            </div>
-            <div class="w-full md:w-2/6 px-3">
-                <select name="category" id="id_category" class="block appearance-none w-full bg-gray-200 border border-gray-200 text-gray-700 py-3 px-4 pr-8 rounded leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                        hx-get="{% url 'update-days' %}" hx-trigger="change" hx-target="#id_day">
-                    <option value="">Select a Category</option>
-                    {% for category in categories %}
-                        <option value="{{ category.id }}">{{ category.name }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-        </div>
+    <section class="section">
+        <div class="container">
+            <div class="box has-shadow">
+                <h2 class="title is-4">Print Class Lists</h2>
 
-        <div class="flex flex-wrap mb-6 -mx-3 items-center">
-            <div class="w-full md:w-1/6 px-3 mb-6 md:mb-0">
-                <label for="id_day" class="block uppercase tracking-wide text-white text-xs font-bold mb-2 text-right pr-4">Day:</label>
-            </div>
-            <div class="w-full md:w-2/6 px-3" id="id_day">
-                {% include 'reports/partials/day_options.html' %}
-                <!-- Day options will be populated here -->
-            </div>
-        </div>
+                <form method="post" action="{% url 'reports:class_print' %}">
+                    {% csrf_token %}
+                    <!-- Term Selection -->
+                    <div class="field is-horizontal">
+                        <div class="field-label is-normal">
+                            <label for="id_term" class="label">Term</label>
+                        </div>
+                        <div class="field-body">
+                            <div class="field">
+                                <div class="control">
+                                    <div class="select is-fullwidth">
+                                        <select name="term" id="id_term">
+                                            <option value="current">Current Term</option>
+                                            <option value="next">Next Term</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Category Dropdown -->
+                    <div class="field is-horizontal">
+                        <div class="field-label is-normal">
+                            <label for="id_category" class="label">Category</label>
+                        </div>
+                        <div class="field-body">
+                            <div class="field">
+                                <div class="control">
+                                    <div class="select is-fullwidth">
+                                        <select name="category" id="id_category"
+                                                hx-get="{% url 'reports:update-days' %}"
+                                                hx-trigger="change"
+                                                hx-target="#id_day">
+                                            <option value="">Select a Category</option>
+                                            {% for category in categories %}
+                                                <option value="{{ category.id }}">{{ category.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
-        <div class="flex flex-wrap mb-6 -mx-3 items-center">
-            <div class="w-full md:w-1/6 px-3 mb-6 md:mb-0">
-                <label for="id_lesson" class="block uppercase tracking-wide text-white text-xs font-bold mb-2 text-right pr-4">Lesson:</label>
-            </div>
-            <div class="w-full md:w-2/6 px-3" id="id_lesson">
-                {% include 'reports/partials/lesson_options.html' %}
-                <!-- Lesson options will be populated here -->
-            </div>
-        </div>
+                    <!-- Day Dropdown -->
+                    <div class="field is-horizontal mt-4">
+                        <div class="field-label is-normal">
+                            <label for="id_day" class="label">Day</label>
+                        </div>
+                        <div class="field-body" id="id_day">
+                            {% include 'reports/partials/day_options.html' %}
+                        </div>
+                    </div>
 
-        <div class="flex flex-wrap -mx-3">
-            <div class="w-full md:w-1/2 px-3">
-                <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">Submit</button>
+                    <!-- Lesson Dropdown -->
+                    <div class="field is-horizontal mt-4">
+                        <div class="field-label is-normal">
+                            <label for="id_lesson" class="label">Lesson</label>
+                        </div>
+                        <div class="field-body" id="id_lesson">
+                            {% include 'reports/partials/lesson_options.html' %}
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="field mt-5">
+                        <div class="control">
+                            <button type="submit" class="button is-primary is-medium">
+                                Print Class List
+                            </button>
+                        </div>
+                    </div>
+
+                </form>
             </div>
         </div>
-    </form>
-</div>
+    </section>
 {% endblock %}

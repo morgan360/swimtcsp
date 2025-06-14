@@ -79,7 +79,7 @@ class UserAdmin(HijackUserAdminMixin, ImportExportMixin, BaseUserAdmin):
         return obj.id
     get_user_id.short_description = 'User ID'  # Set the column header
 
-    list_display = ('get_user_id', 'email', 'full_name', 'username', 'mobile_phone', 'display_groups',)
+    list_display = ('get_user_id', 'email',  'username', 'mobile_phone', 'display_groups',)
     list_filter = [('last_name', DropdownFilter), ('first_name', DropdownFilter), ('groups', RelatedDropdownFilter)]
     search_fields = ('email', 'last_name', 'first_name',)
     ordering = ('last_name', 'first_name',)

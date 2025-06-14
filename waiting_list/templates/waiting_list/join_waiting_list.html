@@ -4,24 +4,37 @@
 {% block title %}Waiting List{% endblock %}
 
 {% block content %}
-    <div class="mt-28">
-        <div class="max-w-lg mx-auto bg-white p-6 rounded-lg shadow-md">
-            <h2 class="text-orange-400 text-2xl font-semibold mb-4">Join Waiting List</h2>
-            <p class="text-gray-700 mb-2"><span class="font-medium">Lesson:</span> {{ product.name }}</p>
-            <form method="POST">
-                {% csrf_token %}
-                <div class="mb-4 text-gray-700">
-                    <label for="swimling" class="block text-sm font-medium text-gray-700">Select Swimling</label>
-                    <select id="swimling" name="swimling" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-gray-700">
-                        {% for swimling in swimlings %}
-                            <option class="text-gray-700" value="{{ swimling.id }}">{{ swimling }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <button type="submit" class="w-full bg-blue-500 text-white font-bold py-2 px-4 rounded hover:bg-blue-600">
-                    Join Waiting List
-                </button>
-            </form>
+<section class="section">
+  <div class="container">
+    <div class="box" style="max-width: 600px; margin: 0 auto;">
+      <h2 class="title is-4 has-text-primary">Join Waiting List</h2>
+      <p class="mb-4"><strong>Lesson:</strong> {{ product.name }}</p>
+
+      <form method="POST">
+        {% csrf_token %}
+
+        <div class="field">
+          <label for="swimling" class="label">Select Swimling</label>
+          <div class="control">
+            <div class="select is-fullwidth">
+              <select id="swimling" name="swimling">
+                {% for swimling in swimlings %}
+                  <option value="{{ swimling.id }}">{{ swimling }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
         </div>
+
+        <div class="field mt-5">
+          <div class="control">
+            <button type="submit" class="button is-book is-fullwidth">
+              Join Waiting List
+            </button>
+          </div>
+        </div>
+      </form>
     </div>
+  </div>
+</section>
 {% endblock %}

@@ -86,13 +86,18 @@ class Command(BaseCommand):
                     except:
                         created_dt = None
 
-                # Allow duplicates; do not enforce uniqueness on import
-                LessonEnrollment.objects.create(
+                if LessonEnrollment.objects.filter(swimling=swimling, lesson=lesson, term=term).exists():
+                    skipped += 1
+                    continue
+
+                LessonEnrollment.objects.update_or_create(
                     swimling=swimling,
                     lesson=lesson,
                     term=term,
-                    notes=row['notes'],
-                    created=created_dt or None
+                    defaults={
+                        'notes': row['notes'],
+                        'created': created_dt or None
+                    }
                 )
                 imported += 1
 

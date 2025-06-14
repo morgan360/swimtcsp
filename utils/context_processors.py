@@ -6,90 +6,76 @@ from django.http import HttpRequest
 from typing import Dict
 from django.utils import timezone
 from django.utils.formats import date_format
+from utils.terms_utils import get_term_context_data
 
+from datetime import datetime
+from django.utils import formats
+from lessons_bookings.models import Term
+from schools_bookings.models import ScoTerm
+from django.http import HttpRequest
+from typing import Dict
+from django.utils import timezone
+from django.utils.formats import date_format
+from utils.terms_utils import get_term_context_data
 
 def get_term_info(request: HttpRequest) -> Dict[str, str]:
-    """
-    Context processor to retrieve the current term, its current phase, and the next phase.
+    data = get_term_context_data()
 
-    Args:
-    - request: HttpRequest object.
+    current_term = data['current_term']
+    next_term = data['next_term']
+    previous_term = data['previous_term']
+    phase_id = data['current_phase_id']
+    today = data['today']
 
-    Returns:
-    - Dictionary with keys 'current_term', 'current_phase', and 'next_phase' associated to the current term's string
-      representation, its current phase, and the next phase, or messages indicating no current term or phases not found, respectively.
-    """
-    today = timezone.now().date()
-    # Initialize all variables to ensure they have default values
-    current_term_id = None
-    next_term_id = None
-    previous_term_id = None
-    start_date = None
-    end_date = None
-    rebooking_date = None
-    booking_date = None
-    phase_id = None
-    next_phase_id = None
-    term_string = "No current term"
+    # 📌 determine booking_term for display
+    if current_term and current_term.rebooking_date and today >= current_term.rebooking_date:
+        booking_term = next_term
+    else:
+        booking_term = current_term
+
+    def fmt(d):
+        return d.strftime('%d %b %Y') if d else None
+
+    start_date = fmt(booking_term.start_date) if booking_term else None
+    end_date = fmt(booking_term.end_date) if booking_term else None
+    rebooking_date = fmt(current_term.rebooking_date) if current_term else None
+    booking_date = fmt(current_term.booking_date) if current_term else None
+
+    term_string = booking_term.concatenated_term() if booking_term else "No current term"
+    previous_term_string = previous_term.concatenated_term() if previous_term else "Previous term not found"
+    next_term_string = next_term.concatenated_term() if next_term else "Next term not found"
+
     phase_string = "Phase not found"
     next_phase_string = "Next phase not found"
-    previous_term_string = "Previous term not found"
-    next_term_string = "Next term not found"
+    next_phase_id = None
 
-    try:
-        current_term_id = Term.get_current_term_id()
-        if current_term_id is not None:
-            term = Term.objects.get(id=current_term_id)
-            term_string = term.concatenated_term()
-            start_date = term.start_date.strftime('%d %b %Y')
-            end_date = term.end_date.strftime('%d %b %Y')
-            rebooking_date = term.rebooking_date.strftime('%d %b %Y')
-            booking_date = term.booking_date.strftime('%d %b %Y')
+    if phase_id == 'BK':
+        next_phase_id = 'RB'
+        phase_string = f'Booking for This Term: Closes ~ {rebooking_date}'
+        next_phase_string = f'ReBooking for Next Term: Starts ~ {rebooking_date}'
+    elif phase_id == 'RB':
+        next_phase_id = 'BN'
+        phase_string = f'ReBooking for Next Term until {booking_date}'
+        next_phase_string = f'Booking for Next Term: starts {booking_date}'
+    elif phase_id == 'BN':
+        phase_string = f'Booking for Next Term until {end_date}'
 
-            # Checking for previous term
-            previous_term = Term.objects.filter(end_date__lt=term.start_date).order_by('-end_date').first()
-            if previous_term:
-                previous_term_id = previous_term.id
-                previous_term_string = previous_term.concatenated_term()
-            else:
-                previous_term_id = None
-                previous_term_string = "Previous term not found"
-
-            # Checking for next term
-            next_term = Term.objects.filter(start_date__gt=term.end_date).order_by('start_date').first()
-            if next_term:
-                next_term_id = next_term.id
-                next_term_string = next_term.concatenated_term()
-            else:
-                next_term_id = None
-                next_term_string = "Next term not found"
-
-            # Check and retrieve the current phase
-            if hasattr(term, 'determine_phase'):
-                phase_id = term.determine_phase()
-                if phase_id == 'BK':
-                    next_phase_id = 'RB'
-                    phase_string = f'Booking for This Term: Closes ~ {rebooking_date}'
-                    next_phase_string = f'ReBooking for Next Term: Starts ~ {rebooking_date}'
-                elif phase_id == 'RB':
-                    next_phase_id = 'BN'
-                    phase_string = f'ReBooking for Next Term  until {booking_date}'
-                    next_phase_string = f'Booking for Next Term: starts {booking_date}'
-                elif phase_id == 'BN':
-                    phase_string = f'Booking for Next Term until {end_date}'
-            else:
-                phase_string = "Phase method not available"
-
-    except Term.DoesNotExist:
-        term_string = "Term not found"
+    print("📌 [DEBUG get_term_info]")
+    print(f"  🕒 Today: {today}")
+    print(f"  📘 Current Term: {current_term} (ID: {getattr(current_term, 'id', None)})")
+    print(f"  📗 Next Term: {next_term} (ID: {getattr(next_term, 'id', None)})")
+    print(f"  📙 Booking Term: {booking_term} (ID: {getattr(booking_term, 'id', None)})")
+    print(f"  ⏳ Phase: {phase_id}")
+    print(f"  🗓️  Start: {start_date}, End: {end_date}")
+    print(f"  🔁 Rebooking: {rebooking_date}, Booking: {booking_date}")
 
     return {
         'today': today,
-        'current_term_id': current_term_id,
+        'current_term_id': current_term.id if current_term else None,
         'current_term': term_string,
-        'next_term_id': next_term_id,
+        'next_term_id': next_term.id if next_term else None,
         'next_term': next_term_string,
-        'previous_term_id': previous_term_id,
+        'previous_term_id': previous_term.id if previous_term else None,
         'previous_term': previous_term_string,
         'start_date': start_date,
         'end_date': end_date,
@@ -100,6 +86,7 @@ def get_term_info(request: HttpRequest) -> Dict[str, str]:
         'next_phase_id': next_phase_id,
         'next_phase': next_phase_string,
     }
+
 
 
 # Different Footer for each version production, local

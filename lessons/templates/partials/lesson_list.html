@@ -1,45 +1,67 @@
 {% load static %}
 
 <section class="hero is-swim has-shadow">
-    <div class="hero-body">
-        <div class="container">
-            <h1 class="title has-text-centered">Public Swim Lessons</h1>
-        </div>
+  <div class="hero-body">
+    <div class="container has-text-centered">
+      <h1 class="title">Public Swim Lessons</h1>
+      {% if current_phase %}
+        <p class="subtitle is-size-5 has-text-light mt-2">
+          {{ current_phase }}
+        </p>
+      {% endif %}
     </div>
+  </div>
 </section>
 
-<!-- Term Information Card -->
+
+<!-- Booking Term Information -->
 <div class="container">
     <div class="box has-shadow mt-5">
         <div>
-            <h2 class="title is-4 has-text-primary mb-4">Current Term Information</h2>
+            <h2 class="title is-4 has-text-primary mb-4">
+                {% if current_phase_id == "RB" %}
+                    Booking for Upcoming Term: {{ next_term }}
+                {% else %}
+                    Booking for Current Term: {{ current_term }}
+                {% endif %}
+            </h2>
             <div class="columns is-multiline">
                 <div class="column is-one-third">
                     <div class="box has-background-primary-light">
                         <div class="is-flex is-align-items-center">
                             <span class="icon is-medium mr-3 has-background-primary-light has-text-primary p-2 is-rounded">
-                                <i class="fas fa-calendar-alt"></i>
-                            </span>
-                            <div>
-                                <span class="is-size-7 has-text-grey">Term</span>
-                                <p class="has-text-weight-medium">{{ current_term }}</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="column is-one-third">
-                    <div class="box has-background-primary-light">
-                        <div class="is-flex is-align-items-center">
-                            <span class="icon is-medium mr-3 has-background-primary-light has-text-primary p-2 is-rounded">
-                                <i class="fas fa-calendar-alt"></i>
+                                <i class="fas fa-calendar-day"></i>
                             </span>
                             <div>
                                 <span class="is-size-7 has-text-grey">Start Date</span>
-                                <p class="has-text-weight-medium">{{ start_date }}</p>
+                                <p class="has-text-weight-medium">
+                                    {% if current_phase_id == "RB" %}
+                                        {{ booking_date }}
+                                    {% else %}
+                                        {{ start_date }}
+                                    {% endif %}
+                                </p>
                             </div>
                         </div>
                     </div>
                 </div>
+
+                <div class="column is-one-third">
+                    <div class="box has-background-primary-light">
+                        <div class="is-flex is-align-items-center">
+                            <span class="icon is-medium mr-3 has-background-primary-light has-text-primary p-2 is-rounded">
+                                <i class="fas fa-calendar-check"></i>
+                            </span>
+                            <div>
+                                <span class="is-size-7 has-text-grey">End Date</span>
+                                <p class="has-text-weight-medium">
+                                    {{ end_date }}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="column is-one-third">
                     <div class="box has-background-primary-light">
                         <div class="is-flex is-align-items-center">
@@ -47,12 +69,13 @@
                                 <i class="fas fa-calendar-alt"></i>
                             </span>
                             <div>
-                                <span class="is-size-7 has-text-grey">End Date</span>
-                                <p class="has-text-weight-medium">{{ end_date }}</p>
+                                <span class="is-size-7 has-text-grey">Phase</span>
+                                <p class="has-text-weight-medium">{{ current_phase }}</p>
                             </div>
                         </div>
                     </div>
                 </div>
+
             </div>
         </div>
     </div>

@@ -62,7 +62,6 @@ INSTALLED_APPS = [
     'hijack.contrib.admin',  # add to admin panel
     'widget_tweaks', # Allows adding css to fields in form templates directly
     'django_browser_reload',  # when debug load automaticaly browser
-    'axes', # Login protection
     'django_extensions', # For Documentation
     # My Apps
     'users',
@@ -83,7 +82,6 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    'axes.middleware.AxesMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -141,13 +139,9 @@ TEMPLATES = [
 WSGI_APPLICATION = 'core.wsgi.application'
 
 
-# Used with axes
 AUTHENTICATION_BACKENDS = [
-    'axes.backends.AxesStandaloneBackend',  # Add this for Django Axes
-    'django.contrib.auth.backends.ModelBackend',  # Django's default auth backend
-]
-AUTHENTICATION_BACKENDS += [
-    'allauth.account.auth_backends.AuthenticationBackend',
+    'django.contrib.auth.backends.ModelBackend',  # Default Django auth
+    'allauth.account.auth_backends.AuthenticationBackend',  # Allauth auth
 ]
 
 AUTH_PASSWORD_VALIDATORS = [

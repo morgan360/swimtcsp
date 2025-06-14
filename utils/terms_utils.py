@@ -50,3 +50,34 @@ def get_current_sco_term():
     else:
         logger.info("No current sco term found.")
     return current_sco_term
+
+def get_term_context_data():
+    """
+    Returns a dictionary with the current term, next term, previous term,
+    and the current booking phase (BK, RB, BN).
+    """
+    today = timezone.now().date()
+
+    current_term = get_current_term()
+    next_term = get_next_term()
+    previous_term = get_previous_term()
+
+    current_phase_id = None
+    if current_term and hasattr(current_term, 'determine_phase'):
+        current_phase_id = current_term.determine_phase()
+
+    # 🔍 DEBUG: Print out the term IDs and phase
+    print("📅 TERM DEBUG >>>")
+    print(f"  📌 Today: {today}")
+    print(f"  📘 Current Term: {current_term} (ID: {getattr(current_term, 'id', None)})")
+    print(f"  📗 Next Term: {next_term} (ID: {getattr(next_term, 'id', None)})")
+    print(f"  ⏳ Current Phase: {current_phase_id}")
+    print("<<<")
+
+    return {
+        'today': today,
+        'current_term': current_term,
+        'next_term': next_term,
+        'previous_term': previous_term,
+        'current_phase_id': current_phase_id,
+    }

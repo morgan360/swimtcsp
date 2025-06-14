@@ -1,6 +1,6 @@
 <!-- day_options.html -->
 <select name="day" id="id_day" class="form-select custom-select-width"
-        hx-get="{% url 'update-lessons' %}"
+        hx-get="{% url 'reports:update-lessons' %}"
         hx-trigger="change"
         hx-target="#id_lesson"
         hx-include="#id_category">

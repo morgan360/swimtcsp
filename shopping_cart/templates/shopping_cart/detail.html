@@ -4,61 +4,69 @@
 {% block title %}Your Shopping Cart{% endblock %}
 
 {% block content %}
-<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
-    <h1 class="text-center text-white text-2xl font-bold my-4">Your Shopping Cart</h1>
-    {% if cart_items %}
-        <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-            <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-            <tr>
-                <th scope="col" class="py-3 px-6">Product</th>
-                <th scope="col" class="py-3 px-6">Price</th>
-                <th scope="col" class="py-3 px-6">Swimling</th>
-                <th scope="col" class="py-3 px-6">Lesson Details</th>
-                <th scope="col" class="py-3 px-6">Remove</th>
-            </tr>
-            </thead>
-            <tbody>
-            {% for item in cart_items %}
-                <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
-                    <td class="py-4 px-6">{{ item.product.name }}</td>
-                    <td class="py-4 px-6">€{{ item.price }}</td>
-                    <td class="py-4 px-6">{{ item.swimling.first_name }} {{ item.swimling.last_name }}</td>
-                    <td class="py-4 px-6">
-                        {% if item.swimling.registered_lessons %}
-                            <ul>
-                                {% for lesson in item.swimling.registered_lessons %}
-                                    <li>{{ lesson.name }} (ID: {{ lesson.id }})</li>
-                                {% endfor %}
-                            </ul>
-                        {% else %}
-                            No lessons registered
-                        {% endif %}
-                    </td>
-                    <td class="py-4 px-6">
-                        <form action="{% url 'shopping_cart:cart_remove' product_id=item.product_id type=item.type swimling_id=item.swimling.id %}" method="post">
-                            {% csrf_token %}
-                            <button type="submit" class="text-white bg-red-500 hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50 rounded px-4 py-2">
-                                Remove
-                            </button>
-                        </form>
-                    </td>
-                </tr>
-            {% endfor %}
-            </tbody>
-            <tfoot>
-                <tr class="bg-gray-100 dark:bg-gray-700">
-                    <td colspan="4" class="text-right font-bold py-4 px-6">Total Price:</td>
-                    <td class="font-bold py-4 px-6">€{{ total_price }}</td>
-                </tr>
-            </tfoot>
-        </table>
-        <div class="flex justify-end mt-4">
-            <a href="{% url 'shopping_cart:payment_process' %}" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-                Pay Now
-            </a>
+<section class="section">
+    <div class="container">
+        <div class="box">
+            <h1 class="title is-3 has-text-centered has-text-primary">🛒 Your Shopping Cart</h1>
+
+            {% if cart_items %}
+                <table class="table is-bordered is-striped is-fullwidth mt-4">
+                    <thead class="has-background-light">
+                        <tr>
+                            <th>Product</th>
+                            <th>Price</th>
+                            <th>Swimling</th>
+                            <th>Lesson Details</th>
+                            <th>Remove</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in cart_items %}
+                            <tr>
+                                <td>{{ item.product.name }}</td>
+                                <td>€{{ item.price }}</td>
+                                <td>{{ item.swimling.first_name }} {{ item.swimling.last_name }}</td>
+                                <td>
+                                    {% if item.swimling.registered_lessons %}
+                                        <ul>
+                                            {% for lesson in item.swimling.registered_lessons %}
+                                                <li>{{ lesson.name }} (ID: {{ lesson.id }})</li>
+                                            {% endfor %}
+                                        </ul>
+                                    {% else %}
+                                        <span class="has-text-grey-light">No lessons registered</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <form action="{% url 'shopping_cart:cart_remove' product_id=item.product_id type=item.type swimling_id=item.swimling.id %}" method="post">
+                                        {% csrf_token %}
+                                        <button type="submit" class="button is-danger is-light is-small">
+                                            ❌ Remove
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="4" class="has-text-right has-text-weight-bold">Total Price:</td>
+                            <td class="has-text-weight-bold">€{{ total_price }}</td>
+                        </tr>
+                    </tfoot>
+                </table>
+
+                <div class="has-text-right mt-4">
+                    <a href="{% url 'shopping_cart:payment_process' %}" class="button is-primary is-medium">
+                        💳 Pay Now
+                    </a>
+                </div>
+            {% else %}
+                <div class="notification is-info has-text-centered">
+                    Your shopping cart is empty.
+                </div>
+            {% endif %}
         </div>
-    {% else %}
-        <div class="text-center">Your shopping cart is empty.</div>
-    {% endif %}
-</div>
+    </div>
+</section>
 {% endblock %}

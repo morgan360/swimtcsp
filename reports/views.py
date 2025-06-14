@@ -28,13 +28,12 @@ def enrollment_report_data(request):
     """AJAX endpoint for DataTables"""
     draw = int(request.GET.get('draw', 1))
     start = int(request.GET.get('start', 0))
-    length = int(request.GET.get('length', -1))  # Show all records if -1
+    length = int(request.GET.get('length', -1))
     search_value = request.GET.get('search[value]', '')
     order_column = int(request.GET.get('order[0][column]', 0))
     order_dir = request.GET.get('order[0][dir]', 'asc')
     term_filter = request.GET.get('term_filter', 'current')
 
-    # Resolve term
     term_lookup = {
         'current': Term.get_current_term,
         'previous': Term.get_previous_term,
@@ -42,14 +41,12 @@ def enrollment_report_data(request):
     }
     term = term_lookup.get(term_filter, Term.get_current_term)()
 
-    # Base queryset: all products (lessons), annotate enrollments for the term
     base_queryset = Product.objects.all().annotate(
         current_enrollments=Count('enrollments', filter=Q(enrollments__term=term))
     ).select_related('category')
 
     records_total = base_queryset.count()
 
-    # Apply search filter
     if search_value:
         base_queryset = base_queryset.filter(
             Q(name__icontains=search_value) |
@@ -60,7 +57,6 @@ def enrollment_report_data(request):
     records_filtered = base_queryset.count()
     all_products = list(base_queryset)
 
-    # Ordering
     order_columns = [
         'name', 'category__name', 'instructor', 'day_of_week',
         'current_enrollments', 'num_places', None, None
@@ -73,7 +69,6 @@ def enrollment_report_data(request):
 
     paginated_queryset = base_queryset if length == -1 else base_queryset[start:start + length]
 
-    # Summary data
     total_enrollments = sum(p.current_enrollments for p in all_products)
     total_capacity = sum(p.num_places or 0 for p in all_products)
     utilization = (total_enrollments / total_capacity * 100) if total_capacity > 0 else 0
@@ -85,7 +80,6 @@ def enrollment_report_data(request):
         'overall_utilization': round(utilization, 1)
     }
 
-    # Build DataTable rows
     data = []
     for p in paginated_queryset:
         schedule = ' '.join(filter(None, [
@@ -124,19 +118,27 @@ def enrollment_report_data(request):
 
 
 def class_print(request):
+    """Print swimlings for selected lesson and term"""
     lesson_id = request.POST.get('lesson')
-    current_term_id = Term.get_current_term_id()
+    term_choice = request.POST.get('term', 'current')
 
+    term_lookup = {
+        'current': Term.get_current_term,
+        'next': Term.get_next_term,
+    }
+    term = term_lookup.get(term_choice, Term.get_current_term)()
+    # print(f"Selected term ({term_choice}):", term.id)
     swimlings = Swimling.objects.filter(
         lessonenrollment__lesson__id=lesson_id,
-        lessonenrollment__term=current_term_id
-    ) if current_term_id and lesson_id else Swimling.objects.none()
+        lessonenrollment__term=term
+    ) if term and lesson_id else Swimling.objects.none()
 
     product = get_object_or_404(Product, id=lesson_id) if lesson_id else None
 
     return render(request, 'reports/printable_swimlings_list.html', {
         'swimlings': swimlings,
-        'product': product
+        'product': product,
+        'term_label': term_choice.title() + " Term"
     })
 
 

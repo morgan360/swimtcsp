@@ -125,6 +125,7 @@ class LessonEnrollment(models.Model):
             models.Index(fields=['term', 'lesson', 'swimling']),
         ]
         ordering = ['-term', 'lesson']
+        unique_together = ('swimling', 'lesson', 'term')
 
     def __str__(self):
         return f'{self.lesson.name}, {str(self.term.id)}, {self.swimling.first_name}, {self.swimling.last_name}'

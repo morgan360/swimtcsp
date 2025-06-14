@@ -1,20 +1,31 @@
 {% extends "base/_base.html" %}
 {% load static %}
 
-{% block title %}Your shopping cart{% endblock %}
+{% block title %}Your Shopping Cart{% endblock %}
 
 {% block content %}
-    <div class="max-w-lg mx-auto bg-white p-6 rounded-lg shadow-md mt-10">
-        <h2 class="text-orange-400 text-2xl font-semibold mb-4">Review Order</h2>
-        <p class="text-gray-800 mb-2"><span class="font-medium">Swimling:</span> {{ swimling}}</p>
-        <p class="text-gray-800 mb-2"><span class="font-medium">Lesson:</span> {{ lesson.name }}</p>
-        <p class="text-gray-800 mb-4"><span class="font-medium">Price:</span> €{{ lesson.price }}</p>
+<section class="section">
+  <div class="container is-max-desktop">
+    <div class="box">
+      <h2 class="title is-4 has-text-warning">Review Order</h2>
 
-        <form method="POST" action="{% url 'shopping_cart:confirm_rebooking' swimling.id lesson.id %}">
-            {% csrf_token %}
-            <button type="submit" class="w-full bg-blue-500 text-white font-bold py-2 px-4 rounded hover:bg-blue-600">
-                Confirm and Pay
+      <div class="content">
+        <p><strong>Swimling:</strong> {{ swimling }}</p>
+        <p><strong>Lesson:</strong> {{ lesson.name }}</p>
+        <p><strong>Price:</strong> €{{ lesson.price }}</p>
+      </div>
+
+      <form method="POST" action="{% url 'shopping_cart:confirm_rebooking' swimling.id lesson.id %}">
+        {% csrf_token %}
+        <div class="field">
+          <div class="control">
+            <button type="submit" class="button is-primary is-fullwidth">
+              Confirm and Pay
             </button>
-        </form>
+          </div>
+        </div>
+      </form>
     </div>
+  </div>
+</section>
 {% endblock %}

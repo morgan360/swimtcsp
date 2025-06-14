@@ -14,23 +14,35 @@ from .models import (
 from lessons_bookings.utils.enrollment import handle_lessons_enrollment
 from schools_bookings.utils.enrollment import handle_schools_enrollment
 from .payment_functions import get_boipa_session_token  # External function
+
 # Initialize logging
 payments_logger = logging.getLogger('payments')
 
 
 def initiate_boipa_payment_session(request, order_ref, total_price):
-    """
-    Initiates a payment session for BOIPA with the given order reference and total price.
-    Redirects to the BOIPA Hosted Payment Page (HPP) if successful.
-    """
     total_price = Decimal(total_price)
+
+    # 🔁 Allow switching between 'Iframe' and 'Standalone' via query param
+    integration_mode = request.GET.get('mode', 'Standalone').capitalize()
+    if integration_mode not in ['Standalone', 'Iframe']:
+        integration_mode = 'Standalone'
+
     token = get_boipa_session_token(request, order_ref, total_price)
     if token is None:
         payments_logger.error(f"Failed to obtain session token for order_ref {order_ref}")
-        return render(request, 'error.html', {'error': 'Unable to obtain session token.'})
+        return render(request, 'boipa/error.html', {'error': 'Unable to obtain session token.'})
 
-    hpp_url = f"{settings.HPP_FORM}?token={token}&merchantId={settings.BOIPA_MERCHANT_ID}&integrationMode=Standalone"
-    return redirect(hpp_url)
+    hpp_url = (
+        f"{settings.HPP_FORM}?token={token}"
+        f"&merchantId={settings.BOIPA_MERCHANT_ID}"
+        f"&integrationMode={integration_mode}"
+    )
+
+    # Render iframe page or redirect based on mode
+    if integration_mode == 'Iframe':
+        return render(request, 'boipa/payment_form.html', {'hpp_url': hpp_url})
+    else:
+        return redirect(hpp_url)
 
 
 def payment_response(request):
@@ -38,10 +50,10 @@ def payment_response(request):
     result = request.GET.get('result')
     merchantTxId = request.GET.get('merchantTxId')
     if result == "success":
-        return render(request, 'payment_success.html', {'order_ref': merchantTxId, 'message': result})
+        return render(request, 'boipa/payment_success.html', {'order_ref': merchantTxId, 'message': result})
     elif result == "failure":
-        return render(request, 'payment_failure.html', {'order_ref': merchantTxId, 'message': result})
-    return render(request, 'error.html', {'error_message': 'Unknown payment response.'})
+        return render(request, 'boipa/payment_failure.html', {'order_ref': merchantTxId, 'message': result})
+    return render(request, 'boipa/error.html', {'error_message': 'Unknown payment response.'})
 
 
 from django.http import JsonResponse
@@ -96,7 +108,7 @@ def payment_notification(request):
                     acquirerCurrency=data.get('acquirerCurrency', ''),
                     paymentSolutionId=data.get('paymentSolutionId', None),
                     status=data.get('status', ''),
-                    errorMessage = data.get('errorMessage', 'No error message provided'),
+                    errorMessage=data.get('errorMessage', 'No error message provided'),
                 )
 
                 # Call the enrollment function if the order is paid successfully

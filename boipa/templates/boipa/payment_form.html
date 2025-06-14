@@ -1,0 +1,31 @@
+{% extends "base/_base.html" %}
+{% load static %}
+
+{% block title %}Secure Checkout{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="container is-max-desktop">
+    <div class="box has-shadow">
+      <h1 class="title is-4 has-text-primary mb-4">💳 Complete Your Payment</h1>
+
+      <p class="subtitle is-6 has-text-grey mb-5">
+        You are securely completing your payment via our trusted payment partner.
+        All card details are handled externally over an encrypted connection.
+      </p>
+
+      <div class="notification is-light is-info is-size-7 mb-5">
+        🔒 <strong>Secure Payment:</strong> Your information is protected using 3D Secure (Verified by Visa / Mastercard SecureCode).
+      </div>
+
+      <div class="box" style="padding: 0;">
+        <iframe src="{{ hpp_url }}"
+                style="width: 100%; height: 500px; border: none;"
+                allowpaymentrequest
+                frameborder="0">
+        </iframe>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

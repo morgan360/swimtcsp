@@ -79,6 +79,7 @@ INSTALLED_APPS = [
     'shopping_cart',
     'boipa',
     'waiting_list',
+    'navigation',
 ]
 
 MIDDLEWARE = [

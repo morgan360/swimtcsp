@@ -20,6 +20,7 @@ REMOTE_DB_CONFIG = {
     'charset': os.getenv('REMOTE_TCSP_DB_CHARSET', 'utf8mb4'),
 }
 
+
 def connect_to_remote():
     return pymysql.connect(**REMOTE_DB_CONFIG)
 

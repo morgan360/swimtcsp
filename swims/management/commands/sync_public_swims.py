@@ -23,6 +23,28 @@ class Command(BaseCommand):
     help = "Sync Public Swim categories, products, and price variants from remote DB"
 
     def handle(self, *args, **options):
+        from swims_orders.models import Order, OrderItem
+        from swims.models import PublicSwimCategory, PublicSwimProduct, PriceVariant
+        from django.db import connection
+
+        self.stdout.write("🧹 Deleting all public swim data...")
+
+        # Delete in correct dependency order
+        OrderItem.objects.all().delete()
+        Order.objects.all().delete()
+        PriceVariant.objects.all().delete()
+        PublicSwimProduct.objects.all().delete()
+        PublicSwimCategory.objects.all().delete()
+
+        # Reset AUTO_INCREMENT for clean DB
+        with connection.cursor() as cursor:
+            cursor.execute("ALTER TABLE swims_orders_orderitem AUTO_INCREMENT = 1;")
+            cursor.execute("ALTER TABLE swims_orders_order AUTO_INCREMENT = 1;")
+            cursor.execute("ALTER TABLE swims_pricevariant AUTO_INCREMENT = 1;")
+            cursor.execute("ALTER TABLE swims_publicswimproduct AUTO_INCREMENT = 1;")
+            cursor.execute("ALTER TABLE swims_publicswimcategory AUTO_INCREMENT = 1;")
+
+        self.stdout.write("🧼 Tables cleared and reset.")
         self.stdout.write("\U0001F310 Connecting to remote database...")
         conn = pymysql.connect(
             host=config('REMOTE_TCSP_DB_HOST'),
@@ -133,10 +155,20 @@ class Command(BaseCommand):
                 for product in product_map.values():
                     for code, _ in PriceVariant.VARIANT_CHOICES:
                         normalized_code = code.strip().title()
+                        default_prices = {
+                            'Adult': 9.00,
+                            'Child': 5.00,
+                            'OAP': 3.00,
+                            'Student': 4.00,
+                            'Infant': 0.00,
+                        }
+
+                        # Inside your loop
+                        price = default_prices.get(normalized_code, 0.00)
                         obj, created = PriceVariant.objects.get_or_create(
                             product=product,
                             variant=normalized_code,
-                            defaults={'price': 0.00}
+                            defaults={'price': price}
                         )
                         if created:
                             created_count += 1

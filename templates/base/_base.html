@@ -1,6 +1,6 @@
 {% load static %}
 <!doctype html>
-<html lang="en" x-data="{ dark: false }">
+<html lang="en" >
 
 <head>
     <meta charset="utf-8"/>
@@ -20,8 +20,8 @@
 
     <!-- HTMX & Alpine with Collapse plugin -->
     <script src="https://unpkg.com/htmx.org@1.9.10" defer></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
 
     <title>{% block title %}TCSP Home{% endblock %}</title>
 
@@ -30,10 +30,10 @@
 </head>
 
 <body>
-
+<div x-data="{ dark: false, drawerOpen: false }">
     {# ✅ Include Navbar inside body #}
-    {% include "partials/_navbar.html" %}
-
+{#    {% include "partials/_navbar.html" %}#}
+    {% include "partials/_drawer.html" %}
     <main class="section">
         <div class="container">
             {% block content %}{% endblock %}
@@ -45,5 +45,6 @@
         {% include "partials/_footer.html" %}
     {% endblock %}
 {% block extra_js %}{% endblock %}
+</div>
 </body>
 </html>

@@ -92,6 +92,42 @@ body {
   color: white;
   font-weight: 600;
 }
+/* 🌐 Mobile Navbar Fixes */
+
+@media screen and (max-width: 768px) {
+  .navbar-brand {
+    width: 100%;
+    justify-content: space-between;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .navbar-burger {
+    margin-left: auto;
+  }
+
+  html, body {
+    overflow-x: hidden;
+  }
+
+  .navbar {
+    max-width: 100%;
+  }
+}
+.navbar.is-header .navbar-brand {
+  width: 100%;
+  justify-content: space-between;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+.-translate-x-full {
+  transform: translateX(-100%);
+}
+
+.translate-x-0 {
+  transform: translateX(0%);
+}
+
 
 /* --- Hero Section (optional gradient override) --- */
 .hero {

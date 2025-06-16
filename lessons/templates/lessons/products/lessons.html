@@ -3,89 +3,124 @@
 {% load static %}
 
 {% block title %}
-    {% if category %}{{ category.name }}{% else %}Lessons {% endif %}
+    {% if category %}{{ category.name }}{% else %}Lessons{% endif %}
 {% endblock %}
 
 {% block content %}
-    <section class="section">
-        <div class="container">
-            <div class="mb-5">
-                <h1 class="title is-3">
-                    {% if category %}{{ category.name }}{% else %}Swimming Lessons{% endif %}
-                </h1>
-                <p class="subtitle has-text-grey">Find the perfect swimming lesson for you or your child</p>
-            </div>
+<section class="section">
+    <div class="container">
+        <!-- Page Heading -->
+        <div class="mb-5">
+            <h1 class="title is-3 is-size-4-mobile">
+                {% if category %}{{ category.name }}{% else %}Swimming Lessons{% endif %}
+            </h1>
+            <p class="subtitle has-text-grey is-size-6-mobile">
+                Find the perfect swimming lesson for you or your child
+            </p>
+        </div>
 
-            <div class="columns">
-                <!-- Filters sidebar -->
-                <div class="column is-one-quarter">
-                    <div class="box has-shadow">
-                        <h3 class="title is-5 mb-4">Filter Options</h3>
+        <!-- Responsive Columns -->
+        <div class="columns is-multiline is-variable is-2">
+            <!-- Filters Sidebar -->
+            <div class="column is-full-mobile is-one-quarter-tablet">
+                <div class="box has-shadow is-size-7-mobile">
+                    <h3 class="title is-5 mb-4 is-size-6-mobile">Filter Options</h3>
 
-                        <div class="field mb-4">
-                            <label for="id_category" class="label is-small">Program</label>
-                            <div class="control">
-                                <div class="select is-fullwidth">
-                                    <select id="id_category"
-                                            name="program"
-                                            hx-get="{% url 'lessons:update_lesson_list' %}"
-                                            hx-include="#days_list"
-                                            hx-trigger="change"
-                                            hx-target="#lesson_list"
-                                            hx-indicator="#loading-indicator">
-                                        <option value="">All Programs</option>
-                                        {% for program in programs %}
-                                            <option value="{{ program.id }}">{{ program.name }}</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="field">
-                            <label for="days_list" class="label is-small">Day of Week</label>
-                            <div class="control">
-                                <div class="select is-fullwidth">
-                                    <select id="days_list"
-                                            name="day"
-                                            hx-include="#id_category"
-                                            hx-get="{% url 'lessons:update_lesson_list' %}"
-                                            hx-trigger="change"
-                                            hx-target="#lesson_list"
-                                            hx-indicator="#loading-indicator">
-                                        <option value="">Any Day</option>
-                                        <option value="0">Monday</option>
-                                        <option value="1">Tuesday</option>
-                                        <option value="2">Wednesday</option>
-                                        <option value="3">Thursday</option>
-                                        <option value="4">Friday</option>
-                                        <option value="5">Saturday</option>
-                                        <option value="6">Sunday</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="has-text-centered mt-4">
-                            <div id="loading-indicator" class="htmx-indicator">
-                                <div class="is-inline-block">
-                                    <span class="icon is-medium has-text-primary">
-                                        <i class="fas fa-spinner fa-spin"></i>
-                                    </span>
-                                </div>
-                                <span class="is-size-7 has-text-grey ml-2">Loading...</span>
+                    <!-- Program Filter -->
+                    <div class="field mb-4">
+                        <label for="id_category" class="label is-small">Program</label>
+                        <div class="control">
+                            <div class="select is-fullwidth">
+                                <select id="id_category"
+                                        name="program"
+                                        hx-get="{% url 'lessons:update_lesson_list' %}"
+                                        hx-include="#days_list"
+                                        hx-trigger="change"
+                                        hx-target="#lesson_list"
+                                        hx-indicator="#loading-indicator">
+                                    <option value="">All Programs</option>
+                                    {% for program in programs %}
+                                        <option value="{{ program.id }}">{{ program.name }}</option>
+                                    {% endfor %}
+                                </select>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                <!-- Lesson list -->
-                <div class="column is-three-quarters">
-                    <div id="lesson_list" class="box has-shadow p-4">
+                    <!-- Day Filter -->
+                    <div class="field">
+                        <label for="days_list" class="label is-small">Day of Week</label>
+                        <div class="control">
+                            <div class="select is-fullwidth">
+                                <select id="days_list"
+                                        name="day"
+                                        hx-include="#id_category"
+                                        hx-get="{% url 'lessons:update_lesson_list' %}"
+                                        hx-trigger="change"
+                                        hx-target="#lesson_list"
+                                        hx-indicator="#loading-indicator">
+                                    <option value="">Any Day</option>
+                                    <option value="0">Monday</option>
+                                    <option value="1">Tuesday</option>
+                                    <option value="2">Wednesday</option>
+                                    <option value="3">Thursday</option>
+                                    <option value="4">Friday</option>
+                                    <option value="5">Saturday</option>
+                                    <option value="6">Sunday</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Loading Indicator -->
+                    <div class="has-text-centered mt-4">
+                        <div id="loading-indicator" class="htmx-indicator">
+                            <div class="is-inline-block">
+                                <span class="icon is-medium has-text-primary">
+                                    <i class="fas fa-spinner fa-spin"></i>
+                                </span>
+                            </div>
+                            <span class="is-size-7 has-text-grey ml-2">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lesson List -->
+            <div class="column is-full-mobile is-three-quarters-tablet">
+                <div style="overflow-x: auto;">
+                    <div id="lesson_list" class="box has-shadow p-4 is-size-7-mobile">
                         {% include 'partials/lesson_list.html' %}
                     </div>
                 </div>
             </div>
         </div>
-    </section>
+    </div>
+</section>
+
+<!-- Extra Mobile Text Scaling -->
+<style>
+@media screen and (max-width: 768px) {
+    html, body {
+        max-width: 100%;
+        overflow-x: hidden;
+    }
+
+    .box, .card, .select, .field {
+        font-size: 0.85rem;
+    }
+
+    select, label {
+        font-size: 0.85rem;
+    }
+
+    h1.title, h3.title {
+        font-size: 1.25rem !important;
+    }
+
+    p.subtitle {
+        font-size: 1rem !important;
+    }
+}
+</style>
 {% endblock %}

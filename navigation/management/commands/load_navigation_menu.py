@@ -51,6 +51,10 @@ class Command(BaseCommand):
 
         # === Lessons ===
         lessons = add_menu_group("Lessons", "lessons", 1)
+        # === Guardian ===
+        lessons = add_menu_group("Lessons", "lessons", order=2)  # ✅ create or retrieve the group
+        add_item(lessons, "Book Lessons", url_name="lessons:lesson_list", icon="fas fa-calendar-plus", order=1,
+                 requires_login=True, groups=["guardian"])
         add_item(lessons, "Swimling Panel", url_name="users:combined_swimling_mgmt", icon="fas fa-user-friends", order=1, requires_login=True, groups=["guardian"])
         add_item(lessons, "Swimling Progress", url_name="lessons:swimling_progress", icon="fas fa-chart-line", order=2, requires_login=True, groups=["guardian"])
         add_item(lessons, "School Classes", url_name="schools:school_dashboard", icon="fas fa-school", order=3, requires_login=True, groups=["guardian", "schools"])

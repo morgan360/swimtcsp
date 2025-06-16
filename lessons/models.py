@@ -1,10 +1,9 @@
 from django.db import models
 from django.urls import reverse
-from datetime import time
 from django.db.models.signals import pre_save
 from django.dispatch import receiver
 from django.utils.text import slugify
-
+from datetime import datetime, timedelta, time
 
 # The modules here represent the structer of lessons and classes in TCSP.
 # Product : represents a series of lessons for a term. Each individual lesson is called a class.

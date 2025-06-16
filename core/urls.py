@@ -3,7 +3,6 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib.sessions.models import Session
-from timetable.admin import events_site
 from custom_admins.lessonsadmin import lessons_admin_site
 from custom_admins.usersadmin import users_admin_site
 from custom_admins.swimsadmin import swims_admin_site
@@ -12,7 +11,6 @@ from custom_admins.swimsadmin import swims_admin_site
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('home.urls')),
-    path('events/', events_site.urls),
     # Allauth
     path('accounts/', include('allauth.urls')),
     path('users/', include('users.urls', namespace='user')),

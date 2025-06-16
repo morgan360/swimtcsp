@@ -1,0 +1,74 @@
+{% extends "base/_base.html" %}
+{% load static %}
+
+{% block title %}Timetable{% endblock %}
+
+{% block content %}
+    <section class="section">
+        <div class="container" x-data="timetableApp()" x-init="fetchEvents()">
+            <h1 class="title mb-4">Weekly Timetable</h1>
+
+            <!-- 🗂 Tabs -->
+            <div class="tabs is-toggle is-centered mb-4">
+                <ul>
+                    <li :class="{ 'is-active': currentTab === 'lessons' }">
+                        <a href="#" @click.prevent="switchTab('lessons')">Lessons</a>
+                    </li>
+                    <li :class="{ 'is-active': currentTab === 'swims' }">
+                        <a href="#" @click.prevent="switchTab('swims')">Public Swims</a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- 📅 Weekly Grid -->
+            <div class="columns" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 1rem;">
+                <template x-for="(day, index) in 7" :key="index">
+                    <div
+                            class="column is-one-seventh px-2"
+                            :class="{ 'highlight-today': dateFor(index) === today }"
+                            style="display: flex; flex-direction: column;"
+                    >
+                        <!-- Day header -->
+                        <div class="has-text-centered has-text-weight-bold is-size-7 mb-3"
+                             style="height: 2.5rem; display: flex; align-items: center; justify-content: center;"
+                             x-text="dayLabel(index)">
+                        </div>
+
+                        <!-- Time block grouping -->
+                        <template
+                                x-for="[timeBlock, events] of Object.entries(groupedEventsForDay(index)).sort((a, b) => a[0].localeCompare(b[0]))"
+                                :key="timeBlock">
+                            <div class="mb-2 is-size-7">
+                                <p class="has-text-grey-dark mb-1">
+                                    🕘 <strong x-text="formatTimeRange(timeBlock)"></strong>
+                                </p>
+                                <ul class="ml-3" style="list-style-type: none; padding-left: 1rem;">
+                                    <template x-for="event in events" :key="event.title + event.start">
+                                        <li>
+                                            <span x-text="eventIcon(event.type, event.category) + ' ' + cleanTitle(event.title)"></span>
+                                        </li>
+
+                                    </template>
+                                </ul>
+                            </div>
+                        </template>
+                    </div>
+                </template>
+            </div>
+        </div>
+    </section>
+
+    <!-- 💅 Custom highlight for today -->
+    <style>
+        .highlight-today {
+            background-color: #e0f7fa;
+            border: 1px solid #00b5ad;
+            border-radius: 6px;
+            padding-top: 0.5rem;
+            padding-bottom: 0.5rem;
+        }
+    </style>
+
+    <!-- ✅ External JS -->
+    <script src="{% static 'js/timetable.js' %}"></script>
+{% endblock %}

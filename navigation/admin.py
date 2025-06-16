@@ -10,7 +10,7 @@ class MenuItemInline(admin.StackedInline):  # ← Changed to StackedInline
 
 @admin.register(MenuGroup)
 class MenuGroupAdmin(admin.ModelAdmin):
-    list_display = ("name", "slug")
+    list_display = ("name", "slug", "order")
     prepopulated_fields = {"slug": ("name",)}
     inlines = [MenuItemInline]
 

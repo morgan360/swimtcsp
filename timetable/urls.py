@@ -1,7 +1,10 @@
 from django.urls import path
-from . import views
+from .api import weekly_timetable, public_timetable
+from .views import timetable_grid
 
+app_name = "timetable"
 urlpatterns = [
-    # Other URL patterns for the timetable app...
-    path('', views.lessons_cal_view, name='lessons_cal_view'),
+    path('api/week/', weekly_timetable, name='weekly_timetable'),
+    path('grid/', timetable_grid, name='timetable_grid'),
+    path("api/public/", public_timetable, name="public_timetable"),
 ]

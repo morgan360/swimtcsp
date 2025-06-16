@@ -2,356 +2,372 @@
 
 /* --- Color Variables --- */
 :root {
-  --primary-color: #00b5ad;
-  --accent-color: #00d1b2;
-  --school-color: #7957d5;
-  --danger-color: #ff3860;
-  --background-color: #f5f7fa;
-  --text-dark: #363636;
+    --primary-color: #00b5ad;
+    --accent-color: #00d1b2;
+    --school-color: #7957d5;
+    --danger-color: #ff3860;
+    --background-color: #f5f7fa;
+    --text-dark: #363636;
 }
 
 /* --- Global Styles --- */
 body {
-  background-color: var(--background-color);
-  font-family: 'Segoe UI', Roboto, sans-serif;
-  color: var(--text-dark);
+    background-color: var(--background-color);
+    font-family: 'Segoe UI', Roboto, sans-serif;
+    color: var(--text-dark);
 }
 
 .section {
-  background-color: var(--background-color);
-  padding: 2rem 1.5rem;
+    background-color: var(--background-color);
+    padding: 2rem 1.5rem;
 }
 
 /* --- Typography --- */
 .card-header-title {
-  font-weight: 600;
-  color: var(--text-dark);
+    font-weight: 600;
+    color: var(--text-dark);
 }
 
 /* --- Buttons --- */
 .button.is-book {
-  background-color: var(--primary-color);
-  color: white;
-  border-radius: 8px;
-  transition: background 0.3s;
+    background-color: var(--primary-color);
+    color: white;
+    border-radius: 8px;
+    transition: background 0.3s;
 }
 
 .button.is-book:hover {
-  background-color: #009c96;
+    background-color: #009c96;
 }
 
 /* --- Tags --- */
 .tag.is-school {
-  background-color: var(--school-color);
-  color: white;
+    background-color: var(--school-color);
+    color: white;
 }
 
 .tag.is-public {
-  background-color: var(--accent-color);
-  color: white;
+    background-color: var(--accent-color);
+    color: white;
 }
 
 .tag.is-lesson {
-  background-color: #ffdd57;
-  color: black;
+    background-color: #ffdd57;
+    color: black;
 }
 
 .tag.is-admin {
-  background-color: var(--danger-color);
-  color: white;
+    background-color: var(--danger-color);
+    color: white;
 }
 
 /* --- Navbar --- */
 .navbar {
-  background-color: white;
-  border-bottom: 1px solid #ddd;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    background-color: white;
+    border-bottom: 1px solid #ddd;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
 .navbar-item:hover {
-  background-color: #f0f0f0;
+    background-color: #f0f0f0;
 }
 
 /* Navbar custom background */
 .navbar.is-header {
-  background-color: var(--primary-color);
-  color: white;
+    background-color: var(--primary-color);
+    color: white;
 }
 
 .navbar.is-header .navbar-item,
 .navbar.is-header .navbar-link {
-  color: white;
+    color: white;
 }
 
 .navbar.is-header .navbar-item:hover,
 .navbar.is-header .navbar-link:hover {
-  background-color: rgba(255, 255, 255, 0.15);
+    background-color: rgba(255, 255, 255, 0.15);
 }
 
 .navbar .navbar-item strong {
-  color: white;
-  font-weight: 600;
+    color: white;
+    font-weight: 600;
 }
+
 /* 🌐 Mobile Navbar Fixes */
 
 @media screen and (max-width: 768px) {
-  .navbar-brand {
+    .navbar-brand {
+        width: 100%;
+        justify-content: space-between;
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+
+    .navbar-burger {
+        margin-left: auto;
+    }
+
+    html, body {
+        overflow-x: hidden;
+    }
+
+    .navbar {
+        max-width: 100%;
+    }
+}
+
+.navbar.is-header .navbar-brand {
     width: 100%;
     justify-content: space-between;
     padding-left: 1rem;
     padding-right: 1rem;
-  }
-
-  .navbar-burger {
-    margin-left: auto;
-  }
-
-  html, body {
-    overflow-x: hidden;
-  }
-
-  .navbar {
-    max-width: 100%;
-  }
 }
-.navbar.is-header .navbar-brand {
-  width: 100%;
-  justify-content: space-between;
-  padding-left: 1rem;
-  padding-right: 1rem;
-}
+
 .-translate-x-full {
-  transform: translateX(-100%);
+    transform: translateX(-100%);
 }
 
 .translate-x-0 {
-  transform: translateX(0%);
+    transform: translateX(0%);
 }
 
 
 /* --- Hero Section (optional gradient override) --- */
 .hero {
-  background: linear-gradient(to bottom right, #00b5ad 0%, #00d1b2 100%);
-  color: white;
+    background: linear-gradient(to bottom right, #00b5ad 0%, #00d1b2 100%);
+    color: white;
 }
 
 .hero .title,
 .hero .subtitle {
-  color: white;
+    color: white;
 }
 
 /* --- Card/Box Enhancements --- */
 .box, .card {
-  background-color: white;
-  border-radius: 10px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
-  margin-bottom: 1.5rem;
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    margin-bottom: 1.5rem;
 }
 
 /* --- Form Inputs & Focus States --- */
 input, textarea, select {
-  background-color: #fdfdfd;
-  border: 1px solid #ccc;
-  border-radius: 4px;
+    background-color: #fdfdfd;
+    border: 1px solid #ccc;
+    border-radius: 4px;
 }
 
 input:focus, textarea:focus, select:focus {
-  border-color: var(--primary-color);
-  box-shadow: 0 0 0 0.125em rgba(0, 181, 173, 0.25);
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.125em rgba(0, 181, 173, 0.25);
 }
 
 /* --- Social Login Buttons --- */
 .socialaccount_provider {
-  display: inline-block;
-  background-color: #e2e8f0;
-  color: #1d4ed8;
-  padding: 0.5rem 1rem;
-  border-radius: 0.375rem;
-  text-decoration: none;
-  font-weight: bold;
-  margin: 0.25rem 0;
+    display: inline-block;
+    background-color: #e2e8f0;
+    color: #1d4ed8;
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+    text-decoration: none;
+    font-weight: bold;
+    margin: 0.25rem 0;
 }
 
 .socialaccount_provider.google {
-  background-color: #db4437;
-  color: white;
+    background-color: #db4437;
+    color: white;
 }
 
 .socialaccount_provider.facebook {
-  background-color: #4267B2;
-  color: white;
+    background-color: #4267B2;
+    color: white;
 }
 
 .footer {
-  font-size: 0.9rem;
-  border-top: 1px solid #e5e5e5;
+    font-size: 0.9rem;
+    border-top: 1px solid #e5e5e5;
 }
 
 .footer a:hover {
-  text-decoration: underline;
+    text-decoration: underline;
 }
 
 .footer.is-site-footer {
-  background-color: #f0f2f5;
-  color: var(--text-dark);
-  padding: 2rem 1.5rem;
-  font-size: 0.95rem;
-  border-top: 1px solid #ddd;
+    background-color: #f0f2f5;
+    color: var(--text-dark);
+    padding: 2rem 1.5rem;
+    font-size: 0.95rem;
+    border-top: 1px solid #ddd;
 }
 
 .footer.is-site-footer a {
-  color: var(--primary-color);
-  text-decoration: none;
+    color: var(--primary-color);
+    text-decoration: none;
 }
 
 .footer.is-site-footer a:hover {
-  text-decoration: underline;
+    text-decoration: underline;
 }
 
 /* --- Accordion styles --- */
 .is-rotate-180 {
-  transform: rotate(180deg);
-  transition: transform 0.2s ease;
+    transform: rotate(180deg);
+    transition: transform 0.2s ease;
 }
 
 .card {
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
 }
 
 .has-shadow {
-  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
 /* School icon container */
 .school-icon-container {
-  height: 200px;
+    height: 200px;
 }
 
 /* Card header background colors */
 .card-header.is-public {
-  background-color: var(--accent-color);
+    background-color: var(--accent-color);
 }
 
 .card-header.is-swim {
-  background-color: var(--primary-color);
+    background-color: var(--primary-color);
 }
 
 .card-header.is-school {
-  background-color: var(--school-color);
+    background-color: var(--school-color);
 }
 
 /* Card header buttons to match backgrounds */
 .card-header.is-public .button,
 .card-header.is-swim .button,
 .card-header.is-school .button {
-  background-color: inherit;
-  border: none;
-  width: 100%;
-  color: white;
+    background-color: inherit;
+    border: none;
+    width: 100%;
+    color: white;
 }
 
 /* --- SINGLE MOBILE NAVBAR SECTION --- */
 @media screen and (max-width: 1023px) {
-  /* Ensure mobile menu displays properly */
-  .navbar-menu.is-active {
-    display: block !important;
-    background-color: white;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  }
+    /* Ensure mobile menu displays properly */
+    .navbar-menu.is-active {
+        display: block !important;
+        background-color: white;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
 
-  /* Mobile navbar text styling */
-  .navbar-menu.is-active .navbar-item,
-  .navbar-menu.is-active .navbar-link {
-    color: #363636 !important;
-    padding: 0.75rem 1rem;
-    border-bottom: 1px solid #f5f5f5;
-  }
+    /* Mobile navbar text styling */
+    .navbar-menu.is-active .navbar-item,
+    .navbar-menu.is-active .navbar-link {
+        color: #363636 !important;
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid #f5f5f5;
+    }
 
-  .navbar-menu.is-active .navbar-item:hover,
-  .navbar-menu.is-active .navbar-link:hover {
-    background-color: #f5f5f5;
-    color: #363636 !important;
-  }
+    .navbar-menu.is-active .navbar-item:hover,
+    .navbar-menu.is-active .navbar-link:hover {
+        background-color: #f5f5f5;
+        color: #363636 !important;
+    }
 
-  /* Mobile dropdown styling */
-  .navbar-menu.is-active .navbar-dropdown {
-    position: static;
-    box-shadow: none;
-    padding-left: 1.5rem;
-    background-color: #fafafa;
-  }
+    /* Mobile dropdown styling */
+    .navbar-menu.is-active .navbar-dropdown {
+        position: static;
+        box-shadow: none;
+        padding-left: 1.5rem;
+        background-color: #fafafa;
+    }
 
-  .navbar-menu.is-active .navbar-dropdown .navbar-item {
-    padding-left: 1.5rem;
-    color: #363636 !important;
-  }
+    .navbar-menu.is-active .navbar-dropdown .navbar-item {
+        padding-left: 1.5rem;
+        color: #363636 !important;
+    }
 
-  /* Keep logout red */
-  .navbar-menu.is-active .has-text-danger {
-    color: #ff3860 !important;
-  }
+    /* Keep logout red */
+    .navbar-menu.is-active .has-text-danger {
+        color: #ff3860 !important;
+    }
 
-  /* Button styling in mobile */
-  .navbar-menu.is-active .button.is-primary {
-    background-color: #3273dc !important;
-    color: white !important;
-  }
+    /* Button styling in mobile */
+    .navbar-menu.is-active .button.is-primary {
+        background-color: #3273dc !important;
+        color: white !important;
+    }
 
-  .navbar-menu.is-active .button.is-light {
-    background-color: #f5f5f5 !important;
-    color: #363636 !important;
-  }
+    .navbar-menu.is-active .button.is-light {
+        background-color: #f5f5f5 !important;
+        color: #363636 !important;
+    }
 }
+
 /* DataTables column alignment */
 th, td {
-  white-space: nowrap;
+    white-space: nowrap;
 }
 
 td.numeric {
-  text-align: right;
+    text-align: right;
 }
 
 /* Utilization badge colors */
 span.utilization-tag {
-  font-weight: bold;
+    font-weight: bold;
 }
 
 span.utilization-tag.low {
-  color: #48c774; /* Bulma green */
+    color: #48c774; /* Bulma green */
 }
 
 span.utilization-tag.medium {
-  color: #ffdd57; /* Bulma yellow */
+    color: #ffdd57; /* Bulma yellow */
 }
 
 span.utilization-tag.high {
-  color: #f14668; /* Bulma red */
+    color: #f14668; /* Bulma red */
 }
 
 /* Capacity status */
 .tag.full {
-  background-color: #f14668 !important;
-  color: white !important;
+    background-color: #f14668 !important;
+    color: white !important;
 }
+
 table.dataTable thead input.column-filter {
-  width: 100%;
-  box-sizing: border-box;
+    width: 100%;
+    box-sizing: border-box;
 }
+
 .message-header.has-background-primary {
-  background-color: var(--primary-color);
+    background-color: var(--primary-color);
 }
+
 .message-header.has-background-accent {
-  background-color: var(--accent-color);
+    background-color: var(--accent-color);
 }
+
 .card-header.is-swim {
-  background-color: var(--primary-color); /* Teal */
+    background-color: var(--primary-color); /* Teal */
 }
 
 .card-header.is-public {
-  background-color: var(--accent-color); /* Aqua */
+    background-color: var(--accent-color); /* Aqua */
+}
+
+.highlight-today {
+    background-color: #e0f7fa; /* Soft aqua */
+    border: 1px solid #00b5ad;
+    border-radius: 6px;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
 }

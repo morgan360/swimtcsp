@@ -1,21 +1,9 @@
 from django.contrib import admin
-from .models import Events  # Import your model
+from .models import TimetableOverride
 
+@admin.register(TimetableOverride)
+class TimetableOverrideAdmin(admin.ModelAdmin):
+    list_display = ('title', 'event_type', 'date', 'start_time', 'end_time', 'created_by')
+    list_filter = ('event_type', 'date')
+    search_fields = ('title', 'notes')
 
-class EventsAdminArea(admin.AdminSite):
-    # site_header = "Events Area"
-    # Change Site Labels
-    site_header = "TCSP Events Management"
-    site_title = "TCSP Events Management"
-    index_title = "TCSP Events"
-
-
-events_site = EventsAdminArea(name='EventsAdmin')
-
-
-@admin.register(Events)
-class YourModelNameAdmin(admin.ModelAdmin):
-    pass
-
-
-events_site.register(Events)

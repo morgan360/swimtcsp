@@ -98,3 +98,6 @@ class NewSwimlingForm(forms.ModelForm):
             'sco_role_num': 'School Role Number',
             'notes': 'Additional Notes'
         }
+
+class GuardianOptInForm(forms.Form):
+    become_guardian = forms.BooleanField(label="I would like to become a guardian", required=True)

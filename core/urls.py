@@ -6,7 +6,8 @@ from django.contrib.sessions.models import Session
 from custom_admins.lessonsadmin import lessons_admin_site
 from custom_admins.usersadmin import users_admin_site
 from custom_admins.swimsadmin import swims_admin_site
-
+from custom_admins.schoolsadmin import schools_admin_site
+from custom_admins.generaladmin import general_admin_site
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -52,10 +53,13 @@ if settings.DEBUG:
     ]
 
 # Add Admin Sites
-urlpatterns += [path('lessonsadmin/', lessons_admin_site.urls),
-                path('usersadmin/', users_admin_site.urls),
-                path('swimsadmin/', swims_admin_site.urls)
-                ]
+urlpatterns += [
+    path('lessonsadmin/', lessons_admin_site.urls),
+    path('usersadmin/', users_admin_site.urls),
+    path('swimsadmin/', swims_admin_site.urls),
+    path('schoolsadmin/', schools_admin_site.urls),
+    path('generaladmin/', general_admin_site.urls),
+    ]
 # add auto reload
 urlpatterns += [path('__reload__/', include('django_browser_reload.urls'))]
 
@@ -64,3 +68,8 @@ urlpatterns += [path('__reload__/', include('django_browser_reload.urls'))]
 admin.site.site_header = "TCSP Administration"
 admin.site.site_title = "TCSP Administration site"
 admin.site.index_title = "TCSP Administration"
+
+# dashboard
+urlpatterns += [
+path("dashboard/", include(("dashboard.urls", "dashboard"), namespace="dashboard"))
+]

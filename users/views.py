@@ -6,7 +6,7 @@ from django.db import transaction
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import HttpResponse
-from .forms import UserForm, UserProfileForm, NewSwimlingForm
+from .forms import UserForm, UserProfileForm, NewSwimlingForm, GuardianOptInForm
 from django.contrib.auth import get_user_model
 from lessons_bookings.models import LessonEnrollment, Term
 from django.template.loader import render_to_string
@@ -15,6 +15,7 @@ from utils.context_processors import get_term_info
 from utils.context_processors import term_status_for_active_schools
 from .helpers import fetch_swimling_management_data, fetch_normal_lessons_data, fetch_school_lessons_data, fetch_waiting_list_data
 from django.contrib.admin.views.decorators import staff_member_required
+from django.contrib.auth.models import Group
 
 # Get the custom user model
 user = get_user_model()
@@ -145,3 +146,15 @@ def load_new_swimling_form(request, product_slug):
     return render(request, 'partials/new_swimling_form.html', {'form': form, 'product': product})
 
 
+@login_required
+def become_guardian_view(request):
+    if request.method == 'POST':
+        form = GuardianOptInForm(request.POST)
+        if form.is_valid() and form.cleaned_data['become_guardian']:
+            guardian_group, _ = Group.objects.get_or_create(name='guardian')
+            request.user.groups.add(guardian_group)
+            return redirect('/')  # Or any success page
+    else:
+        form = GuardianOptInForm()
+
+    return render(request, 'users/become_guardian.html', {'form': form})

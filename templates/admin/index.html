@@ -1,16 +1,39 @@
 {% extends "admin/index.html" %}
+{% load static %}
 
 {% block content %}
-<div class="module">
+  <div class="box custom-admin-menu">
+    <h2 class="title is-4 has-text-primary mb-4">
+      <a href="/management/">🛠️ Management Menu</a>
+    </h2>
+    <ul>
+      <li>
+        <a href="/swimsadmin/" class="admin-link {% if '/swimsadmin/' in request.path %}is-active{% endif %}">
+          🏊 Swims Admin
+        </a>
+      </li>
+      <li>
+        <a href="/lessonsadmin/" class="admin-link {% if '/lessonsadmin/' in request.path %}is-active{% endif %}">
+          📚 Lessons Admin
+        </a>
+      </li>
+      <li>
+        <a href="/schoolsadmin/" class="admin-link {% if '/schoolsadmin/' in request.path %}is-active{% endif %}">
+          🏫 Schools Admin
+        </a>
+      </li>
+      <li>
+        <a href="/usersadmin/" class="admin-link {% if '/usersadmin/' in request.path %}is-active{% endif %}">
+          👤 Users Admin
+        </a>
+      </li>
+      <li>
+        <a href="/generaladmin/" class="admin-link {% if '/generaladmin/' in request.path %}is-active{% endif %}">
+          ⚙️ General Admin
+        </a>
+      </li>
+    </ul>
+  </div>
 
- <h2  style="color: white;><a href="/management/">Management Menu</a></h2>
-  <ul>
-      <li> <h3><a href="/swimsadmin/">Swims Admin</a></h3></li>
- <li><h3><a href="/lessonsadmin/">Lessons Admin</a></h3></li>
-<li><h3><a href="/usersadmin/">Users Admin</a></h3></li>
-      <li><h3><a href="/reports/today/">Reports Admin</a></h3></li>
-</ul>
-</div>
-{{ block.super }}
+  {{ block.super }}
 {% endblock %}
-

@@ -1,0 +1,21 @@
+:root {
+  --primary-color: #363636; /* dark grey for general admin */
+}
+
+/* Header styling */
+/* Force the top admin header bar to accommodate the logo */
+#header {
+  height: 80px !important;
+  min-height: 80px !important;
+  padding-left: 1rem;
+  background-color: var(--primary-color);
+  color: white;
+  display: flex;
+  align-items: center;
+  overflow: visible;
+}
+
+#header img {
+  height: 60px;
+  object-fit: contain;
+}

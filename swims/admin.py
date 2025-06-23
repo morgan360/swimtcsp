@@ -47,7 +47,7 @@ class PublicSwimProductAdmin(ImportExportMixin, admin.ModelAdmin):
     )
     list_filter = [('name' , DropdownFilter),('category', RelatedDropdownFilter),('day_of_week',  ChoiceDropdownFilter),('available')]
 
-admin.site.register(PublicSwimProduct, PublicSwimProductAdmin)
+# admin.site.register(PublicSwimProduct, PublicSwimProductAdmin) # Cant register twice
 
 
 @admin.register(PriceVariant)

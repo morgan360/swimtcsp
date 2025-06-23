@@ -11,5 +11,6 @@ urlpatterns = [
     path('edit-swimling/<int:id>/', views.edit_swimling, name='edit-swimling'),
     path('add_new_swimling/', views.add_new_swimling, name='add_new_swimling'),
     path('accounts/', include('allauth.urls')),
+    path('profile/become-guardian/', views.become_guardian_view, name='become_guardian'),
     path('<int:user_id>/', views.hijack_redirect, name='hijack_redirect'),
 ]

@@ -1,0 +1,29 @@
+{% extends "dashboard/base_dashboard.html" %}
+{% block content %}
+<section class="section">
+  <div class="container">
+    <h1 class="title">🏊 Public Swim Products</h1>
+
+    <table class="table is-bordered is-striped is-fullwidth">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Category</th>
+          <th>Slug</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for product in products %}
+          <tr>
+            <td>{{ product.name }}</td>
+            <td>{{ product.category.name }}</td>
+            <td>{{ product.slug }}</td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="4">No Public Swim Products available.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,36 @@
+{% extends "base/_base.html" %}
+{% block content %}
+<section class="section">
+  <div class="container">
+    <div class="box">
+      <h1 class="title is-4 has-text-primary">Upgrade to Book Swimming Lessons</h1>
+      <p class="mb-4">
+        When you upgrade, you will gain access to features such as:
+      </p>
+      <ul class="content mb-5">
+        <li>✔ Register your children for lessons</li>
+        <li>✔ View and manage your children's lesson schedules</li>
+        <li>✔ Book and rebook swimming sessions with ease</li>
+      </ul>
+
+      <form method="post">
+        {% csrf_token %}
+        <div class="field">
+          <div class="control">
+            {{ form.become_guardian }}
+            <label class="checkbox ml-2" for="{{ form.become_guardian.id_for_label }}">
+              {{ form.become_guardian.label }}
+            </label>
+          </div>
+        </div>
+
+        <div class="field mt-4">
+          <div class="control">
+            <button type="submit" class="button is-link is-medium">Upgrade</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</section>
+{% endblock %}

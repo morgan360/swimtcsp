@@ -1,0 +1,83 @@
+:root {
+  --primary-color: #7957d5;
+}
+
+/* Top bar */
+#header {
+  background-color: var(--primary-color) !important;
+  border-bottom: 2px solid #5f47b0;
+}
+
+#header h1, #user-tools a {
+  color: white !important;
+}
+
+/* Menu titles */
+.module h2, .app-lessons h2, .app-lessons_bookings h2 {
+  background-color: var(--primary-color);
+  color: white;
+  padding: 0.3em;
+  font-weight: bold;
+}
+
+/* Management section */
+.management-heading {
+  background-color: #eee !important;
+}
+
+
+/* App index section */
+#content-main table th {
+  background-color: #f5f7fa;
+  color: #363636;
+}
+
+/* Action links */
+a:link, a:visited {
+  color: #7957d5;
+}
+
+a:hover {
+  color: #573db5;
+}
+
+/* Add spacing and visual improvements */
+.module table {
+  margin-bottom: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+.return-to-site {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1rem;
+  font-weight: bold;
+}
+
+.return-to-site img {
+  height: 24px;
+  width: 24px;
+  margin-right: 0.5rem;
+}
+
+.custom-admin-menu {
+  border-radius: 6px;
+  padding: 1rem;
+  background-color: var(--primary-color, #7957d5);
+  color: white;
+}
+
+.custom-admin-menu h2 {
+  color: white;
+  font-size: 1.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.custom-admin-menu h3 a {
+  color: white;
+  text-decoration: underline;
+}
+
+.custom-admin-menu h3 a:hover {
+  text-decoration: none;
+}

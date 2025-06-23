@@ -2,23 +2,30 @@
 {% load static %}
 
 {% block title %}
-    <p>School Lessons</p>
+  School Lessons
 {% endblock %}
 
 {% block content %}
-   <div class="flex justify-center items-center mt-8">
-    <form method="get"
-          action="{% url 'schools:school_list' %}"
-          hx-get="{% url 'schools:school_list' %}"
-          hx-target="#lesson-list"
-          hx-swap="innerHTML"
-          hx-trigger="change from:select"
-         >
-        {{ form.as_table }}
-    </form>
-</div>
-    <div id="lesson-list">
-        {% include "schools/partials/_lesson_list.html" %}
+<section class="section">
+  <div class="container">
+    <!-- 🔽 Filter Form -->
+    <div class="box has-shadow">
+      <form method="get"
+            action="{% url 'schools:school_list' %}"
+            hx-get="{% url 'schools:school_list' %}"
+            hx-target="#lesson-list"
+            hx-swap="innerHTML"
+            hx-trigger="change from:select">
+        <div class="field is-horizontal is-grouped is-grouped-multiline is-flex is-justify-content-center">
+          {{ form.as_table }}
+        </div>
+      </form>
     </div>
 
+    <!-- 📋 Lesson List Content -->
+    <div id="lesson-list">
+      {% include "schools/partials/_lesson_list.html" %}
+    </div>
+  </div>
+</section>
 {% endblock %}

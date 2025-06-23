@@ -1,0 +1,37 @@
+/* Force the top admin header bar to accommodate the logo */
+:root {
+  --primary-color: #00b5ad; /* Teal */
+}
+#header {
+  background-color: var(--primary-color) !important;
+  color: white !important;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  padding-left: 1rem;
+  overflow: visible;
+}
+
+#header img {
+  height: 60px;
+  object-fit: contain;
+}
+.admin-link {
+  display: block;
+  font-size: 1rem; /* Smaller and consistent */
+  padding: 0.4rem 0.75rem;
+  border-radius: 4px;
+  color: var(--text-dark); /* Default text color */
+  text-decoration: none;
+  transition: background-color 0.2s ease;
+}
+
+.admin-link:hover {
+  background-color: #f0f0f0;
+}
+
+.admin-link.is-active {
+  background-color: #e0f7fa; /* Soft highlight */
+  color: var(--primary-color); /* Make text stand out */
+  font-weight: 600;
+}

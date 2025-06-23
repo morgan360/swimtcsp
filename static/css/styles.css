@@ -371,3 +371,13 @@ table.dataTable thead input.column-filter {
     padding-top: 0.5rem;
     padding-bottom: 0.5rem;
 }
+html, body {
+  height: 100%;
+}
+
+.menu {
+  min-height: 100vh;
+  background: white;
+  padding: 1rem;
+  border-right: 1px solid #ddd;
+}

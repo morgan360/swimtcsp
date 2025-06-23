@@ -80,6 +80,7 @@ INSTALLED_APPS = [
     'boipa',
     'waiting_list',
     'navigation',
+    'dashboard',
 ]
 
 MIDDLEWARE = [

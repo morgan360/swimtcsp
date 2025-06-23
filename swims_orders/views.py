@@ -7,9 +7,15 @@ from django.utils import timezone
 from datetime import timedelta
 from utils.date_utils import get_next_occurrence
 from django.http import HttpResponse
+from django.contrib.auth import REDIRECT_FIELD_NAME
 
-@login_required
+
 def order_create(request):
+    if not request.user.is_authenticated:
+        signup_url = reverse('account_signup')
+        return redirect(f'{signup_url}?{REDIRECT_FIELD_NAME}={request.get_full_path()}')
+
+
     order_type = request.GET.get('value', 'default_value')
     current_user = request.user
     cart = Cart(request)  # Assuming Cart class is imported

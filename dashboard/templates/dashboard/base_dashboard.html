@@ -1,0 +1,34 @@
+{<!-- templates/dashboard/base_dashboard.html -->
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>TCSP Admin</title>
+  <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+</head>
+<body style="background-color: var(--background-color);">
+
+<div class="columns is-gapless" style="min-height: 100vh;">
+  <!-- Sidebar -->
+  <aside class="menu column is-2 has-background-white p-3" style="border-right: 1px solid #ddd;">
+    <p class="menu-label has-text-weight-semibold">Admin Sections</p>
+    <ul class="menu-list">
+      <li><a href="{% url 'dashboard:dashboard_public_swims' %}">🏊 Public Swims</a></li>
+      <li><a href="{% url 'dashboard:dashboard_lessons' %}">📚 Lessons</a></li>
+      <li><a href="{% url 'dashboard:dashboard_schools' %}">🏫 Schools</a></li>
+      <li><a href="{% url 'dashboard:dashboard_orders' %}">💳 Orders</a></li>
+      <li><a href="{% url 'dashboard:dashboard_general' %}">⚙️ General</a></li>
+    </ul>
+  </aside>
+
+  <!-- Main content -->
+  <main class="column is-10 p-5">
+    {% block content %}
+    {% endblock %}
+  </main>
+</div>
+
+</body>
+</html>

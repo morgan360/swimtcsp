@@ -1,86 +1,75 @@
 {% load static %}
 
 {% block content %}
-    <div class="bg-blue-500 p-3">
-        <h1 class="text-2xl text-white text-center">School Swim Lessons</h1>
+<section class="section">
+  <div class="container">
+    <!-- 🔹 Page Title -->
+    <div class="box has-background-primary has-text-white">
+      <h1 class="title is-4 has-text-centered has-text-white">School Swim Lessons</h1>
     </div>
-    <div class="container mx-auto mt-6">
-        <div class="row">
-            <div class="col-md-11">
-                <table class="table table-striped">
-                    <thead>
-                    <tr>
-                        <th>Lessons</th>
-                         <th>School</th>
-                        <th>Spaces</th>
-                        <th>Places</th>
-                        <th>Action</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    {% for lesson in page_obj %}
-                        <tr>
-                            <td>{{ lesson.name }}</td>
-                             <td>{{ lesson.school.sco_name }}</td>
-                            <td>{{ lesson.num_places }}</td>
-                            <td>
-                                {% if lesson.remaining_spaces <= 0 %}
-                                    <p>Full</p>
-                                {% else %}
-                                    <p>{{ lesson.remaining_spaces }}</p>
-                                {% endif %}
-                            </td>
-                            <td><a href="{% url 'schools:school_detail' slug=lesson.slug %}" class="btn btn-info
-                          btn-sm">Book</a></td>
-                        </tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-    <!-- Pagination Navigation with Tailwind -->
-   <nav aria-label="Page navigation" class="flex justify-center mt-4">
-    <ul class="inline-flex -space-x-px">
-        <!-- First and Previous Page Links -->
-        <li>
-            <a href="?page=1" class="py-2 px-3 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700" aria-label="Go to first page">
-                ««
-            </a>
-        </li>
-        {% if page_obj.has_previous %}
-        <li>
-            <a href="?page={{ page_obj.previous_page_number }}" class="py-2 px-3 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700" aria-label="Go to previous page">
-                «
-            </a>
-        </li>
-        {% endif %}
 
-        <!-- Numbered Page Links -->
+    <!-- 🏫 Lessons Table -->
+    <div class="box">
+      <table class="table is-fullwidth is-striped is-hoverable">
+        <thead>
+          <tr>
+            <th>Lesson</th>
+            <th>School</th>
+            <th>Spaces</th>
+            <th>Places</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for lesson in page_obj %}
+          <tr>
+            <td>{{ lesson.name }}</td>
+            <td>{{ lesson.school.sco_name }}</td>
+            <td>{{ lesson.num_places }}</td>
+            <td>
+              {% if lesson.remaining_spaces <= 0 %}
+                <span class="tag is-danger is-light">Full</span>
+              {% else %}
+                <span class="tag is-success is-light">{{ lesson.remaining_spaces }}</span>
+              {% endif %}
+            </td>
+            <td>
+              <a href="{% url 'schools:school_detail' slug=lesson.slug %}" class="button is-book is-small">Book</a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 📄 Pagination -->
+    {% if page_obj.has_other_pages %}
+    <nav class="pagination is-centered" role="navigation" aria-label="pagination">
+      {% if page_obj.has_previous %}
+        <a class="pagination-previous" href="?page=1">««</a>
+        <a class="pagination-previous" href="?page={{ page_obj.previous_page_number }}">«</a>
+      {% else %}
+        <a class="pagination-previous" disabled>««</a>
+        <a class="pagination-previous" disabled>«</a>
+      {% endif %}
+
+      {% if page_obj.has_next %}
+        <a class="pagination-next" href="?page={{ page_obj.next_page_number }}">»</a>
+        <a class="pagination-next" href="?page={{ page_obj.paginator.num_pages }}">»»</a>
+      {% else %}
+        <a class="pagination-next" disabled>»</a>
+        <a class="pagination-next" disabled>»»</a>
+      {% endif %}
+
+      <ul class="pagination-list">
         {% for num in page_obj.paginator.page_range %}
         <li>
-            <a href="?page={{ num }}" class="{% if page_obj.number == num %}py-2 px-3 leading-tight text-gray-500 bg-blue-500 text-white border border-blue-500 hover:bg-blue-600 hover:text-white{% else %}py-2 px-3 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700{% endif %}">
-                {{ num }}
-            </a>
+          <a class="pagination-link {% if page_obj.number == num %}is-current{% endif %}" href="?page={{ num }}">{{ num }}</a>
         </li>
         {% endfor %}
-
-        <!-- Next and Last Page Links -->
-        {% if page_obj.has_next %}
-        <li>
-            <a href="?page={{ page_obj.next_page_number }}" class="py-2 px-3 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700" aria-label="Go to next page">
-                »
-            </a>
-        </li>
-        <li>
-            <a href="?page={{ page_obj.paginator.num_pages }}" class="py-2 px-3 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700" aria-label="Go to last page">
-                »»
-            </a>
-        </li>
-        {% endif %}
-    </ul>
-</nav>
-
-
-
+      </ul>
+    </nav>
+    {% endif %}
+  </div>
+</section>
 {% endblock %}

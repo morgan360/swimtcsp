@@ -1,9 +1,8 @@
 from django.urls import path, include
-from .views import home, contact_us, management, test_daisyui, about
+from .views import home, info_view, management
 urlpatterns = [
-    path('contact/', contact_us, name='contact'),
     path('',home, name='home'),  # Add the view function 'home' here
     path('management/', management, name='management'),  # Add the view function 'home' here
-    path('test-daisyui/', test_daisyui, name='test_daisyui'),
-    path('about/', about, name='about'),
+    path('info/', info_view, name='info'),  # both
+    path('info/<str:section>/', info_view, name='info_section'),  # about/contact
 ]

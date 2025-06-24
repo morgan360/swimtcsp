@@ -5,8 +5,10 @@
 <!-- Top Bar with Logo and Login/Logout -->
 <div class="navbar is-white has-shadow is-flex is-justify-content-space-between is-align-items-center px-4 py-2">
     <div class="is-flex is-align-items-center">
-        <img src="{% static 'img/logo.png' %}" alt="Logo" width="40" height="40" class="mr-2">
-        <strong class="mr-3">TCSP</strong>
+        <a href="{% url 'home' %}" class="is-flex is-align-items-center mr-3">
+            <img src="{% static 'img/logo.png' %}" alt="Logo" width="40" height="40" class="mr-2">
+            <strong>TCSP</strong>
+        </a>
         <button @click="drawerOpen = !drawerOpen" class="button is-small has-background-link has-text-white">
             <i x-show="!drawerOpen" class="fas fa-bars"></i>
             <i x-show="drawerOpen" class="fas fa-times"></i>
@@ -14,12 +16,12 @@
     </div>
     <div class="buttons">
         <!-- Static links always shown -->
-        <a href="{% url 'about' %}" class="button is-small is-white">
-            <i class="fas fa-info-circle"></i>&nbsp;About
+        <a href="{% url 'info' %}" class="button is-small is-white">
+            <i class="fas fa-info-circle"></i>&nbsp;Info
         </a>
-        <a href="{% url 'contact' %}" class="button is-small is-white">
-            <i class="fas fa-envelope"></i>&nbsp;Contact
-        </a>
+        {#        <a href="{% url 'info_section' 'about' %}" class="button is-small is-white">#}
+        {#            <i class="fas fa-envelope"></i>&nbsp;About#}
+        {#        </a>#}
         {% if user.is_authenticated %}
             <span class="mr-3">Hello, {{ user.get_full_name|default:user.username }}</span>
             <a href="{% url 'account_logout' %}" class="button is-small is-light">
@@ -65,7 +67,8 @@
         {% for group, items in drawer_menus.items %}
             <div class="mb-2" x-data="{ open: '{{ group|lower }}' === 'main' }">
                 <button
-                        class="has-text-grey-dark is-size-6 has-text-weight-bold is-flex is-align-items-center w-full"
+                        class="has-text-grey-dark is-size-6 has-text-weight-bold is-flex is-align-items-center
+                        is-fullwidth"
                         @click="open = !open"
                 >
           <span class="mr-2">

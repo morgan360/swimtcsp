@@ -49,14 +49,24 @@ class Command(BaseCommand):
                         guardian = User.objects.get(id=row['guardian_id'])
                     except User.DoesNotExist:
                         skipped += 1
+                        self.stdout.write(
+                            self.style.WARNING(
+                                f"⚠️ Skipped Swimling ID {row['wp_id']}: Guardian ID {row['guardian_id']} not found"
+                            )
+                        )
                         continue
+
+                    # Safe field extraction with fallback
+                    first_name = row.get('first_name') or 'Unknown'
+                    last_name = row.get('last_name') or ''
+                    notes = row.get('notes') or ''
 
                     Swimling.objects.create(
                         id=int(row['wp_id']),
                         guardian=guardian,
-                        first_name=row['first_name'],
-                        last_name=row['last_name'],
-                        notes=row['notes']
+                        first_name=first_name,
+                        last_name=last_name,
+                        notes=notes
                     )
                     created += 1
 
@@ -68,7 +78,8 @@ class Command(BaseCommand):
 
             self.stdout.write(self.style.SUCCESS(f"✅ Imported {created} Swimlings"))
             if skipped:
-                self.stdout.write(self.style.WARNING(f"⚠️ Skipped {skipped} due to missing guardian"))
+                self.stdout.write(self.style.WARNING(f"⚠️ Skipped {skipped} due to missing guardians"))
 
         finally:
             remote_conn.close()
+            self.stdout.write("🔒 Remote DB connection closed.")

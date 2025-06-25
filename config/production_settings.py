@@ -48,12 +48,12 @@ DATABASES = {
 ALLOWED_HOSTS = ['tcsp-morganmck.eu.pythonanywhere.com']
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True  # Use TLS (True for Gmail)
-EMAIL_HOST_USER = 'morganmcknight@gmail.com'  # Your Gmail email address
-EMAIL_HOST_PASSWORD = 'rkjxohiawwncphgp'  # Your Gmail password or an app password
-EMAIL_USE_SSL = False
+# EMAIL_HOST = 'smtp.gmail.com'
+# EMAIL_PORT = 587
+# EMAIL_USE_TLS = True  # Use TLS (True for Gmail)
+# EMAIL_HOST_USER = 'morganmcknight@gmail.com'  # Your Gmail email address
+# EMAIL_HOST_PASSWORD = 'rkjxohiawwncphgp'  # Your Gmail password or an app password
+# EMAIL_USE_SSL = False
 
 PAYMENTS_LOG_FILE_PATH = '/home/morganmck/swimtcsp/logs/payments.log'
 CART_LOG_FILE_PATH = '/home/morganmck/swimtcsp/logs/cart.log'
@@ -123,3 +123,11 @@ SITE_ID = 2
 
 
 FOOTER_MESSAGE = "Production Version"
+
+# email settings
+EMAIL_HOST = 'sandbox.smtp.mailtrap.io'
+EMAIL_PORT = 2525
+EMAIL_HOST_USER = '226a61f66cbf6f'  # use your actual username
+EMAIL_HOST_PASSWORD = '6ace6e16495c4b'
+EMAIL_USE_TLS = True
+DEFAULT_FROM_EMAIL = 'noreply@yourdomain.com'

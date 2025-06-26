@@ -1,64 +1,53 @@
 from config.base_settings import *
-from dotenv import load_dotenv
+from decouple import config
 import os
-import logging
-import environ
+from pathlib import Path
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-# Initialize environ
-env = environ.Env()
-# Reading .env file
-env_file = os.path.join(BASE_DIR, '.env')
-env.read_env(env_file)  # Provide the path to the .env file
 
-# Environment variables
-BOIPA_MERCHANT_ID = env('BOIPA_MERCHANT_ID')
-BOIPA_PASSWORD = env('BOIPA_PASSWORD')
-BOIPA_TOKEN_URL = env('BOIPA_TOKEN_URL')
-HPP_FORM = env('HPP_FORM')
-NGROK = env('NGROK', default='http://localhost:4040').rstrip('/')
-SECRET_KEY = env('SECRET_KEY')
-# DJANGO_SETTINGS_MODULE= env('DJANGO_SETTINGS_MODULE')
-DB_PASSWORD = env('DB_PASSWORD')
-BRAND_ID = env('BRAND_ID')
-BOIPA_PAYMENT_URL = env('BOIPA_PAYMENT_URL')
+DEBUG = False  # ✅ Should always be False in production!
 
+# Core environment variables
+SECRET_KEY = config('SECRET_KEY')
+BOIPA_MERCHANT_ID = config('BOIPA_MERCHANT_ID')
+BOIPA_PASSWORD = config('BOIPA_PASSWORD')
+BOIPA_TOKEN_URL = config('BOIPA_TOKEN_URL')
+HPP_FORM = config('HPP_FORM')
+NGROK = config('NGROK', default='http://localhost:4040').rstrip('/')
+BRAND_ID = config('BRAND_ID')
+BOIPA_PAYMENT_URL = config('BOIPA_PAYMENT_URL')
 
 CART_SESSION_ID = 'cart'
-#
-# load_dotenv()  # loads the configs from .env
 
+# Database configuration
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'morganmck$swimtcsp',
         'USER': 'morganmck',
-        'PASSWORD': env("DB_PASSWORD"),  # Ensures the password is read from environment variables
+        'PASSWORD': config("DB_PASSWORD"),
         'HOST': 'morganmck.mysql.eu.pythonanywhere-services.com',
         'OPTIONS': {
             'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
-        },  # Make sure to close the OPTIONS dictionary correctly
+        },
     }
 }
 
-
 ALLOWED_HOSTS = ['tcsp-morganmck.eu.pythonanywhere.com']
 
+# Email Configuration (Microsoft 365 - web@tcsp.ie)
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-# EMAIL_HOST = 'smtp.gmail.com'
-# EMAIL_PORT = 587
-# EMAIL_USE_TLS = True  # Use TLS (True for Gmail)
-# EMAIL_HOST_USER = 'morganmcknight@gmail.com'  # Your Gmail email address
-# EMAIL_HOST_PASSWORD = 'rkjxohiawwncphgp'  # Your Gmail password or an app password
-# EMAIL_USE_SSL = False
+EMAIL_HOST = config('EMAIL_HOST')
+EMAIL_PORT = config('EMAIL_PORT', cast=int)
+EMAIL_USE_TLS = config('EMAIL_USE_TLS', cast=bool)
+EMAIL_HOST_USER = config('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
+DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL')
 
+# Log file paths
 PAYMENTS_LOG_FILE_PATH = '/home/morganmck/swimtcsp/logs/payments.log'
 CART_LOG_FILE_PATH = '/home/morganmck/swimtcsp/logs/cart.log'
 APP_LOG_FILE_PATH = '/home/morganmck/swimtcsp/logs/app.log'
-
 
 LOGGING = {
     'version': 1,
@@ -70,16 +59,16 @@ LOGGING = {
             'filename': PAYMENTS_LOG_FILE_PATH,
             'formatter': 'detailed',
         },
-        'cart_file': {  # Handler for cart logging
+        'cart_file': {
             'level': 'DEBUG',
             'class': 'logging.FileHandler',
             'filename': CART_LOG_FILE_PATH,
             'formatter': 'detailed',
         },
-        'app_file': {  # New handler for application-wide logging
+        'app_file': {
             'level': 'DEBUG',
             'class': 'logging.FileHandler',
-            'filename': APP_LOG_FILE_PATH,  # Path defined earlier
+            'filename': APP_LOG_FILE_PATH,
             'formatter': 'detailed',
         },
         'console': {
@@ -109,7 +98,7 @@ LOGGING = {
             'level': 'DEBUG',
             'propagate': False,
         },
-        'application': {  # New logger for general application logging
+        'application': {
             'handlers': ['app_file', 'console'],
             'level': 'DEBUG',
             'propagate': False,
@@ -117,17 +106,5 @@ LOGGING = {
     },
 }
 
-
-# Allauth
 SITE_ID = 2
-
-
 FOOTER_MESSAGE = "Production Version"
-
-# email settings
-EMAIL_HOST = 'sandbox.smtp.mailtrap.io'
-EMAIL_PORT = 2525
-EMAIL_HOST_USER = '226a61f66cbf6f'  # use your actual username
-EMAIL_HOST_PASSWORD = '6ace6e16495c4b'
-EMAIL_USE_TLS = True
-DEFAULT_FROM_EMAIL = 'noreply@yourdomain.com'

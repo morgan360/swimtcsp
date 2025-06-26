@@ -3,7 +3,10 @@ import django
 from django.core.mail import EmailMessage, get_connection
 
 # ✅ Correct settings module
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.local_settings')
+if os.environ.get('PRODUCTION_SITE') == 'yes':
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.production_settings')
+else:
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.local_settings')
 
 django.setup()
 

@@ -8,7 +8,7 @@ from datetime import timedelta
 from utils.date_utils import get_next_occurrence
 from django.http import HttpResponse
 from django.contrib.auth import REDIRECT_FIELD_NAME
-
+from swims_orders.tasks import send_order_email
 
 def order_create(request):
     if not request.user.is_authenticated:
@@ -55,7 +55,9 @@ def order_create(request):
 
     # Clear cart and set session order ID
     cart.clear()
-    order_created(order.id)
+    order_created(order.id)  # Keep this for side effects or logging
+    send_order_email(order.id)  # .delay for celery
+
     request.session['order_id'] = order.id
 
     # Redirect to payment process
@@ -81,11 +83,6 @@ def order_confirmation(request):
 
 
 def order_created(order_id):
-    # Retrieve the order object based on the provided order_id
+    # Just for logging, hooks, or legacy calls
     order = Order.objects.get(id=order_id)
-
-    # Perform any additional actions or processing for the order creation
-    # For example, you can send email notifications, update inventory, etc.
-
-    # Return a success message or any relevant data
     return f"Order {order_id} created successfully!"

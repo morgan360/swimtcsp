@@ -14,6 +14,7 @@ from .models import (
 from lessons_bookings.utils.enrollment import handle_lessons_enrollment
 from schools_bookings.utils.enrollment import handle_schools_enrollment
 from .payment_functions import get_boipa_session_token  # External function
+from swims_orders.tasks import send_order_email
 
 # Initialize logging
 payments_logger = logging.getLogger('payments')
@@ -76,8 +77,12 @@ def payment_notification(request):
     except (ValueError, IndexError):
         return HttpResponse("Invalid merchantTxId format", status=400)
 
+    def noop(order):
+        """No-op enrollment handler for swim orders."""
+        return
+
     model_map = {
-        'swims': (SwimOrder, SwimOrderPaymentNotification),
+        'swims': (SwimOrder, SwimOrderPaymentNotification, noop),  # add 3rd item
         'lesson': (LessonOrder, LessonOrderPaymentNotification, handle_lessons_enrollment),
         'school': (SchoolOrder, SchoolOrderPaymentNotification, handle_schools_enrollment),
     }
@@ -90,6 +95,7 @@ def payment_notification(request):
                 order.paid = True
                 order.txId = data.get('txId', '')
                 order.save()
+                send_order_email(order.id) #use delay with celery
 
                 notification = NotificationModel.objects.create(
                     order=order,

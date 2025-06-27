@@ -24,7 +24,7 @@ def get_boipa_session_token(request, order_ref, total_price):
             "country": "IE",
             "currency": "EUR",
             "amount": str(amount),
-            "merchantTxId": order_ref,
+            "merchantTxId": f"{order_ref}_{int(time.time())}",
             "merchantLandingPageUrl": settings.NGROK + reverse('boipa:payment_response'),
             "merchantNotificationUrl": settings.NGROK + reverse('boipa:payment_notification'),
             "merchantLandingPageRedirectMethod": "GET",

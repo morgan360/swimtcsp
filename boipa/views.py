@@ -72,8 +72,9 @@ def payment_notification(request):
         return HttpResponse("Missing merchantTxId", status=400)
 
     try:
-        source_prefix, order_id_str = merchantTxId.split("_", 1)
-        order_id = int(order_id_str)
+        parts = merchantTxId.split("_")
+        source_prefix = parts[0]
+        order_id = int(parts[1])
     except (ValueError, IndexError):
         return HttpResponse("Invalid merchantTxId format", status=400)
 

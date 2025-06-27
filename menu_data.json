@@ -1,0 +1,634 @@
+[
+{
+  "model": "navigation.menugroup",
+  "pk": 15,
+  "fields": {
+    "name": "Main",
+    "slug": "main",
+    "order": 0
+  }
+},
+{
+  "model": "navigation.menugroup",
+  "pk": 16,
+  "fields": {
+    "name": "Swimming Lessons",
+    "slug": "lessons",
+    "order": 2
+  }
+},
+{
+  "model": "navigation.menugroup",
+  "pk": 17,
+  "fields": {
+    "name": "Profile",
+    "slug": "profile",
+    "order": 9
+  }
+},
+{
+  "model": "navigation.menugroup",
+  "pk": 18,
+  "fields": {
+    "name": "School Lessons",
+    "slug": "school",
+    "order": 4
+  }
+},
+{
+  "model": "navigation.menugroup",
+  "pk": 19,
+  "fields": {
+    "name": "Management",
+    "slug": "management",
+    "order": 4
+  }
+},
+{
+  "model": "navigation.menugroup",
+  "pk": 20,
+  "fields": {
+    "name": "Admin",
+    "slug": "admin",
+    "order": 5
+  }
+},
+{
+  "model": "navigation.menugroup",
+  "pk": 21,
+  "fields": {
+    "name": "Staff",
+    "slug": "staff",
+    "order": 6
+  }
+},
+{
+  "model": "navigation.menugroup",
+  "pk": 22,
+  "fields": {
+    "name": "Reporting",
+    "slug": "reporting",
+    "order": 7
+  }
+},
+{
+  "model": "navigation.menugroup",
+  "pk": 23,
+  "fields": {
+    "name": "dashboard",
+    "slug": "dashboard",
+    "order": 8
+  }
+},
+{
+  "model": "navigation.menuitem",
+  "pk": 47,
+  "fields": {
+    "group": 15,
+    "label": "About",
+    "url_name": "about",
+    "external_url": "",
+    "icon_class": "",
+    "order": 2,
+    "requires_login": false,
+    "requires_staff": false,
+    "required_groups": []
+  }
+},
+{
+  "model": "navigation.menuitem",
+  "pk": 48,
+  "fields": {
+    "group": 15,
+    "label": "Contact",
+    "url_name": "contact",
+    "external_url": "",
+    "icon_class": "",
+    "order": 3,
+    "requires_login": false,
+    "requires_staff": false,
+    "required_groups": []
+  }
+},
+{
+  "model": "navigation.menuitem",
+  "pk": 49,
+  "fields": {
+    "group": 15,
+    "label": "Timetable",
+    "url_name": "timetable:timetable_grid",
+    "external_url": "",
+    "icon_class": "fas fa-calendar",
+    "order": 4,
+    "requires_login": false,
+    "requires_staff": false,
+    "required_groups": []
+  }
+},
+{
+  "model": "navigation.menuitem",
+  "pk": 50,
+  "fields": {
+    "group": 15,
+    "label": "Public Swims",
+    "url_name": "swims:product_list",
+    "external_url": "",
+    "icon_class": "fas fa-swimmer",
+    "order": 5,
+    "requires_login": false,
+    "requires_staff": false,
+    "required_groups": []
+  }
+},
+{
+  "model": "navigation.menuitem",
+  "pk": 51,
+  "fields": {
+    "group": 16,
+    "label": "Book Lessons",
+    "url_name": "lessons:lesson_list",
+    "external_url": "",
+    "icon_class": "fas fa-calendar-plus",
+    "order": 1,
+    "requires_login": true,
+    "requires_staff": false,
+    "required_groups": [
+      6
+    ]
+  }
+},
+{
+  "model": "navigation.menuitem",
+  "pk": 52,
+  "fields": {
+    "group": 16,
+    "label": "Swimling Panel",
+    "url_name": "users:combined_swimling_mgmt",
+    "external_url": "",
+    "icon_class": "fas fa-user-friends",
+    "order": 1,
+    "requires_login": true,
+    "requires_staff": false,
+    "required_groups": [
+      6
+    ]
+  }
+},
+{
+  "model": "navigation.menuitem",
+  "pk": 53,
+  "fields": {
+    "group": 16,
+    "label": "Swimling Progress",
+    "url_name": "lessons:swimling_progress",
+    "external_url": "",
+    "icon_class": "fas fa-chart-line",
+    "order": 2,
+    "requires_login": true,
+    "requires_staff": false,
+    "required_groups": [
+      6
+    ]
+  }
+},
+{
+  "model": "navigation.menuitem",
+  "pk": 54,
+  "fields": {
+    "group": 16,
+    "label": "School Lessons",
+    "url_name": "schools:school_list",
+    "external_url": "",
+    "icon_class": "fas fa-school",
+    "order": 3,
+    "requires_login": true,
+    "requires_staff": false,
+    "required_groups": [
+      6,
+      22
+    ]
+  }
+},
+{
+  "model": "navigation.menuitem",
+  "pk": 55,
+  "fields": {
+    "group": 17,
+    "label": "Manage Profile",
+    "url_name": "users:profile",
+    "external_url": "",
+    "icon_class": "fas fa-user-cog",
+    "order": 1,
+    "requires_login": true,
+    "requires_staff": false,
+    "required_groups": []
+  }
+},
+{
+  "model": "navigation.menuitem",
+  "pk": 56,
+  "fields": {
+    "group": 17,
+    "label": "View Orders",
+    "url_name": "swims_orders:order_list",
+    "external_url": "",
+    "icon_class": "fas fa-receipt",
+    "order": 2,
+    "requires_login": true,
+    "requires_staff": false,
+    "required_groups": []
+  }
+},
+{
+  "model": "navigation.menuitem",
+  "pk": 57,
+  "fields": {
+    "group": 17,
+    "label": "Upgrade to Guardian",
+    "url_name": "users:become_guardian",
+    "external_url": "",
+    "icon_class": "fas fa-user-plus",
+    "order": 3,
+    "requires_login": true,
+    "requires_staff": false,
+    "required_groups": [
+      1
+    ]
+  }
+},
+{
+  "model": "navigation.menuitem",
+  "pk": 58,
+  "fields": {
+    "group": 17,
+    "label": "My Swim Bookings",
+    "url_name": "swims:my_bookings",
+    "external_url": "",
+    "icon_class": "fas fa-swimming-pool",
+    "order": 4,
+    "requires_login": true,
+    "requires_staff": false,
+    "required_groups": [
+      1
+    ]
+  }
+},
+{
+  "model": "navigation.menuitem",
+  "pk": 59,
+  "fields": {
+    "group": 17,
+    "label": "Logout",
+    "url_name": "account_logout",
+    "external_url": "",
+    "icon_class": "fas fa-sign-out-alt",
+    "order": 5,
+    "requires_login": true,
+    "requires_staff": false,
+    "required_groups": []
+  }
+},
+{
+  "model": "navigation.menuitem",
+  "pk": 60,
+  "fields": {
+    "group": 18,
+    "label": "Register School",
+    "url_name": "school:register",
+    "external_url": "",
+    "icon_class": "fas fa-plus",
+    "order": 1,
+    "requires_login": true,
+    "requires_staff": false,
+    "required_groups": [
+      18,
+      22
+    ]
+  }
+},
+{
+  "model": "navigation.menuitem",
+  "pk": 61,
+  "fields": {
+    "group": 18,
+    "label": "School Bookings",
+    "url_name": "schools:school_list",
+    "external_url": "",
+    "icon_class": "fas fa-calendar-check",
+    "order": 2,
+    "requires_login": true,
+    "requires_staff": false,
+    "required_groups": [
+      22
+    ]
+  }
+},
+{
+  "model": "navigation.menuitem",
+  "pk": 62,
+  "fields": {
+    "group": 18,
+    "label": "School Dashboard",
+    "url_name": "schools:school_dashboard",
+    "external_url": "",
+    "icon_class": "fas fa-school",
+    "order": 3,
+    "requires_login": true,
+    "requires_staff": false,
+    "required_groups": [
+      22
+    ]
+  }
+},
+{
+  "model": "navigation.menuitem",
+  "pk": 63,
+  "fields": {
+    "group": 19,
+    "label": "Move Swimmers",
+    "url_name": "management:move_swimmers",
+    "external_url": "",
+    "icon_class": "fas fa-exchange-alt",
+    "order": 1,
+    "requires_login": true,
+    "requires_staff": false,
+    "required_groups": [
+      15,
+      23
+    ]
+  }
+},
+{
+  "model": "navigation.menuitem",
+  "pk": 64,
+  "fields": {
+    "group": 19,
+    "label": "Order Management",
+    "url_name": "management:order_list",
+    "external_url": "",
+    "icon_class": "fas fa-box",
+    "order": 2,
+    "requires_login": true,
+    "requires_staff": false,
+    "required_groups": [
+      15,
+      23
+    ]
+  }
+},
+{
+  "model": "navigation.menuitem",
+  "pk": 66,
+  "fields": {
+    "group": 20,
+    "label": "Booking Management",
+    "url_name": "lessons_bookings:management",
+    "external_url": "",
+    "icon_class": "fas fa-calendar-alt",
+    "order": 10,
+    "requires_login": true,
+    "requires_staff": true,
+    "required_groups": [
+      14
+    ]
+  }
+},
+{
+  "model": "navigation.menuitem",
+  "pk": 67,
+  "fields": {
+    "group": 20,
+    "label": "Analytics",
+    "url_name": "reports:term_information",
+    "external_url": "",
+    "icon_class": "fas fa-chart-line",
+    "order": 9,
+    "requires_login": true,
+    "requires_staff": true,
+    "required_groups": [
+      14
+    ]
+  }
+},
+{
+  "model": "navigation.menuitem",
+  "pk": 68,
+  "fields": {
+    "group": 20,
+    "label": "Staff Schedule",
+    "url_name": "staff:schedule",
+    "external_url": "",
+    "icon_class": "fas fa-clock",
+    "order": 8,
+    "requires_login": true,
+    "requires_staff": true,
+    "required_groups": [
+      14
+    ]
+  }
+},
+{
+  "model": "navigation.menuitem",
+  "pk": 70,
+  "fields": {
+    "group": 21,
+    "label": "Staff Dashboard",
+    "url_name": "staff:dashboard",
+    "external_url": "",
+    "icon_class": "fas fa-tachometer-alt",
+    "order": 1,
+    "requires_login": true,
+    "requires_staff": true,
+    "required_groups": []
+  }
+},
+{
+  "model": "navigation.menuitem",
+  "pk": 71,
+  "fields": {
+    "group": 21,
+    "label": "My Schedule",
+    "url_name": "staff:schedule",
+    "external_url": "",
+    "icon_class": "fas fa-clock",
+    "order": 2,
+    "requires_login": true,
+    "requires_staff": true,
+    "required_groups": []
+  }
+},
+{
+  "model": "navigation.menuitem",
+  "pk": 72,
+  "fields": {
+    "group": 21,
+    "label": "Manage Bookings",
+    "url_name": "lessons_bookings:management",
+    "external_url": "",
+    "icon_class": "fas fa-calendar-check",
+    "order": 3,
+    "requires_login": true,
+    "requires_staff": true,
+    "required_groups": []
+  }
+},
+{
+  "model": "navigation.menuitem",
+  "pk": 73,
+  "fields": {
+    "group": 22,
+    "label": "Enrollments",
+    "url_name": "reports:enrollment_report",
+    "external_url": "",
+    "icon_class": "fas fa-users",
+    "order": 1,
+    "requires_login": true,
+    "requires_staff": true,
+    "required_groups": []
+  }
+},
+{
+  "model": "navigation.menuitem",
+  "pk": 74,
+  "fields": {
+    "group": 22,
+    "label": "Class Lists",
+    "url_name": "reports:class_list_view",
+    "external_url": "",
+    "icon_class": "fas fa-list",
+    "order": 2,
+    "requires_login": true,
+    "requires_staff": true,
+    "required_groups": []
+  }
+},
+{
+  "model": "navigation.menuitem",
+  "pk": 75,
+  "fields": {
+    "group": 22,
+    "label": "Term Information",
+    "url_name": "reports:term_information",
+    "external_url": "",
+    "icon_class": "fas fa-calendar",
+    "order": 3,
+    "requires_login": true,
+    "requires_staff": true,
+    "required_groups": []
+  }
+},
+{
+  "model": "navigation.menuitem",
+  "pk": 76,
+  "fields": {
+    "group": 22,
+    "label": "All Reports",
+    "url_name": "",
+    "external_url": "/reports/",
+    "icon_class": "fas fa-tachometer-alt",
+    "order": 4,
+    "requires_login": true,
+    "requires_staff": false,
+    "required_groups": [
+      14
+    ]
+  }
+},
+{
+  "model": "navigation.menuitem",
+  "pk": 77,
+  "fields": {
+    "group": 23,
+    "label": "Public Swims Admin",
+    "url_name": "dashboard:dashboard_public_swims",
+    "external_url": "",
+    "icon_class": "",
+    "order": 0,
+    "requires_login": false,
+    "requires_staff": false,
+    "required_groups": [
+      14
+    ]
+  }
+},
+{
+  "model": "navigation.menuitem",
+  "pk": 79,
+  "fields": {
+    "group": 20,
+    "label": "Lessons Admin",
+    "url_name": "lessonsadmin:index",
+    "external_url": "",
+    "icon_class": "fas fa-book-open",
+    "order": 1,
+    "requires_login": true,
+    "requires_staff": true,
+    "required_groups": [
+      2,
+      14
+    ]
+  }
+},
+{
+  "model": "navigation.menuitem",
+  "pk": 80,
+  "fields": {
+    "group": 20,
+    "label": "Schools Admin",
+    "url_name": "schoolsadmin:index",
+    "external_url": "",
+    "icon_class": "fas fa-school",
+    "order": 3,
+    "requires_login": true,
+    "requires_staff": false,
+    "required_groups": [
+      14
+    ]
+  }
+},
+{
+  "model": "navigation.menuitem",
+  "pk": 81,
+  "fields": {
+    "group": 20,
+    "label": "Swims Admin",
+    "url_name": "swimsadmin:index",
+    "external_url": "",
+    "icon_class": "fas fa-swimmer",
+    "order": 0,
+    "requires_login": true,
+    "requires_staff": true,
+    "required_groups": []
+  }
+},
+{
+  "model": "navigation.menuitem",
+  "pk": 82,
+  "fields": {
+    "group": 20,
+    "label": "Users Admin",
+    "url_name": "usersadmin:index",
+    "external_url": "",
+    "icon_class": "fas fa-users",
+    "order": 4,
+    "requires_login": true,
+    "requires_staff": true,
+    "required_groups": []
+  }
+},
+{
+  "model": "navigation.menuitem",
+  "pk": 83,
+  "fields": {
+    "group": 20,
+    "label": "General Administration",
+    "url_name": "generaladmin:index",
+    "external_url": "",
+    "icon_class": "fas fa-cog",
+    "order": 5,
+    "requires_login": true,
+    "requires_staff": true,
+    "required_groups": []
+  }
+}
+]

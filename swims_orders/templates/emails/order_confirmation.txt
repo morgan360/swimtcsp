@@ -1,0 +1,12 @@
+Hi {{ user.first_name }},
+
+Thank you for booking with TCSP!
+
+You’ve booked {{ product.name }} on {{ booking_date|date:"l, j F Y" }}.
+
+Your order ID is {{ order.id }}.
+
+If you have any questions, reply to this email or contact us at {{ settings.DEFAULT_FROM_EMAIL }}.
+
+Regards,
+Templeogue College Swim Pool

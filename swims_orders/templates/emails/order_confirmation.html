@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+  <body style="font-family: Arial, sans-serif; line-height: 1.6; padding: 20px;">
+    <h2>Thank you, {{ user.first_name }}! 🏊</h2>
+    <p>Your swim booking is confirmed.</p>
+
+    <ul>
+      <li><strong>Session:</strong> {{ product.name }}</li>
+      <li><strong>Date:</strong> {{ booking_date|date:"l, j F Y" }}</li>
+      <li><strong>Order ID:</strong> {{ order.id }}</li>
+    </ul>
+
+    <p>Need help? <a href="mailto:{{ settings.DEFAULT_FROM_EMAIL }}">{{ settings.DEFAULT_FROM_EMAIL }}</a></p>
+
+    <p>See you at the pool!</p>
+    <p>— TCSP Swim Team</p>
+  </body>
+</html>

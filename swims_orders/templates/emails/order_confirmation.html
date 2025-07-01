@@ -1,18 +1,51 @@
 <!DOCTYPE html>
 <html>
-  <body style="font-family: Arial, sans-serif; line-height: 1.6; padding: 20px;">
-    <h2>Thank you, {{ user.first_name }}! 🏊</h2>
-    <p>Your swim booking is confirmed.</p>
+  <head>
+    <meta charset="utf-8">
+    <title>Swim Booking Confirmation</title>
+  </head>
+  <body style="font-family: 'Segoe UI', sans-serif; background-color: #f5f5f5; padding: 20px;">
+    <div style="max-width: 600px; margin: auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+      <h2 style="color: #f14668;">Thank you, {{ user.first_name }}! 🏊</h2>
+      <p>Your swim booking is confirmed.</p>
 
-    <ul>
-      <li><strong>Session:</strong> {{ product.name }}</li>
-      <li><strong>Date:</strong> {{ booking_date|date:"l, j F Y" }}</li>
-      <li><strong>Order ID:</strong> {{ order.id }}</li>
-    </ul>
+      <ul style="list-style: none; padding-left: 0; margin-bottom: 20px;">
+        <li><strong>Swimling:</strong> {{ order.user.get_full_name }}</li>
+        <li><strong>Session:</strong> {{ product.name }}</li>
+        <li><strong>Date:</strong> {{ booking_date|date:"l, j F Y" }}</li>
+        <li><strong>Order ID:</strong> {{ order.id }}</li>
+      </ul>
 
-    <p>Need help? <a href="mailto:{{ settings.DEFAULT_FROM_EMAIL }}">{{ settings.DEFAULT_FROM_EMAIL }}</a></p>
+      <h3 style="margin-top: 30px; color: #363636;">Your Tickets</h3>
+      <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+        <thead style="background-color: #f14668; color: white;">
+          <tr>
+            <th style="text-align: left; padding: 10px;">Ticket</th>
+            <th style="text-align: center; padding: 10px;">Qty</th>
+            <th style="text-align: right; padding: 10px;">Unit Price</th>
+            <th style="text-align: right; padding: 10px;">Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in order_items %}
+          <tr style="border-bottom: 1px solid #dbdbdb;">
+            <td style="padding: 10px;">{{ item.variant }}</td>
+            <td style="text-align: center;">{{ item.quantity }}</td>
+            <td style="text-align: right;">€{{ item.get_unit_price|floatformat:2 }}</td>
+            <td style="text-align: right;">€{{ item.get_cost|floatformat:2 }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot>
+          <tr>
+            <td colspan="3" style="text-align: right; padding: 10px; font-weight: bold;">Total:</td>
+            <td style="text-align: right; padding: 10px; font-weight: bold;">€{{ total_price|floatformat:2 }}</td>
+          </tr>
+        </tfoot>
+      </table>
 
-    <p>See you at the pool!</p>
-    <p>— TCSP Swim Team</p>
+      <p style="margin-top: 30px;">If you have any questions, feel free to contact us at <a href="mailto:{{ support_email }}">{{ support_email }}</a>.</p>
+      <p>See you at the pool!<br>— TCSP Swim Team</p>
+    </div>
   </body>
 </html>

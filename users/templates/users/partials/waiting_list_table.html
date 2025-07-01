@@ -15,7 +15,7 @@
         <td>{{ entry.requested_lesson }}</td>
         <td>{{ entry.assigned_lesson }}</td>
         <td>
-          {% if entry.can_book %}
+          {% if entry.can_book and entry.assigned_lesson_id %}
             <a href="{% url 'shopping_cart:review_waiting_list_booking' entry.swimling_id entry.assigned_lesson_id %}"
                class="button is-book is-small">
               Book Now

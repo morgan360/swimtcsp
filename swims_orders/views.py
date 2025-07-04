@@ -56,7 +56,6 @@ def order_create(request):
     # Clear cart and set session order ID
     cart.clear()
     order_created(order.id)  # Keep this for side effects or logging
-    send_order_email(order.id)  # .delay for celery
 
     request.session['order_id'] = order.id
 

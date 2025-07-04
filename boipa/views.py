@@ -15,6 +15,9 @@ from lessons_bookings.utils.enrollment import handle_lessons_enrollment
 from schools_bookings.utils.enrollment import handle_schools_enrollment
 from .payment_functions import get_boipa_session_token  # External function
 from swims_orders.tasks import send_order_email
+from lessons_orders.tasks import send_lesson_order_email
+
+
 
 # Initialize logging
 payments_logger = logging.getLogger('payments')
@@ -62,43 +65,60 @@ from django.http import JsonResponse
 
 @csrf_exempt
 def payment_notification(request):
-    payments_logger.debug(f"Received payment Notification: {request.POST.dict()}")
+    print("📥 payment_notification view triggered")
+    payments_logger.debug(f"Received payment Notification (POST): {request.POST.dict()}")
+
     if request.method != 'POST':
+        print("❌ Invalid request method:", request.method)
         return HttpResponse("Invalid request method", status=405)
 
     data = QueryDict(request.body)
+    print("📦 Raw request body parsed:", data)
+
     merchantTxId = data.get('merchantTxId')
     if not merchantTxId:
+        print("❌ merchantTxId missing from payload")
         return HttpResponse("Missing merchantTxId", status=400)
 
     try:
         parts = merchantTxId.split("_")
         source_prefix = parts[0]
         order_id = int(parts[1])
-    except (ValueError, IndexError):
+        print(f"🔍 Extracted source_prefix: {source_prefix}, order_id: {order_id}")
+    except (ValueError, IndexError) as e:
+        print(f"❌ Error parsing merchantTxId: {merchantTxId} → {e}")
         return HttpResponse("Invalid merchantTxId format", status=400)
 
-    def noop(order):
-        """No-op enrollment handler for swim orders."""
-        return
+    def noop(order): return
 
     model_map = {
-        'swims': (SwimOrder, SwimOrderPaymentNotification, noop),  # add 3rd item
+        'swims': (SwimOrder, SwimOrderPaymentNotification, noop),
         'lesson': (LessonOrder, LessonOrderPaymentNotification, handle_lessons_enrollment),
         'school': (SchoolOrder, SchoolOrderPaymentNotification, handle_schools_enrollment),
     }
 
+    print("🔑 Available source prefixes:", list(model_map.keys()))
+
     if source_prefix in model_map:
         OrderModel, NotificationModel, enrollment_func = model_map[source_prefix]
         try:
+            print(f"📄 Looking up order with ID {order_id} from model {OrderModel.__name__}")
             with transaction.atomic():
                 order = OrderModel.objects.get(id=order_id)
                 order.paid = True
                 order.txId = data.get('txId', '')
                 order.save()
-                send_order_email(order.id) #use delay with celery
+                print(f"✅ Order {order_id} marked as paid")
 
-                notification = NotificationModel.objects.create(
+                # ✅ Explicit email dispatch based on type
+                if source_prefix == 'swims':
+                    print("📧 Sending swim order email")
+                    send_order_email(order.id)
+                elif source_prefix == 'lesson':
+                    print("📨 Sending lesson order email")
+                    send_lesson_order_email(order.id)
+
+                NotificationModel.objects.create(
                     order=order,
                     txId=data.get('txId', ''),
                     merchantTxId=data.get('merchantTxId', ''),
@@ -117,14 +137,19 @@ def payment_notification(request):
                     status=data.get('status', ''),
                     errorMessage=data.get('errorMessage', 'No error message provided'),
                 )
+                print("📝 Payment notification record created")
 
-                # Call the enrollment function if the order is paid successfully
                 enrollment_func(order)
+                print("📚 Enrollment function called")
 
                 return HttpResponse('Payment processed successfully', status=200)
+
         except OrderModel.DoesNotExist:
+            print(f"❌ Order {order_id} not found in model {OrderModel.__name__}")
             return HttpResponse("Order not found", status=404)
         except Exception as e:
+            print(f"❌ Exception during processing: {e}")
             return HttpResponse(f"Error processing payment: {str(e)}", status=500)
 
+    print(f"❌ Source prefix '{source_prefix}' not recognized")
     return HttpResponse("Source prefix not recognized", status=400)

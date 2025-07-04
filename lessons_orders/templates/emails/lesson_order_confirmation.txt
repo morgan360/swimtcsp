@@ -1,0 +1,13 @@
+Hi {{ user.first_name }},
+
+Your lesson booking is confirmed!
+
+Student: {{ user.get_full_name }}
+Lesson: {{ lesson.name }}
+Date: {{ booking_date|date:"l, j F Y" }}
+Order ID: {{ order.id }}
+
+If you have questions, contact us at {{ support_email }}.
+
+See you at the lesson!
+— TCSP Lessons Team

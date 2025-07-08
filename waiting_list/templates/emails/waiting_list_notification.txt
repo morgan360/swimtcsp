@@ -1,0 +1,11 @@
+Dear {{ guardian.first_name }},
+
+A space has become available for your swimling {{ swimling.first_name }} in the lesson "{{ lesson.name }}".
+
+You now have 5 days to complete the booking via your Swimling Dashboard:
+https://yourdomain.com/dashboard/
+
+Please act soon, as the place may be reallocated if unbooked after that.
+
+Best regards,
+The SwimTCSP Team

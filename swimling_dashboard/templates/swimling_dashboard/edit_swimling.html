@@ -1,0 +1,77 @@
+{% extends "base/_base.html" %}
+{% load static %}
+
+{% block title %}Edit Swimling{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="container is-max-desktop">
+
+    <!-- 🧭 Page Title -->
+    <h1 class="title is-3 mb-5 has-text-primary">✏️ Edit Swimling</h1>
+
+    <!-- 🧾 Form Card -->
+    <div class="box has-shadow-light p-5" style="background-color: #f8fefc;">
+      <form method="POST">
+        {% csrf_token %}
+
+        <!-- 🧒 First Name -->
+        <div class="field">
+          <label class="label">First Name</label>
+          <div class="control">
+            <input class="input" type="text" name="first_name" value="{{ form.first_name.value }}" required>
+          </div>
+        </div>
+
+        <!-- 👤 Last Name -->
+        <div class="field">
+          <label class="label">Last Name</label>
+          <div class="control">
+            <input class="input" type="text" name="last_name" value="{{ form.last_name.value }}" required>
+          </div>
+        </div>
+
+        <!-- 🎂 Date of Birth -->
+        <div class="field">
+          <label class="label">Date of Birth</label>
+          <div class="control">
+            <input class="input" type="date" name="dob" value="{{ form.dob.value|date:'Y-m-d' }}">
+          </div>
+        </div>
+
+        <!-- 🏫 School Role Number -->
+        <div class="field">
+          <label class="label">School Role Number</label>
+          <div class="control">
+            <input class="input" type="text" name="sco_role_num" value="{{ form.sco_role_num.value|default_if_none:'' }}">
+          </div>
+        </div>
+
+        <!-- 📝 Notes -->
+        <div class="field">
+          <label class="label">Additional Notes</label>
+          <div class="control">
+            <textarea class="textarea" name="notes" placeholder="Optional notes...">{{ form.notes.value }}</textarea>
+          </div>
+        </div>
+
+        <!-- 📍 Buttons -->
+        <div class="field is-grouped mt-4">
+          <div class="control">
+            <button type="submit" class="button is-success">
+              💾 Save Changes
+            </button>
+          </div>
+          <div class="control">
+            <a href="{% url 'swimling_dashboard:guardian_dashboard' %}" class="button is-light">
+              Cancel
+            </a>
+          </div>
+        </div>
+
+      </form>
+    </div>
+
+  </div>
+</section>
+{% endblock %}

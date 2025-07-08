@@ -18,6 +18,15 @@ from utils.terms_utils import get_current_term
 # 🎯 Main Lesson List View
 # -----------------------
 def lesson_list(request):
+    swimling_id = request.GET.get('swimling')
+    selected_swimling = None
+
+    if swimling_id:
+        try:
+            selected_swimling = Swimling.objects.get(id=swimling_id, guardian=request.user)
+        except Swimling.DoesNotExist:
+            selected_swimling = None
+
     term_data = get_term_context_data()
     phase = term_data['current_phase_id']
     term = term_data['next_term'] if phase == 'RB' else term_data['current_term']
@@ -40,14 +49,14 @@ def lesson_list(request):
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
-    return render(request, 'lessons/products/lessons.html', {
+    return render(request, 'lessons/lesson_list.html', {
         'page_obj': page_obj,
         'programs': programs,
         'days': day_choices,
         'current_term': term,
-        **get_term_info(request),  # phase strings etc.
+        'selected_swimling': selected_swimling,
+        **get_term_info(request),
     })
-
 
 # -------------------------------
 # 🔄 HTMX Update Filtered Lessons
@@ -102,9 +111,20 @@ def update_lesson_list(request):
 
 def product_detail(request, id):
     product = get_object_or_404(Product, id=id)
-    form = NewSwimlingForm()
-    cart_product_form = CartAddProductForm(user=request.user)
     swimlings = Swimling.objects.filter(guardian=request.user)
+    cart_product_form = CartAddProductForm(user=request.user)
+
+    # ⬇️ Get swimling ID from query string
+    swimling_id = request.GET.get('swimling')
+    selected_swimling = None
+    if swimling_id:
+        try:
+            selected_swimling = Swimling.objects.get(id=swimling_id, guardian=request.user)
+        except Swimling.DoesNotExist:
+            selected_swimling = None
+
+    # (Optional) You can pass selected_swimling into a form if needed
+    form = NewSwimlingForm()  # Replace or customize as needed
 
     current_term = get_current_term()
     num_sold = product.get_num_sold(current_term) if current_term else 0
@@ -115,9 +135,11 @@ def product_detail(request, id):
         'cart_product_form': cart_product_form,
         'form': form,
         'swimlings': swimlings,
+        'selected_swimling': selected_swimling,  # 🔑 for use in template
         'num_sold': num_sold,
         'num_left': num_left,
     })
+
 
 
 # ---------------------------------

@@ -5,7 +5,8 @@ from django.utils import timezone
 from .models import WaitingList
 from lessons.models import Product
 from users.models import Swimling
-from .utils import send_waiting_list_notification  # Assuming you put the email sending function in a utils module
+from django.shortcuts import get_object_or_404, redirect, render
+from django.contrib import messages
 
 
 @login_required
@@ -20,7 +21,6 @@ def join_waiting_list(request, product_id):
         WaitingList.objects.create(
             swimling=swimling,
             product=product,
-            user=request.user
         )
         return redirect('waiting_list:waiting_list_success')  # You can create this view/template for a success message
 
@@ -28,13 +28,6 @@ def join_waiting_list(request, product_id):
         'swimlings': swimlings,
         'product': product,
     })
-
-
-from django.shortcuts import get_object_or_404, redirect, render
-from .models import WaitingList
-from lessons.models import Product
-from .utils import send_waiting_list_notification
-from django.contrib import messages
 
 
 @staff_member_required
@@ -77,3 +70,9 @@ def notify_customer(request, waiting_list_id):
 
 def waiting_list_success(request):
     return render(request, 'waiting_list/success.html')
+
+def remove_waiting_list_entry(request, id):
+    entry = get_object_or_404(WaitingList, id=id)
+    if request.method == 'POST':
+        entry.delete()
+    return redirect('swimling_dashboard:guardian_dashboard')

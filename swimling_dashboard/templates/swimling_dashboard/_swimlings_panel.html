@@ -1,0 +1,114 @@
+<!-- 🏊 Swimling Management Table -->
+<h2 class="title is-5 mb-4">Swimlings Panel</h2>
+<div id="swimlings-table" class="box has-shadow p-5 mb-6">
+
+  <!-- 🧾 Table -->
+  <div class="table-container mb-5">
+    <table class="table is-fullwidth is-striped is-hoverable">
+      <thead class="has-background-success-light">
+        <tr>
+          <th>Name</th>
+          <th>DOB</th>
+          <th>Notes</th>
+          <th>School Role No.</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for swimling in swimlings %}
+          <tr>
+            <td>{{ swimling.first_name }} {{ swimling.last_name }}</td>
+            <td>
+              {% if swimling.dob %}
+                {{ swimling.dob|date:"Y-m-d" }}
+              {% else %}
+                <span class="has-text-grey-light">Not provided</span>
+              {% endif %}
+            </td>
+            <td>{{ swimling.notes|default:"—" }}</td>
+            <td>{{ swimling.sco_role_num|default:"—" }}</td>
+            <td>
+              <a href="{% url 'swimling_dashboard:edit-swimling' id=swimling.id %}"
+                 class="button is-book is-small">
+                ✏️ Edit
+              </a>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ➕ Add Button -->
+  <div class="has-text-right mt-4">
+    <button class="button is-success is-light"
+            onclick="document.getElementById('addSwimlingModal').classList.add('is-active')">
+      <span class="icon"><i class="fas fa-plus"></i></span>
+      <span>Add New Swimling</span>
+    </button>
+  </div>
+</div>
+
+<!-- ✅ Modal for Adding Swimling -->
+<div id="addSwimlingModal" class="modal">
+  <div class="modal-background" onclick="document.getElementById('addSwimlingModal').classList.remove('is-active')"></div>
+  <div class="modal-card">
+    <header class="modal-card-head has-background-success-light">
+      <p class="modal-card-title has-text-black">Add New Swimling</p>
+      <button class="delete" aria-label="close" onclick="document.getElementById('addSwimlingModal').classList.remove('is-active')"></button>
+    </header>
+
+    <form method="POST"
+          action="{% url 'swimling_dashboard:add_swimling' %}"
+          hx-post="{% url 'swimling_dashboard:add_swimling' %}"
+          hx-target="#swimlings-table"
+          hx-swap="outerHTML"
+          onsubmit="document.getElementById('addSwimlingModal').classList.remove('is-active')">
+      {% csrf_token %}
+      <section class="modal-card-body">
+        <div class="field">
+          <label class="label">First Name</label>
+          <div class="control">
+            <input class="input" type="text" name="first_name" placeholder="John" required>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="label">Last Name</label>
+          <div class="control">
+            <input class="input" type="text" name="last_name" placeholder="Doe" required>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="label">Date of Birth</label>
+          <div class="control">
+            <input class="input" type="date" name="dob">
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="label">School Role Number</label>
+          <div class="control">
+            <input class="input" type="text" name="sco_role_num" placeholder="e.g. 30297A">
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="label">Notes</label>
+          <div class="control">
+            <textarea class="textarea" name="notes" placeholder="Optional notes..."></textarea>
+          </div>
+        </div>
+      </section>
+
+      <footer class="modal-card-foot">
+        <button type="submit" class="button is-success">Submit</button>
+        <button type="button" class="button is-light"
+                onclick="document.getElementById('addSwimlingModal').classList.remove('is-active')">
+          Cancel
+        </button>
+      </footer>
+    </form>
+  </div>
+</div>

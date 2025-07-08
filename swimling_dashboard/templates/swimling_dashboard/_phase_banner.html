@@ -1,0 +1,39 @@
+{% if phase_summary %}
+  <div class="notification is-info is-light has-shadow mb-5">
+    <div class="columns is-vcentered is-mobile">
+
+      <!-- 📅 Current Phase -->
+      <div class="column has-text-left">
+        <p class="mb-1">
+          <span class="icon-text">
+            <span class="icon">📅</span>
+            <span>
+              <strong>Current Phase:</strong> {{ phase_summary.current.label }}
+              {% if phase_summary.current.until %}
+                (until {{ phase_summary.current.until }})
+              {% endif %}
+            </span>
+          </span>
+        </p>
+      </div>
+
+      <!-- 🕐 Next Phase -->
+      {% if phase_summary.next.label %}
+        <div class="column has-text-right">
+          <p class="mb-1">
+            <span class="icon-text">
+              <span class="icon">🕐</span>
+              <span>
+                <strong>Next Phase:</strong> {{ phase_summary.next.label }}
+                {% if phase_summary.next.starts %}
+                  (starts {{ phase_summary.next.starts }})
+                {% endif %}
+              </span>
+            </span>
+          </p>
+        </div>
+      {% endif %}
+
+    </div>
+  </div>
+{% endif %}

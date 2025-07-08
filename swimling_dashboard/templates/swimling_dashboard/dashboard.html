@@ -1,0 +1,36 @@
+{% extends "base/_base.html" %}
+{% load static %}
+
+{% block title %}Swimling Dashboard{% endblock %}
+
+{% block content %}
+<section class="section">
+    <div class="container">
+
+        <!-- 🔔 Booking Phase Banner -->
+        {% include "swimling_dashboard/_term_summary.html" %}
+
+        <h1 class="title is-2 mb-5 has-text-centered">Your Swimling Dashboard</h1>
+        {% include "swimling_dashboard/_phase_banner.html" %}
+
+        <!-- ✅ HTMX target wrapper (refreshes both panels together) -->
+        <div id="dashboard-panels">
+            {% include "swimling_dashboard/_dashboard_panels.html" %}
+        </div>
+
+        {% if show_school_panel %}
+            <section class="box has-shadow mb-5">
+                <h2 class="title is-5 mb-4">School Lessons Panel</h2>
+                {% include "swimling_dashboard/_school_table.html" %}
+            </section>
+        {% endif %}
+
+        {% if show_waiting_list %}
+            <section class="box has-shadow mb-5">
+                {% include "swimling_dashboard/_waiting_list_panel.html" %}
+            </section>
+        {% endif %}
+
+    </div>
+</section>
+{% endblock %}

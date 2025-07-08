@@ -81,6 +81,7 @@ INSTALLED_APPS = [
     'waiting_list',
     'navigation',
     'dashboard',
+    'swimling_dashboard',
 ]
 
 MIDDLEWARE = [

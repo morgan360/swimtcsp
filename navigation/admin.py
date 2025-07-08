@@ -16,9 +16,9 @@ class MenuGroupAdmin(admin.ModelAdmin):
 
 
 @admin.register(MenuItem)
-class MenuItemAdmin(admin.ModelAdmin):  # ← Renamed from MenuItemInline
-    list_display = ("label", "group", "url_name", "external_url", "order", "requires_login", "requires_staff")
-    list_filter = ("group", "requires_login", "requires_staff")
-    ordering = ("group", "order")
-    filter_horizontal = ("required_groups",)
-    search_fields = ("label", "url_name", "external_url")
+class MenuItemAdmin(admin.ModelAdmin):
+    list_display = ('label', 'is_active', 'group', 'url_name', 'requires_login', 'requires_staff')
+    list_editable = ('is_active',)  # 👈 Allows editing is_active inline
+    list_display_links = ('label',)  # 👈 Makes 'label' the clickable link to edit detail view
+    list_filter = ('group', 'is_active', 'requires_login', 'requires_staff')
+    search_fields = ('label', 'url_name', 'external_url')

@@ -16,6 +16,8 @@ class MenuGroup(models.Model):
         ordering = ["order", "name"]
 
 class MenuItem(models.Model):
+    # Add this field to MenuItem
+    is_active = models.BooleanField(default=True, help_text="Uncheck to hide this menu item.")
     group = models.ForeignKey(MenuGroup, on_delete=models.CASCADE, related_name='items')
     label = models.CharField(max_length=100)
     url_name = models.CharField(max_length=100, blank=True, help_text="Name of a Django URL pattern")

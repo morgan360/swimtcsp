@@ -8,4 +8,6 @@ urlpatterns = [
     path('manage/', views.manage_waiting_list, name='manage_waiting_list'),
     path('notify/<int:waiting_list_id>/', views.notify_customer, name='notify_customer'),
     path('success/', views.waiting_list_success, name='waiting_list_success'),
+    path('remove/<int:id>/', views.remove_waiting_list_entry, name='remove'),
+
 ]

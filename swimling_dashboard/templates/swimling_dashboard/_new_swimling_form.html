@@ -1,0 +1,72 @@
+<!-- 🔘 Add Button -->
+<div class="mb-4">
+    <button class="button is-book" onclick="document.getElementById('addSwimlingModal').classList.add('is-active')">
+        ➕ Add New Swimling
+    </button>
+</div>
+
+<!-- 🧾 Modal -->
+<div id="addSwimlingModal" class="modal">
+    <div class="modal-background"
+         onclick="document.getElementById('addSwimlingModal').classList.remove('is-active')"></div>
+    <div class="modal-card">
+        <header class="modal-card-head has-background-primary">
+            <p class="modal-card-title has-text-white">Add New Swimling</p>
+            <button class="delete" aria-label="close"
+                    onclick="document.getElementById('addSwimlingModal').classList.remove('is-active')"></button>
+        </header>
+
+        <form method="POST"
+              action="{% url 'swimling_dashboard:add_swimling' %}"
+              hx-post="{% url 'swimling_dashboard:add_swimling' %}"
+              hx-target="#dashboard-panels"
+              hx-swap="outerHTML"
+              onsubmit="document.getElementById('addSwimlingModal').classList.remove('is-active')">
+            {% csrf_token %}
+            <section class="modal-card-body">
+                <div class="field">
+                    <label class="label">First Name</label>
+                    <div class="control">
+                        <input class="input" type="text" name="first_name" placeholder="John" required>
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label class="label">Last Name</label>
+                    <div class="control">
+                        <input class="input" type="text" name="last_name" placeholder="Doe" required>
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label class="label">Date of Birth</label>
+                    <div class="control">
+                        <input class="input" type="date" name="dob" required>
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label class="label">School Role Number</label>
+                    <div class="control">
+                        <input class="input" type="text" name="sco_role_num" placeholder="12345">
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label class="label">Additional Notes</label>
+                    <div class="control">
+                        <textarea class="textarea" name="notes" placeholder="Enter additional notes here..."></textarea>
+                    </div>
+                </div>
+            </section>
+
+            <footer class="modal-card-foot">
+                <input type="submit" value="Submit" class="button is-book">
+                <button type="button" class="button is-light"
+                        onclick="document.getElementById('addSwimlingModal').classList.remove('is-active')">
+                    Cancel
+                </button>
+            </footer>
+        </form>
+    </div>
+</div>

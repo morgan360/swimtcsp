@@ -1,10 +1,10 @@
 from django.db import transaction
 from lessons_orders.models import Order, OrderItem
 from lessons_bookings.models import LessonEnrollment
-
+from waiting_list.models import WaitingList
 
 def handle_lessons_enrollment(order):
-    print( 'lesson_enrollment')
+    # print( 'lesson_enrollment')
     try:
         with transaction.atomic():  # Ensures atomicity of the database operations
             # Retrieve relevant order items
@@ -24,7 +24,12 @@ def handle_lessons_enrollment(order):
                     order=order,  # Include the order object
                     # Other relevant fields, e.g., notes=order_item.notes (if applicable)
                 )
-
+                # ✅ Mark waiting list entry as completed
+                WaitingList.objects.filter(
+                    swimling=swimling,
+                    assigned_lesson=lesson,
+                    completed=False
+                ).update(completed=True)
         # Optional: Further actions upon successful enrollment (e.g., sending confirmation emails)
 
     except Exception as e:

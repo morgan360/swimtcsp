@@ -7,6 +7,27 @@
 {% endblock %}
 
 {% block content %}
+    <!-- Page Heading -->
+<div class="mb-5">
+    <h1 class="title is-3 is-size-4-mobile">
+        {% if category %}{{ category.name }}{% else %}Swimming Lessons{% endif %}
+    </h1>
+    <p class="subtitle has-text-grey is-size-6-mobile">
+        Find the perfect swimming lesson for you or your child
+    </p>
+</div>
+
+<!-- ✅ Booking Phase Banner -->
+{% if current_phase %}
+    <div class="notification {{ phase_css_class }} mb-5">
+        <strong>📅 {{ current_phase }}</strong><br>
+        <span>{{ current_phase_string }}</span>
+        {% if next_phase_string %}
+            <p class="has-text-grey mt-2">→ {{ next_phase_string }}</p>
+        {% endif %}
+    </div>
+{% endif %}
+
 <section class="section">
     <div class="container">
         <!-- Page Heading -->

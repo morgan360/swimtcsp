@@ -1,0 +1,8 @@
+Hi {{ guardian.first_name }},
+
+Your swimling {{ swimling.first_name }} has been added to the waiting list for "{{ product.name }}".
+
+We’ll notify you as soon as a spot becomes available.
+
+Thank you,
+The Swim School Team

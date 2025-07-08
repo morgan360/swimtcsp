@@ -29,14 +29,25 @@ class MenuGroupAdmin(ModelAdmin):
     list_display = ['name']
     inlines = [MenuItemInline]
 
+class MenuItemAdmin(ModelAdmin):
+    list_display = ('label', 'is_active', 'group', 'url_name', 'requires_login', 'requires_staff')
+    list_display_links = ('label',)
+    list_editable = ('is_active',)
+    list_filter = ('group', 'is_active', 'requires_login', 'requires_staff')
+    search_fields = ('label', 'url_name', 'external_url')
+
 # ✅ Optional: customize WaitingList admin
 class WaitingListAdmin(ModelAdmin):
-    list_display = ['swimling', 'product', 'user', 'is_notified', 'notification_date']
-    list_filter = ['is_notified']
+    list_display = ['swimling', 'product', 'is_notified', 'notification_date', "completed"]
+    list_filter = ['is_notified', 'completed']
     search_fields = ['swimling__name', 'user__email', 'product__name']
 
+try:
+    general_admin_site.unregister(MenuItem)
+except admin.sites.NotRegistered:
+    pass
 # ✅ Register models to general admin site
 general_admin_site.register(MenuGroup, MenuGroupAdmin)
-general_admin_site.register(MenuItem)
 general_admin_site.register(TimetableOverride)
 general_admin_site.register(WaitingList, WaitingListAdmin)  # ✅ Registered here
+general_admin_site.register(MenuItem, MenuItemAdmin)

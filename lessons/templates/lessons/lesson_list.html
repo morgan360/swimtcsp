@@ -1,0 +1,144 @@
+{% extends "base/_base.html" %}
+{% load static %}
+
+{% block content %}
+
+    <section class="hero is-swim has-shadow">
+        <div class="hero-body">
+            <div class="container has-text-centered">
+                <h1 class="title">Public Swim Lessons</h1>
+                {% if current_phase %}
+                    <p class="subtitle is-size-5 has-text-light mt-2">
+                        {{ current_phase }}
+                    </p>
+                {% endif %}
+            </div>
+        </div>
+    </section>
+
+
+    <!-- Booking Term Information -->
+    {% include "swimling_dashboard/_term_summary.html" %}
+    {% include "swimling_dashboard/_phase_banner.html" %}
+
+    <!-- Lessons Table -->
+    <div class="container mt-5">
+        <div class="box has-shadow">
+            <div class="table-container">
+                <table class="table is-fullwidth is-hoverable">
+                    <thead>
+                    <tr>
+                        <th>Lessons</th>
+                        <th>Price</th>
+                        <th>Spaces</th>
+                        <th>Places Left</th>
+                        <th>Action</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for lesson_info in page_obj %}
+                        <tr class="{% cycle '' 'has-background-light' %}">
+                            <td>
+                                <div class="has-text-weight-medium">{{ lesson_info.lesson.name }}</div>
+                            </td>
+                            <td>
+                                <div class="has-text-weight-medium">€{{ lesson_info.lesson.price }}</div>
+                            </td>
+                            <td>
+                                <div>{{ lesson_info.num_places }}</div>
+                            </td>
+                            <td>
+                                {% if lesson_info.is_full %}
+                                    <span class="tag is-danger is-light">Full</span>
+                                {% elif lesson_info.remaining_spaces <= 3 %}
+                                    <span class="tag is-warning is-light">Only {{ lesson_info.remaining_spaces }} left!</span>
+                                {% else %}
+                                    <span class="tag is-success is-light">{{ lesson_info.remaining_spaces }} available</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if lesson_info.remaining_spaces > 0 %}
+                                    <a href="{% url 'lessons:product_detail' id=lesson_info.lesson.id %}?swimling={{ selected_swimling.id }}"
+                                       class="button is-book is-small">
+                                        <span class="icon is-small">
+                                            <i class="fas fa-ticket-alt"></i>
+                                        </span>
+                                        <span>Book Now</span>
+                                    </a>
+
+                                {% else %}
+                                    <a href="{% url 'waiting_list:join_waiting_list' product_id=lesson_info.lesson.id %}"
+                                       class="button is-warning is-small">
+                                        <span class="icon is-small">
+                                            <i class="fas fa-clock"></i>
+                                        </span>
+                                        <span>Join Waiting List</span>
+                                    </a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="5" class="has-text-centered py-6">
+                                <div class="is-flex is-flex-direction-column is-align-items-center">
+                                    <span class="icon is-large has-text-grey-light mb-3">
+                                        <i class="fas fa-inbox fa-3x"></i>
+                                    </span>
+                                    <span class="has-text-weight-medium has-text-grey is-size-5">No lessons available</span>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if page_obj.paginator.num_pages > 1 %}
+        <div class="container mb-6 mt-5">
+            <div class="box has-shadow">
+                <nav class="pagination is-centered" role="navigation" aria-label="pagination">
+                    {% if page_obj.has_previous %}
+                        <a href="?page=1" class="pagination-previous">First</a>
+                        <a href="?page={{ page_obj.previous_page_number }}" class="pagination-previous">Previous</a>
+                    {% else %}
+                        <a class="pagination-previous" disabled>First</a>
+                        <a class="pagination-previous" disabled>Previous</a>
+                    {% endif %}
+
+                    {% if page_obj.has_next %}
+                        <a href="?page={{ page_obj.next_page_number }}" class="pagination-next">Next</a>
+                        <a href="?page={{ page_obj.paginator.num_pages }}" class="pagination-next">Last</a>
+                    {% else %}
+                        <a class="pagination-next" disabled>Next</a>
+                        <a class="pagination-next" disabled>Last</a>
+                    {% endif %}
+
+                    <ul class="pagination-list">
+                        {% for num in page_obj.paginator.page_range %}
+                            {% if page_obj.number == num %}
+                                <li>
+                                    <a class="pagination-link is-current" aria-current="page">{{ num }}</a>
+                                </li>
+                            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                <li>
+                                    <a href="?page={{ num }}" class="pagination-link">{{ num }}</a>
+                                </li>
+                            {% elif num == page_obj.number|add:'-3' or num == page_obj.number|add:'3' %}
+                                <li>
+                                    <span class="pagination-ellipsis">&hellip;</span>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                    </ul>
+                </nav>
+
+                <div class="has-text-centered has-text-grey is-size-7 mt-3">
+                    Showing page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                </div>
+            </div>
+        </div>
+    {% endif %}
+{% endblock %}

@@ -1,0 +1,58 @@
+{% for item in public_lessons_data %}
+    <div class="box has-shadow mb-4">
+        <div class="columns is-vcentered">
+
+            <!-- Swimling Name -->
+            <div class="column is-3">
+                <h3 class="title is-6 mb-2">🧍 {{ item.swimling.first_name }} {{ item.swimling.last_name }}</h3>
+            </div>
+
+            <!-- Current Term -->
+            <div class="column is-4">
+                <h4 class="has-text-weight-semibold mb-1">📘 Current Term</h4>
+                {% if item.current_lessons %}
+                    <ul class="mb-1">
+                        {% for lesson in item.current_lessons %}
+                            <li>{{ lesson.name }}</li>
+                        {% endfor %}
+                    </ul>
+                    <p class="has-text-grey is-size-7">You may book additional lessons.</p>
+                {% else %}
+                    <p><em class="has-text-grey-light">Not registered</em></p>
+                {% endif %}
+            </div>
+
+            <!-- Next Term -->
+            <div class="column is-3">
+                <h4 class="has-text-weight-semibold mb-1">📗 Next Term</h4>
+                {% if item.next_lessons %}
+                    <ul>
+                        {% for lesson in item.next_lessons %}
+                            <li>{{ lesson.name }}</li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p><em class="has-text-grey-light">Not registered</em></p>
+                {% endif %}
+            </div>
+
+            <!-- Actions -->
+            <div class="column is-2 has-text-right">
+                <h4 class="has-text-weight-semibold mb-1">🎯 Actions</h4>
+                {% if item.actions %}
+                    <div class="buttons are-small is-right">
+                        {% for action in item.actions %}
+                            <a href="{% url 'lessons:lesson_list' %}?swimling={{ item.swimling.id }}"
+                               class="button is-book is-small">
+                                {{ action.label }}
+                            </a>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="has-text-grey-light">No actions available</p>
+                {% endif %}
+            </div>
+
+        </div>
+    </div>
+{% endfor %}

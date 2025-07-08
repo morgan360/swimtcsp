@@ -7,7 +7,7 @@ from lessons_bookings.models import Term, LessonEnrollment
 from lessons.models import Product, Category
 from schools_bookings.models import ScoTerm
 from schools.models import ScoSchool
-from users.views import Swimling
+from users.models import Swimling
 from .forms import ClassListForm
 
 

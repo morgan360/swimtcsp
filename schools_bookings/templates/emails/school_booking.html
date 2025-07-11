@@ -1,0 +1,13 @@
+<h2>Booking Confirmation</h2>
+<p>Hi {{ user.first_name }},</p>
+<p>You have successfully booked the following:</p>
+<ul>
+  <li><strong>Swimling:</strong> {{ swimling.full_name }}</li>
+  <li><strong>Lesson:</strong> {{ lesson.name }}</li>
+  <li><strong>Day:</strong> {{ lesson.get_day_of_week_display }}</li>
+  <li><strong>Time:</strong> {{ lesson.start_time }} - {{ lesson.end_time }}</li>
+  <li><strong>Term:</strong> {{ term }}</li>
+  <li><strong>School:</strong> {{ school.name }}</li>
+  <li><strong>Price:</strong> €{{ lesson.price }}</li>
+</ul>
+<p>Thank you,<br>TCSP Swim Team</p>

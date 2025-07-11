@@ -1,0 +1,14 @@
+Hi {{ user.first_name }},
+
+This is your confirmation for the lesson booking:
+
+Swimling: {{ swimling.full_name }}
+Lesson: {{ lesson.name }}
+Day: {{ lesson.get_day_of_week_display }}
+Time: {{ lesson.start_time }} - {{ lesson.end_time }}
+Term: {{ term }}
+School: {{ school.name }}
+Price: €{{ lesson.price }}
+
+Thank you,
+TCSP Swim Team

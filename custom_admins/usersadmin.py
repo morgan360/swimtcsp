@@ -1,10 +1,25 @@
-from django.contrib.admin import AdminSite, ModelAdmin
+from django.contrib import admin  # ✅ Needed for admin.StackedInline, admin.ModelAdmin
+from django.contrib.admin import AdminSite
+from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
-from django.utils.html import format_html
+from django.contrib.auth.admin import UserAdmin as BaseUserAdmin, GroupAdmin as BaseGroupAdmin
+
+from import_export.admin import ImportExportMixin, ImportExportModelAdmin
+from django_admin_listfilter_dropdown.filters import DropdownFilter, RelatedDropdownFilter
+
 from django.urls import reverse
-from users.models import User, Swimling
+from django.utils.html import format_html
+
+from hijack.contrib.admin import HijackUserAdminMixin
+
+from users.models import  Swimling
+from users.resources import SwimlingResource, UserResource, GroupResource
+
+User = get_user_model()
 
 
+
+# 🔹 Admin site
 class UsersAdminSite(AdminSite):
     site_header = '👤 Users Admin'
     site_title = 'Users Admin Portal'
@@ -19,14 +34,24 @@ class UsersAdminSite(AdminSite):
 users_admin_site = UsersAdminSite(name='usersadmin')
 
 
-# ✅ Custom admin for User (optional fields/display)
-class UserAdmin(ModelAdmin):
-    list_display = ("email", "first_name", "last_name", "is_active", "is_staff")
+# 🔹 Inlines
+class SwimlingInline(admin.StackedInline):
+    model = Swimling
+    extra = 1
+    fields = ('first_name', 'last_name', 'dob', 'sco_role_num', 'notes')
 
 
-# ✅ Safe Swimling admin with guardian link
-class SwimlingAdmin(ModelAdmin):
-    list_display = ("first_name", "last_name", "guardian_link")
+
+# 🔹 Swimling Admin
+class SwimlingAdmin(ImportExportMixin, admin.ModelAdmin):
+    resource_class = SwimlingResource
+    list_display = ['first_name', 'last_name', 'guardian_link']
+    list_filter = [
+        ('last_name', DropdownFilter),
+        ('first_name', DropdownFilter),
+        ('guardian', RelatedDropdownFilter),
+    ]
+    ordering = ['guardian__last_name', 'last_name']
 
     def guardian_link(self, obj):
         if obj.guardian:
@@ -40,13 +65,62 @@ class SwimlingAdmin(ModelAdmin):
                 )
                 name = f"{obj.guardian.first_name} {obj.guardian.last_name or ''}".strip()
                 return format_html('<a href="{}">{}</a>', url, name)
-            except Exception as e:
-                # Optional: log e here
+            except Exception:
                 return f"{obj.guardian.first_name} {obj.guardian.last_name or ''}".strip()
         return "-"
+    guardian_link.short_description = 'Guardian'
 
 
-# Register models with usersadmin
+# 🔹 User Admin
+class UserAdmin(HijackUserAdminMixin, ImportExportMixin, BaseUserAdmin):
+    resource_class = UserResource
+    list_per_page = 20
+    inlines = [SwimlingInline]
+
+    fieldsets = (
+        (None, {'fields': ('email', 'password', 'mobile_phone', 'first_name', 'last_name', 'admin_notes', 'last_login')}),
+        ('Permissions', {'fields': ('is_active', 'is_staff', 'is_superuser')}),
+        ('Groups and Permissions', {'fields': ('groups', 'user_permissions')})
+    )
+
+    readonly_fields = ('user_permissions',)
+    add_fieldsets = (
+        (None, {
+            'classes': ('wide',),
+            'fields': ('email', 'password1', 'password2')
+        }),
+    )
+
+    def get_user_id(self, obj):
+        return obj.id
+    get_user_id.short_description = 'User ID'
+
+    def display_groups(self, obj):
+        return ', '.join([group.name for group in obj.groups.all()])
+    display_groups.short_description = 'Groups'
+
+    list_display = ('get_user_id', 'email', 'username', 'mobile_phone', 'display_groups')
+    list_filter = [
+        ('last_name', DropdownFilter),
+        ('first_name', DropdownFilter),
+        ('groups', RelatedDropdownFilter),
+    ]
+    search_fields = ('email', 'last_name', 'first_name')
+    ordering = ('last_name', 'first_name')
+    filter_horizontal = ('groups',)
+
+
+# 🔹 Group Admin
+class GroupAdmin(BaseGroupAdmin, ImportExportModelAdmin):
+    resource_class = GroupResource
+
+# 🔹 Register with default admin (for Hijack compatibility)
+try:
+    admin.site.register(User, UserAdmin)
+except admin.sites.AlreadyRegistered:
+    pass
+
+# 🔹 Register all
 users_admin_site.register(User, UserAdmin)
 users_admin_site.register(Swimling, SwimlingAdmin)
-users_admin_site.register(Group)
+users_admin_site.register(Group, GroupAdmin)

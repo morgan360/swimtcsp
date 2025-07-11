@@ -6,7 +6,6 @@ from django.contrib.auth.signals import user_logged_in
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.contrib.auth import get_user_model
-from .models import UserProfile
 from django.utils.timezone import now
 
 User = get_user_model()

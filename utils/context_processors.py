@@ -7,8 +7,8 @@ from django.conf import settings
 from datetime import datetime
 from typing import Dict
 from django.http import HttpRequest
-from django.utils import timezone
 from lessons_bookings.models import Term
+from schools.models import ScoSchool
 from schools_bookings.models import ScoTerm
 from utils.terms_utils import get_term_context_data
 from utils.constants import PHASE_DETAILS
@@ -170,3 +170,16 @@ def term_status_for_active_schools(request):
                 }
 
     return {'school_term_status': school_status}
+
+
+def get_latest_active_school_term(sco_role_number):
+    today = timezone.now().date()
+    school = ScoSchool.objects.filter(sco_role_num=sco_role_number).first()
+    if not school:
+        return None
+    return ScoTerm.objects.filter(
+        school=school,
+        is_active=True,
+        start_date__lte=today,
+        end_date__gte=today
+    ).order_by('-start_date').first()

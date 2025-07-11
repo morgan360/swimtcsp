@@ -134,4 +134,6 @@ Models:
 2. ScoEnrollment
 
 #### Shortcut
-python manage.py sync_school_bookings
+(python manage.py sync_school_bookings) 
+- Now
+-  python manage.py sync_all_schools_data --delete-existing

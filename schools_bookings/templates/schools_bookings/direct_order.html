@@ -1,0 +1,58 @@
+{% extends 'base/_base.html' %}
+{% load widget_tweaks %}
+
+{% block content %}
+    <section class="section">
+        <div class="container">
+            <div class="box">
+                <h2 class="title is-4">Enroll {{ swimling.first_name }} {{ swimling.last_name }}</h2>
+
+                {% if school %}
+                    <p><strong>School:</strong> {{ school.name }}</p>
+                {% endif %}
+
+                <p><strong>Term:</strong> {{ term.name }} ({{ term.start_date }} → {{ term.end_date }})</p>
+
+                <form method="post">
+  {% csrf_token %}
+
+  <table class="table is-fullwidth is-bordered is-striped">
+    <thead>
+      <tr>
+        <th></th>
+        <th>Lesson Name</th>
+        <th>Day</th>
+        <th>Time</th>
+        <th>Places</th>
+        <th>Price</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for lesson in form.fields.lesson.queryset %}
+        <tr>
+          <td>
+            <input type="radio" name="{{ form.lesson.name }}" value="{{ lesson.id }}" required>
+          </td>
+          <td>{{ lesson.name }}</td>
+          <td>{{ lesson.get_day_of_week_display }}</td>
+          <td>{{ lesson.start_time }} - {{ lesson.end_time }}</td>
+          <td>{{ lesson.num_places }}</td>
+          <td>€{{ lesson.price }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <div class="field mt-4">
+    <button type="submit" class="button is-primary is-medium">
+      <span class="icon"><i class="fas fa-shopping-cart"></i></span>
+      <span>Proceed to Payment</span>
+    </button>
+  </div>
+</form>
+
+
+            </div>
+        </div>
+    </section>
+{% endblock %}

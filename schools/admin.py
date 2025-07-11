@@ -1,4 +1,7 @@
 from django.contrib import admin
+from import_export.admin import ImportExportMixin
+from django_admin_listfilter_dropdown.filters import DropdownFilter, RelatedDropdownFilter, ChoiceDropdownFilter
+
 from custom_admins.schoolsadmin import schools_admin_site
 
 from schools.models import ScoLessons, ScoCategory, ScoProgram, ScoSchool
@@ -6,12 +9,20 @@ from schools_orders.models import Order
 from schools_bookings.models import ScoTerm, ScoEnrollment
 
 from .resources import CategoryResource, ProductResource, ProgramResource, SchoolResource
-from import_export.admin import ImportExportMixin
-from django_admin_listfilter_dropdown.filters import DropdownFilter, RelatedDropdownFilter, ChoiceDropdownFilter
+
+
+# ✅ Helper to avoid AlreadyRegistered error
+from django.contrib.admin.sites import AlreadyRegistered
+
+def safe_register(site, model, admin_class=None):
+    try:
+        site.register(model, admin_class)
+    except AlreadyRegistered:
+        pass
 
 
 class ScoLessonsAdmin(ImportExportMixin, admin.ModelAdmin):
-    resource_class = ProductResource  # Assuming still correct
+    resource_class = ProductResource
     list_display = ['name', 'price', 'active', 'school', 'created', 'updated']
     list_filter = [
         ('name', DropdownFilter),
@@ -54,11 +65,11 @@ class ScoSchoolAdmin(ImportExportMixin, admin.ModelAdmin):
         return [field.name for field in ScoSchool._meta.fields]
 
 
-# Register models only to the schools admin site
-schools_admin_site.register(ScoLessons, ScoLessonsAdmin)
-schools_admin_site.register(ScoCategory, ScoCategoryAdmin)
-schools_admin_site.register(ScoProgram, ScoProgramAdmin)
-schools_admin_site.register(ScoSchool, ScoSchoolAdmin)
-schools_admin_site.register(Order)
-schools_admin_site.register(ScoTerm)
-schools_admin_site.register(ScoEnrollment)
+# ✅ Safe registration of models to custom admin site
+safe_register(schools_admin_site, ScoLessons, ScoLessonsAdmin)
+safe_register(schools_admin_site, ScoCategory, ScoCategoryAdmin)
+safe_register(schools_admin_site, ScoProgram, ScoProgramAdmin)
+safe_register(schools_admin_site, ScoSchool, ScoSchoolAdmin)
+safe_register(schools_admin_site, Order)
+safe_register(schools_admin_site, ScoTerm)
+safe_register(schools_admin_site, ScoEnrollment)

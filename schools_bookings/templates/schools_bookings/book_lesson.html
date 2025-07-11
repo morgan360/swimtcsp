@@ -1,0 +1,12 @@
+{% extends "base/_base.html" %}
+{% block content %}
+<section class="section">
+  <div class="container">
+    <h1 class="title">Book Lesson</h1>
+    <p><strong>Swimling:</strong> {{ swimling.first_name }} {{ swimling.last_name }}</p>
+    <p><strong>Term:</strong> {{ term.name }} ({{ term.start_date }} - {{ term.end_date }})</p>
+
+    <p>Booking form coming soon...</p>
+  </div>
+</section>
+{% endblock %}

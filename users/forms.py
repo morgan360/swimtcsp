@@ -2,7 +2,7 @@ from django import forms
 from allauth.account.forms import SignupForm
 from django.contrib.auth.models import Group
 from django.contrib.auth import get_user_model
-from .models import UserProfile, Swimling
+from .models import  Swimling
 
 # Get the custom user model
 User = get_user_model()
@@ -39,8 +39,16 @@ class CustomSignupForm(SignupForm):
 class UserForm(forms.ModelForm):
     class Meta:
         model = User
-        fields = ("username", "first_name", "last_name")
-
+        fields = ("username", "first_name", "last_name", "admin_notes")
+        widgets = {
+            "admin_notes": forms.Textarea(attrs={
+                "rows": 4,
+                "placeholder": "Add any personal notes or preferences...",
+            }),
+        }
+        labels = {
+            "admin_notes": "Notes",
+        }
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # Add help text and styling
@@ -70,17 +78,6 @@ class UserForm(forms.ModelForm):
 
         return username
 
-
-class UserProfileForm(forms.ModelForm):
-    class Meta:
-        model = UserProfile
-        fields = ('notes',)
-        widgets = {
-            'notes': forms.Textarea(attrs={
-                'rows': 4,
-                'placeholder': 'Add any personal notes or preferences...'
-            }),
-        }
 
 
 class NewSwimlingForm(forms.ModelForm):

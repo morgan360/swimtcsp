@@ -11,5 +11,6 @@ urlpatterns = [
     path('edit-swimling/<int:id>/', views.edit_swimling, name='edit-swimling'),
     path('refresh-rebooking/', views.refresh_rebooking_table, name='refresh_rebooking'),
     path('refresh-waiting-list/', views.refresh_waiting_list_panel, name='refresh_waiting_list'),
-    path('refresh-school/', views.refresh_school_table, name='refresh_school_table'),
+    path('refresh-school/', views.refresh_school_panel, name='refresh_school_panel'),
+    path('checkout/school/<int:swimling_id>/<int:term_id>/', views.school_checkout, name='school_checkout'),
 ]

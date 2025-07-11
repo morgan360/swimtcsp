@@ -6,6 +6,19 @@ from users.models import Swimling, User
 from django.contrib.auth import get_user_model
 from schools.models import ScoLessons
 
+class DirectOrderForm(forms.Form):
+    lesson = forms.ModelChoiceField(
+        queryset=ScoLessons.objects.none(),
+        label="Select a Lesson",
+        widget=forms.Select(attrs={'class': 'select is-primary'})
+    )
+
+    def __init__(self, *args, lessons=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if lessons is not None:
+            self.fields['lesson'].queryset = lessons
+
+
 # Define a form to ask if the user wants to add another swimling
 class AddAnotherSwimlingForm(forms.Form):
     add_another = forms.BooleanField(

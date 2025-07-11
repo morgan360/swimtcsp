@@ -1,4 +1,4 @@
-from users.models import UserProfile, User, Swimling
+from users.models import  User, Swimling
 from lessons_bookings.models import LessonEnrollment, Term
 from schools_bookings.models import ScoEnrollment, ScoTerm
 from schools.models import ScoSchool

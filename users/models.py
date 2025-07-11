@@ -58,16 +58,6 @@ class User(AbstractBaseUser, PermissionsMixin):
     def get_absolute_url(self):
         return "/users/%i/" % (self.pk)
 
-# Not going to use this table I think
-class UserProfile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    notes = models.TextField(null=True, blank=True)
-
-    def __str__(self):
-        return f"Profile for {self.user.email}"
-
-
-# Create your models here.
 # Stores the swimmer details with link to guardians
 class Swimling(models.Model):
     guardian = models.ForeignKey(User, on_delete=models.CASCADE, blank=True,

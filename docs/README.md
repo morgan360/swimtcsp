@@ -9,7 +9,7 @@ school bookings, and public swim sessions — with integrated e-commerce, admin 
 
 ### 🔧 Setup
 - [Setup Instructions](setup.md)
-- [Deployment (PythonAnywhere)](deployment.md)
+- [Deployment (PythonAnywhere)](TCSP Processes/TCSP_deployment.md)
 
 ### 🧱 Architecture
 - [Django App Structure](architecture.md)

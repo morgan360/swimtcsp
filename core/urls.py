@@ -74,3 +74,7 @@ admin.site.index_title = "TCSP Administration"
 urlpatterns += [
 path("dashboard/", include(("dashboard.urls", "dashboard"), namespace="dashboard"))
 ]
+
+urlpatterns += [
+path("chatbot/", include("chatbot.urls")),
+]

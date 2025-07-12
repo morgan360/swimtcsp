@@ -64,6 +64,7 @@ INSTALLED_APPS = [
     'django_browser_reload',  # when debug load automaticaly browser
     'django_extensions', # For Documentation
     # My Apps
+    'chatbot',
     'users',
     'home',
     'lessons',
@@ -285,3 +286,6 @@ HIJACK_REGISTER_ADMIN = False
 HIJACK_ALLOW_GET_REQUESTS = True
 HIJACK_URL_ALLOWED_ATTRIBUTES = ['username', ]
 HIJACK_PERMISSION_CHECK = "hijack.permissions.superusers_and_staff"
+
+# AI Key
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")

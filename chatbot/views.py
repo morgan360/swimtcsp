@@ -14,7 +14,7 @@ from datetime import datetime, time
 
 from lessons_bookings.models import Term
 from lessons.models import Product, Category  # or wherever your lessons are
-
+from .utils import get_skill_structure_summary
 
 # Setup
 logger = logging.getLogger(__name__)
@@ -49,26 +49,44 @@ def public_lesson_chat_api(request):
             for lesson in lessons
         ]) or "No active public lessons found."
 
+        # 🧠 Add skill structure summary
+        try:
+            skill_summary = get_skill_structure_summary()
+        except Exception as e:
+            logger.error("❌ Skill summary failed: %s", e)
+            skill_summary = "*Skill summary temporarily unavailable.*"
+
         # 🧠 Prompt to GPT
         prompt = f"""
 You are a helpful assistant for a swimming lesson booking website.
 
-Here are the upcoming term dates:
+🏫 Teaching Philosophy:
+Our swimming programme is built around Core Aquatic Skills (CAS), such as Aquatic Breathing, Floatation & Buoyancy, Rotation & Balance, and Movement Coordination.
+
+Children progress through structured levels (e.g. Beginners 1, Beginners 2, Improvers...) by consistently demonstrating these skills, not by age or number of terms completed.
+
+You may see the **same CAS taught across multiple levels**, but in more advanced forms — e.g. in deeper water, with less support, or in more dynamic situations. This repetition is **intentional** and crucial for confident, safe swimming.
+
+It’s normal (and often beneficial) for a swimmer to repeat a level before advancing.
+
+📅 Upcoming Term Dates:
 {term_info}
 
-Here are the public lessons currently available:
+📘 Available Lessons:
 {lesson_list}
+
+🏊 Skill Structure by Core Aquatic Skill:
+{skill_summary}
 
 User asked: "{user_message}"
 
-Please reply with useful information based only on what's available above.
-Use markdown formatting and be clear and friendly.
-        """
+Please give a friendly and clear answer based on the information above. Use markdown formatting and explain our teaching process, skill goals, and why progression may take time.
+"""
 
         response = client.chat.completions.create(
             model="gpt-4",
             messages=[
-                {"role": "system", "content": "Answer questions about public swimming lessons."},
+                {"role": "system", "content": "You are an expert assistant helping parents understand swimming lessons, progression, and skills."},
                 {"role": "user", "content": prompt}
             ]
         )
@@ -80,7 +98,10 @@ Use markdown formatting and be clear and friendly.
 
     except Exception as e:
         logger.error("❌ Lesson chatbot error: %s", str(e), exc_info=True)
-        return JsonResponse({"error": "Something went wrong while processing your message."}, status=500)
+        return JsonResponse({"reply": f"⚠️ Error: {str(e)}"}, status=200)
+
+######################################################################################################
+
 # 📁 Load FAQ markdown content from file
 def load_booking_faq():
     path = Path(__file__).resolve().parent / "static" / "chatbot" / "faq_booking.md"
@@ -183,6 +204,11 @@ def public_swim_chat(request):
 
         Please respond using markdown formatting (bold, lists) to clearly present the info.
         Only include sessions based on the list above. If there are no sessions today, say so clearly.
+        <example>
+        User asked: "What are the next 10 swims?"
+        swim_list:  [name, day, start_time, end_time, num_places]
+        Bot responded: "There are no swims today. Please come back tomorrow."
+        </example>
         """
 
         response = client.chat.completions.create(

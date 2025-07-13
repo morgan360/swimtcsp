@@ -32,19 +32,50 @@
 
     input.focus();
 
-    function appendMessage(sender, message, isBot = false) {
+    function appendUserMessage(message) {
       const div = document.createElement("div");
-      div.className = "notification " + (isBot ? "is-info is-light" : "is-link is-light");
-      div.innerHTML = `<strong>${sender}:</strong> ${message}`;
+      div.className = "notification is-link is-light";
+      div.innerHTML = `<strong>You:</strong> ${message}`;
       log.appendChild(div);
       log.scrollTop = log.scrollHeight;
+    }
+
+    function appendBotHTMLMessage(html) {
+      const div = document.createElement("div");
+      div.className = "notification is-info is-light";
+      div.innerHTML = `<strong>Bot:</strong> ${html}`;
+      log.appendChild(div);
+      log.scrollTop = log.scrollHeight;
+    }
+
+    function typeBotMessage(message, delay = 15) {
+      const div = document.createElement("div");
+      div.className = "notification is-info is-light";
+      const strong = document.createElement("strong");
+      strong.textContent = "Bot: ";
+      div.appendChild(strong);
+      const span = document.createElement("span");
+      div.appendChild(span);
+      log.appendChild(div);
+      log.scrollTop = log.scrollHeight;
+
+      let i = 0;
+      function type() {
+        if (i < message.length) {
+          span.textContent += message.charAt(i);
+          log.scrollTop = log.scrollHeight;
+          i++;
+          setTimeout(type, delay);
+        }
+      }
+      type();
     }
 
     async function sendMessage() {
       const userMessage = input.value.trim();
       if (!userMessage) return;
 
-      appendMessage("You", userMessage);
+      appendUserMessage(userMessage);
       input.value = "";
 
       try {
@@ -56,13 +87,18 @@
 
         const data = await response.json();
         if (data.reply) {
-          appendMessage("Bot", data.reply, true);
+          // If reply contains HTML tags, render directly; else animate typing
+          if (/<[a-z][\s\S]*>/i.test(data.reply)) {
+            appendBotHTMLMessage(data.reply);
+          } else {
+            typeBotMessage(data.reply);
+          }
         } else {
-          appendMessage("Bot", "Sorry, I couldn’t understand that.", true);
+          typeBotMessage("Sorry, I couldn’t understand that.");
         }
       } catch (err) {
-        appendMessage("Bot", "Something went wrong.", true);
         console.error(err);
+        typeBotMessage("Something went wrong.");
       }
     }
 

@@ -1,0 +1,27 @@
+{% extends "base/_base.html" %}
+
+{% block content %}
+<section class="section">
+  <div class="container">
+    <h1 class="title is-4 mb-4">📘 My Instructor Dashboard</h1>
+
+    {% if assignments %}
+      {% for assignment in assignments %}
+        <div class="box">
+          <p><strong>Term:</strong> {{ assignment.term.label }}</p>
+          <p><strong>Lesson:</strong> {{ assignment.lesson.name }}</p>
+          <p><strong>Day:</strong> {{ assignment.lesson.get_day_of_week_display }}</p>
+          <p><strong>Time:</strong> {{ assignment.lesson.start_time }}–{{ assignment.lesson.end_time }}</p>
+
+          <a class="button is-link is-small mt-2"
+             href="{% url 'instructors:evaluate_lesson_skills' assignment.lesson.id assignment.term.id %}">
+            📝 Evaluate Skills
+          </a>
+        </div>
+      {% endfor %}
+    {% else %}
+      <p>You have no assigned lessons.</p>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

@@ -123,6 +123,7 @@ class TermAdmin(ImportExportMixin, admin.ModelAdmin):
     list_display = ['id', 'start_date', 'end_date', 'rebooking_date', 'booking_date', 'assessment_date', 'changed_by']
     exclude = ('changed_by',)
     actions = ['sync_terms_now']  # ✅ add the custom action
+    search_fields = ('id', 'start_date', 'end_date')
 
     def save_model(self, request, obj, form, change):
         if not change:

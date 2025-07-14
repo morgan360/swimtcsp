@@ -45,6 +45,12 @@ class Term(models.Model):
     def __str__(self):
         return f"{self.id}"
 
+    @property
+    def label(self):
+        if self.start_date and self.end_date:
+            return f"Term {self.id} ({self.start_date} → {self.end_date})"
+        return f"Term {self.id}"
+
     # Method to bring back formated term
 
     @classmethod
@@ -112,7 +118,11 @@ class Term(models.Model):
 
 class LessonEnrollment(models.Model):
     lesson = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='enrollments')
-    swimling = models.ForeignKey(Swimling, on_delete=models.CASCADE)
+    swimling = models.ForeignKey(
+        Swimling,
+        on_delete=models.CASCADE,
+        related_name='enrollments'
+    )
     term = models.ForeignKey(Term, on_delete=models.CASCADE)
     order = models.ForeignKey('lessons_orders.Order', on_delete=models.CASCADE, null=True, blank=True)
     notes = models.TextField(null=True, blank=True)

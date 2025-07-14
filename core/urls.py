@@ -8,6 +8,8 @@ from custom_admins.usersadmin import users_admin_site
 from custom_admins.swimsadmin import swims_admin_site
 from custom_admins.schoolsadmin import schools_admin_site
 from custom_admins.generaladmin import general_admin_site
+from custom_admins.instructorsadmin import instructors_admin_site
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -60,6 +62,7 @@ urlpatterns += [
     path('swimsadmin/', swims_admin_site.urls),
     path('schoolsadmin/', schools_admin_site.urls),
     path('generaladmin/', general_admin_site.urls),
+    path('instructorsadmin/', instructors_admin_site.urls),
     ]
 # add auto reload
 urlpatterns += [path('__reload__/', include('django_browser_reload.urls'))]
@@ -77,4 +80,5 @@ path("dashboard/", include(("dashboard.urls", "dashboard"), namespace="dashboard
 
 urlpatterns += [
 path("chatbot/", include("chatbot.urls")),
+path("instructors/", include("instructors.urls")),
 ]

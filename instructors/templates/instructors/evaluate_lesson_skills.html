@@ -1,0 +1,83 @@
+{% extends "base/_base.html" %}
+{% load progress_tags %}
+{% block content %}
+<section class="section">
+  <div class="container">
+    <h1 class="title is-4 mb-4">📝 Evaluate Skills for {{ lesson.name }}</h1>
+    <h2 class="subtitle is-6">Term {{ term.id }}: {{ term.start_date }} to {{ term.end_date }}</h2>
+
+    {% if swimlings and skills %}
+    <form method="post">
+      {% csrf_token %}
+      <table class="table is-fullwidth is-striped is-hoverable">
+        <thead>
+          <tr>
+            <th>Swimling</th>
+            {% for skill in skills %}
+              <th>
+                {{ skill.code }}<br>
+                <span class="is-size-7 has-text-grey">{{ skill.name }}</span>
+              </th>
+            {% endfor %}
+            <th>General Note</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for swimling in swimlings %}
+          <tr>
+            <td>
+              <strong>{{ swimling.first_name }} {{ swimling.last_name }}</strong>
+            </td>
+
+            {% for skill in skills %}
+              {% with assessment=assessments|dict_get:swimling.id|dict_get:skill.id %}
+              <td>
+                <div class="field">
+                  <div class="control">
+                    <div class="select is-small">
+                      <select name="level_{{ swimling.id }}_{{ skill.id }}">
+                        <option value="">–</option>
+                        {% for i in "12345" %}
+                          <option value="{{ i }}"
+                            {% if assessment and assessment.level|stringformat:"s" == i %}selected{% endif %}>
+                            {{ i }}
+                          </option>
+                        {% endfor %}
+                      </select>
+                    </div>
+                  </div>
+                  <input class="input is-small mt-1"
+                         type="text"
+                         name="notes_{{ swimling.id }}_{{ skill.id }}"
+                         placeholder="Optional note"
+                         {% if assessment %}
+                           value="{{ assessment.notes|default:'' }}"
+                         {% else %}
+                           value=""
+                         {% endif %}>
+                </div>
+              </td>
+              {% endwith %}
+            {% endfor %}
+
+            <td>
+             <textarea class="textarea is-small" name="note_{{ swimling.id }}" rows="2"
+          placeholder="General note">{{ notes|dict_get:swimling.id|default_if_none:"" }}</textarea>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+      <div class="field mt-4">
+        <div class="control">
+          <button class="button is-primary is-medium">💾 Save Evaluations</button>
+        </div>
+      </div>
+    </form>
+    {% else %}
+      <p>No swimlings or skills available for this lesson and term.</p>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

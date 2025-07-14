@@ -84,6 +84,7 @@ INSTALLED_APPS = [
     'dashboard',
     'swimling_dashboard',
     'progress',
+    'instructors',
 ]
 
 MIDDLEWARE = [

@@ -16,6 +16,7 @@ class ProductAdmin(ImportExportMixin, admin.ModelAdmin):
         ('day_of_week', ChoiceDropdownFilter),
     ]
     list_editable = ['price', 'active']
+    search_fields = ('name',)
     fieldsets = (
         ('Times', {
             'classes': ('grp-collapse grp-open',),
@@ -46,3 +47,4 @@ class CategoryAdmin(ImportExportMixin, admin.ModelAdmin):
 lessons_admin_site.register(Product, ProductAdmin)
 lessons_admin_site.register(Program, ProgramAdmin)
 lessons_admin_site.register(Category, CategoryAdmin)
+admin.site.register(Product, ProductAdmin)

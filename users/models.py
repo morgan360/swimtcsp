@@ -71,3 +71,13 @@ class Swimling(models.Model):
 
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
+
+# users/models.py
+
+@property
+def is_instructor(self):
+    return self.groups.filter(name="instructor").exists()
+
+@property
+def is_assistant(self):
+    return self.groups.filter(name="assistant").exists()

@@ -3,6 +3,13 @@ from navigation.models import MenuGroup, MenuItem
 from timetable.models import TimetableOverride
 from waiting_list.models import WaitingList  # ✅ Import your model
 from django.contrib import admin
+from progress.models import (
+    CoreAquaticSkill,
+    Skill,
+    LessonSkill,
+    SkillAssessment,
+    InstructorNote
+)
 
 class GeneralAdminSite(AdminSite):
     site_header = "⚙️ General Admin"
@@ -46,6 +53,42 @@ try:
     general_admin_site.unregister(MenuItem)
 except admin.sites.NotRegistered:
     pass
+
+
+###### Skills ########
+
+# Optional: Customize how each appears
+class CoreAquaticSkillAdmin(ModelAdmin):
+    list_display = ['name']
+    search_fields = ['name']
+
+class SkillAdmin(ModelAdmin):
+    list_display = ['code', 'name', 'cas']
+    search_fields = ['code', 'name']
+    list_filter = ['cas']
+
+class LessonSkillAdmin(ModelAdmin):
+    list_display = ['lesson', 'skill', 'order']
+    search_fields = ['lesson__name', 'skill__name']
+    list_filter = ['lesson']
+
+class SkillAssessmentAdmin(ModelAdmin):
+    list_display = ['swimling', 'skill', 'term', 'level', 'instructor']
+    list_filter = ['term', 'level', 'instructor']
+    search_fields = ['swimling__first_name', 'swimling__last_name', 'skill__name']
+
+class InstructorNoteAdmin(ModelAdmin):
+    list_display = ['swimling', 'term', 'instructor', 'created_at']
+    search_fields = ['swimling__first_name', 'swimling__last_name', 'note']
+    list_filter = ['term', 'instructor']
+
+# ✅ Register all skills-related models
+general_admin_site.register(CoreAquaticSkill, CoreAquaticSkillAdmin)
+general_admin_site.register(Skill, SkillAdmin)
+general_admin_site.register(LessonSkill, LessonSkillAdmin)
+general_admin_site.register(SkillAssessment, SkillAssessmentAdmin)
+general_admin_site.register(InstructorNote, InstructorNoteAdmin)
+
 # ✅ Register models to general admin site
 general_admin_site.register(MenuGroup, MenuGroupAdmin)
 general_admin_site.register(TimetableOverride)

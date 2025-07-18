@@ -30,3 +30,33 @@ def drawer_menu(context):
             menu[group.name] = visible_items
 
     return menu
+
+@register.simple_tag(takes_context=True)
+def drawer_menu(context):
+    """
+    Returns a dictionary of visible MenuGroups and their filtered, active MenuItems for the current user.
+    Usage: {% drawer_menu as menu %}
+    """
+    user = context['request'].user
+    menu = {}
+
+    for group in MenuGroup.objects.prefetch_related('items').all():
+        visible_items = []
+        for item in group.items.filter(is_active=True):
+            if item.requires_login and not user.is_authenticated:
+                continue
+            if item.requires_staff and not user.is_staff:
+                continue
+            if item.required_groups.exists() and not user.groups.filter(
+                id__in=item.required_groups.values_list('id', flat=True)
+            ).exists():
+                continue
+            if item.excluded_groups.exists() and user.groups.filter(
+                id__in=item.excluded_groups.values_list('id', flat=True)
+            ).exists():
+                continue
+            visible_items.append(item)
+        if visible_items:
+            menu[group.name] = visible_items
+
+    return menu

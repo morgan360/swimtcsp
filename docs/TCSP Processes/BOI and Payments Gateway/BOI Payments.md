@@ -41,8 +41,9 @@ MID: 100121 Brand ID: 1001210000 API Password: qWGEJQQAkhROSTGpwS5O
 Please ensure test mode is ticked on the back end. Card Number: 4111 1111 1111 1111 CVV: 111 Expiry: 12/23\
 
 ### create local tunnel
-npx localtunnel --port 8000
-update .env
+- ngrok http 8000
+-  'https://9eca76f068bc.ngrok-free.app' add what appears to .env
+- update .env
 
 
 BOIPA Sandbox

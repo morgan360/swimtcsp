@@ -1,6 +1,7 @@
 from django.db import models
 from swims.models import PublicSwimProduct, PriceVariant
 from django.conf import settings
+from coupons.models import Coupon
 
 
 class Order(models.Model):
@@ -17,6 +18,8 @@ class Order(models.Model):
     txId = models.CharField(max_length=250, blank=True)
     payment_status = models.CharField(max_length=100, blank=True)
     amount = models.DecimalField(max_digits=8, decimal_places=2)
+    coupon = models.ForeignKey(Coupon, null=True, blank=True, on_delete=models.SET_NULL)
+    discount_amount = models.DecimalField(max_digits=6, decimal_places=2, null=True, blank=True, default=0)
 
     class Meta:
         ordering = ['-created']

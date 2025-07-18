@@ -1,26 +1,42 @@
-
 {% load crispy_forms %}
+
 {% block title %}
-  Checkout
+    Checkout
 {% endblock %}
 
 {% block content %}
-  <h1>Checkout</h1>
-  <div class="order-info">
-    <h3>Your order</h3>
-    <ul>
-      {% for item in cart %}
-        <li>
-          {{ item.quantity }}x {{ item.product.name }}
-          <span>${{ item.total_price }}</span>
-        </li>
-      {% endfor %}
-    </ul>
-    <p>Total: ${{ cart.get_total_price }}</p>
-  </div>
-  <form method="post" class="order-form">
-    {{ form.as_p }}
-    <p><input type="submit" value="Place order"></p>
-    {% csrf_token %}
-  </form>
+    <h1 class="title is-4">Checkout</h1>
+
+    <div class="box">
+        <h3 class="subtitle is-5">Your Order</h3>
+        <ul>
+            {% for item in cart %}
+                <li>
+                    {{ item.quantity }} × {{ item.product.name }}
+                    <span>€{{ item.total_price }}</span>
+                </li>
+            {% endfor %}
+        </ul>
+        <p><strong>Total: €{{ cart.get_total_price }}</strong></p>
+    </div>
+
+    <form method="post" class="box">
+        {% csrf_token %}
+        {{ form.as_p }}
+
+        <div class="field">
+            <label class="label" for="coupon_code">Coupon Code</label>
+            <div class="control">
+                <input class="input" type="text" name="coupon_code" id="coupon_code" placeholder="Enter coupon code">
+            </div>
+        </div>
+
+        <div class="field mt-4">
+            <div class="control">
+                <button type="submit" class="button is-primary is-fullwidth">
+                    💳 Pay Now
+                </button>
+            </div>
+        </div>
+    </form>
 {% endblock %}

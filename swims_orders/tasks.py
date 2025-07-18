@@ -23,9 +23,11 @@ def send_order_email(order_id):
         "order": order,
         "product": order.product,
         "booking_date": order.booking,
-        "order_items": order_items,
-        "total_price": total_price,
-        "support_email": settings.DEFAULT_FROM_EMAIL
+        "order_items": order.items.all(),
+        "total_price": order.amount,
+        "coupon": order.coupon,  # ✅ Needed for email template
+        "discount": order.discount_amount,  # ✅ Also needed
+        "support_email": settings.DEFAULT_SUPPORT_EMAIL,  # Or hardcode if needed
     }
 
     text_body = render_to_string("emails/order_confirmation.txt", context)

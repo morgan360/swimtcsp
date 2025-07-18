@@ -98,3 +98,10 @@ class NewSwimlingForm(forms.ModelForm):
 
 class GuardianOptInForm(forms.Form):
     become_guardian = forms.BooleanField(label="I would like to become a guardian", required=True)
+
+
+class JoinSchoolsForm(forms.Form):
+    join_schools = forms.BooleanField(
+        label="I want to join the Schools Program",
+        required=True
+    )

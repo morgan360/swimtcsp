@@ -129,8 +129,8 @@ def class_print(request):
     term = term_lookup.get(term_choice, Term.get_current_term)()
     # print(f"Selected term ({term_choice}):", term.id)
     swimlings = Swimling.objects.filter(
-        lessonenrollment__lesson__id=lesson_id,
-        lessonenrollment__term=term
+        enrollments__lesson__id=lesson_id,
+        enrollments__term=term
     ) if term and lesson_id else Swimling.objects.none()
 
     product = get_object_or_404(Product, id=lesson_id) if lesson_id else None

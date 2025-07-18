@@ -3,6 +3,21 @@
 This document outlines the menu structure used in the custom navigation app.
 
 ---
+## Exporting Menu(Navigation)  from localdb  to Deployment db
+
+### From Local DB
+- python manage.py dumpdata navigation.MenuGroup navigation.MenuItem --indent 2 > menu_export.json
+
+
+### From DBeaver
+- DELETE FROM `morganmck$swimtcsp`.navigation_menuitem_required_groups;
+- DELETE FROM `morganmck$swimtcsp`.navigation_menuitem;
+- DELETE FROM `morganmck$swimtcsp`.navigation_menugroup;
+
+### Remote Terminal
+- python manage.py loaddata menu_export.json
+
+
 
 ## 🌐 Public (Not Logged In)
 

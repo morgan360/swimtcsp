@@ -1,93 +1,108 @@
 {% extends 'base/_base.html' %}
 {% load static %}
+{% load custom_filters %}
 
 {% block title %}{{ product.name }}{% endblock %}
 
 {% block content %}
-<section class="section">
-  <div class="container">
-    <div class="columns">
-      <!-- Product Image Column -->
-      <div class="column is-one-third">
-        <figure class="image is-4by3">
-          <img src="{% if product.image %}{{ product.image.url }}{% else %}{% static 'images/no_image.png' %}{% endif %}"
-               alt="{{ product.name }}" class="has-shadow is-rounded">
-        </figure>
-      </div>
+    <section class="section">
+        <div class="container">
+            <div class="columns">
+                <!-- Product Image Column -->
+                <div class="column is-one-third">
+                    <figure class="image is-4by3">
+                        <img src="
 
-      <!-- Product Details Column -->
-      <div class="column is-two-thirds">
-        <h1 class="title is-3 mb-4">
-          <span>{{ product.name }}</span>
-          <span class="has-text-weight-normal">Booking for:</span>
-          <span class="has-text-primary">{{ next_occurrence_date }}</span>
-        </h1>
+                                {% if product.image %}{{ product.image.url }}{% else %}{% static 'images/no_image.png' %}{% endif %}"
+                             alt="{{ product.name }}" class="has-shadow is-rounded">
+                    </figure>
+                </div>
 
-        <div class="box animate__animated animate__fadeIn">
-          <form method="post">
-            {% csrf_token %}
+                <!-- Product Details Column -->
+                <div class="column is-two-thirds">
+                    <h1 class="title is-3 mb-4">
+                        <span>{{ product.name }}</span>
+                        <span class="has-text-weight-normal">Booking for:</span>
+                        <span class="has-text-primary">{{ next_occurrence_date }}</span>
+                    </h1>
 
-            <table class="table is-fullwidth is-hoverable">
-              <thead>
-                <tr>
-                  <th class="has-text-primary">Variant</th>
-                  <th class="has-text-primary">Quantity</th>
-                  <th class="has-text-primary">Price</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for variant in price_variants %}
-                <tr>
-                  <td>{{ variant.variant }}</td>
-                  <td>
-                    <div class="select is-fullwidth">
-                      <select
-                        name="quantity_{{ variant.id }}"
-                        hx-trigger="change"
-                        hx-post="{% url 'swims:calculate_total' %}"
-                        hx-target="#totalPrice span"
-                        hx-swap="innerHTML">
-                        {% for quantity in quantities %}
-                        <option value="{{ quantity }}">{{ quantity }}</option>
-                        {% endfor %}
-                      </select>
-                    </div>
-                  </td>
-                  <td>€{{ variant.price }}</td>
-                </tr>
-                {% endfor %}
-              </tbody>
-            </table>
+                    <div class="box animate__animated animate__fadeIn">
+                        <form method="post">
+                            {% csrf_token %}
 
-            <div class="notification is-light is-primary mt-4">
-              <div class="is-size-4" id="totalPrice">
-                <strong>Total to pay:</strong> €<span>0.00</span>
-              </div>
-            </div>
+                            <table class="table is-fullwidth is-hoverable">
+                                <thead>
+                                <tr>
+                                    <th class="has-text-primary">Variant</th>
+                                    <th class="has-text-primary">Quantity</th>
+                                    <th class="has-text-primary">Price</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {% for variant in price_variants %}
+                                    <tr>
+                                        <td>{{ variant.variant }}</td>
+                                        <td>
+                                            <div class="select is-fullwidth">
+                                                <div class="select is-fullwidth">
+                                                    <select
+                                                            name="quantity_{{ variant.id }}"
+                                                            hx-trigger="change"
+                                                            hx-post="{% url 'swims:calculate_total' %}"
+                                                            hx-target="#totalPrice span"
+                                                            hx-swap="innerHTML">
+                                                        {% for quantity in quantities %}
+                                                            <option value="{{ quantity }}">{{ quantity }}</option>
+                                                        {% endfor %}
+                                                    </select>
+                                                </div>
+                                            </div>
 
-            <div class="field mt-5">
-              <div class="control">
-                <button type="submit" class="button is-book">
+                                        </td>
+                                        <td>€{{ variant.price }}</td>
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+
+                            <div class="field mt-4">
+                                <label class="label">Coupon Code</label>
+                                <div class="control">
+                                    <input class="input" type="text" name="coupon_code"
+                                           placeholder="Enter coupon code (optional)"
+                                           value="{{ entered_coupon|default:'' }}">
+                                </div>
+                            </div>
+
+                            <div class="notification is-light is-primary mt-4">
+                                <div class="is-size-4" id="totalPrice">
+                                    <strong>Total to pay:</strong> €<span>0.00</span>
+                                </div>
+                            </div>
+
+                            <div class="field mt-5">
+                                <div class="control">
+                                    <button type="submit" class="button is-book">
                   <span class="icon">
                     <i class="fas fa-credit-card"></i>
                   </span>
-                  <span>Pay Now</span>
-                </button>
-              </div>
+                                        <span>Pay Now</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Product Description -->
+                    <div class="content mt-5">
+                        <h3 class="title is-5">About this session</h3>
+                        <p>{{ product.description }}</p>
+                    </div>
+                </div>
             </div>
-          </form>
         </div>
+    </section>
 
-        <!-- Product Description -->
-        <div class="content mt-5">
-          <h3 class="title is-5">About this session</h3>
-          <p>{{ product.description }}</p>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- Include Animate.css for animations -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <!-- Include Animate.css for animations -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
 {% endblock %}

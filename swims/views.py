@@ -10,6 +10,9 @@ import time
 from .forms import ParticipantQuantityForm
 # Assume a function to create BOIPA payment session, replace with your actual function
 from boipa.views import initiate_boipa_payment_session
+from coupons.models import Coupon
+from django.utils.timezone import now as tz_now
+from swims_orders.tasks import send_order_email
 
 
 def product_list(request, category_slug=None):
@@ -39,66 +42,111 @@ def product_list(request, category_slug=None):
                   'swims/product/list.html',
                   context)
 
+
+
+@login_required
 @login_required
 def product_detail(request, id, slug):
     product = get_object_or_404(PublicSwimProduct, id=id, slug=slug, available=True)
     price_variants = PriceVariant.objects.filter(product=product)
-    quantities = range(0, 6)  # Assuming you allow up to 10 of each variant
+    quantities = range(0, 6)
 
     if request.method == 'POST':
-        # Calculate total amount based on selected quantities and variant prices
+        # Store coupon
+        posted_coupon = request.POST.get('coupon_code', '').strip()
+        if posted_coupon:
+            request.session['applied_coupon'] = posted_coupon
+            print(f">>> DEBUG: Coupon stored in session from product_detail: {posted_coupon}")
+
         total_amount = 0
         order_items = []
+
+        # Calculate order total
         for variant in price_variants:
             quantity = int(request.POST.get(f'quantity_{variant.id}', 0))
             if quantity > 0:
                 total_amount += quantity * variant.price
                 order_items.append((variant, quantity))
 
-        if total_amount > 0:
-            # Calculate the next occurrence date for the product
-            today = timezone.now().date()
-            next_occurrence_date = get_next_occurrence(product.day_of_week)
+        # Apply coupon
+        applied_coupon = None
+        discount_amount = 0
+        coupon_code = request.session.get('applied_coupon', '')
+        if coupon_code:
+            try:
+                coupon = Coupon.objects.get(code__iexact=coupon_code)
+                if coupon.is_valid():
+                    applied_coupon = coupon
+                    if coupon.discount_type == 'fixed':
+                        discount_amount = min(coupon.discount_value, coupon.balance_remaining, total_amount)
+                    elif coupon.discount_type == 'percent':
+                        discount_amount = min(total_amount * coupon.discount_value / 100, coupon.balance_remaining)
 
-            # Create Order and OrderItem objects
+                    coupon.balance_remaining -= discount_amount
+                    coupon.save()
+                    total_amount -= discount_amount
+                else:
+                    print(f">>> DEBUG: Coupon {coupon_code} is not valid.")
+            except Coupon.DoesNotExist:
+                print(f">>> DEBUG: Coupon {coupon_code} not found.")
+
+        if order_items:
+            next_occurrence_date = get_next_occurrence(product.day_of_week)
             order = Order.objects.create(
                 user=request.user,
                 product=product,
-                booking=next_occurrence_date,  # Save the next occurrence date to the booking field
+                booking=next_occurrence_date,
                 paid=False,
-                amount = total_amount,
+                amount=total_amount,
+                coupon=applied_coupon,       # ✅ included
+                discount_amount=discount_amount,  # ✅ included
             )
             for variant, quantity in order_items:
                 OrderItem.objects.create(order=order, variant=variant, quantity=quantity)
 
-            # Generate a unique order reference using the order ID
-            order_ref = f"swims_{order.id}"
+            if total_amount > 0:
+                order_ref = f"swims_{order.id}_{int(time.time())}"
+                return redirect(reverse('boipa:initiate_payment_session', kwargs={
+                    'order_ref': order_ref,
+                    'total_price': str(total_amount)
+                }))
+            else:
+                # Fully paid by coupon
+                order.paid = True
+                order.save()
+                order.refresh_from_db()
 
-            # Redirect to payment initiation with total amount and order reference
-            return redirect(reverse('boipa:initiate_payment_session', kwargs={'order_ref': order_ref, 'total_price': str(total_amount)}))
+                if order.paid:
+                    send_order_email(order.id)  # ✅ pulls discount info from order record
+                return render(request, 'swims_orders/order/created.html', {
+                    'order': order,
+                    'order_items': order.items.all(),
+                    'current_user': request.user,
+                    'discount': discount_amount,         # ✅ for template display
+                    'coupon': applied_coupon,            # ✅ for template display
+                })
         else:
-            # Handle the case where no items are selected (e.g., show an error message)
-            pass
+            print(">>> DEBUG: No items selected, not proceeding.")
 
     next_occurrence_date = get_next_occurrence(product.day_of_week)
-    context = {
-        'next_occurrence_date':next_occurrence_date,
+    return render(request, 'swims/product/detail.html', {
         'product': product,
         'price_variants': price_variants,
         'quantities': quantities,
-    }
-    return render(request, 'swims/product/detail.html', context)
+        'next_occurrence_date': next_occurrence_date,
+    })
 
 
 def calculate_total(request):
-    print(request.POST)  # Add this to check what's being posted
+    print(request.POST)  # Debugging: check what's being posted
     total = 0
     for key, value in request.POST.items():
         if key.startswith('quantity_'):
             variant_id = key.split('_')[1]
             quantity = int(value)
-            variant = PriceVariant.objects.get(id=variant_id)
-            total += variant.price * quantity
-
-    context = {'total': total}
-    return render(request, 'swims/partials/total_price.html', context)
+            try:
+                variant = PriceVariant.objects.get(id=variant_id)
+                total += variant.price * quantity
+            except PriceVariant.DoesNotExist:
+                continue
+    return render(request, 'swims/partials/total_price.html', {'total': total})

@@ -35,7 +35,7 @@ def evaluate_lesson_skills(request, lesson_id, term_id):
 
     if not request.user.groups.filter(name='instructor').exists():
         return redirect('not_authorized')
-
+    # print("Enrollments for lesson and term:", LessonEnrollment.objects.filter(lesson=lesson, term=term))
     swimlings = Swimling.objects.filter(
         enrollments__lesson=lesson,
         enrollments__term=term

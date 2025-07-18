@@ -1,0 +1,25 @@
+{% extends "base/_base.html" %}
+
+{% block content %}
+<section class="section">
+  <div class="container">
+    <div class="box">
+      <h1 class="title is-4 has-text-primary">Join the Schools Program</h1>
+      <p class="mb-4">Gain access to booking for school swimming terms and manage school-linked swimlings.</p>
+
+      <form method="post">
+        {% csrf_token %}
+        <div class="field">
+          <div class="control">
+            {{ form.join_schools }}
+            <label class="checkbox ml-2" for="{{ form.join_schools.id_for_label }}">
+              {{ form.join_schools.label }}
+            </label>
+          </div>
+        </div>
+        <button class="button is-primary mt-4">Join Program</button>
+      </form>
+    </div>
+  </div>
+</section>
+{% endblock %}

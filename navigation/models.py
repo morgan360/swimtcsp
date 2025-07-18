@@ -31,7 +31,12 @@ class MenuItem(models.Model):
     requires_login = models.BooleanField(default=False)
     requires_staff = models.BooleanField(default=False)
     required_groups = models.ManyToManyField(Group, blank=True)
-
+    excluded_groups = models.ManyToManyField(
+        Group,
+        related_name='excluded_from_menuitems',
+        blank=True,
+        help_text="Users in these groups will NOT see this menu item."
+    )
     class Meta:
         ordering = ["order"]
 

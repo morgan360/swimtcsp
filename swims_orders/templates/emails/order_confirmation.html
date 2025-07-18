@@ -37,8 +37,14 @@
           {% endfor %}
         </tbody>
         <tfoot>
+          {% if coupon %}
           <tr>
-            <td colspan="3" style="text-align: right; padding: 10px; font-weight: bold;">Total:</td>
+            <td colspan="3" style="text-align: right; padding: 10px;"><strong>Coupon Applied:</strong> {{ coupon.code }}</td>
+            <td style="text-align: right; padding: 10px;">-€{{ discount|floatformat:2 }}</td>
+          </tr>
+          {% endif %}
+          <tr>
+            <td colspan="3" style="text-align: right; padding: 10px; font-weight: bold;">Total Paid:</td>
             <td style="text-align: right; padding: 10px; font-weight: bold;">€{{ total_price|floatformat:2 }}</td>
           </tr>
         </tfoot>

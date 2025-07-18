@@ -85,6 +85,7 @@ INSTALLED_APPS = [
     'swimling_dashboard',
     'progress',
     'instructors',
+    'coupons',
 ]
 
 MIDDLEWARE = [
@@ -291,3 +292,5 @@ HIJACK_PERMISSION_CHECK = "hijack.permissions.superusers_and_staff"
 
 # AI Key
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+# Default Email
+DEFAULT_SUPPORT_EMAIL = "swim@tcsp.ie"

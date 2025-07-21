@@ -15,8 +15,11 @@
             <th>Swimling</th>
             {% for skill in skills %}
               <th>
-                {{ skill.code }}<br>
-                <span class="is-size-7 has-text-grey">{{ skill.name }}</span>
+                <strong>{{ skill.code }}</strong><br>
+                <span class="is-size-7 has-text-grey">{{ skill.name }}</span><br>
+                <span class="is-size-7 has-text-grey-light">
+                  {{ skill.cas.abbreviation }}
+                </span>
               </th>
             {% endfor %}
             <th>General Note</th>
@@ -50,19 +53,15 @@
                          type="text"
                          name="notes_{{ swimling.id }}_{{ skill.id }}"
                          placeholder="Optional note"
-                         {% if assessment %}
-                           value="{{ assessment.notes|default:'' }}"
-                         {% else %}
-                           value=""
-                         {% endif %}>
+                         value="{{ assessment.notes|default_if_none:'' if assessment }}">
                 </div>
               </td>
               {% endwith %}
             {% endfor %}
 
             <td>
-             <textarea class="textarea is-small" name="note_{{ swimling.id }}" rows="2"
-          placeholder="General note">{{ notes|dict_get:swimling.id|default_if_none:"" }}</textarea>
+              <textarea class="textarea is-small" name="note_{{ swimling.id }}" rows="2"
+                        placeholder="General note">{{ notes|dict_get:swimling.id|default_if_none:"" }}</textarea>
             </td>
           </tr>
           {% endfor %}

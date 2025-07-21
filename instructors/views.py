@@ -1,19 +1,17 @@
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404, redirect
 from instructors.models import InstructorAssignment
 from utils.terms_utils import get_term_context_data
-from django.contrib.auth.decorators import login_required
-from django.shortcuts import render, get_object_or_404, redirect
 from lessons.models import Product
 from lessons_bookings.models import Term, LessonEnrollment
-from progress.models import SkillAssessment, InstructorNote, LessonSkill
+from progress.models import SkillAssessment, InstructorNote, CategorySkill
 from users.models import Swimling
 
 @login_required
 def instructor_dashboard(request):
     term_data = get_term_context_data()
     terms = [term_data.get('previous_term'), term_data.get('current_term'), term_data.get('next_term')]
-    terms = [term for term in terms if term]  # Remove None if any term is missing
+    terms = [term for term in terms if term]
 
     assignments = (
         InstructorAssignment.objects
@@ -35,19 +33,25 @@ def evaluate_lesson_skills(request, lesson_id, term_id):
 
     if not request.user.groups.filter(name='instructor').exists():
         return redirect('not_authorized')
-    # print("Enrollments for lesson and term:", LessonEnrollment.objects.filter(lesson=lesson, term=term))
+
     swimlings = Swimling.objects.filter(
         enrollments__lesson=lesson,
         enrollments__term=term
     ).distinct()
 
-    skills = LessonSkill.objects.filter(lesson=lesson).select_related('skill')
+    # Get skills for the lesson's category
+    if not lesson.category:
+        return render(request, "instructors/error.html", {
+            "message": "This lesson has no associated category, so no skills can be evaluated."
+        })
+
+    category_skills = CategorySkill.objects.filter(category=lesson.category).select_related('skill')
 
     if request.method == 'POST':
         for swimling in swimlings:
-            for lesson_skill in skills:
-                level_key = f"level_{swimling.id}_{lesson_skill.skill.id}"
-                notes_key = f"notes_{swimling.id}_{lesson_skill.skill.id}"
+            for category_skill in category_skills:
+                level_key = f"level_{swimling.id}_{category_skill.skill.id}"
+                notes_key = f"notes_{swimling.id}_{category_skill.skill.id}"
 
                 level_val = request.POST.get(level_key)
                 notes_val = request.POST.get(notes_key, '')
@@ -55,7 +59,7 @@ def evaluate_lesson_skills(request, lesson_id, term_id):
                 if level_val:
                     SkillAssessment.objects.update_or_create(
                         swimling=swimling,
-                        skill=lesson_skill.skill,
+                        skill=category_skill.skill,
                         term=term,
                         defaults={
                             'instructor': request.user,
@@ -64,7 +68,6 @@ def evaluate_lesson_skills(request, lesson_id, term_id):
                         }
                     )
 
-            # Optional: Save general instructor note
             general_note = request.POST.get(f"note_{swimling.id}", "")
             if general_note:
                 InstructorNote.objects.update_or_create(
@@ -78,7 +81,6 @@ def evaluate_lesson_skills(request, lesson_id, term_id):
 
         return redirect("instructors:instructor_dashboard")
 
-    # prefetch existing assessments
     assessments = SkillAssessment.objects.filter(term=term, swimling__in=swimlings).select_related('skill', 'swimling')
     notes = InstructorNote.objects.filter(term=term, swimling__in=swimlings)
 
@@ -91,7 +93,7 @@ def evaluate_lesson_skills(request, lesson_id, term_id):
         "lesson": lesson,
         "term": term,
         "swimlings": swimlings,
-        "skills": [ls.skill for ls in skills],
+        "skills": [cs.skill for cs in category_skills],
         "assessments": assessments_by_key,
         "notes": notes_by_id
     })

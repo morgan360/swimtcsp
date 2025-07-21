@@ -1,4 +1,4 @@
-from progress.models import CoreAquaticSkill, Skill, LessonSkill
+from progress.models import CoreAquaticSkill, Skill, CategorySkill
 from django.db.models import Prefetch
 
 
@@ -19,7 +19,7 @@ def get_skill_structure_summary():
 
         for skill in cas.skills.all():
             lessons = (
-                LessonSkill.objects
+                CategorySkill.objects
                 .filter(skill=skill)
                 .select_related("lesson__category")
                 .distinct()

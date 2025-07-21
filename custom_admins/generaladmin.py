@@ -6,7 +6,7 @@ from django.contrib import admin
 from progress.models import (
     CoreAquaticSkill,
     Skill,
-    LessonSkill,
+    CategorySkill,
     SkillAssessment,
     InstructorNote
 )
@@ -59,18 +59,18 @@ except admin.sites.NotRegistered:
 
 # Optional: Customize how each appears
 class CoreAquaticSkillAdmin(ModelAdmin):
-    list_display = ['name']
-    search_fields = ['name']
+    list_display = ['abbreviation', 'name']
+    search_fields = ['abbreviation', 'name']
 
 class SkillAdmin(ModelAdmin):
     list_display = ['code', 'name', 'cas']
     search_fields = ['code', 'name']
     list_filter = ['cas']
 
-class LessonSkillAdmin(ModelAdmin):
-    list_display = ['lesson', 'skill', 'order']
-    search_fields = ['lesson__name', 'skill__name']
-    list_filter = ['lesson']
+class CategorySkillAdmin(ModelAdmin):
+    list_display = ['category', 'skill', 'order']
+    search_fields = ['category__name', 'skill__name']
+    list_filter = ['category']
 
 class SkillAssessmentAdmin(ModelAdmin):
     list_display = ['swimling', 'skill', 'term', 'level', 'instructor']
@@ -85,7 +85,7 @@ class InstructorNoteAdmin(ModelAdmin):
 # ✅ Register all skills-related models
 general_admin_site.register(CoreAquaticSkill, CoreAquaticSkillAdmin)
 general_admin_site.register(Skill, SkillAdmin)
-general_admin_site.register(LessonSkill, LessonSkillAdmin)
+general_admin_site.register(CategorySkill, CategorySkillAdmin)
 general_admin_site.register(SkillAssessment, SkillAssessmentAdmin)
 general_admin_site.register(InstructorNote, InstructorNoteAdmin)
 

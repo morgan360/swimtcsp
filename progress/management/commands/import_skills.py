@@ -1,104 +1,59 @@
 import pandas as pd
 from django.core.management.base import BaseCommand
-from lessons.models import Product
-from progress.models import Skill, LessonSkill, CoreAquaticSkill
-from pathlib import Path
-
-# ✅ Lesson code → list of Category.name values
-CODE_TO_CATEGORY_NAME = {
-    "B1": ["Beginners - 1", "Beginners 1 - BG", "Beginners 8+"],
-    "B2": ["Beginners - 2", "Beginners 2 - BG", "Beginners - C"],
-
-    "I1": ["Improvers - 1", "Improvers 1 - BG"],
-    "I2": ["Improvers - 2", "Improvers 2 - BG"],
-    "I3": ["Improvers - C"],
-
-    "L1": ["Lengths - L1"],
-    "L2": ["Lengths - L2"],
-    "L3": ["Lengths - L3"],
-
-    "A": ["Advanced", "Advanced - BG", "Adult Begin & Improvers"]
-}
+from django.db import transaction
+from progress.models import CoreAquaticSkill, Skill
 
 
 class Command(BaseCommand):
-    help = "Import skills from SKILLS List.xlsx (Sheet2), and link to Core Aquatic Skills + lesson categories"
+    help = "Import Core Aquatic Skills and Skills from 'SKILLS List.xlsx' (Sheet2)"
 
-    def handle(self, *args, **kwargs):
-        file_path = Path("SKILLS List.xlsx")
-        if not file_path.exists():
-            self.stderr.write("❌ SKILLS List.xlsx not found in the root directory.")
+    def add_arguments(self, parser):
+        parser.add_argument(
+            "--path",
+            type=str,
+            default="SKILLS List.xlsx",
+            help="Path to the Excel file (default: SKILLS List.xlsx)",
+        )
+
+    @transaction.atomic
+    def handle(self, *args, **options):
+        path = options["path"]
+        self.stdout.write(f"📥 Reading Excel file: {path}")
+
+        try:
+            df = pd.read_excel(path, sheet_name="Sheet2", header=None)
+        except Exception as e:
+            self.stderr.write(self.style.ERROR(f"❌ Failed to read Excel: {e}"))
             return
 
-        self.stdout.write("📥 Reading Excel file...")
-        df = pd.read_excel(file_path, sheet_name="Sheet2")
+        self.stdout.write("🧹 Clearing existing skills and CAS entries...")
+        Skill.objects.all().delete()
+        CoreAquaticSkill.objects.all().delete()
 
-        skill_count = 0
-        link_count = 0
-        cas_count = 0
-        errors = []
+        current_cas = None
+        created_cas_count = 0
+        created_skill_count = 0
 
-        # Extract CAS names from top-level columns (e.g. 'B1', 'B2', etc.)
-        for i in range(0, len(df.columns) - 1, 2):
-            cas_name = str(df.columns[i]).strip()
-            skill_code_col = df.columns[i + 1]
+        for index, row in df.iterrows():
+            raw_cas_cell = str(row[0]).strip() if pd.notna(row[0]) else ""
+            code = str(row[1]).strip() if pd.notna(row[1]) else ""
+            name = str(row[2]).strip() if pd.notna(row[2]) else ""
 
-            # 🔁 Get or create the CAS
-            cas, created = CoreAquaticSkill.objects.get_or_create(name=cas_name)
-            if created:
-                cas_count += 1
+            # If the cell has text and does NOT contain "nose", treat it as CAS
+            if raw_cas_cell and "nose" not in raw_cas_cell.lower():
+                current_cas = CoreAquaticSkill.objects.create(name=raw_cas_cell)
+                created_cas_count += 1
+                self.stdout.write(self.style.SUCCESS(f"✅ CAS: {current_cas.name}"))
 
-            for _, row in df.iterrows():
-                skill_name = row.get(cas_name)
-                skill_code = row.get(skill_code_col)
-
-                if pd.isna(skill_name) or pd.isna(skill_code):
+            # If skill data exists, associate with current CAS
+            if current_cas and code and name:
+                if len(code) > 20:
+                    self.stderr.write(self.style.ERROR(f"❌ Code too long: '{code}' ({len(code)} characters)"))
                     continue
+                Skill.objects.create(code=code, name=name, cas=current_cas)
+                created_skill_count += 1
 
-                skill_name = str(skill_name).strip()
-                skill_code = str(skill_code).strip()
+        self.stdout.write(self.style.SUCCESS(
+            f"🎉 Imported {created_cas_count} Core Aquatic Skills and {created_skill_count} Skills."
+        ))
 
-                # Extract lesson code (e.g. 'B1' from 'B1-EE2')
-                if "-" not in skill_code:
-                    continue
-                lesson_code = skill_code.split("-")[0]
-
-                # 🔁 Map code to one or more category names
-                category_names = CODE_TO_CATEGORY_NAME.get(lesson_code)
-                if not category_names:
-                    errors.append(f"⚠️ No category mapping for lesson code '{lesson_code}'")
-                    continue
-
-                # Create Skill (activity)
-                skill, created = Skill.objects.get_or_create(
-                    code=skill_code,
-                    defaults={
-                        "name": skill_name,
-                        "description": skill_name,
-                        "cas": cas
-                    }
-                )
-                if created:
-                    skill_count += 1
-
-                # Link Skill to all lessons under matching categories
-                for cat_name in category_names:
-                    lessons = Product.objects.filter(category__name__iexact=cat_name)
-                    if not lessons.exists():
-                        errors.append(f"⚠️ No lessons found in category '{cat_name}' for skill '{skill_code}'")
-                        continue
-
-                    for lesson in lessons:
-                        link, created = LessonSkill.objects.get_or_create(
-                            skill=skill,
-                            lesson=lesson,
-                        )
-                        if created:
-                            link_count += 1
-
-        self.stdout.write(f"\n✅ Imported {skill_count} skills, linked to {link_count} lessons.")
-        self.stdout.write(f"✅ Created {cas_count} Core Aquatic Skills.")
-        if errors:
-            self.stdout.write("\n⚠️ Issues found:")
-            for err in sorted(set(errors)):
-                self.stdout.write(f" - {err}")

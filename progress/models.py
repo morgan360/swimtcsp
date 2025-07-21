@@ -2,11 +2,13 @@ from django.db import models
 from django.conf import settings
 
 class CoreAquaticSkill(models.Model):
-    name = models.CharField(max_length=100, unique=True)  # e.g. "Aquatic Breathing"
+    abbreviation = models.CharField(max_length=10, null=True, blank=True, unique=False) # e.g. "B1", "L2"
+    name = models.CharField(max_length=100)  # e.g. "Beginners 1", "Level 2"
     description = models.TextField(blank=True)
 
     def __str__(self):
-        return self.name
+        return f"{self.abbreviation} – {self.name}"
+
 
 
 class Skill(models.Model):
@@ -18,16 +20,14 @@ class Skill(models.Model):
     def __str__(self):
         return f"{self.code} – {self.name}"
 
-
-class LessonSkill(models.Model):
-    lesson = models.ForeignKey("lessons.Product", on_delete=models.CASCADE)
+class CategorySkill(models.Model):
+    category = models.ForeignKey("lessons.Category", on_delete=models.CASCADE)
     skill = models.ForeignKey(Skill, on_delete=models.CASCADE)
     order = models.PositiveIntegerField(default=0)
 
     class Meta:
-        unique_together = ("lesson", "skill")
+        unique_together = ("category", "skill")
         ordering = ["order"]
-
 
 class SkillAssessment(models.Model):
     swimling = models.ForeignKey('users.Swimling', on_delete=models.CASCADE)

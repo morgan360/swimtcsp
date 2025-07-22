@@ -95,6 +95,10 @@ main {
     font-weight: 600;
 }
 
+.navbar a strong {
+    color: white;
+}
+
 /* 🌐 Mobile Navbar Fixes */
 
 @media screen and (max-width: 768px) {

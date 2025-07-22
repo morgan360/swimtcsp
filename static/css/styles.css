@@ -12,13 +12,15 @@
 
 /* --- Global Styles --- */
 body {
-    background-color: var(--background-color);
     font-family: 'Segoe UI', Roboto, sans-serif;
     color: var(--text-dark);
 }
 
+main {
+    background-color: rgb(99, 188, 229);
+}
+
 .section {
-    background-color: var(--background-color);
     padding: 2rem 1.5rem;
 }
 

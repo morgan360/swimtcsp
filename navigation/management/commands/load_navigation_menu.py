@@ -1,102 +1,58 @@
 # navigation/management/commands/load_navigation_menu.py
+
+import json
 from django.core.management.base import BaseCommand
 from django.contrib.auth.models import Group
 from navigation.models import MenuGroup, MenuItem
-from django.urls import reverse, NoReverseMatch
+
 
 class Command(BaseCommand):
-    help = "Wipe and load the updated navigation menu structure."
+    help = "Import the navigation menu structure from a JSON file (opposite of download_navigation_menu)."
+
+    def add_arguments(self, parser):
+        parser.add_argument("json_file", type=str, help="Path to the JSON file containing the menu structure")
 
     def handle(self, *args, **options):
+        json_file = options["json_file"]
+
+        try:
+            with open(json_file, "r") as f:
+                menu_data = json.load(f)
+        except FileNotFoundError:
+            self.stderr.write(self.style.ERROR(f"❌ File not found: {json_file}"))
+            return
+        except json.JSONDecodeError as e:
+            self.stderr.write(self.style.ERROR(f"❌ JSON decode error: {e}"))
+            return
+
+        # Clear existing menu
         MenuItem.objects.all().delete()
         MenuGroup.objects.all().delete()
 
-        def add_menu_group(name, slug, order):
-            group, _ = MenuGroup.objects.get_or_create(name=name, slug=slug, defaults={"order": order})
-            group.order = order
-            group.save()
-            return group
+        for group_entry in menu_data:
+            group_info = group_entry["group"]
+            items = group_entry.get("items", [])
 
-        def reverse_url(name):
-            try:
-                return reverse(name)
-            except NoReverseMatch:
-                return None
-
-        def add_item(group, label, url_name=None, external_url=None, icon=None, order=0,
-                     requires_login=False, requires_staff=False, groups=None):
-            item = MenuItem.objects.create(
-                group=group,
-                label=label,
-                url_name=url_name or '',
-                external_url=external_url or '',
-                icon_class=icon or '',
-                order=order,
-                requires_login=requires_login,
-                requires_staff=requires_staff,
+            group = MenuGroup.objects.create(
+                name=group_info["name"],
+                slug=group_info["slug"],
+                order=group_info["order"]
             )
-            if groups:
-                for g in groups:
-                    grp = Group.objects.get_or_create(name=g)[0]
-                    item.required_groups.add(grp)
-            item.save()
 
-        # === Public ===
-        main = add_menu_group("Main", "main", 0)
-        add_item(main, "Home", url_name="home", order=1)
-        add_item(main, "About", url_name="about", order=2)
-        add_item(main, "Contact", url_name="contact", order=3)
-        add_item(main, "Timetable", url_name="swims:product_list", icon="fas fa-calendar", order=4)
-        add_item(main, "Public Swims", url_name="swims:product_list", icon="fas fa-swimmer", order=5, requires_login=True)
+            for item in items:
+                menu_item = MenuItem.objects.create(
+                    group=group,
+                    label=item["label"],
+                    url_name=item.get("url_name", ""),
+                    external_url=item.get("external_url", ""),
+                    icon_class=item.get("icon_class", ""),
+                    order=item.get("order", 0),
+                    requires_login=item.get("requires_login", False),
+                    requires_staff=item.get("requires_staff", False),
+                )
 
-        # === Lessons ===
-        lessons = add_menu_group("Lessons", "lessons", 1)
-        # === Guardian ===
-        lessons = add_menu_group("Lessons", "lessons", order=2)  # ✅ create or retrieve the group
-        add_item(lessons, "Book Lessons", url_name="lessons:lesson_list", icon="fas fa-calendar-plus", order=1,
-                 requires_login=True, groups=["guardian"])
-        add_item(lessons, "Swimling Panel", url_name="users:combined_swimling_mgmt", icon="fas fa-user-friends", order=1, requires_login=True, groups=["guardian"])
-        add_item(lessons, "Swimling Progress", url_name="lessons:swimling_progress", icon="fas fa-chart-line", order=2, requires_login=True, groups=["guardian"])
-        add_item(lessons, "School Classes", url_name="schools:school_dashboard", icon="fas fa-school", order=3, requires_login=True, groups=["guardian", "schools"])
+                for group_name in item.get("groups", []):
+                    grp = Group.objects.get_or_create(name=group_name)[0]
+                    menu_item.required_groups.add(grp)
 
-        # === Profile ===
-        profile = add_menu_group("Profile", "profile", 2)
-        add_item(profile, "Manage Profile", url_name="users:profile", icon="fas fa-user-cog", order=1, requires_login=True)
-        add_item(profile, "View Orders", url_name="swims_orders:order_list", icon="fas fa-receipt", order=2, requires_login=True)
-        add_item(profile, "Upgrade to Guardian", url_name="users:upgrade_guardian", icon="fas fa-user-plus", order=3, requires_login=True)
-        add_item(profile, "My Swim Bookings", url_name="swims:my_bookings", icon="fas fa-swimming-pool", order=4, requires_login=True, groups=["customer"])
-        add_item(profile, "Logout", url_name="account_logout", icon="fas fa-sign-out-alt", order=5, requires_login=True)
-
-        # === School ===
-        school = add_menu_group("School", "school", 3)
-        add_item(school, "Register School", url_name="school:register", icon="fas fa-plus", order=1, requires_login=True, groups=["schools"])
-        add_item(school, "School Bookings", url_name="schools:school_list", icon="fas fa-calendar-check", order=2, requires_login=True, groups=["schools"])
-        add_item(school, "School Dashboard", url_name="schools:school_dashboard", icon="fas fa-school", order=3, requires_login=True, groups=["schools"])
-
-        # === Management ===
-        management = add_menu_group("Management", "management", 4)
-        add_item(management, "Move Swimmers", url_name="management:move_swimmers", icon="fas fa-exchange-alt", order=1, requires_login=True, groups=["manager", "pool_manager"])
-        add_item(management, "Order Management", url_name="management:order_list", icon="fas fa-box", order=2, requires_login=True, groups=["manager", "pool_manager"])
-
-        # === Admin ===
-        admin = add_menu_group("Admin", "admin", 5)
-        add_item(admin, "Admin Panel", external_url="/admin/", icon="fas fa-tools", order=1, requires_login=True, groups=["administrator"])
-        add_item(admin, "Booking Management", url_name="lessons_bookings:management", icon="fas fa-calendar-alt", order=2, requires_login=True, groups=["administrator"])
-        add_item(admin, "Analytics", url_name="reports:term_information", icon="fas fa-chart-line", order=3, requires_login=True, groups=["administrator"])
-        add_item(admin, "Staff Schedule", url_name="staff:schedule", icon="fas fa-clock", order=4, requires_login=True, groups=["administrator"])
-        add_item(admin, "Settings", url_name="settings", icon="fas fa-cog", order=5, requires_login=True, groups=["administrator"])
-
-        # === Staff ===
-        staff = add_menu_group("Staff", "staff", 6)
-        add_item(staff, "Staff Dashboard", url_name="staff:dashboard", icon="fas fa-tachometer-alt", order=1, requires_login=True, requires_staff=True)
-        add_item(staff, "My Schedule", url_name="staff:schedule", icon="fas fa-clock", order=2, requires_login=True, requires_staff=True)
-        add_item(staff, "Manage Bookings", url_name="lessons_bookings:management", icon="fas fa-calendar-check", order=3, requires_login=True, requires_staff=True)
-
-        # === Reporting ===
-        reporting = add_menu_group("Reporting", "reporting", 7)
-        add_item(reporting, "Enrollments", url_name="reports:enrollment_report", icon="fas fa-users", order=1, requires_login=True, requires_staff=True)
-        add_item(reporting, "Class Lists", url_name="reports:class_list_view", icon="fas fa-list", order=2, requires_login=True, requires_staff=True)
-        add_item(reporting, "Term Information", url_name="reports:term_information", icon="fas fa-calendar", order=3, requires_login=True, requires_staff=True)
-        add_item(reporting, "All Reports", external_url="/reports/", icon="fas fa-tachometer-alt", order=4, requires_login=True, groups=["administrator"])
-
-        self.stdout.write(self.style.SUCCESS("✅ Navigation menu structure updated and loaded."))
+        self.stdout.write(self.style.SUCCESS("✅ Navigation menu imported successfully."))

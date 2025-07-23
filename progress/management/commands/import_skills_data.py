@@ -5,7 +5,7 @@ import django
 import json
 from django.core.serializers import deserialize
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'your_project.local_settings')  # adjust if needed
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.local_settings')  # or 'config.production_settings' when on PythonAnywhere
 django.setup()
 
 with open('skills_export.json') as f:

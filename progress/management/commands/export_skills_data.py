@@ -5,10 +5,11 @@ import django
 import json
 from django.core.serializers import serialize
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'your_project.settings')  # adjust as needed
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.local_settings')  # or 'config.production_settings' when on PythonAnywhere
 django.setup()
 
-from your_app.models import CoreAquaticSkill, Skill, CategorySkill, SkillAssessment, InstructorNote
+
+from progress.models import CoreAquaticSkill, Skill, CategorySkill, SkillAssessment, InstructorNote
 
 # Collect the data
 models = [CoreAquaticSkill, Skill, CategorySkill, SkillAssessment, InstructorNote]

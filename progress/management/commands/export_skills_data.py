@@ -1,26 +1,20 @@
-# export_skills_data.py
-
-import os
-import django
-import json
+from django.core.management.base import BaseCommand
 from django.core.serializers import serialize
-
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.local_settings')  # or 'config.production_settings' when on PythonAnywhere
-django.setup()
-
-
 from progress.models import CoreAquaticSkill, Skill, CategorySkill, SkillAssessment, InstructorNote
+import json
 
-# Collect the data
-models = [CoreAquaticSkill, Skill, CategorySkill, SkillAssessment, InstructorNote]
-data = []
+class Command(BaseCommand):
+    help = "Export skill-related data to a JSON file"
 
-for model in models:
-    serialized = serialize('json', model.objects.all())
-    data.extend(json.loads(serialized))
+    def handle(self, *args, **kwargs):
+        data = []
 
-# Save to a file
-with open('skills_export.json', 'w') as f:
-    json.dump(data, f, indent=2)
+        models = [CoreAquaticSkill, Skill, CategorySkill, SkillAssessment, InstructorNote]
+        for model in models:
+            serialized = serialize('json', model.objects.all())
+            data.extend(json.loads(serialized))
 
-print("Export complete: skills_export.json")
+        with open('skills_export.json', 'w') as f:
+            json.dump(data, f, indent=2)
+
+        self.stdout.write(self.style.SUCCESS("Export complete: skills_export.json"))

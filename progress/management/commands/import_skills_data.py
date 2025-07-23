@@ -1,17 +1,15 @@
-# import_skills_data.py
-
-import os
-import django
-import json
+from django.core.management.base import BaseCommand
 from django.core.serializers import deserialize
+import json
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.local_settings')  # or 'config.production_settings' when on PythonAnywhere
-django.setup()
+class Command(BaseCommand):
+    help = "Import skill-related data from a JSON file"
 
-with open('skills_export.json') as f:
-    data = json.load(f)
+    def handle(self, *args, **kwargs):
+        with open('skills_export.json') as f:
+            data = json.load(f)
 
-for obj in deserialize('json', json.dumps(data)):
-    obj.save()
+        for obj in deserialize('json', json.dumps(data)):
+            obj.save()
 
-print("Import complete")
+        self.stdout.write(self.style.SUCCESS("Import complete"))

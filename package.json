@@ -2,14 +2,15 @@
   "private": true,
   "devDependencies": {
     "autoprefixer": "^10.4.21",
-    "postcss": "^8.5.4",
-    "tailwindcss": "^4.1.8"
+    "postcss": "^8.5.6",
+    "tailwindcss": "^4.1.11"
   },
   "scripts": {
-    "tailwind:watch": "npx tailwindcss -i ./theme/static/src/input.css -o ./theme/static/css/tailwind.css --watch",
-    "tailwind:build": "npx tailwindcss -i ./theme/static/src/input.css -o ./theme/static/css/tailwind.css --minify"
+    "dev": "npx tailwindcss -i ./static/src/input.css -o ./static/css/styles.css --watch",
+    "build": "npx tailwindcss -i ./static/src/input.css -o ./static/css/styles.css --minify"
   },
   "dependencies": {
+    "daisyui": "^5.0.46",
     "datatables.net": "^2.3.2",
     "datatables.net-bs5": "^2.3.2",
     "datatables.net-buttons": "^3.2.3",
@@ -19,5 +20,24 @@
     "datatables.net-responsive": "^3.0.4",
     "datatables.net-responsive-bs5": "^3.0.4",
     "datatables.net-responsive-dt": "^3.0.4"
-  }
+  },
+  "name": "swimtcsp",
+  "version": "1.0.0",
+  "description": "This is a Django-based web application designed for managing lessons, swims, schools, and online bookings for a swimming pool business. It includes user registration, e-commerce integration with Bank of Ireland Finance, custom admin dashboards, and HTMX/Tailwind/Alpine-based interactivity.",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/morgan360/swimtcsp.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/morgan360/swimtcsp/issues"
+  },
+  "homepage": "https://github.com/morgan360/swimtcsp#readme"
 }

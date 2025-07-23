@@ -86,6 +86,7 @@ INSTALLED_APPS = [
     'progress',
     'instructors',
     'coupons',
+    'mailchimp',
 ]
 
 MIDDLEWARE = [
@@ -294,3 +295,7 @@ HIJACK_PERMISSION_CHECK = "hijack.permissions.superusers_and_staff"
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 # Default Email
 DEFAULT_SUPPORT_EMAIL = "swim@tcsp.ie"
+# Mailchimp
+MAILCHIMP_API_KEY = config("MAILCHIMP_API_KEY")
+MAILCHIMP_SERVER_PREFIX = config("MAILCHIMP_SERVER_PREFIX")
+MAILCHIMP_LIST_ID = config("MAILCHIMP_LIST_ID")

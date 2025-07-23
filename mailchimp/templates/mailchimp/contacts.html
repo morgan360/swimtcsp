@@ -1,0 +1,34 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+<h1>Mailchimp Contacts</h1>
+
+{% if error %}
+  <p style="color: red;">Error: {{ error }}</p>
+{% endif %}
+
+<table>
+  <thead>
+    <tr>
+      <th>Email</th>
+      <th>Status</th>
+      <th>First Name</th>
+      <th>Last Name</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for member in members %}
+    <tr>
+      <td>{{ member.email_address }}</td>
+      <td>{{ member.status }}</td>
+      <td>{{ member.merge_fields.FNAME }}</td>
+      <td>{{ member.merge_fields.LNAME }}</td>
+    </tr>
+    {% empty %}
+    <tr>
+      <td colspan="4">No contacts found</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

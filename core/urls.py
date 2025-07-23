@@ -46,6 +46,7 @@ urlpatterns = [
     # Waiting List
     path('waiting-list/', include('waiting_list.urls')),
     path("dashboard/", include("swimling_dashboard.urls", namespace="swimling_dashboard")),
+    path("mailchimp/", include("mailchimp.urls")),
 ]
 # Serve static and media files during development
 if settings.DEBUG:

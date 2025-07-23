@@ -1,0 +1,64 @@
+{% extends "base/_base.html" %}
+
+{% block content %}
+<section class="section">
+  <div class="container category-skill-matrix">
+
+    <div class="level mb-4">
+      <div class="level-left">
+        <h1 class="title is-3">Category–Skill Cross Reference</h1>
+      </div>
+      <div class="level-right">
+        <button class="button is-link" onclick="window.print()">
+          <span class="icon"><i class="fas fa-print"></i></span>
+          <span>Print</span>
+        </button>
+      </div>
+    </div>
+
+    <table class="table is-fullwidth is-bordered is-striped">
+      <thead>
+        <tr>
+          <th>Category</th>
+          <th>Skills</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for category in categories %}
+          <tr>
+            <td>{{ category.name }}</td>
+            <td>
+              <ul style="margin-left: 1em;">
+                {% for cs in category.categoryskill_set.all %}
+                  <li>{{ cs.skill.name }} ({{ cs.skill.code }})</li>
+                {% endfor %}
+              </ul>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+  </div>
+</section>
+{% endblock %}
+{% block head %}
+  {{ block.super }}
+  <style>
+    @media print {
+      button,
+      .navbar,
+      .footer {
+        display: none !important;
+      }
+
+      .section {
+        padding: 0 !important;
+      }
+
+      table {
+        font-size: 12px;
+      }
+    }
+  </style>
+{% endblock %}

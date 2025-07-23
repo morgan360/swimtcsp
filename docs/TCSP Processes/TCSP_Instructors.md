@@ -41,3 +41,26 @@ Most of our instructors are current or former competitive swimmers, bringing bot
 - Substitutes must also hold the `instructor` role and appropriate Swim Ireland certification.
 
 ---
+## ADMIN
+progress/management/commands/
+├── export_skills_data.py
+└── import_skills_data.py
+
+📤 Exporting from PythonAnywhere
+Run the following command on your live server (e.g. via SSH or PythonAnywhere console):
+
+python manage.py export_skills_data
+This will generate a file named:
+
+skills_export.json
+Download this file and copy it into your local project root.
+
+📥 Importing into Local Environment
+To reset and import data locally:
+
+python manage.py import_skills_data --purge
+This will:
+
+Delete existing data from the relevant models.
+Load all records from skills_export.json.
+⚠️ Warning: This will erase local data in the above models.

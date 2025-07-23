@@ -2,9 +2,9 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, get_object_or_404, redirect
 from instructors.models import InstructorAssignment
 from utils.terms_utils import get_term_context_data
-from lessons.models import Product
+from lessons.models import Product, Category
 from lessons_bookings.models import Term, LessonEnrollment
-from progress.models import SkillAssessment, InstructorNote, CategorySkill
+from progress.models import SkillAssessment, InstructorNote, CategorySkill, Skill, CoreAquaticSkill
 from users.models import Swimling
 
 @login_required
@@ -96,4 +96,20 @@ def evaluate_lesson_skills(request, lesson_id, term_id):
         "skills": [cs.skill for cs in category_skills],
         "assessments": assessments_by_key,
         "notes": notes_by_id
+    })
+
+### Skill Charts ###
+
+def category_skill_matrix(request):
+    # Categories and their skills
+    categories = Category.objects.prefetch_related(
+        'categoryskill_set__skill'
+    ).all()
+
+    # CAS and their skills (optional)
+    cas_list = CoreAquaticSkill.objects.prefetch_related('skills').all()
+
+    return render(request, 'instructors/category_skill_matrix.html', {
+        'categories': categories,
+        'cas_list': cas_list,
     })

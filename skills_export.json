@@ -1,0 +1,2579 @@
+[
+  {
+    "model": "progress.coreaquaticskill",
+    "pk": 3,
+    "fields": {
+      "abbreviation": null,
+      "name": "Entry & Exit",
+      "description": ""
+    }
+  },
+  {
+    "model": "progress.coreaquaticskill",
+    "pk": 4,
+    "fields": {
+      "abbreviation": null,
+      "name": "Aquatic breathing & Submersion",
+      "description": ""
+    }
+  },
+  {
+    "model": "progress.coreaquaticskill",
+    "pk": 5,
+    "fields": {
+      "abbreviation": null,
+      "name": "Floatation & bouyancy",
+      "description": ""
+    }
+  },
+  {
+    "model": "progress.coreaquaticskill",
+    "pk": 6,
+    "fields": {
+      "abbreviation": null,
+      "name": "Treading water & Sculling",
+      "description": ""
+    }
+  },
+  {
+    "model": "progress.coreaquaticskill",
+    "pk": 7,
+    "fields": {
+      "abbreviation": null,
+      "name": "Rotation & Balance",
+      "description": ""
+    }
+  },
+  {
+    "model": "progress.coreaquaticskill",
+    "pk": 8,
+    "fields": {
+      "abbreviation": null,
+      "name": "Steamlining",
+      "description": ""
+    }
+  },
+  {
+    "model": "progress.coreaquaticskill",
+    "pk": 9,
+    "fields": {
+      "abbreviation": null,
+      "name": "Movement & co-ordination",
+      "description": ""
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 1,
+    "fields": {
+      "code": "B1-EE1",
+      "name": "Pool Safety & Rules",
+      "description": "",
+      "cas": 3
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 2,
+    "fields": {
+      "code": "B1-EE2",
+      "name": "Listen & action instruction",
+      "description": "",
+      "cas": 3
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 3,
+    "fields": {
+      "code": "B1-EE3",
+      "name": "Safe entry via steps",
+      "description": "",
+      "cas": 3
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 4,
+    "fields": {
+      "code": "B1-EE4",
+      "name": "Safe exit via steps",
+      "description": "",
+      "cas": 3
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 5,
+    "fields": {
+      "code": "B1-EE5",
+      "name": "Sitting slide in aided",
+      "description": "",
+      "cas": 3
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 6,
+    "fields": {
+      "code": "B1-EE6",
+      "name": "Poolside climb out aided",
+      "description": "",
+      "cas": 3
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 7,
+    "fields": {
+      "code": "B1-EE7",
+      "name": "Jump in aided (shallow with FD)",
+      "description": "",
+      "cas": 3
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 8,
+    "fields": {
+      "code": "B1-EE8",
+      "name": "Sitting rearch forward entry",
+      "description": "",
+      "cas": 3
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 9,
+    "fields": {
+      "code": "B1-AB1",
+      "name": "Blow bubbles",
+      "description": "",
+      "cas": 4
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 10,
+    "fields": {
+      "code": "B1-AB2",
+      "name": "Blow continuous bubbles",
+      "description": "",
+      "cas": 4
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 11,
+    "fields": {
+      "code": "B1-AB3",
+      "name": "Submerge & blow bubbles",
+      "description": "",
+      "cas": 4
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 12,
+    "fields": {
+      "code": "B1-AB4",
+      "name": "Hold breath & submerge",
+      "description": "",
+      "cas": 4
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 13,
+    "fields": {
+      "code": "B1-AB5",
+      "name": "5 Rhythmic breaths",
+      "description": "",
+      "cas": 4
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 14,
+    "fields": {
+      "code": "B1-AB7",
+      "name": "swim through surface hoop",
+      "description": "",
+      "cas": 4
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 15,
+    "fields": {
+      "code": "B1-AB8",
+      "name": "Submerge & locate object",
+      "description": "",
+      "cas": 4
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 16,
+    "fields": {
+      "code": "B1--FB1",
+      "name": "Float on back with FD",
+      "description": "",
+      "cas": 5
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 17,
+    "fields": {
+      "code": "B1--FB2",
+      "name": "Float on front with FD",
+      "description": "",
+      "cas": 5
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 18,
+    "fields": {
+      "code": "B1--FB3",
+      "name": "Jellyfish float",
+      "description": "",
+      "cas": 5
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 19,
+    "fields": {
+      "code": "B1--FB4",
+      "name": "Tuck float",
+      "description": "",
+      "cas": 5
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 20,
+    "fields": {
+      "code": "B1--FB5",
+      "name": "Star float",
+      "description": "",
+      "cas": 5
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 21,
+    "fields": {
+      "code": "B1-TW1",
+      "name": "Legs treading water action with FD",
+      "description": "",
+      "cas": 6
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 22,
+    "fields": {
+      "code": "B1-TW2",
+      "name": "circular wrist sculling action (catch)",
+      "description": "",
+      "cas": 6
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 23,
+    "fields": {
+      "code": "B1-RB1",
+      "name": "Roll from front to back",
+      "description": "",
+      "cas": 7
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 24,
+    "fields": {
+      "code": "B1-RB2",
+      "name": "Roll from back to front",
+      "description": "",
+      "cas": 7
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 25,
+    "fields": {
+      "code": "B1-RB3",
+      "name": "Submerge & turn",
+      "description": "",
+      "cas": 7
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 26,
+    "fields": {
+      "code": "B1-RB4",
+      "name": "change direction",
+      "description": "",
+      "cas": 7
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 27,
+    "fields": {
+      "code": "B1-RB5",
+      "name": "Floating compass (head to point)",
+      "description": "",
+      "cas": 7
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 28,
+    "fields": {
+      "code": "B1-RB6",
+      "name": "woggle balancing",
+      "description": "",
+      "cas": 7
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 29,
+    "fields": {
+      "code": "B1-RB7",
+      "name": "vertical rotation",
+      "description": "",
+      "cas": 7
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 30,
+    "fields": {
+      "code": "B1-ST1",
+      "name": "Push off & glide on front with FD",
+      "description": "",
+      "cas": 8
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 31,
+    "fields": {
+      "code": "B1-ST2",
+      "name": "Push off & glide on back with FD",
+      "description": "",
+      "cas": 8
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 32,
+    "fields": {
+      "code": "B1-ST3",
+      "name": "Push & glide FC kick",
+      "description": "",
+      "cas": 8
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 33,
+    "fields": {
+      "code": "B1-ST4",
+      "name": "Push & glide BC kick",
+      "description": "",
+      "cas": 8
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 34,
+    "fields": {
+      "code": "B1-ST5",
+      "name": "Push, glide & roll to back",
+      "description": "",
+      "cas": 8
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 35,
+    "fields": {
+      "code": "B1-ST6",
+      "name": "Push glide on back roll to front",
+      "description": "",
+      "cas": 8
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 36,
+    "fields": {
+      "code": "B1-Mv1",
+      "name": "10m FC Kick with FD",
+      "description": "",
+      "cas": 9
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 37,
+    "fields": {
+      "code": "B1-Mv2",
+      "name": "10m BC Kick with FD",
+      "description": "",
+      "cas": 9
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 38,
+    "fields": {
+      "code": "B1-Mv3",
+      "name": "Push, glide, bubbles, Kick FC",
+      "description": "",
+      "cas": 9
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 39,
+    "fields": {
+      "code": "B1-Mv4",
+      "name": "Push, glide, bubbles, Kick BC",
+      "description": "",
+      "cas": 9
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 40,
+    "fields": {
+      "code": "B1-Mv5",
+      "name": "Create frog arm motion",
+      "description": "",
+      "cas": 9
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 41,
+    "fields": {
+      "code": "B1-Mv6",
+      "name": "Create frog leg motion",
+      "description": "",
+      "cas": 9
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 42,
+    "fields": {
+      "code": "B2-EE5",
+      "name": "Sitting slide in",
+      "description": "",
+      "cas": 3
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 43,
+    "fields": {
+      "code": "B2-EE6",
+      "name": "Poolside climb out",
+      "description": "",
+      "cas": 3
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 44,
+    "fields": {
+      "code": "BE-EE7",
+      "name": "Jump in unaided (shallow)",
+      "description": "",
+      "cas": 3
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 45,
+    "fields": {
+      "code": "B2-EE8",
+      "name": "Sitting jump & stretch",
+      "description": "",
+      "cas": 3
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 46,
+    "fields": {
+      "code": "B2-AB2",
+      "name": "Long continuous bubbles",
+      "description": "",
+      "cas": 4
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 47,
+    "fields": {
+      "code": "B2-AB3",
+      "name": "Submerge & blow bubbles to sink",
+      "description": "",
+      "cas": 4
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 48,
+    "fields": {
+      "code": "B2-AB4",
+      "name": "Hold breath & submerge extended",
+      "description": "",
+      "cas": 4
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 49,
+    "fields": {
+      "code": "B2-AB5",
+      "name": "10 Rhythmic breaths submerging",
+      "description": "",
+      "cas": 4
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 50,
+    "fields": {
+      "code": "B2-AB6",
+      "name": "hold breath and sit on bottom of pool",
+      "description": "",
+      "cas": 4
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 51,
+    "fields": {
+      "code": "B2-AB7",
+      "name": "hold breath and lie on bottom of pool",
+      "description": "",
+      "cas": 4
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 52,
+    "fields": {
+      "code": "B2-AB8",
+      "name": "Pick up object in chest deep water",
+      "description": "",
+      "cas": 4
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 53,
+    "fields": {
+      "code": "B2-AB9",
+      "name": "swim through submerged hoop",
+      "description": "",
+      "cas": 4
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 54,
+    "fields": {
+      "code": "B2-FB1",
+      "name": "Float on front  arm position!",
+      "description": "",
+      "cas": 5
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 55,
+    "fields": {
+      "code": "B2-FB2",
+      "name": "Float on Back",
+      "description": "",
+      "cas": 5
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 56,
+    "fields": {
+      "code": "B2-FB3",
+      "name": "Rocking tuck float",
+      "description": "",
+      "cas": 5
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 57,
+    "fields": {
+      "code": "B2-FB4",
+      "name": "Tuck to stretch float",
+      "description": "",
+      "cas": 5
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 58,
+    "fields": {
+      "code": "B2-FB5",
+      "name": "Pencil float",
+      "description": "",
+      "cas": 5
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 59,
+    "fields": {
+      "code": "B2-TW1",
+      "name": "Treading water action with leg and arm motion",
+      "description": "",
+      "cas": 6
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 60,
+    "fields": {
+      "code": "B2-TW2",
+      "name": "circular wrist sculling action (catch) to move forward",
+      "description": "",
+      "cas": 6
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 61,
+    "fields": {
+      "code": "B2-TW3",
+      "name": "circular wrist sculling action (catch) to move backwards",
+      "description": "",
+      "cas": 6
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 62,
+    "fields": {
+      "code": "B2-RB1",
+      "name": "Rotate front to back with kick",
+      "description": "",
+      "cas": 7
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 63,
+    "fields": {
+      "code": "B2-RB2",
+      "name": "Rotate back to front with kick",
+      "description": "",
+      "cas": 7
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 64,
+    "fields": {
+      "code": "B2-RB3",
+      "name": "Float 180\u25e6 rotation",
+      "description": "",
+      "cas": 7
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 65,
+    "fields": {
+      "code": "B2-RB4",
+      "name": "Swim & change direction",
+      "description": "",
+      "cas": 7
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 66,
+    "fields": {
+      "code": "B2-RB6",
+      "name": "Sit on FD",
+      "description": "",
+      "cas": 7
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 67,
+    "fields": {
+      "code": "B2-RB7",
+      "name": "legs tucked vertical rotation- both directions",
+      "description": "",
+      "cas": 7
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 68,
+    "fields": {
+      "code": "B2-ST1",
+      "name": "Push & glide on front",
+      "description": "",
+      "cas": 8
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 69,
+    "fields": {
+      "code": "B2-ST2",
+      "name": "Push & glide on front",
+      "description": "",
+      "cas": 8
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 70,
+    "fields": {
+      "code": "B2-ST3",
+      "name": "Push & glide FC kick 5m",
+      "description": "",
+      "cas": 8
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 71,
+    "fields": {
+      "code": "B2-ST4",
+      "name": "Push & glide BC kick 5m",
+      "description": "",
+      "cas": 8
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 72,
+    "fields": {
+      "code": "B2-ST5",
+      "name": "Push, glide & roll to back kick 5m",
+      "description": "",
+      "cas": 8
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 73,
+    "fields": {
+      "code": "B2-ST6",
+      "name": "Push glide on back roll to front kick 5m",
+      "description": "",
+      "cas": 8
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 74,
+    "fields": {
+      "code": "B2-Mv1",
+      "name": "B2-Mv1",
+      "description": "",
+      "cas": 9
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 75,
+    "fields": {
+      "code": "B2-Mv2",
+      "name": "BC kick 10m",
+      "description": "",
+      "cas": 9
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 76,
+    "fields": {
+      "code": "B2-Mv3",
+      "name": "FC with arm action 10m aided",
+      "description": "",
+      "cas": 9
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 77,
+    "fields": {
+      "code": "B2-Mv4",
+      "name": "FC with arm action 10m aided",
+      "description": "",
+      "cas": 9
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 78,
+    "fields": {
+      "code": "B2-Mv5",
+      "name": "FC with arm action 10m unaided",
+      "description": "",
+      "cas": 9
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 79,
+    "fields": {
+      "code": "B2-Mv6",
+      "name": "BC with arm action 10m unaided",
+      "description": "",
+      "cas": 9
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 80,
+    "fields": {
+      "code": "B2-Mv7",
+      "name": "Create frog leg motion with FD",
+      "description": "",
+      "cas": 9
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 81,
+    "fields": {
+      "code": "B2-Mv8",
+      "name": "Dolphin undulating kick",
+      "description": "",
+      "cas": 9
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 82,
+    "fields": {
+      "code": "B2-Mv9",
+      "name": "Create frog arm motion with FD",
+      "description": "",
+      "cas": 9
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 83,
+    "fields": {
+      "code": "I1-EE5",
+      "name": "Pencil jump & submerge",
+      "description": "",
+      "cas": 3
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 84,
+    "fields": {
+      "code": "I1-EE7",
+      "name": "Jump out of depth, vertical rotation & swim to side",
+      "description": "",
+      "cas": 3
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 85,
+    "fields": {
+      "code": "I1-EE8",
+      "name": "Sitting dive",
+      "description": "",
+      "cas": 3
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 86,
+    "fields": {
+      "code": "I1-AB2",
+      "name": "Long trickle bubbles with kick",
+      "description": "",
+      "cas": 4
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 87,
+    "fields": {
+      "code": "I1-AB3",
+      "name": "Blow bubbles to sink & sit",
+      "description": "",
+      "cas": 4
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 88,
+    "fields": {
+      "code": "I1-AB4",
+      "name": "Distance hold breath with kick",
+      "description": "",
+      "cas": 4
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 89,
+    "fields": {
+      "code": "I1-AB5",
+      "name": "10 Rhythmic with kicking",
+      "description": "",
+      "cas": 4
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 90,
+    "fields": {
+      "code": "I1-AB6",
+      "name": "Rotary breath with aid 10m",
+      "description": "",
+      "cas": 4
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 91,
+    "fields": {
+      "code": "I1-AB7",
+      "name": "swim through chest deep submerged hoop",
+      "description": "",
+      "cas": 4
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 92,
+    "fields": {
+      "code": "I1-AB8",
+      "name": "Handstand shallow water",
+      "description": "",
+      "cas": 4
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 93,
+    "fields": {
+      "code": "I1-FB1",
+      "name": "Float in deep water on front",
+      "description": "",
+      "cas": 5
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 94,
+    "fields": {
+      "code": "I1-FB2",
+      "name": "Float in deep water on back",
+      "description": "",
+      "cas": 5
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 95,
+    "fields": {
+      "code": "I1-FB3",
+      "name": "Tuck float - push  arms to rotate 180",
+      "description": "",
+      "cas": 5
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 96,
+    "fields": {
+      "code": "I1-FB4",
+      "name": "Tuck float submerge to handstand",
+      "description": "",
+      "cas": 5
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 97,
+    "fields": {
+      "code": "I1-TW1",
+      "name": "Treading water 5-10 secs",
+      "description": "",
+      "cas": 6
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 98,
+    "fields": {
+      "code": "I1-TW2",
+      "name": "Sculling on back head 1st 10m",
+      "description": "",
+      "cas": 6
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 99,
+    "fields": {
+      "code": "I1-TW3",
+      "name": "sculling backwards sitting on board",
+      "description": "",
+      "cas": 6
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 100,
+    "fields": {
+      "code": "I1-TW4",
+      "name": "sculling forward sitting on board",
+      "description": "",
+      "cas": 6
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 101,
+    "fields": {
+      "code": "I1-RB1",
+      "name": "Sidelying kick with FD",
+      "description": "",
+      "cas": 7
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 102,
+    "fields": {
+      "code": "I1-RB2",
+      "name": "Float on back to tuck to stand",
+      "description": "",
+      "cas": 7
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 103,
+    "fields": {
+      "code": "I1-RB3",
+      "name": "Float 360 rotation",
+      "description": "",
+      "cas": 7
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 104,
+    "fields": {
+      "code": "I1-RB4",
+      "name": "swim with submerged direction change",
+      "description": "",
+      "cas": 7
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 105,
+    "fields": {
+      "code": "I1-RB6",
+      "name": "Sit on FD and create forward movement",
+      "description": "",
+      "cas": 7
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 106,
+    "fields": {
+      "code": "I1-ST1",
+      "name": "Push & glide on front 5m",
+      "description": "",
+      "cas": 8
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 107,
+    "fields": {
+      "code": "I1-ST2",
+      "name": "Push & glide on back 5m",
+      "description": "",
+      "cas": 8
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 108,
+    "fields": {
+      "code": "I1-ST3",
+      "name": "Push & glide FC kick 10m",
+      "description": "",
+      "cas": 8
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 109,
+    "fields": {
+      "code": "I1-ST4",
+      "name": "Push & glide BC kick 10m",
+      "description": "",
+      "cas": 8
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 110,
+    "fields": {
+      "code": "I1-ST5",
+      "name": "Push, glide & roll to back kick 10 m",
+      "description": "",
+      "cas": 8
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 111,
+    "fields": {
+      "code": "I1-ST6",
+      "name": "Push glide on back roll to front kick 10m",
+      "description": "",
+      "cas": 8
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 112,
+    "fields": {
+      "code": "I1-Mv1",
+      "name": "FC kick 10m with streamlining",
+      "description": "",
+      "cas": 9
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 113,
+    "fields": {
+      "code": "I1-Mv2",
+      "name": "BC kick 10m with streamlining",
+      "description": "",
+      "cas": 9
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 114,
+    "fields": {
+      "code": "I1-Mv3",
+      "name": "BC kick 10m with streamlining",
+      "description": "",
+      "cas": 9
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 115,
+    "fields": {
+      "code": "I1-Mv4",
+      "name": "FC with rotary breathing unaided",
+      "description": "",
+      "cas": 9
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 116,
+    "fields": {
+      "code": "I1-Mv5",
+      "name": "BC with continuous arm action",
+      "description": "",
+      "cas": 9
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 117,
+    "fields": {
+      "code": "I1-Mv6",
+      "name": "BS arm action 5-10m",
+      "description": "",
+      "cas": 9
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 118,
+    "fields": {
+      "code": "I1-Mv7",
+      "name": "BS kick 10m",
+      "description": "",
+      "cas": 9
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 119,
+    "fields": {
+      "code": "I1-Mv8",
+      "name": "Dolphin kick 5m",
+      "description": "",
+      "cas": 9
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 120,
+    "fields": {
+      "code": "I1-Mv9",
+      "name": "BF arm action",
+      "description": "",
+      "cas": 9
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 121,
+    "fields": {
+      "code": "I2-EE7",
+      "name": "Jump out of depth horizontal rotation swim on back to wall",
+      "description": "",
+      "cas": 3
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 122,
+    "fields": {
+      "code": "I2-EE8",
+      "name": "Sitting dive with 5-10m glide",
+      "description": "",
+      "cas": 3
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 123,
+    "fields": {
+      "code": "I2-EE9",
+      "name": "Kneeling dive",
+      "description": "",
+      "cas": 3
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 124,
+    "fields": {
+      "code": "I2-AB2",
+      "name": "Explosive bubble drill",
+      "description": "",
+      "cas": 4
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 125,
+    "fields": {
+      "code": "I2-AB3",
+      "name": "Blow bubbles lie on floor",
+      "description": "",
+      "cas": 4
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 126,
+    "fields": {
+      "code": "I2-AB4",
+      "name": "Distance hold breath with kick",
+      "description": "",
+      "cas": 4
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 127,
+    "fields": {
+      "code": "I2-AB5",
+      "name": "10 Rhythmic breaths over & under",
+      "description": "",
+      "cas": 4
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 128,
+    "fields": {
+      "code": "I2-AB6",
+      "name": "Rotary breath with kick 20m",
+      "description": "",
+      "cas": 4
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 129,
+    "fields": {
+      "code": "I2-AB7",
+      "name": "swim through deep hoop",
+      "description": "",
+      "cas": 4
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 130,
+    "fields": {
+      "code": "I2-AB8",
+      "name": "Handstand deep water",
+      "description": "",
+      "cas": 4
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 131,
+    "fields": {
+      "code": "I2-TW1",
+      "name": "Tread water 20sec",
+      "description": "",
+      "cas": 6
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 132,
+    "fields": {
+      "code": "I2-TW2",
+      "name": "Sculling on back feet 1st 10m",
+      "description": "",
+      "cas": 6
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 133,
+    "fields": {
+      "code": "I2-RB1",
+      "name": "side kick 5m with 180 swapside",
+      "description": "",
+      "cas": 7
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 134,
+    "fields": {
+      "code": "I2-RB2",
+      "name": "360 rotation with kick",
+      "description": "",
+      "cas": 7
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 135,
+    "fields": {
+      "code": "I2-RB3",
+      "name": "standing to 360 tumble",
+      "description": "",
+      "cas": 7
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 136,
+    "fields": {
+      "code": "I2-RB4",
+      "name": "FC to BC change direction",
+      "description": "",
+      "cas": 7
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 137,
+    "fields": {
+      "code": "I2-ST1",
+      "name": "FC to BC change direction",
+      "description": "",
+      "cas": 8
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 138,
+    "fields": {
+      "code": "I2-ST2",
+      "name": "Push, glide to 360 rotation back",
+      "description": "",
+      "cas": 8
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 139,
+    "fields": {
+      "code": "I2-ST3",
+      "name": "Push to single arm side glide",
+      "description": "",
+      "cas": 8
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 140,
+    "fields": {
+      "code": "I2-ST4",
+      "name": "push & glide BC arms overhead",
+      "description": "",
+      "cas": 8
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 141,
+    "fields": {
+      "code": "I2-Mv3",
+      "name": "FC bilateral Breathing",
+      "description": "",
+      "cas": 9
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 142,
+    "fields": {
+      "code": "I2-Mv4",
+      "name": "BC with continuous arm action 20m",
+      "description": "",
+      "cas": 9
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 143,
+    "fields": {
+      "code": "I2-Mv5",
+      "name": "BS arm action with breathing",
+      "description": "",
+      "cas": 9
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 144,
+    "fields": {
+      "code": "I2-Mv6",
+      "name": "BS kick 20m",
+      "description": "",
+      "cas": 9
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 145,
+    "fields": {
+      "code": "I2-Mv7",
+      "name": "Dolphin kick 10m",
+      "description": "",
+      "cas": 9
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 146,
+    "fields": {
+      "code": "I2-Mv8",
+      "name": "BF arm action 10m",
+      "description": "",
+      "cas": 9
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 147,
+    "fields": {
+      "code": "Ad-EE9",
+      "name": "Standing Dive",
+      "description": "",
+      "cas": 3
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 148,
+    "fields": {
+      "code": "Ad-AB3",
+      "name": "Blow bubbles lie on floor deep",
+      "description": "",
+      "cas": 4
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 149,
+    "fields": {
+      "code": "Ad-AB4",
+      "name": "Distance hold breath with kick",
+      "description": "",
+      "cas": 4
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 150,
+    "fields": {
+      "code": "Ad-AB6",
+      "name": "Stroke variation & breath numbers",
+      "description": "",
+      "cas": 4
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 151,
+    "fields": {
+      "code": "B2-EE1",
+      "name": "/",
+      "description": "",
+      "cas": 3
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 152,
+    "fields": {
+      "code": "Ad-AB7",
+      "name": "obstacle submerged swim",
+      "description": "",
+      "cas": 4
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 153,
+    "fields": {
+      "code": "Ad-AB8",
+      "name": "alternating surface dives",
+      "description": "",
+      "cas": 4
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 154,
+    "fields": {
+      "code": "Ad-TW1",
+      "name": "Tread water 30sec/ 2 kick types",
+      "description": "",
+      "cas": 6
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 155,
+    "fields": {
+      "code": "Ad-TW2",
+      "name": "sculling on front, hands front",
+      "description": "",
+      "cas": 6
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 156,
+    "fields": {
+      "code": "Ad-RB1",
+      "name": "alternating side kick",
+      "description": "",
+      "cas": 7
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 157,
+    "fields": {
+      "code": "Ad-RB3",
+      "name": "tumble turn to push & glide",
+      "description": "",
+      "cas": 5
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 158,
+    "fields": {
+      "code": "Ad-RB4",
+      "name": "Backward tumble",
+      "description": "",
+      "cas": 7
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 159,
+    "fields": {
+      "code": "Ad-ST4",
+      "name": "push & glide BS",
+      "description": "",
+      "cas": 8
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 160,
+    "fields": {
+      "code": "Ad-Mv3",
+      "name": "FC bilateral Breathing 25m tech",
+      "description": "",
+      "cas": 9
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 161,
+    "fields": {
+      "code": "AD-Mv4",
+      "name": "BC with continuous arm action 25m",
+      "description": "",
+      "cas": 9
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 162,
+    "fields": {
+      "code": "AD-Mv5",
+      "name": "BS with timing",
+      "description": "",
+      "cas": 9
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 163,
+    "fields": {
+      "code": "Ad-Mv6",
+      "name": "Dolphin kick 20m",
+      "description": "",
+      "cas": 9
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 164,
+    "fields": {
+      "code": "AD-Mv7",
+      "name": "BF arm action 20m",
+      "description": "",
+      "cas": 9
+    }
+  },
+  {
+    "model": "progress.skill",
+    "pk": 165,
+    "fields": {
+      "code": "AD-Mv8",
+      "name": "BF 20 m",
+      "description": "",
+      "cas": 9
+    }
+  },
+  {
+    "model": "progress.categoryskill",
+    "pk": 1,
+    "fields": {
+      "category": 9,
+      "skill": 1,
+      "order": 1
+    }
+  },
+  {
+    "model": "progress.categoryskill",
+    "pk": 2,
+    "fields": {
+      "category": 9,
+      "skill": 2,
+      "order": 2
+    }
+  },
+  {
+    "model": "progress.categoryskill",
+    "pk": 3,
+    "fields": {
+      "category": 9,
+      "skill": 3,
+      "order": 3
+    }
+  },
+  {
+    "model": "progress.categoryskill",
+    "pk": 4,
+    "fields": {
+      "category": 9,
+      "skill": 4,
+      "order": 4
+    }
+  },
+  {
+    "model": "progress.categoryskill",
+    "pk": 5,
+    "fields": {
+      "category": 9,
+      "skill": 5,
+      "order": 5
+    }
+  },
+  {
+    "model": "progress.categoryskill",
+    "pk": 82,
+    "fields": {
+      "category": 6,
+      "skill": 83,
+      "order": 5
+    }
+  },
+  {
+    "model": "progress.categoryskill",
+    "pk": 14,
+    "fields": {
+      "category": 11,
+      "skill": 42,
+      "order": 5
+    }
+  },
+  {
+    "model": "progress.categoryskill",
+    "pk": 43,
+    "fields": {
+      "category": 11,
+      "skill": 43,
+      "order": 6
+    }
+  },
+  {
+    "model": "progress.categoryskill",
+    "pk": 6,
+    "fields": {
+      "category": 9,
+      "skill": 6,
+      "order": 6
+    }
+  },
+  {
+    "model": "progress.categoryskill",
+    "pk": 44,
+    "fields": {
+      "category": 11,
+      "skill": 44,
+      "order": 7
+    }
+  },
+  {
+    "model": "progress.categoryskill",
+    "pk": 7,
+    "fields": {
+      "category": 9,
+      "skill": 7,
+      "order": 7
+    }
+  },
+  {
+    "model": "progress.categoryskill",
+    "pk": 83,
+    "fields": {
+      "category": 6,
+      "skill": 84,
+      "order": 7
+    }
+  },
+  {
+    "model": "progress.categoryskill",
+    "pk": 45,
+    "fields": {
+      "category": 11,
+      "skill": 45,
+      "order": 8
+    }
+  },
+  {
+    "model": "progress.categoryskill",
+    "pk": 8,
+    "fields": {
+      "category": 9,
+      "skill": 8,
+      "order": 8
+    }
+  },
+  {
+    "model": "progress.categoryskill",
+    "pk": 84,
+    "fields": {
+      "category": 6,
+      "skill": 85,
+      "order": 8
+    }
+  },
+  {
+    "model": "progress.categoryskill",
+    "pk": 9,
+    "fields": {
+      "category": 9,
+      "skill": 9,
+      "order": 9
+    }
+  },
+  {
+    "model": "progress.categoryskill",
+    "pk": 10,
+    "fields": {
+      "category": 9,
+      "skill": 10,
+      "order": 10
+    }
+  },
+  {
+    "model": "progress.categoryskill",
+    "pk": 85,
+    "fields": {
+      "category": 6,
+      "skill": 86,
+      "order": 11
+    }
+  },
+  {
+    "model": "progress.categoryskill",
+    "pk": 46,
+    "fields": {
+      "category": 11,
+      "skill": 46,
+      "order": 11
+    }
+  },
+  {
+    "model": "progress.categoryskill",
+    "pk": 11,
+    "fields": {
+      "category": 9,
+      "skill": 11,
+      "order": 11
+    }
+  },
+  {
+    "model": "progress.categoryskill",
+    "pk": 86,
+    "fields": {
+      "category": 6,
+      "skill": 87,
+      "order": 12
+    }
+  },
+  {
+    "model": "progress.categoryskill",
+    "pk": 47,
+    "fields": {
+      "category": 11,
+      "skill": 47,
+      "order": 12
+    }
+  },
+  {
+    "model": "progress.categoryskill",
+    "pk": 12,
+    "fields": {
+      "category": 9,
+      "skill": 12,
+      "order": 12
+    }
+  },
+  {
+    "model": "progress.categoryskill",
+    "pk": 87,
+    "fields": {
+      "category": 6,
+      "skill": 88,
+      "order": 13
+    }
+  },
+  {
+    "model": "progress.categoryskill",
+    "pk": 13,
+    "fields": {
+      "category": 9,
+      "skill": 13,
+      "order": 13
+    }
+  },
+  {
+    "model": "progress.categoryskill",
+    "pk": 48,
+    "fields": {
+      "category": 11,
+      "skill": 48,
+      "order": 13
+    }
+  },
+  {
+    "model": "progress.categoryskill",
+    "pk": 88,
+    "fields": {
+      "category": 6,
+      "skill": 89,
+      "order": 14
+    }
+  },
+  {
+    "model": "progress.categoryskill",
+    "pk": 49,
+    "fields": {
+      "category": 11,
+      "skill": 49,
+      "order": 14
+    }
+  },
+  {
+    "model": "progress.categoryskill",
+    "pk": 50,
+    "fields": {
+      "category": 11,
+      "skill": 50,
+      "order": 15
+    }
+  },
+  {
+    "model": "progress.categoryskill",
+    "pk": 89,
+    "fields": {
+      "category": 6,
+      "skill": 90,
+      "order": 15
+    }
+  },
+  {
+    "model": "progress.categoryskill",
+    "pk": 51,
+    "fields": {
+      "category": 11,
+      "skill": 51,
+      "order": 16
+    }
+  },
+  {
+    "model": "progress.categoryskill",
+    "pk": 90,
+    "fields": {
+      "category": 6,
+      "skill": 91,
+      "order": 16
+    }
+  },
+  {
+    "model": "progress.categoryskill",
+    "pk": 15,
+    "fields": {
+      "category": 9,
+      "skill": 14,
+      "order": 16
+    }
+  },
+  {
+    "model": "progress.categoryskill",
+    "pk": 91,
+    "fields": {
+      "category": 6,
+      "skill": 92,
+      "order": 17
+    }
+  },
+  {
+    "model": "progress.categoryskill",
+    "pk": 16,
+    "fields": {
+      "category": 9,
+      "skill": 15,
+      "order": 17
+    }
+  },
+  {
+    "model": "progress.categoryskill",
+    "pk": 52,
+    "fields": {
+      "category": 11,
+      "skill": 52,
+      "order": 17
+    }
+  },
+  {
+    "model": "progress.categoryskill",
+    "pk": 53,
+    "fields": {
+      "category": 11,
+      "skill": 53,
+      "order": 18
+    }
+  },
+  {
+    "model": "progress.categoryskill",
+    "pk": 54,
+    "fields": {
+      "category": 11,
+      "skill": 54,
+      "order": 19
+    }
+  },
+  {
+    "model": "progress.categoryskill",
+    "pk": 92,
+    "fields": {
+      "category": 6,
+      "skill": 93,
+      "order": 19
+    }
+  },
+  {
+    "model": "progress.categoryskill",
+    "pk": 17,
+    "fields": {
+      "category": 9,
+      "skill": 16,
+      "order": 19
+    }
+  },
+  {
+    "model": "progress.categoryskill",
+    "pk": 55,
+    "fields": {
+      "category": 11,
+      "skill": 55,
+      "order": 20
+    }
+  },
+  {
+    "model": "progress.categoryskill",
+    "pk": 18,
+    "fields": {
+      "category": 9,
+      "skill": 17,
+      "order": 20
+    }
+  },
+  {
+    "model": "progress.categoryskill",
+    "pk": 93,
+    "fields": {
+      "category": 6,
+      "skill": 94,
+      "order": 20
+    }
+  },
+  {
+    "model": "progress.categoryskill",
+    "pk": 19,
+    "fields": {
+      "category": 9,
+      "skill": 18,
+      "order": 21
+    }
+  },
+  {
+    "model": "progress.categoryskill",
+    "pk": 56,
+    "fields": {
+      "category": 11,
+      "skill": 56,
+      "order": 21
+    }
+  },
+  {
+    "model": "progress.categoryskill",
+    "pk": 94,
+    "fields": {
+      "category": 6,
+      "skill": 95,
+      "order": 21
+    }
+  },
+  {
+    "model": "progress.categoryskill",
+    "pk": 57,
+    "fields": {
+      "category": 11,
+      "skill": 57,
+      "order": 22
+    }
+  },
+  {
+    "model": "progress.categoryskill",
+    "pk": 20,
+    "fields": {
+      "category": 9,
+      "skill": 19,
+      "order": 22
+    }
+  },
+  {
+    "model": "progress.categoryskill",
+    "pk": 95,
+    "fields": {
+      "category": 6,
+      "skill": 96,
+      "order": 22
+    }
+  },
+  {
+    "model": "progress.categoryskill",
+    "pk": 58,
+    "fields": {
+      "category": 11,
+      "skill": 58,
+      "order": 23
+    }
+  },
+  {
+    "model": "progress.categoryskill",
+    "pk": 21,
+    "fields": {
+      "category": 9,
+      "skill": 20,
+      "order": 23
+    }
+  },
+  {
+    "model": "progress.categoryskill",
+    "pk": 59,
+    "fields": {
+      "category": 11,
+      "skill": 59,
+      "order": 24
+    }
+  },
+  {
+    "model": "progress.categoryskill",
+    "pk": 22,
+    "fields": {
+      "category": 9,
+      "skill": 21,
+      "order": 24
+    }
+  },
+  {
+    "model": "progress.categoryskill",
+    "pk": 96,
+    "fields": {
+      "category": 6,
+      "skill": 97,
+      "order": 24
+    }
+  },
+  {
+    "model": "progress.categoryskill",
+    "pk": 60,
+    "fields": {
+      "category": 11,
+      "skill": 60,
+      "order": 25
+    }
+  },
+  {
+    "model": "progress.categoryskill",
+    "pk": 23,
+    "fields": {
+      "category": 9,
+      "skill": 22,
+      "order": 25
+    }
+  },
+  {
+    "model": "progress.categoryskill",
+    "pk": 61,
+    "fields": {
+      "category": 11,
+      "skill": 61,
+      "order": 26
+    }
+  },
+  {
+    "model": "progress.categoryskill",
+    "pk": 24,
+    "fields": {
+      "category": 9,
+      "skill": 23,
+      "order": 29
+    }
+  },
+  {
+    "model": "progress.categoryskill",
+    "pk": 62,
+    "fields": {
+      "category": 11,
+      "skill": 62,
+      "order": 29
+    }
+  },
+  {
+    "model": "progress.categoryskill",
+    "pk": 63,
+    "fields": {
+      "category": 11,
+      "skill": 63,
+      "order": 30
+    }
+  },
+  {
+    "model": "progress.categoryskill",
+    "pk": 25,
+    "fields": {
+      "category": 9,
+      "skill": 24,
+      "order": 30
+    }
+  },
+  {
+    "model": "progress.categoryskill",
+    "pk": 26,
+    "fields": {
+      "category": 9,
+      "skill": 25,
+      "order": 31
+    }
+  },
+  {
+    "model": "progress.categoryskill",
+    "pk": 64,
+    "fields": {
+      "category": 11,
+      "skill": 64,
+      "order": 31
+    }
+  },
+  {
+    "model": "progress.categoryskill",
+    "pk": 65,
+    "fields": {
+      "category": 11,
+      "skill": 65,
+      "order": 32
+    }
+  },
+  {
+    "model": "progress.categoryskill",
+    "pk": 27,
+    "fields": {
+      "category": 9,
+      "skill": 26,
+      "order": 32
+    }
+  },
+  {
+    "model": "progress.categoryskill",
+    "pk": 28,
+    "fields": {
+      "category": 9,
+      "skill": 27,
+      "order": 33
+    }
+  },
+  {
+    "model": "progress.categoryskill",
+    "pk": 30,
+    "fields": {
+      "category": 9,
+      "skill": 28,
+      "order": 34
+    }
+  },
+  {
+    "model": "progress.categoryskill",
+    "pk": 66,
+    "fields": {
+      "category": 11,
+      "skill": 66,
+      "order": 34
+    }
+  },
+  {
+    "model": "progress.categoryskill",
+    "pk": 67,
+    "fields": {
+      "category": 11,
+      "skill": 67,
+      "order": 35
+    }
+  },
+  {
+    "model": "progress.categoryskill",
+    "pk": 29,
+    "fields": {
+      "category": 9,
+      "skill": 29,
+      "order": 35
+    }
+  },
+  {
+    "model": "progress.categoryskill",
+    "pk": 31,
+    "fields": {
+      "category": 9,
+      "skill": 68,
+      "order": 38
+    }
+  },
+  {
+    "model": "progress.categoryskill",
+    "pk": 68,
+    "fields": {
+      "category": 11,
+      "skill": 68,
+      "order": 38
+    }
+  },
+  {
+    "model": "progress.categoryskill",
+    "pk": 69,
+    "fields": {
+      "category": 11,
+      "skill": 69,
+      "order": 39
+    }
+  },
+  {
+    "model": "progress.categoryskill",
+    "pk": 32,
+    "fields": {
+      "category": 9,
+      "skill": 31,
+      "order": 39
+    }
+  },
+  {
+    "model": "progress.categoryskill",
+    "pk": 33,
+    "fields": {
+      "category": 9,
+      "skill": 32,
+      "order": 40
+    }
+  },
+  {
+    "model": "progress.categoryskill",
+    "pk": 70,
+    "fields": {
+      "category": 11,
+      "skill": 70,
+      "order": 40
+    }
+  },
+  {
+    "model": "progress.categoryskill",
+    "pk": 71,
+    "fields": {
+      "category": 11,
+      "skill": 71,
+      "order": 41
+    }
+  },
+  {
+    "model": "progress.categoryskill",
+    "pk": 34,
+    "fields": {
+      "category": 9,
+      "skill": 33,
+      "order": 41
+    }
+  },
+  {
+    "model": "progress.categoryskill",
+    "pk": 72,
+    "fields": {
+      "category": 11,
+      "skill": 72,
+      "order": 42
+    }
+  },
+  {
+    "model": "progress.categoryskill",
+    "pk": 35,
+    "fields": {
+      "category": 9,
+      "skill": 34,
+      "order": 42
+    }
+  },
+  {
+    "model": "progress.categoryskill",
+    "pk": 36,
+    "fields": {
+      "category": 9,
+      "skill": 35,
+      "order": 43
+    }
+  },
+  {
+    "model": "progress.categoryskill",
+    "pk": 73,
+    "fields": {
+      "category": 11,
+      "skill": 73,
+      "order": 43
+    }
+  },
+  {
+    "model": "progress.categoryskill",
+    "pk": 37,
+    "fields": {
+      "category": 9,
+      "skill": 36,
+      "order": 47
+    }
+  },
+  {
+    "model": "progress.categoryskill",
+    "pk": 74,
+    "fields": {
+      "category": 11,
+      "skill": 74,
+      "order": 47
+    }
+  },
+  {
+    "model": "progress.categoryskill",
+    "pk": 38,
+    "fields": {
+      "category": 9,
+      "skill": 37,
+      "order": 48
+    }
+  },
+  {
+    "model": "progress.categoryskill",
+    "pk": 75,
+    "fields": {
+      "category": 11,
+      "skill": 75,
+      "order": 48
+    }
+  },
+  {
+    "model": "progress.categoryskill",
+    "pk": 39,
+    "fields": {
+      "category": 9,
+      "skill": 38,
+      "order": 49
+    }
+  },
+  {
+    "model": "progress.categoryskill",
+    "pk": 76,
+    "fields": {
+      "category": 11,
+      "skill": 76,
+      "order": 49
+    }
+  },
+  {
+    "model": "progress.categoryskill",
+    "pk": 40,
+    "fields": {
+      "category": 9,
+      "skill": 39,
+      "order": 50
+    }
+  },
+  {
+    "model": "progress.categoryskill",
+    "pk": 77,
+    "fields": {
+      "category": 11,
+      "skill": 77,
+      "order": 50
+    }
+  },
+  {
+    "model": "progress.categoryskill",
+    "pk": 41,
+    "fields": {
+      "category": 9,
+      "skill": 40,
+      "order": 51
+    }
+  },
+  {
+    "model": "progress.categoryskill",
+    "pk": 42,
+    "fields": {
+      "category": 9,
+      "skill": 41,
+      "order": 52
+    }
+  },
+  {
+    "model": "progress.categoryskill",
+    "pk": 78,
+    "fields": {
+      "category": 11,
+      "skill": 79,
+      "order": 52
+    }
+  },
+  {
+    "model": "progress.categoryskill",
+    "pk": 79,
+    "fields": {
+      "category": 11,
+      "skill": 80,
+      "order": 53
+    }
+  },
+  {
+    "model": "progress.categoryskill",
+    "pk": 80,
+    "fields": {
+      "category": 11,
+      "skill": 81,
+      "order": 54
+    }
+  },
+  {
+    "model": "progress.categoryskill",
+    "pk": 81,
+    "fields": {
+      "category": 11,
+      "skill": 82,
+      "order": 55
+    }
+  }
+]

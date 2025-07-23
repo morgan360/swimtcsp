@@ -1,12 +1,18 @@
-# navigation/management/commands/download_navigation_menu.py
-
 from django.core.management.base import BaseCommand
 from navigation.models import MenuGroup, MenuItem
-
 import json
+import os
 
 class Command(BaseCommand):
     help = "Export the current navigation menu structure to JSON."
+
+    def add_arguments(self, parser):
+        parser.add_argument(
+            "output_file",
+            nargs="?",
+            default="menu_export.json",
+            help="File to save the exported menu (default: menu_export.json)",
+        )
 
     def handle(self, *args, **options):
         output = []
@@ -40,5 +46,7 @@ class Command(BaseCommand):
 
             output.append(group_data)
 
-        self.stdout.write(json.dumps(output, indent=2))
-        self.stdout.write(self.style.SUCCESS("✅ Navigation menu exported successfully."))
+        with open(options["output_file"], "w") as f:
+            json.dump(output, f, indent=2)
+
+        self.stdout.write(self.style.SUCCESS(f"✅ Navigation menu exported to {options['output_file']}"))

@@ -1,5 +1,8 @@
-✅ Navigation menu exported to menu_export.json
-"slug": "main",
+[
+  {
+    "group": {
+      "name": "Main",
+      "slug": "main",
       "order": 0
     },
     "items": [

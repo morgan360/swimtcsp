@@ -19,9 +19,9 @@
 
     <!-- Bottom-Centered Button -->
     <div class="absolute bottom-6 flex justify-center w-full">
-      <a href="{% url 'timetable:timetable_grid' %}" class="py-2.5 px-5 text-sm font-medium text-gray-900 bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-red-700 focus:outline-none focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
-        <i class="fas fa-calendar mr-2"></i>
-        Weekly Timetable
+      <a href="{% url 'timetable:timetable_grid' %}" class="inline-flex items-center px-5 py-4 text-2xl text-center font-semibold border border-white text-white bg-red-700 rounded-lg hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-800">
+        <i class="fas fa-calendar mr-3"></i>
+        View Weekly Timetable
       </a>
     </div>
   </section>
@@ -30,9 +30,9 @@
   <!-- Feature Cards -->
   <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 gap-8 px-4 sm:px-6 lg:px-8 max-w-screen-xl mx-auto mb-10">
     <!-- Public Swims Card -->
-    <div class="bg-white/20 backdrop-blur-md border border-white/20 rounded-xl shadow-md p-6 ">
+    <div class="bg-white/20 backdrop-blur-md border border-white/20 rounded-xl shadow-md p-6 flex flex-col h-full">
       <img src="{% static 'img/fc-lanes.jpeg' %}" alt="Public swim" class="w-full h-48 rounded object-cover">
-      <div class="p-6">
+      <div class="p-6 flex-grow">
         <h2 class="text-xl font-semibold mb-4 text-white">Public Swims</h2>
         <p class="text-sm text-base-content text-white">No membership needed — just book a slot and dive in.</p>
       </div>
@@ -44,9 +44,9 @@
     </div>
 
     <!-- Lessons Card -->
-    <div class="bg-red-500/30 backdrop-blur-md border border-white/20 rounded-xl shadow-md p-6">
+    <div class="bg-red-500/30 backdrop-blur-md border border-white/20 rounded-xl shadow-md p-6 flex flex-col h-full">
       <img src="{% static 'img/teacher-1.jpeg' %}" alt="Swimming lessons" class="w-full h-48 rounded object-cover">
-      <div class="p-6">
+      <div class="p-6 flex-grow">
         <h2 class="text-xl font-semibold mb-4 text-white">Swimming Lessons</h2>
         <p class="text-sm text-base-content text-white">Beginners to advanced, coached by Swim Ireland certified staff.</p>
       </div>
@@ -58,9 +58,9 @@
     </div>
 
     <!-- Community Card -->
-    <div class="bg-white/20 backdrop-blur-md border border-white/20 rounded-xl shadow-md p-6">
+    <div class="bg-white/20 backdrop-blur-md border border-white/20 rounded-xl shadow-md p-6 flex flex-col h-full">
       <img src="{% static 'img/girls-and-teacher.jpeg' %}" alt="Community events" class="w-full h-48 rounded object-cover">
-      <div class="p-6">
+      <div class="p-6 flex-grow">
         <h2 class="text-xl font-semibold mb-4 text-white">Join Our Community</h2>
         <p class="text-sm text-base-content text-white">Events, galas, charity swims — be part of something bigger.</p>
       </div>
@@ -72,11 +72,13 @@
     </div>
 
     <!-- About Us (info) Card -->
-    <div class="bg-red-500/30 backdrop-blur-md border border-white/20 rounded-xl shadow-md p-6">
+    <div class="bg-red-500/30 backdrop-blur-md border border-white/20 rounded-xl shadow-md p-6 flex flex-col h-full">
       <img src="{% static 'img/kid-and-teacher.jpeg' %}" alt="About Us" class="w-full h-48 rounded object-cover">
-      <div class="p-6">
-        <h2 class="text-xl font-semibold mb-4 text-white">Got Any Questions?</h2>
-        <p class="text-sm text-base-content text-white">Want to get to know us better? Need to get more information?</p>
+<div class="p-6 flex-grow">
+  <h2 class="text-xl font-semibold mb-4 text-white">Got Any Questions?</h2>
+  <p class="text-sm text-base-content text-white">Do you have a question or just want to get to know us better? Click below!</p>
+</div>
+
       </div>
       <div class="p-4 text-primary font-medium flex justify-center">
         <a href="{% url 'chatbot:public-swim-ui' %}" class="inline-flex items-center px-3 py-2 text-md text-center border border-white text-white bg-red-600 rounded-lg hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-800">

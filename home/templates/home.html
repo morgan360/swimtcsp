@@ -37,7 +37,7 @@
         <p class="text-sm text-base-content text-white">No membership needed — just book a slot and dive in.</p>
       </div>
       <div class="p-4 text-primary font-medium flex justify-center">
-        <a href="/accounts/signup/" class="inline-flex items-center px-3 py-2 text-md border border-white text-center text-white bg-blue-700 rounded-lg hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
+        <a href="{% url 'account_signup' %}" class="inline-flex items-center px-3 py-2 text-md border border-white text-center text-white bg-blue-700 rounded-lg hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
           Register
         </a>
       </div>
@@ -75,11 +75,11 @@
     <div class="bg-red-500/30 backdrop-blur-md border border-white/20 rounded-xl shadow-md p-6">
       <img src="{% static 'img/kid-and-teacher.jpeg' %}" alt="About Us" class="w-full h-48 rounded object-cover">
       <div class="p-6">
-        <h2 class="text-xl font-semibold mb-4 text-white">About Us</h2>
-        <p class="text-sm text-base-content text-white">Want to get to know us better? Need to get in touch?</p>
+        <h2 class="text-xl font-semibold mb-4 text-white">Got Any Questions?</h2>
+        <p class="text-sm text-base-content text-white">Want to get to know us better? Need to get more information?</p>
       </div>
       <div class="p-4 text-primary font-medium flex justify-center">
-        <a href="{% url 'info' %}" class="inline-flex items-center px-3 py-2 text-md text-center border border-white text-white bg-red-600 rounded-lg hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-800">
+        <a href="{% url 'chatbot:public-swim-ui' %}" class="inline-flex items-center px-3 py-2 text-md text-center border border-white text-white bg-red-600 rounded-lg hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-800">
           Learn More
         </a>
       </div>

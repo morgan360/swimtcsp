@@ -3,6 +3,7 @@ from . import views
 from allauth.account.views import EmailVerificationSentView
 from django.contrib.auth.decorators import login_required
 from .views import join_schools_program
+from users.views import CustomSignupView
 
 app_name = "users"
 

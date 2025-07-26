@@ -1,6 +1,6 @@
 {% load static %}
 <!doctype html>
-<html lang="en" >
+<html lang="en">
 
 <head>
     <meta charset="utf-8"/>
@@ -29,15 +29,25 @@
 
     <title>{% block title %}TCSP Home{% endblock %}</title>
 
-<!--Font Awesome - FIXED-->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
+    <!--Font Awesome - FIXED-->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 </head>
 
 <body class="overflow-x-hidden">
 <div x-data="{ dark: false, drawerOpen: false }" class="bg-blue-900">
     {# ✅ Include Navbar inside body #}
-{#    {% include "partials/_navbar.html" %}#}
+    {#    {% include "partials/_navbar.html" %}#}
     {% include "partials/_drawer.html" %}
+    {% if messages %}
+        <div class="p-4 max-w-3xl mx-auto">
+            {% for message in messages %}
+                <div class="mb-2 p-3 rounded bg-blue-100 text-blue-800 border border-blue-300">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
     <main class="section">
         <div>
             {% block content %}{% endblock %}
@@ -48,7 +58,7 @@
     {% block footer %}
         {% include "partials/_footer.html" %}
     {% endblock %}
-{% block extra_js %}{% endblock %}
+    {% block extra_js %}{% endblock %}
 </div>
 {% block scripts %}{% endblock %}
 </body>

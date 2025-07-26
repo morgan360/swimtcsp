@@ -7,6 +7,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from .forms import UserForm, GuardianOptInForm, JoinSchoolsForm
 from django.shortcuts import render, redirect
+from allauth.account.views import SignupView
 
 # Get the custom user model
 user = get_user_model()
@@ -65,3 +66,13 @@ def join_schools_program(request):
         form = JoinSchoolsForm()
 
     return render(request, "users/join_schools.html", {"form": form})
+
+
+class CustomSignupView(SignupView):
+    def dispatch(self, request, *args, **kwargs):
+        print("🚨 CustomSignupView dispatch triggered")
+        if request.user.is_authenticated:
+            list(messages.get_messages(request))  # reads + clears the queue
+            messages.info(request, "You are already logged in.")
+            return redirect("swimling_dashboard:guardian_dashboard")  # or another named view like 'dashboard'
+        return super().dispatch(request, *args, **kwargs)

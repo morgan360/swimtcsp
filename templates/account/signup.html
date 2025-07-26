@@ -13,10 +13,16 @@
 
                     <h1 class="title is-3 has-text-centered">{% trans "Sign Up" %}</h1>
 
-                    <p class="has-text-centered mb-4">
-                        {% blocktrans %}Already have an account? Then please <a href="{{ login_url }}">sign in</a>.{% endblocktrans %}
+                    <p class="has-text-centered mb-2">
+                        This is to sign up so that you can book <strong>Public Swims</strong> online.<br>
+                        If you also wish to book lessons, tick the checkbox:
+                        <em>"I wish to apply for children's lessons"</em>.
                     </p>
 
+                    <p class="has-text-centered mb-4">
+                        {% blocktrans %}Already have an account? Then please <a href="{{ login_url }}">sign in</a>
+                            .{% endblocktrans %}
+                    </p>
                     <form method="post" action="{% url 'account_signup' %}">
                         {% csrf_token %}
 
@@ -49,14 +55,16 @@
                     </div>
 
                     <div class="buttons is-centered">
-                        <a href="{% provider_login_url 'google' %}" class="button is-primary is-fullwidth has-text-weight-bold">
+                        <a href="{% provider_login_url 'google' %}"
+                           class="button is-primary is-fullwidth has-text-weight-bold">
                             <span class="icon is-small">
                                 <img src="{% static 'img/google-logo.svg' %}" alt="Google" style="height: 1.2rem;">
                             </span>
                             <span>Sign up with Google</span>
                         </a>
 
-                        <a href="#" class="button is-light is-fullwidth is-static has-text-grey" onclick="facebookUnavailable(event)">
+                        <a href="#" class="button is-light is-fullwidth is-static has-text-grey"
+                           onclick="facebookUnavailable(event)">
                             <span class="icon"><i class="fab fa-facebook-f"></i></span>
                             <span>Facebook (coming soon)</span>
                         </a>
@@ -69,8 +77,8 @@
 {% endblock %}
 
 <script>
-  function facebookUnavailable(event) {
-    event.preventDefault();
-    alert("Facebook sign-in is not available yet. Please use Google or create an account manually.");
-  }
+    function facebookUnavailable(event) {
+        event.preventDefault();
+        alert("Facebook sign-in is not available yet. Please use Google or create an account manually.");
+    }
 </script>

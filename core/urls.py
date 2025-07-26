@@ -10,12 +10,13 @@ from custom_admins.schoolsadmin import schools_admin_site
 from custom_admins.generaladmin import general_admin_site
 from custom_admins.instructorsadmin import instructors_admin_site
 from custom_admins.coupons_admin import coupons_admin_site
-
+from users.views import CustomSignupView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('home.urls')),
     # Allauth
+    path('accounts/signup/', CustomSignupView.as_view(), name='account_signup'),
     path('accounts/', include('allauth.urls')),
     path('users/', include('users.urls', namespace='user')),
     # Lessons

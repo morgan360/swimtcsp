@@ -33,13 +33,13 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 </head>
 
-<body>
-<div x-data="{ dark: false, drawerOpen: false }">
+<body class="overflow-x-hidden">
+<div x-data="{ dark: false, drawerOpen: false }" class="bg-blue-900">
     {# ✅ Include Navbar inside body #}
 {#    {% include "partials/_navbar.html" %}#}
     {% include "partials/_drawer.html" %}
     <main class="section">
-        <div class="container">
+        <div>
             {% block content %}{% endblock %}
         </div>
     </main>

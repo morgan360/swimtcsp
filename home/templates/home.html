@@ -4,97 +4,86 @@
 {% block title %}Welcome{% endblock %}
 
 {% block content %}
-<section class="hero is-medium mb-6"
-         style="background-image: url('{% static "img/pool_hero.jpg" %}');
-                background-size: cover;
-                background-position: center;
-                position: relative;
-                min-height: 450px;">
+<div>
+  <!-- Hero Section -->
+  <section 
+    class="relative bg-cover bg-center min-h-[450px] min-w-[330px] w-full mb-10 rounded-lg shadow-lg overflow-hidden" 
+    style="background-image: url('{% static "img/three-kids-woggles.jpg" %}')">
+    <!-- Overlay -->
+    <div class="absolute inset-0 bg-black bg-opacity-50"></div>
 
-  <!-- Dark overlay -->
-  <div style="position: absolute; inset: 0; background-color: rgba(0,0,0,0.45); z-index: 1;"></div>
+    <!-- Centered Heading -->
+    <div class="relative z-10 flex flex-col justify-center items-center h-full text-center text-white px-4 mt-20">
+      <h1 class="text-3xl sm:text-4xl md:text-5xl font-bold leading-tight max-w-2xl">Swimming is for Life</h1>
+    </div>
 
-  <!-- Top: Main Heading -->
-  <div class="has-text-centered" style="position: absolute; top: 2rem; width: 100%; z-index: 2;">
-    <h1 class="title has-text-white is-size-2">Swimming is for Life</h1>
-  </div>
-
-  <!-- Optional spacing in the middle -->
-  <div class="hero-body" style="z-index: 0;"></div>
-
- <!-- Bottom: Timetable CTA Button -->
-<div class="has-text-centered" style="position: absolute; bottom: 1.5rem; width: 100%; z-index: 2;">
-  <a href="{% url 'timetable:timetable_grid' %}" class="button is-book is-medium">
-    <span class="icon">
-      <i class="fas fa-calendar"></i>
-    </span>
-    <span>Timetable</span>
-  </a>
-</div>
-
-</section>
+    <!-- Bottom-Centered Button -->
+    <div class="absolute bottom-6 flex justify-center w-full">
+      <a href="{% url 'timetable:timetable_grid' %}" class="py-2.5 px-5 text-sm font-medium text-gray-900 bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-red-700 focus:outline-none focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
+        <i class="fas fa-calendar mr-2"></i>
+        Weekly Timetable
+      </a>
+    </div>
+  </section>
 
 
-
-
-  <!-- 🏊 Feature Cards -->
-  <div class="columns is-multiline is-variable is-6">
-
+  <!-- Feature Cards -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-8 min-h-[450px] min-w-[300px] w-[90vw] mx-auto mb-10 max-w-screen-xl">
     <!-- Public Swims Card -->
-    <div class="column is-one-third">
-      <div class="card is-hoverable">
-        <div class="card-image">
-          <figure class="image is-4by3">
-            <img src="{% static 'img/laneswim2.jpeg' %}" alt="Public swim">
-          </figure>
-        </div>
-        <div class="card-content">
-          <h2 class="title is-4">Public Swims</h2>
-          <p>No membership needed — just book a slot and dive in.</p>
-        </div>
-        <footer class="card-footer">
-          <a href="/accounts/signup/" class="card-footer-item has-text-primary">Register</a>
-        </footer>
+    <div class="bg-white/20 backdrop-blur-md border border-white/20 rounded-xl shadow-md p-6 ">
+      <img src="{% static 'img/fc-lanes.jpeg' %}" alt="Public swim" class="w-full h-48 rounded object-cover">
+      <div class="p-6">
+        <h2 class="text-xl font-semibold mb-4 text-white">Public Swims</h2>
+        <p class="text-sm text-base-content text-white">No membership needed — just book a slot and dive in.</p>
+      </div>
+      <div class="p-4 text-primary font-medium flex justify-center">
+        <a href="/accounts/signup/" class="inline-flex items-center px-3 py-2 text-md border border-white text-center text-white bg-blue-700 rounded-lg hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
+          Register
+        </a>
       </div>
     </div>
 
     <!-- Lessons Card -->
-    <div class="column is-one-third">
-      <div class="card is-hoverable">
-        <div class="card-image">
-          <figure class="image is-4by3">
-            <img src="{% static 'img/swimming-goggles.jpg' %}" alt="Swimming lessons">
-          </figure>
-        </div>
-        <div class="card-content">
-          <h2 class="title is-4">Swimming Lessons</h2>
-          <p>Beginners to advanced, coached by Swim Ireland certified staff.</p>
-        </div>
-        <footer class="card-footer">
-          <a href="/register/" class="card-footer-item has-text-primary">Book&nbsp;Lessons</a>
-        </footer>
+    <div class="bg-red-500/30 backdrop-blur-md border border-white/20 rounded-xl shadow-md p-6">
+      <img src="{% static 'img/teacher-1.jpeg' %}" alt="Swimming lessons" class="w-full h-48 rounded object-cover">
+      <div class="p-6">
+        <h2 class="text-xl font-semibold mb-4 text-white">Swimming Lessons</h2>
+        <p class="text-sm text-base-content text-white">Beginners to advanced, coached by Swim Ireland certified staff.</p>
+      </div>
+      <div class="p-4 text-primary font-medium flex justify-center">
+        <a href="/register/" class="inline-flex items-center px-3 py-2 text-md text-center border border-white text-white bg-red-600 rounded-lg hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-800">
+          Book&nbsp;Lessons
+        </a>
       </div>
     </div>
 
     <!-- Community Card -->
-    <div class="column is-one-third">
-      <div class="card is-hoverable">
-        <div class="card-image">
-          <figure class="image is-4by3">
-            <img src="{% static 'img/home.jpg' %}" alt="Community events">
-          </figure>
-        </div>
-        <div class="card-content">
-          <h2 class="title is-4">Join Our Community</h2>
-          <p>Events, galas, charity swims — be part of something bigger.</p>
-        </div>
-        <footer class="card-footer">
-          <a href="#" class="card-footer-item has-text-primary">Sign&nbsp;Up</a>
-        </footer>
+    <div class="bg-white/20 backdrop-blur-md border border-white/20 rounded-xl shadow-md p-6">
+      <img src="{% static 'img/girls-and-teacher.jpeg' %}" alt="Community events" class="w-full h-48 rounded object-cover">
+      <div class="p-6">
+        <h2 class="text-xl font-semibold mb-4 text-white">Join Our Community</h2>
+        <p class="text-sm text-base-content text-white">Events, galas, charity swims — be part of something bigger.</p>
+      </div>
+      <div class="p-4 font-medium flex justify-center">
+        <a href="#" class="inline-flex items-center px-3 py-2 text-md border border-white text-center text-white bg-blue-700 rounded-lg hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
+          Sign&nbsp;Up
+        </a>
       </div>
     </div>
 
+    <!-- About Us (info) Card -->
+    <div class="bg-red-500/30 backdrop-blur-md border border-white/20 rounded-xl shadow-md p-6">
+      <img src="{% static 'img/kid-and-teacher.jpeg' %}" alt="About Us" class="w-full h-48 rounded object-cover">
+      <div class="p-6">
+        <h2 class="text-xl font-semibold mb-4 text-white">About Us</h2>
+        <p class="text-sm text-base-content text-white">Want to get to know us better? Need to get in touch?</p>
+      </div>
+      <div class="p-4 text-primary font-medium flex justify-center">
+        <a href="{% url 'info' %}" class="inline-flex items-center px-3 py-2 text-md text-center border border-white text-white bg-red-600 rounded-lg hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-800">
+          Learn More
+        </a>
+      </div>
+    </div>
   </div>
-
-</section>
+</div>
 {% endblock %}

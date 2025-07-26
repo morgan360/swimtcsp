@@ -6,7 +6,6 @@ from django.contrib import messages
 from django.core.paginator import Paginator
 from lessons_bookings.models import Term
 from shopping_cart.forms import CartAddProductForm
-from users.forms import NewSwimlingForm
 from users.models import Swimling
 from .models import Program, Category, Product
 from .filters import ProductFilter
@@ -123,8 +122,6 @@ def product_detail(request, id):
         except Swimling.DoesNotExist:
             selected_swimling = None
 
-    # (Optional) You can pass selected_swimling into a form if needed
-    form = NewSwimlingForm()  # Replace or customize as needed
 
     current_term = get_current_term()
     num_sold = product.get_num_sold(current_term) if current_term else 0
@@ -133,7 +130,6 @@ def product_detail(request, id):
     return render(request, 'lessons/products/detail.html', {
         'product': product,
         'cart_product_form': cart_product_form,
-        'form': form,
         'swimlings': swimlings,
         'selected_swimling': selected_swimling,  # 🔑 for use in template
         'num_sold': num_sold,
@@ -154,51 +150,3 @@ def product_list(request):
     return render(request, 'lessons/products/list_filter.html', {
         'filter': filter,
     })
-
-
-# ------------------------------------------
-# ➕ Add a New Swimling (HTMX or Full Reload)
-# ------------------------------------------
-def add_new_swimling(request):
-    if request.method == 'POST':
-        form = NewSwimlingForm(request.POST)
-        if form.is_valid():
-            new_swimling = form.save(commit=False)
-            new_swimling.guardian = request.user
-            new_swimling.save()
-
-            swimlings = Swimling.objects.filter(guardian=request.user)
-            messages.success(request, 'Swimling added successfully.')
-            rendered_html = render_to_string('partials/swimlings_list.html', {
-                'swimlings': swimlings
-            }, request=request)
-            return HttpResponse(rendered_html)
-        else:
-            html = render_to_string('partials/new_swimling_form.html', {'form': form}, request=request)
-            return HttpResponse(html, status=400) if "HX-Request" in request.headers else render(request, 'partials/new_swimling_form.html', {'form': form})
-    else:
-        form = NewSwimlingForm()
-        return render(request, 'partials/new_swimling_form.html', {'form': form})
-
-
-# -------------------
-# ✅ Success Template
-# -------------------
-def swimling_success(request):
-    return render(request, 'lessons/success.html')
-
-
-# -------------------
-# ❌ Failure Template
-# -------------------
-def swimling_failure(request):
-    return render(request, 'lessons/failure.html')
-
-
-# ---------------------------------
-# 🔁 Load Add Swimling Form Partial
-# ---------------------------------
-def load_new_swimling_form(request, product_slug):
-    form = NewSwimlingForm()
-    product = Product.objects.get(slug=product_slug)
-    return render(request, 'partials/new_swimling_form.html', {'form': form, 'product': product})

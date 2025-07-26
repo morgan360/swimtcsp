@@ -104,3 +104,14 @@ This document outlines the menu structure used in the custom navigation app.
 * Menus will be rendered in a drawer layout using AlpineJS
 * Each `MenuItem` should specify either `url_name` (preferred) or `external_url`
 * Icons can be added using `icon_class` for FontAwesome compatibility
+
+# Navigation Menu Import/Export
+
+## Export the menu to JSON
+python manage.py download_navigation_menu menu_export.json
+
+## Import the menu from JSON
+python manage.py load_navigation_menu menu_export.json
+
+✅ No redirection (`>`) needed — both commands handle file writing and reading directly.
+

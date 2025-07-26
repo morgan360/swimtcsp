@@ -1,6 +1,9 @@
 <h2>Booking Confirmation</h2>
+
 <p>Hi {{ user.first_name }},</p>
+
 <p>You have successfully booked the following:</p>
+
 <ul>
   <li><strong>Swimling:</strong> {{ swimling.full_name }}</li>
   <li><strong>Lesson:</strong> {{ lesson.name }}</li>
@@ -8,6 +11,15 @@
   <li><strong>Time:</strong> {{ lesson.start_time }} - {{ lesson.end_time }}</li>
   <li><strong>Term:</strong> {{ term }}</li>
   <li><strong>School:</strong> {{ school.name }}</li>
-  <li><strong>Price:</strong> €{{ lesson.price }}</li>
+  <li><strong>Original Price:</strong> €{{ lesson.price }}</li>
+
+  {% if coupon %}
+    <li><strong>Coupon Used:</strong> {{ coupon.code }}</li>
+    <li><strong>Discount Applied:</strong> €{{ discount }}</li>
+    <li><strong>Total Paid:</strong> €{{ lesson.price|floatformat:2|add:"-"|add:discount|floatformat:2 }}</li>
+  {% else %}
+    <li><strong>Total Paid:</strong> €{{ lesson.price }}</li>
+  {% endif %}
 </ul>
+
 <p>Thank you,<br>TCSP Swim Team</p>

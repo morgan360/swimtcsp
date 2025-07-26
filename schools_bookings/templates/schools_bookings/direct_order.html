@@ -13,45 +13,71 @@
 
                 <p><strong>Term:</strong> {{ term.name }} ({{ term.start_date }} → {{ term.end_date }})</p>
 
-                <form method="post">
-  {% csrf_token %}
+                <form method="post" action="{% url 'schools_bookings:book_lesson' swimling.id term.id %}">
 
-  <table class="table is-fullwidth is-bordered is-striped">
-    <thead>
-      <tr>
-        <th></th>
-        <th>Lesson Name</th>
-        <th>Day</th>
-        <th>Time</th>
-        <th>Places</th>
-        <th>Price</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for lesson in form.fields.lesson.queryset %}
-        <tr>
-          <td>
-            <input type="radio" name="{{ form.lesson.name }}" value="{{ lesson.id }}" required>
-          </td>
-          <td>{{ lesson.name }}</td>
-          <td>{{ lesson.get_day_of_week_display }}</td>
-          <td>{{ lesson.start_time }} - {{ lesson.end_time }}</td>
-          <td>{{ lesson.num_places }}</td>
-          <td>€{{ lesson.price }}</td>
-        </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+                    {% csrf_token %}
 
-  <div class="field mt-4">
-    <button type="submit" class="button is-primary is-medium">
-      <span class="icon"><i class="fas fa-shopping-cart"></i></span>
-      <span>Proceed to Payment</span>
-    </button>
-  </div>
-</form>
+                    {% if form.errors %}
+                        <div class="notification is-danger">
+                            <strong>Form error(s):</strong>
+                            <ul>
+                                {% for field in form %}
+                                    {% for error in field.errors %}
+                                        <li>{{ field.label }}: {{ error }}</li>
+                                    {% endfor %}
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
 
+                    <table class="table is-fullwidth is-bordered is-striped">
+                        <thead>
+                        <tr>
+                            <th></th>
+                            <th>Lesson Name</th>
+                            <th>Day</th>
+                            <th>Time</th>
+                            <th>Places</th>
+                            <th>Price</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for lesson in form.fields.lesson.queryset %}
+                            <tr>
+                                <td>
+                                    <input type="radio" name="lesson" value="{{ lesson.id }}"
+                                           {% if lesson.id|stringformat:"s" == form.lesson.value|stringformat:"s" %}checked{% endif %}>
 
+                                </td>
+                                <td>{{ lesson.name }}</td>
+                                <td>{{ lesson.get_day_of_week_display }}</td>
+                                <td>{{ lesson.start_time }} - {{ lesson.end_time }}</td>
+                                <td>{{ lesson.num_places }}</td>
+                                <td>€{{ lesson.price }}</td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+
+                    <div class="field mt-4">
+                        <label class="label">Coupon Code (optional)</label>
+                        <div class="control">
+                            <input
+                                    class="input"
+                                    type="text"
+                                    name="code"
+                                    placeholder="Enter coupon code"
+                                    value="{{ request.POST.code|default_if_none:'' }}"
+                            >
+                        </div>
+                    </div>
+                    <div class="field mt-4">
+                        <button type="submit" class="button is-primary is-medium">
+                            <span class="icon"><i class="fas fa-shopping-cart"></i></span>
+                            <span>Proceed to Payment</span>
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </section>

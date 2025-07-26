@@ -22,7 +22,10 @@ def send_lesson_order_email(order_id):
         "user": order.user,
         "order": order,
         "order_items": order_items,
-        "total_price": total_price,
+        "total_price": order.amount,  # ✅ already discounted
+        "coupon": order.coupon,
+        "discount": order.discount_amount,
+        "original_price": order.amount + (order.discount_amount or 0),  # Optional
         "support_email": settings.DEFAULT_FROM_EMAIL,
     }
 

@@ -18,7 +18,14 @@ class Order(models.Model):
     txId = models.CharField(max_length=250, blank=True)
     payment_status = models.CharField(max_length=100, blank=True)
     amount = models.DecimalField(max_digits=8, decimal_places=2)
-    coupon = models.ForeignKey(Coupon, null=True, blank=True, on_delete=models.SET_NULL)
+    coupon = models.ForeignKey(
+        Coupon,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='swim_orders',  # 🔧 different unique name
+        help_text="Coupon used for this swim order."
+    )
     discount_amount = models.DecimalField(max_digits=6, decimal_places=2, null=True, blank=True, default=0)
 
     class Meta:

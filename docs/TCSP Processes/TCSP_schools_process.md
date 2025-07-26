@@ -33,5 +33,7 @@ From her an administrator can carry out the following tasks:
 ### Notes
 Guardian need not register school in order to become part of the schools program. They only need to Update to schools program under their profile. Then they will be allocated the roles schools. If the swimling has a correct sch_role_number then they will be included I the schools panel which will show the name of the student and if they have been registered for the active term for that school. If not they will be presented with a book now button (or if no active term then No active term will be displayed. The swimling will only be able to book into one lesson per term. If there are two active terms then only the latest one is made available. The information about schools is only available I the administration area.
 
-- ScoLessons are generic and used for every term(They are set to active if actually available) and they are also 
-  identified by school
+- ScoLessons are generic and used for every term(They are set to active if actually available) and they are also identified by school
+## Files used in checkout
+schools_bookings/views
+direct_order.html

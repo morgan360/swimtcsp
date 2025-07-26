@@ -2,6 +2,8 @@
 
 {% block content %}
 <h1>Mailchimp Contacts</h1>
+<h2>Showing contacts {{ start_index }} to {{ end_index }} of {{ total }}</h2>
+
 
 {% if error %}
   <p style="color: red;">Error: {{ error }}</p>
@@ -31,4 +33,14 @@
     {% endfor %}
   </tbody>
 </table>
+    <div class="pagination">
+  {% if page > 1 %}
+    <a href="?page={{ page|add:"-1" }}">« Previous</a>
+  {% endif %}
+  Page {{ page }} of {{ num_pages }}
+  {% if page < num_pages %}
+    <a href="?page={{ page|add:"1" }}">Next »</a>
+  {% endif %}
+</div>
+
 {% endblock %}

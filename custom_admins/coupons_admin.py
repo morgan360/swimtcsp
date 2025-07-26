@@ -1,7 +1,10 @@
 from django.contrib.admin import AdminSite
 from django.contrib import admin
-from coupons.models import Coupon
+from coupons.models import Coupon, CouponRedemption
 from coupons.utils import generate_coupon_code
+from django.http import HttpResponse
+import csv
+
 
 # ✅ Define the custom admin site
 class CouponsAdminSite(AdminSite):
@@ -54,3 +57,41 @@ class CouponAdmin(admin.ModelAdmin):
         if not obj.pk:
             obj.created_by = request.user
         super().save_model(request, obj, form, change)
+
+
+@admin.register(CouponRedemption, site=coupons_admin_site)
+class CouponRedemptionAdmin(admin.ModelAdmin):
+    list_display = (
+        'coupon',
+        'redeemed_amount',
+        'redeemed_at',
+        'redeemed_object_display',
+    )
+    readonly_fields = ('coupon', 'redeemed_amount', 'redeemed_at', 'redeemed_object')
+    search_fields = ('coupon__code',)
+    list_filter = ('redeemed_at', 'coupon__code')
+    actions = ['export_as_csv']
+
+    def redeemed_object_display(self, obj):
+        return str(obj.redeemed_object)
+    redeemed_object_display.short_description = "Used On"
+
+    def export_as_csv(self, request, queryset):
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="coupon_redemptions.csv"'
+
+        writer = csv.writer(response)
+        writer.writerow(['Coupon Code', 'Redeemed Amount', 'Redeemed At', 'Used On (Type/ID)'])
+
+        for redemption in queryset:
+            used_on = f"{redemption.content_type.model} #{redemption.object_id}"
+            writer.writerow([
+                redemption.coupon.code,
+                redemption.redeemed_amount,
+                redemption.redeemed_at.strftime('%Y-%m-%d %H:%M:%S'),
+                used_on
+            ])
+
+        return response
+
+    export_as_csv.short_description = "Export selected redemptions as CSV"

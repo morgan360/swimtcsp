@@ -20,6 +20,10 @@ from utils.terms_utils import get_current_term, get_current_sco_term, get_next_t
 from boipa.views import initiate_boipa_payment_session
 from lessons_bookings.utils.enrollment import handle_lessons_enrollment
 from django.http import HttpResponse
+from coupons.forms import CouponApplyForm
+from coupons.models import Coupon
+from coupons.services import CouponService
+from django.core.exceptions import ValidationError
 import logging
 
 # Create a logger object
@@ -72,13 +76,15 @@ def cart_detail(request):
 
     for item_key, item_data in cart.cart.items():
         product_type, product_id, swimling_id = item_key.split('_')
+
         if product_type == 'lesson':
             product = Product.objects.filter(id=product_id).first()
         elif product_type == 'school':
             product = ScoLessons.objects.filter(id=product_id).first()
+        else:
+            continue  # skip unknown types
 
         swimling = Swimling.objects.filter(id=swimling_id).first()
-
         if not product or not swimling:
             continue
 
@@ -91,10 +97,19 @@ def cart_detail(request):
             'price': item_data['price'],
             'swimling': swimling,
             'total_price': item_total,
-            'type': product_type  # Include type in the context for display purposes
+            'type': product_type,
         })
 
-    return render(request, 'shopping_cart/detail.html', {'cart_items': cart_items, 'total_price': total_price})
+    # Include the coupon form
+    coupon_form = CouponApplyForm()
+
+    return render(request, 'shopping_cart/detail.html', {
+        'cart_items': cart_items,
+        'total_price': total_price,
+        'coupon_form': coupon_form,
+    })
+
+    # return render(request, 'shopping_cart/detail.html', {'cart_items': cart_items, 'total_price': total_price})
 
 
 ###################### Payment Process ###################
@@ -108,6 +123,8 @@ def payment_canceled(request):
     return render(request, 'payment/canceled.html')
 
 
+
+
 @login_required
 def payment_process(request):
     if 'cart' not in request.session or not request.session['cart']:
@@ -117,6 +134,7 @@ def payment_process(request):
     cart_type = request.session.get(f"{settings.CART_SESSION_ID}_type", None)
     total_price = Decimal('0.00')
 
+    # Step 1: Create order based on cart type
     if cart_type == 'lesson':
         order = LessonOrder.objects.create(user=request.user)
         total_price = process_order_items(cart, LessonOrderItem, order, Product, get_current_term)
@@ -126,13 +144,33 @@ def payment_process(request):
     else:
         return HttpResponse("Invalid product type in cart.", status=400)
 
-    # Clear cart and save order ID in session after processing all items
+    # Step 2: Handle coupon if present
+    coupon_code = request.POST.get("code", "").strip()
+    if coupon_code:
+        try:
+            coupon = Coupon.objects.get(code=coupon_code)
+            service = CouponService(coupon)
+            discount = service.apply(purchase_obj=order, amount=total_price, user=request.user)
+            total_price -= discount
+
+            # ✅ Persist coupon info to order
+            order.coupon = coupon
+            order.discount_amount = discount
+
+            print(f"[Coupon] Applied {coupon_code} for €{discount}")
+        except Coupon.DoesNotExist:
+            print(f"[Coupon] Invalid code: {coupon_code}")
+        except ValidationError as e:
+            print(f"[Coupon] Error: {str(e)}")
+
+    # Step 3: Save the final amount and clear cart
+    order.amount = total_price
+    order.save()
+
     cart.clear()
     request.session['order_id'] = order.id
     order_ref = f"{cart_type}_{order.id}"
-    print(order_ref)
 
-    # Redirect the user to the payment page, adapting it as necessary for different product types
     return redirect('boipa:initiate_payment_session', order_ref=order_ref, total_price=str(total_price))
 
 

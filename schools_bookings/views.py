@@ -6,40 +6,51 @@ from django.contrib.auth import get_user_model
 from users.models import Swimling
 from django.contrib import messages
 from .forms import DirectOrderForm
-from schools.models import ScoSchool
+from schools.models import ScoSchool,ScoLessons
 from schools_bookings.models import ScoTerm
 from schools_orders.models import Order, OrderItem
 from boipa.views import initiate_boipa_payment_session
+from decimal import Decimal
+from coupons.models import Coupon
+from coupons.services import CouponService
+from django.core.exceptions import ValidationError
+from schools_orders.tasks import send_school_order_email
+import logging
+import sys
+
 User = get_user_model()
 
 
+
+
 def book_lesson(request, swimling_id, term_id):
-    import logging
     logger = logging.getLogger(__name__)
-    logger.warning("🔥 BOOK_LESSON VIEW TRIGGERED 🔥")
+    print("💡 book_lesson view STARTED", file=sys.stderr)
 
     swimling = get_object_or_404(Swimling, id=swimling_id)
-    term = get_object_or_404(ScoTerm, id=term_id)
     school = get_object_or_404(ScoSchool, sco_role_num=swimling.sco_role_num)
 
+    # ✅ Get the current term for this school
+    term = ScoTerm.get_current_term_for_school(school.id)
+    if not term:
+        return HttpResponse("No active term available for this school.", status=400)
+
     lessons = ScoLessons.objects.filter(
-        term=term,
         school=school
     ).order_by('day_of_week', 'start_time')
-    print("=== DEBUG: school ===")
-    print(f"{school.name} ({school.sco_role_num})")
 
-    print("=== DEBUG: lessons count ===")
-    print(f"Lessons count: {lessons.count()}")
-
-    for lesson in lessons:
-        print(f"Lesson: {lesson.name} – {lesson.school.name} ({lesson.school.sco_role_num})")
     if request.method == 'POST':
         form = DirectOrderForm(request.POST, lessons=lessons)
-        if form.is_valid():
+        print("📥 POST received", file=sys.stderr)
+
+        if not form.is_valid():
+            print("❌ FORM INVALID", file=sys.stderr)
+            print(form.errors.as_json(), file=sys.stderr)
+        else:
+            print("✅ FORM VALID", file=sys.stderr)
             lesson = form.cleaned_data['lesson']
 
-            # ✅ Step 1: Create the order
+            # Create base order
             order = Order.objects.create(
                 user=request.user,
                 amount=lesson.price,
@@ -47,7 +58,31 @@ def book_lesson(request, swimling_id, term_id):
                 school=school
             )
 
-            # ✅ Step 2: Create the order item
+            # Handle coupon logic
+            coupon_code = request.POST.get('code', '').strip()
+            discount = Decimal("0.00")
+            coupon = None
+
+            if coupon_code:
+                try:
+                    coupon = Coupon.objects.get(code=coupon_code)
+                    service = CouponService(coupon)
+                    discount = service.apply(
+                        purchase_obj=order,
+                        amount=lesson.price,
+                        user=request.user
+                    )
+                    print(f"✅ Coupon applied: {coupon.code}, discount: €{discount}", file=sys.stderr)
+                except (Coupon.DoesNotExist, ValidationError) as e:
+                    print(f"[Coupon Error] {e}", file=sys.stderr)
+
+            # Update order with final values
+            order.amount = lesson.price - discount
+            order.discount_amount = discount
+            order.coupon = coupon
+            order.save()
+
+            # Create order item
             OrderItem.objects.create(
                 order=order,
                 term=term,
@@ -57,7 +92,19 @@ def book_lesson(request, swimling_id, term_id):
                 swimling=swimling
             )
 
-            # ✅ Step 3: Redirect to BOIPA checkout
+            # Send confirmation email
+            try:
+                send_school_order_email(order.id)
+                print(f"📧 Email sent for order {order.id}", file=sys.stderr)
+            except Exception as e:
+                print(f"❌ Email sending failed: {e}", file=sys.stderr)
+
+            # Log final details
+            print(f"FINAL ORDER ID: {order.id}", file=sys.stderr)
+            print(f"FINAL AMOUNT: €{order.amount}", file=sys.stderr)
+            print(f"DISCOUNT AMOUNT: €{order.discount_amount}", file=sys.stderr)
+            print(f"COUPON USED: {order.coupon.code if order.coupon else 'None'}", file=sys.stderr)
+
             order_ref = f"school_{order.id}"
             return initiate_boipa_payment_session(request, order_ref, order.amount)
 
@@ -68,7 +115,9 @@ def book_lesson(request, swimling_id, term_id):
         'form': form,
         'swimling': swimling,
         'school': school,
+        'term': term,
     })
+
 
 
 

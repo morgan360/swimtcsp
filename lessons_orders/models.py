@@ -4,7 +4,7 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from users.models import Swimling
 from decimal import Decimal
-
+from coupons.models import Coupon
 # from lessons_bookings.models import Term
 
 
@@ -16,6 +16,23 @@ class Order(models.Model):
     txId = models.CharField(max_length=250, blank=True)
     payment_status = models.CharField(max_length=100, blank=True)
     amount = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
+    coupon = models.ForeignKey(
+        Coupon,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='lesson_orders',  # 🔧 unique name
+        help_text="Coupon used for this lesson order."
+    )
+
+    discount_amount = models.DecimalField(
+        max_digits=6,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        default=0,
+        help_text="Total discount applied from the coupon."
+    )
 
     class Meta:
         ordering = ['-created']

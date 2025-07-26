@@ -2,6 +2,8 @@
 from django.db import models
 from django.conf import settings
 from django.utils import timezone
+from django.contrib.contenttypes.models import ContentType
+from django.contrib.contenttypes.fields import GenericForeignKey
 
 class Coupon(models.Model):
     DISCOUNT_TYPE_CHOICES = [
@@ -50,3 +52,18 @@ class Coupon(models.Model):
 
     def __str__(self):
         return self.code
+
+# Tracks all product redemptions
+
+class CouponRedemption(models.Model):
+    coupon = models.ForeignKey('Coupon', on_delete=models.CASCADE, related_name='redemptions')
+    redeemed_amount = models.DecimalField(max_digits=6, decimal_places=2)
+    redeemed_at = models.DateTimeField(auto_now_add=True)
+
+    # GFK to any purchase model: SwimOrder, LessonBooking, etc.
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    object_id = models.PositiveIntegerField()
+    redeemed_object = GenericForeignKey('content_type', 'object_id')
+
+    def __str__(self):
+        return f"{self.coupon.code} redeemed {self.redeemed_amount} on {self.redeemed_object}"

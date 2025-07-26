@@ -1,23 +1,47 @@
-<footer class="footer is-site-footer">
-  <div class="content has-text-centered">
-    <p>
-      <strong>TCSP</strong> – Templeogue College Swimming Pool<br>
-         <p>{{ FOOTER_MESSAGE }}</p>
-      Bringing fitness, fun, and confidence to the water since time began.
-    </p>
+{% load static %}
+<footer class="footer footer-center flex flex-col p-10 bg-blue-100 text-base-content text-center">
+ <div class="flex justify-center mb-4">
+   <a href="/" class="flex justify-center">
+     <img src="{% static 'img/logo.png' %}" alt="Logo" width="60" height="60" class="mx-auto" />
+   </a>
+ </div>
 
-    <div class="columns is-mobile is-centered mt-3 is-vcentered">
-      <div class="column is-narrow">
-        <p><strong>Email:</strong> <a href="mailto:info@tcsp.ie">info@tcsp.ie</a></p>
-      </div>
-      <div class="column is-narrow">
-        <p><strong>Phone:</strong> <a href="tel:+35312345678">+353 1 234 5678</a></p>
-      </div>
-      <div class="column is-narrow">
-        <p><strong>Location:</strong> Templeville Road, Dublin, Ireland</p>
-      </div>
-    </div>
 
-    <p class="is-size-7 mt-3">&copy; {{ now|date:"Y" }} TCSP. All rights reserved.</p>
-  </div>
+ <div class="flex flex-col gap-4 m-4">
+   <p class="text-lg text-blue-800">
+     <strong>TCSP</strong> – Templeogue College Swimming Pool
+   </p>
+   <p>{{ FOOTER_MESSAGE }}</p>
+   <p class="italic">
+     Bringing fitness, fun, and confidence to the water since time began.
+   </p>
+ </div>
+
+
+ <div class="flex flex-col gap-4 text-sm">
+   <div>
+     <p>
+       <strong class="text-blue-800">Email:</strong>
+       <a href="mailto:info@tcsp.ie" class="link link-hover">info@tcsp.ie</a>
+     </p>
+   </div>
+   <div>
+     <p>
+       <strong class="text-blue-800">Phone:</strong>
+       <a href="tel:+35312345678" class="link link-hover">(01) 490 1711</a>
+     </p>
+   </div>
+   <div>
+     <p>
+       <strong class="text-blue-800">Location:</strong> Templeville Road, Dublin, Ireland, D6W E622.
+     </p>
+   </div>
+ </div>
+
+
+ <div>
+   <p class="text-sm italic mt-4">
+     &copy; {{ now|date:"Y" }} TCSP. All rights reserved.
+   </p>
+ </div>
 </footer>

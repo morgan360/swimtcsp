@@ -13,14 +13,17 @@
       style="background-image: url('{% static 'img/laneswim2.jpeg' %}');"
     >
       <div class="bg-white/80 backdrop-blur-sm p-8 md:p-12 lg:p-16 text-gray-800">
-        <p class="text-lg font-medium text-blue-700 mb-2">For the community</p>
 
-        <h1 class="text-3xl md:text-4xl lg:text-5xl font-extrabold mb-6">
-          Templeogue College Swimming Pool
+        <div><img src="{% static 'img/logo.png' %}" alt="Templeogue College Swim Pool Logo" class="h-12 mx-auto mb-5" /></div>
+
+        <h1 class="text-3xl md:text-4xl lg:text-5xl font-extrabold mb-6 text-blue-900 text-center">
+          Templeogue College Swim Pool
         </h1>
 
+        <p class="text-xl font-medium text-red-700 mb-8 text-center">For the community</p>
+
         <p class="text-base md:text-lg mb-6 leading-relaxed">
-          Here at Templeogue College Swim Pool we have a five lane 25m heated pool, which has two
+          Here at Templeogue College Swim Pool we have a five lane 25m heated pool (30&deg;C), which has two
           shallow ends of 3’ and 3’3” in depth. This gives us the benefit of extra shallow space and
           is perfect for beginners and those learning to swim. A deep section in the middle of the
           pool enables deep water development. So whether you are joining us for public swims,
@@ -29,18 +32,16 @@
         </p>
 
         <p class="text-base md:text-lg mb-8 leading-relaxed">
-          <strong class="text-blue-900">To use our services all you need to do is Register</strong>. It's
-          simple and free. All you need is your email address.
-          <br>
-          <span class="text-sm text-gray-600">
-            (If you wish also to register for swimming lessons or our schools program, tick the
-            appropriate box or change it later under your profile.)
-          </span>
+          <strong class="text-blue-900">To use our services all you need to do is sign up</strong>. It's
+          simple and free - all you need is your email address.
         </p>
 
-        <a href="{% url 'account_signup' %}" class="inline-flex items-center gap-2 px-5 py-3 bg-blue-700 text-white font-semibold rounded-lg hover:bg-blue-800 transition">
-          <i class="fas fa-user-plus"></i> Register
+        <a href="{% url 'account_signup' %}" class="inline-flex items-center gap-2 px-5 py-3 bg-red-700 text-white font-semibold rounded-lg hover:bg-red-800 transition">
+          <i class="fas fa-user-plus"></i> Sign up
         </a>
+        <p class="text-gray-600 mt-5">
+            Already have an account? <a href="{% url 'account_login' %}" class="text-blue-600 hover:underline font-bold">Log in</a> instead.
+        </p>
       </div>
     </section>
     {% endif %}

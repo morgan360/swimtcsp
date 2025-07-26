@@ -4,15 +4,18 @@
 <section class="section">
   <div class="container">
     <div class="box" id="chat-container">
-      <h3 class="title is-4 mb-4">💬 Ask About Public Swims</h3>
+      <h3 class="title is-4 mb-4">💬 Chat with <strong>SplashBot</strong></h3>
 
-      <div id="chat-log" class="content" style="height: 300px; overflow-y: auto; background: #f9f9f9; padding: 1rem; border-radius: 8px;">
-        <div class="notification is-light"><strong>Bot:</strong> Hi! Ask me about available public swims. 😊</div>
+      <div id="chat-log" class="content" style="height: 320px; overflow-y: auto; background: #f9f9f9; padding: 1rem; border-radius: 8px;">
+        <div class="notification is-info is-light">
+          <strong>SplashBot:</strong> Hi! I'm <strong>SplashBot</strong> 🐬<br>
+          Ask me about swim times, prices, locker access, booking, or anything about your visit to the pool!
+        </div>
       </div>
 
       <div class="field has-addons mt-4">
         <div class="control is-expanded">
-          <input class="input" type="text" id="chat-input" placeholder="e.g. Are there swims this weekend?">
+          <input class="input" type="text" id="chat-input" placeholder="e.g. Do I need a swim hat?">
         </div>
         <div class="control">
           <button class="button is-primary" id="chat-send">Send</button>
@@ -43,7 +46,7 @@
     function appendBotHTMLMessage(html) {
       const div = document.createElement("div");
       div.className = "notification is-info is-light";
-      div.innerHTML = `<strong>Bot:</strong> ${html}`;
+      div.innerHTML = `<strong>SplashBot:</strong> ${html}`;
       log.appendChild(div);
       log.scrollTop = log.scrollHeight;
     }
@@ -52,7 +55,7 @@
       const div = document.createElement("div");
       div.className = "notification is-info is-light";
       const strong = document.createElement("strong");
-      strong.textContent = "Bot: ";
+      strong.textContent = "SplashBot: ";
       div.appendChild(strong);
       const span = document.createElement("span");
       div.appendChild(span);
@@ -87,18 +90,17 @@
 
         const data = await response.json();
         if (data.reply) {
-          // If reply contains HTML tags, render directly; else animate typing
           if (/<[a-z][\s\S]*>/i.test(data.reply)) {
             appendBotHTMLMessage(data.reply);
           } else {
             typeBotMessage(data.reply);
           }
         } else {
-          typeBotMessage("Sorry, I couldn’t understand that.");
+          typeBotMessage("Sorry, I didn’t catch that. Can you try rephrasing?");
         }
       } catch (err) {
         console.error(err);
-        typeBotMessage("Something went wrong.");
+        typeBotMessage("Oops! Something went wrong.");
       }
     }
 

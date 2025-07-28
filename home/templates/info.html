@@ -66,12 +66,23 @@
           <i class="fas fa-envelope text-white mr-2"></i>
           Contact Us
         </h2>
-        <form method="post">
+        <form method="post" class="bg-white/50 p-6 rounded-lg shadow">
           {% csrf_token %}
           {% for field in form %}
           <div class="mb-5">
-            <label class="block text-blue-900 text-2xl font-semibold mb-2">{{ field.label }}</label>
-            {% render_field field class="w-full mb-2 px-4 py-2 border border-gray-300 bg-white/70 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600/50 focus:bg-white" %}
+            <label class="block text-blue-900 text-xl font-semibold mb-2">{{ field.label }}</label>
+            {% if field.name == "name" %}
+              {% render_field field class="w-full mb-2 px-4 py-2 border border-gray-300 bg-white/70 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600/50 focus:bg-white" placeholder="Name" %}
+            {% elif field.name == "email" %}
+              {% render_field field class="w-full mb-2 px-4 py-2 border border-gray-300 bg-white/70 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600/50 focus:bg-white" placeholder="Email" %}
+            {% elif field.name == "subject" %}
+              {% render_field field class="w-full mb-2 px-4 py-2 border border-gray-300 bg-white/70 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600/50 focus:bg-white" placeholder="Subject of your message" %}
+            {% elif field.name == "message" %}
+              {% render_field field class="w-full mb-2 px-4 py-2 border border-gray-300 bg-white/70 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600/50 focus:bg-white" placeholder="Type your message here..." %}
+            {% else %}
+              {% render_field field class="w-full mb-2 px-4 py-2 border border-gray-300 bg-white/70 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600/50 focus:bg-white" %}
+            {% endif %}
+
             {% if field.help_text %}
             <p class="text-md text-zinc-900 mt-1">{{ field.help_text }}</p>
             {% endif %}

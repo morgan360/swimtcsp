@@ -63,6 +63,7 @@ INSTALLED_APPS = [
     'widget_tweaks', # Allows adding css to fields in form templates directly
     'django_browser_reload',  # when debug load automaticaly browser
     'django_extensions', # For Documentation
+    'rest_framework',
     # My Apps
     'chatbot',
     'users',

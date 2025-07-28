@@ -6,21 +6,69 @@ function timetableApp() {
         events: [],
 
         fetchEvents() {
-            const iso = this.startDate.toISOString().split('T')[0];
-            const endpoint = this.currentTab === 'swims'
-                ? `/timetable/api/public/?start=${iso}`
-                : `/timetable/api/week/?start=${iso}`;
-            fetch(endpoint)
-                .then(res => res.json())
-                .then(data => {
-                    this.events = data.events;
-                });
-        },
+  const iso = this.startDate.toISOString().split('T')[0];
+
+  // ✅ Correct paths based on your Django URLs
+  // ✅ Correct
+const endpoint = this.currentTab === 'swims'
+    ? `/timetable/api/public/?start=${iso}`
+    : `/timetable/api/week/?start=${iso}`;
+
+
+  fetch(endpoint)
+    .then(res => {
+      if (!res.ok) throw new Error(`Fetch failed: ${res.status}`);
+      return res.json();
+    })
+    .then(data => {
+      this.events = data.events || [];
+    })
+    .catch(err => {
+      console.error("Timetable fetch error:", err);
+      this.events = [];
+    });
+},
+
+
+        // Inside the returned object:
+        calendarInitialized: false,
 
         switchTab(tab) {
             this.currentTab = tab;
-            this.fetchEvents();
+            if (tab === 'calendar' && !this.calendarInitialized) {
+                this.loadCalendar();
+                this.calendarInitialized = true;
+            } else {
+                this.fetchEvents();
+            }
         },
+
+        loadCalendar() {
+            this.$nextTick(() => {
+                const calendarEl = document.getElementById('calendar');
+                if (!calendarEl) return;
+
+                const calendar = new FullCalendar.Calendar(calendarEl, {
+                    initialView: 'dayGridMonth',
+                    headerToolbar: {
+                        left: 'prev,next today',
+                        center: 'title',
+                        right: 'dayGridMonth,listYear'
+                    },
+                    views: {
+                        listYear: {
+                            buttonText: 'Year'
+                        }
+                    },
+                    events: '/timetable/calendar/events/',
+                    height: 'auto',
+                    eventDisplay: 'block'
+                });
+
+                calendar.render();
+            });
+        },
+
 
         dateFor(index) {
             const d = new Date(this.startDate);
@@ -57,9 +105,12 @@ function timetableApp() {
             d.setDate(d.getDate() + index);
             const ymd = d.toISOString().split('T')[0];
 
-            const dayEvents = this.events.filter(e => e.date === ymd);
-            const grouped = {};
+            const dayEvents = this.events.filter(e =>
+                e.date === ymd &&
+                e.type === this.currentTab.slice(0, -1) // "lessons" → "lesson", "swims" → "swim"
+            );
 
+            const grouped = {};
             for (const event of dayEvents) {
                 const key = `${event.start}–${event.end}`;
                 if (!grouped[key]) grouped[key] = [];

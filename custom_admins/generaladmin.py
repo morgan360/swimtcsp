@@ -1,6 +1,5 @@
 from django.contrib.admin import AdminSite, TabularInline, ModelAdmin
 from navigation.models import MenuGroup, MenuItem
-from timetable.models import TimetableOverride
 from waiting_list.models import WaitingList  # ✅ Import your model
 from django.contrib import admin
 from progress.models import (
@@ -91,6 +90,5 @@ general_admin_site.register(InstructorNote, InstructorNoteAdmin)
 
 # ✅ Register models to general admin site
 general_admin_site.register(MenuGroup, MenuGroupAdmin)
-general_admin_site.register(TimetableOverride)
 general_admin_site.register(WaitingList, WaitingListAdmin)  # ✅ Registered here
 general_admin_site.register(MenuItem, MenuItemAdmin)

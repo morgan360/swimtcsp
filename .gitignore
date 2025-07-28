@@ -80,3 +80,4 @@ build/
 import_csv/
 swimtcsp/share/jupyter/lab/schemas/
 swimtcsp/home/management/
+/static/css/output.css # adjust path as needed

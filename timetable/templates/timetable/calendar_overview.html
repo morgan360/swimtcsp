@@ -1,0 +1,46 @@
+{% extends "base/_base.html" %}
+{% block title %}Calendar Overview{% endblock %}
+{% block content %}
+<div class="max-w-6xl mx-auto p-4">
+  <div id="calendar"></div>
+</div>
+
+<!-- Core calendar with globals -->
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+
+<!-- List plugin (must be loaded explicitly in v6) -->
+<script src="https://cdn.jsdelivr.net/npm/@fullcalendar/list@6.1.8/index.global.min.js"></script>
+
+<!-- Your JS logic -->
+<script src="{% static 'js/timetable.js' %}"></script>
+
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const calendarEl = document.getElementById('calendar');
+
+    const calendar = new FullCalendar.Calendar(calendarEl, {
+      plugins: [FullCalendar.ListView],  // ✅ Enable the list plugin
+      initialView: 'listYear',
+      headerToolbar: {
+        left: 'prev,next today',
+        center: 'title',
+        right: 'dayGridMonth,listYear'
+      },
+      views: {
+        listYear: {
+          type: 'list',
+          duration: { years: 1 },
+          buttonText: 'Year'
+        }
+      },
+      height: 'auto',
+      events: '/timetable/calendar/events/',
+      eventDisplay: 'block',
+    });
+
+    calendar.render();
+  });
+</script>
+
+{% endblock %}

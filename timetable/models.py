@@ -1,21 +1,28 @@
-from django.db import models
-from django.conf import settings
+# timetable/models.py
 
-class TimetableOverride(models.Model):
-    EVENT_TYPE_CHOICES = [
-        ('bespoke', 'Bespoke Session'),
+from django.db import models
+
+class CalendarEvent(models.Model):
+    CATEGORY_CHOICES = [
+        ('term', 'Term Dates'),
+        ('rebooking', 'Rebooking Window'),
         ('closure', 'Closure'),
+        ('special', 'Special Event'),
     ]
 
-    title = models.CharField(max_length=100)
-    event_type = models.CharField(max_length=10, choices=EVENT_TYPE_CHOICES)
-    date = models.DateField()
-    start_time = models.TimeField()
-    end_time = models.TimeField()
-    notes = models.TextField(blank=True)
-    created_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True
-    )
+    title = models.CharField(max_length=200)
+    start_date = models.DateField()
+    end_date = models.DateField(blank=True, null=True)
+    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES)
+    description = models.TextField(blank=True)
+
+    def get_color(self):
+        return {
+            'term': '#3B82F6',        # blue
+            'rebooking': '#F59E0B',   # yellow
+            'closure': '#EF4444',     # red
+            'special': '#10B981',     # green
+        }.get(self.category, '#6B7280')  # default gray
 
     def __str__(self):
-        return f"{self.title} ({self.event_type}) on {self.date}"
+        return f"{self.title} ({self.category})"

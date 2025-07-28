@@ -1,9 +1,9 @@
+
 from django.contrib import admin
-from .models import TimetableOverride
+from .models import CalendarEvent
 
-@admin.register(TimetableOverride)
-class TimetableOverrideAdmin(admin.ModelAdmin):
-    list_display = ('title', 'event_type', 'date', 'start_time', 'end_time', 'created_by')
-    list_filter = ('event_type', 'date')
-    search_fields = ('title', 'notes')
-
+@admin.register(CalendarEvent)
+class CalendarEventAdmin(admin.ModelAdmin):
+    list_display = ['title', 'category', 'start_date', 'end_date']
+    list_filter = ['category']
+    search_fields = ['title', 'description']

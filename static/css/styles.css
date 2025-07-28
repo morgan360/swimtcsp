@@ -116,8 +116,14 @@
 .max-w-full {
   max-width: 100%;
 }
+.min-w-\[120px\] {
+  min-width: 120px;
+}
 .min-w-\[200px\] {
   min-width: 200px;
+}
+.min-w-\[700px\] {
+  min-width: 700px;
 }
 .flex-grow {
   flex-grow: 1;
@@ -173,6 +179,9 @@
 .overflow-hidden {
   overflow: hidden;
 }
+.overflow-x-auto {
+  overflow-x: auto;
+}
 .overflow-x-hidden {
   overflow-x: hidden;
 }
@@ -214,6 +223,12 @@
 }
 .text-left {
   text-align: left;
+}
+.text-ellipsis {
+  text-overflow: ellipsis;
+}
+.whitespace-nowrap {
+  white-space: nowrap;
 }
 .lowercase {
   text-transform: lowercase;

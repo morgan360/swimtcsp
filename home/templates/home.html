@@ -6,48 +6,45 @@
 {% block content %}
 <div>
   <!-- Hero Section -->
-  <section
-    class="relative bg-cover bg-center h-[60vh] sm:h-[70vh] md:h-[80vh] w-full mb-10 
-    rounded-lg shadow-lg overflow-hidden"
-    style="background-image: url('{% static "img/three-kids-woggles.jpg" %}')">
+  <section class="relative bg-cover bg-center h-[60vh] sm:h-[70vh] md:h-[80vh] w-full mb-10 
+    rounded-lg shadow-lg overflow-hidden" style="background-image: url('{% static 'img/three-kids-woggles.jpg' %}')">
     <!-- Overlay -->
     <div class="absolute inset-0 bg-black bg-opacity-50"></div>
 
     <!-- Centered Heading -->
-<div class="relative z-10 flex flex-col justify-center items-center h-full text-center 
+    <div class="relative z-10 flex flex-col justify-center items-center h-full text-center 
 text-white px-4 mt-20">
-  <h1 class="text-3xl sm:text-4xl md:text-5xl font-bold leading-tight max-w-2xl">Swimming is for Life!</h1>
-</div>
+      <h1 class="text-3xl sm:text-4xl md:text-5xl font-bold leading-tight max-w-2xl">Swimming is for Life!</h1>
+    </div>
 
-<!-- Bottom-Centered Button -->
-<div class="z-10 absolute bottom-6 flex justify-center w-full">
-  <a href="{% url 'timetable:timetable_grid' %}"
-     class="inline-flex items-center px-5 py-4 text-2xl text-center font-semibold 
+    <!-- Bottom-Centered Button -->
+    <div class="z-10 absolute bottom-6 flex justify-center w-full">
+      <a href="{% url 'timetable:timetable_grid' %}" class="inline-flex items-center px-5 py-4 text-2xl text-center font-semibold 
      border border-white text-white bg-red-700 rounded-lg hover:bg-red-800 
      focus:ring-4 focus:outline-none focus:ring-red-300 dark:bg-red-600 
      dark:hover:bg-red-700 dark:focus:ring-red-800">
-    <i class="fas fa-calendar mr-3"></i>
-    Times for Everything
-  </a>
-</div>
+        <i class="fas fa-calendar mr-3"></i>
+        Times for Everything
+      </a>
+    </div>
 
   </section>
 
 
   <!-- Feature Cards -->
-  <div
-    class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 gap-8 
+  <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 gap-8 
     px-4 sm:px-6 lg:px-8 max-w-screen-xl mx-auto pb-10">
     <!-- Public Swims Card -->
     <div class="bg-white/20 backdrop-blur-md border border-white/20 rounded-xl shadow-md p-6 flex flex-col h-full">
       <img src="{% static 'img/fc-lanes.jpeg' %}" alt="Public swim" class="w-full h-48 rounded object-cover">
       <div class="p-6 flex-grow">
         <h2 class="text-xl font-semibold mb-4 text-white">Public Swims</h2>
-        <p class="text-sm text-base-content text-white">No membership needed — just book a slot and dive in.</p>
+        <p class="text-sm text-base-content text-white">
+          Just book your slot and dive in! Our public swim sessions are perfect for fun, fitness, and relaxation.
+        </p>
       </div>
       <div class="p-4 text-primary font-medium flex justify-center">
-        <a href="{% url 'account_signup' %}"
-          class="inline-flex items-center px-3 py-2 text-md border border-white text-center 
+        <a href="{% url 'account_signup' %}" class="inline-flex items-center px-3 py-2 text-md border border-white text-center 
           text-white bg-blue-700 rounded-lg hover:bg-blue-800 focus:ring-4 focus:outline-none 
           focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
           Register
@@ -60,12 +57,13 @@ text-white px-4 mt-20">
       <img src="{% static 'img/teacher-1.jpeg' %}" alt="Swimming lessons" class="w-full h-48 rounded object-cover">
       <div class="p-6 flex-grow">
         <h2 class="text-xl font-semibold mb-4 text-white">Swimming Lessons</h2>
-        <p class="text-sm text-base-content text-white">Beginners to advanced, coached by Swim Ireland certified staff.
+        <p class="text-sm text-base-content text-white">
+          We provide a range of lessons, catering to all ages and abilities. 
+          All lessons are coached by Swim Ireland certified staff.
         </p>
       </div>
       <div class="p-4 text-primary font-medium flex justify-center">
-        <a href="/register/"
-          class="inline-flex items-center px-3 py-2 text-md text-center border border-white text-white 
+        <a href="/register/" class="inline-flex items-center px-3 py-2 text-md text-center border border-white text-white 
           bg-red-600 rounded-lg hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 
           dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-800">
           Book&nbsp;Lessons
@@ -78,15 +76,16 @@ text-white px-4 mt-20">
       <img src="{% static 'img/girls-and-teacher.jpeg' %}" alt="Community events"
         class="w-full h-48 rounded object-cover">
       <div class="p-6 flex-grow">
-        <h2 class="text-xl font-semibold mb-4 text-white">Join Our Community</h2>
-        <p class="text-sm text-base-content text-white">Events, galas, charity swims — be part of something bigger.</p>
+        <h2 class="text-xl font-semibold mb-4 text-white">Keep in touch</h2>
+        <p class="text-sm text-base-content text-white">
+          Events, galas, charity swims, intensive lessons — be part of something bigger. 
+          Sign up to our newsletter for the latest updates.</p>
       </div>
       <div class="p-4 font-medium flex justify-center">
-        <a href="#"
-          class="inline-flex items-center px-3 py-2 text-md border border-white text-center text-white 
+        <a href="#" class="inline-flex items-center px-3 py-2 text-md border border-white text-center text-white 
           bg-blue-700 rounded-lg hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 
           dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
-          Sign&nbsp;Up
+          Newsletter Sign&nbsp;Up
         </a>
       </div>
     </div>
@@ -95,13 +94,12 @@ text-white px-4 mt-20">
     <div class="bg-red-500/30 backdrop-blur-md border border-white/20 rounded-xl shadow-md p-6 flex flex-col h-full">
       <img src="{% static 'img/kid-and-teacher.jpeg' %}" alt="About Us" class="w-full h-48 rounded object-cover">
       <div class="p-6 flex-grow">
-        <h2 class="text-xl font-semibold mb-4 text-white">Got Any Questions?</h2>
+        <h2 class="text-xl font-semibold mb-4 text-white">More Information</h2>
         <p class="text-sm text-base-content text-white">Do you have a question or just want to get to know us better?
           Click below!</p>
       </div>
       <div class="p-4 text-primary font-medium flex justify-center">
-        <a href="{% url 'chatbot:public-swim-ui' %}"
-          class="inline-flex items-center px-3 py-2 text-md text-center border border-white text-white 
+        <a href="/info/" class="inline-flex items-center px-3 py-2 text-md text-center border border-white text-white 
           bg-red-600 rounded-lg hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 
           dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-800">
           Learn More
@@ -110,6 +108,16 @@ text-white px-4 mt-20">
     </div>
 
   </div>
-</div>
+
+  <div class="fixed bottom-6 right-6 flex flex-col items-end space-y-2 z-50 max-w-max">
+    <a href="{% url 'chatbot:public-swim-ui' %}" target="_blank" rel="noopener noreferrer"
+      class="bg-red-600 hover:bg-red-700 text-white rounded-full p-4 shadow-lg flex items-center justify-center w-20 h-20"
+      aria-label="Open Chatbot" title="Chat with us (opens in new tab)">
+      <i class="fas fa-solid fa-comments text-4xl"></i>
+    </a>
+    <p class="hidden md:block bg-red-600 text-white rounded-full px-4 py-3 shadow-lg whitespace-nowrap text-right">
+      Have a question? Ask SplashBot!
+    </p>
+  </div>
 </div>
 {% endblock %}

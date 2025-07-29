@@ -266,7 +266,7 @@ def review_rebooking(request, swimling_id, product_id):
     })
 
 
-def confirm_rebooking(request, swimling_id, product_id):
+def direct_rebooking(request, swimling_id, product_id):
     """Handles the final order submission and initiates the payment process."""
     swimling = get_object_or_404(Swimling, id=swimling_id)
     lesson = get_object_or_404(Product, id=product_id)

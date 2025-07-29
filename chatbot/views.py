@@ -8,7 +8,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render
 from django.utils import timezone
 import markdown
-
+from chatbot.models import ChatbotQuery
 from .helpers.faq import load_faq_embeddings, match_faq
 from .helpers.swim import get_available_swims, format_swim_list
 from .helpers.lesson import get_upcoming_terms, get_active_lessons, format_lesson_list
@@ -75,6 +75,7 @@ def public_lesson_chat_api(request):
         logger.error("❌ Lesson chatbot error: %s", str(e), exc_info=True)
         return JsonResponse({"reply": f"⚠️ Error: {str(e)}"}, status=200)
 
+
 @csrf_exempt
 def public_swim_chat(request):
     if request.method != "POST":
@@ -85,7 +86,14 @@ def public_swim_chat(request):
         user_message = data.get("message", "").strip()
         logger.info("📩 Swim bot message: %s", user_message)
 
-        time_keywords = ["when is the next swim", "what swims are available", "swim today", "swim times", "weekend swims", "can I swim", "sessions", "next public swim"]
+        # ✅ Ensure session exists
+        if not request.session.session_key:
+            request.session.save()
+
+        time_keywords = [
+            "when is the next swim", "what swims are available", "swim today",
+            "swim times", "weekend swims", "can I swim", "sessions", "next public swim"
+        ]
         if any(kw in user_message.lower() for kw in time_keywords):
             faq_answer = None
         else:
@@ -93,6 +101,16 @@ def public_swim_chat(request):
 
         if faq_answer:
             logger.info("✅ Responding from FAQ")
+
+            # ✅ Log query
+            ChatbotQuery.objects.create(
+                user=request.user if request.user.is_authenticated else None,
+                session_key=request.session.session_key,
+                source="public_swim",
+                message=user_message,
+                response_type="FAQ"
+            )
+
             html_reply = markdown.markdown(faq_answer, extensions=["extra"])
             return JsonResponse({"reply": html_reply})
 
@@ -107,6 +125,15 @@ def public_swim_chat(request):
                 {"role": "system", "content": "Answer customer questions about swim availability."},
                 {"role": "user", "content": prompt}
             ]
+        )
+
+        # ✅ Log GPT response
+        ChatbotQuery.objects.create(
+            user=request.user if request.user.is_authenticated else None,
+            session_key=request.session.session_key,
+            source="public_swim",
+            message=user_message,
+            response_type="GPT"
         )
 
         html_reply = parse_markdown_reply(response)
@@ -124,3 +151,7 @@ def public_swim_chat_ui(request):
 
 def chat_response(request):
     return JsonResponse({"reply": "This is the default chatbot endpoint. Try /chat/public-swim/ or /chat/public-lesson/."})
+
+
+
+

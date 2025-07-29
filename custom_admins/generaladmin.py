@@ -9,6 +9,7 @@ from progress.models import (
     SkillAssessment,
     InstructorNote
 )
+from chatbot.models import ChatbotQuery
 
 class GeneralAdminSite(AdminSite):
     site_header = "⚙️ General Admin"
@@ -81,6 +82,18 @@ class InstructorNoteAdmin(ModelAdmin):
     search_fields = ['swimling__first_name', 'swimling__last_name', 'note']
     list_filter = ['term', 'instructor']
 
+
+class ChatbotQueryAdmin(admin.ModelAdmin):
+    list_display = ("source", "timestamp", "short_message", "response_type", "session_key")
+
+    def short_message(self, obj):
+        if not obj.message:
+            return "-"
+        return (obj.message[:50] + "...") if len(obj.message) > 50 else obj.message
+
+    short_message.short_description = "Message"
+
+
 # ✅ Register all skills-related models
 general_admin_site.register(CoreAquaticSkill, CoreAquaticSkillAdmin)
 general_admin_site.register(Skill, SkillAdmin)
@@ -92,3 +105,4 @@ general_admin_site.register(InstructorNote, InstructorNoteAdmin)
 general_admin_site.register(MenuGroup, MenuGroupAdmin)
 general_admin_site.register(WaitingList, WaitingListAdmin)  # ✅ Registered here
 general_admin_site.register(MenuItem, MenuItemAdmin)
+general_admin_site.register(ChatbotQuery, ChatbotQueryAdmin)

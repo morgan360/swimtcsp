@@ -2,83 +2,99 @@
 {% load i18n %}
 {% load static %}
 {% load socialaccount %}
+{% load widget_tweaks %}
 
 {% block head_title %}{% trans "Sign Up" %}{% endblock %}
 
 {% block content %}
-    <section class="section">
-        <div class="container">
-            <div class="columns is-centered">
-                <div class="column is-6-tablet is-5-desktop is-4-widescreen">
+<section class="py-12 px-4 sm:px-6 lg:px-8">
+  <div class="max-w-7xl mx-auto flex justify-center">
+    <div class="bg-white/40 backdrop-blur-md border border-white/20 rounded-xl shadow-md p-10 w-full max-w-xl">
 
-                    <h1 class="title is-3 has-text-centered">{% trans "Sign Up" %}</h1>
+      <h1 class="text-3xl font-bold text-center text-white mb-6">{% trans "Sign Up" %}</h1>
 
-                    <p class="has-text-centered mb-2">
-                        This is to sign up so that you can book <strong>Public Swims</strong> online.<br>
-                        If you also wish to book lessons, tick the checkbox:
-                        <em>"I wish to apply for children's lessons"</em>.
-                    </p>
+      <div class="bg-white/50 p-6 rounded-lg shadow mb-4">
+        <p class="text-blue-900 text-lg mb-4">
+            Use this form to book <strong>public swims</strong> and other pay-as-you-go sessions online.  
+        </p>
+        <p class="text-blue-900 text-lg mb-4">
+            Want to book swimming lessons too? Just tick <em>"I wish to sign up for swimming lessons."</em>
+        </p>
+      </div>
 
-                    <p class="has-text-centered mb-4">
-                        {% blocktrans %}Already have an account? Then please <a href="{{ login_url }}">sign in</a>
-                            .{% endblocktrans %}
-                    </p>
-                    <form method="post" action="{% url 'account_signup' %}">
-                        {% csrf_token %}
+      <p class="text-white mb-6 text-center">
+            {% blocktrans %}Already have an account? Then please <a href="{{ login_url }}" class="underline text-blue-200 hover:text-blue-600">sign in</a>.{% endblocktrans %}
+      </p>
 
-                        {% for field in form %}
-                            <div class="field">
-                                <label class="label" for="{{ field.id_for_label }}">{{ field.label }}</label>
-                                <div class="control">
-                                    {{ field }}
-                                </div>
-                                {% if field.help_text %}
-                                    <p class="help is-small has-text-grey">{{ field.help_text|striptags }}</p>
-                                {% endif %}
-                                {% for error in field.errors %}
-                                    <p class="help is-danger">{{ error }}</p>
-                                {% endfor %}
-                            </div>
-                        {% endfor %}
+      <form method="post" action="{% url 'account_signup' %}" class="bg-white/50 p-6 rounded-lg shadow">
+        {% csrf_token %}
+        {% for field in form %}
+        <div class="mb-5">
+          {% if field.field.widget.input_type == "checkbox" %}
+            <label for="{{ field.id_for_label }}"
+                   class="flex items-center gap-3 p-3 rounded-md border border-gray-300 bg-white/70 text-blue-900 font-medium cursor-pointer hover:ring-2 hover:ring-red-600/50 transition">
+              {{ field|add_class:"h-5 w-5 focus:ring-red-500 rounded border-gray-300" }}
+              <span>{{ field.label }}</span>
+            </label>
+          {% else %}
+            <label class="block text-blue-900 text-xl font-semibold mb-2" for="{{ field.id_for_label }}">
+              {{ field.label }}
+            </label>
+            {% if field.name == "first_name" %}
+              {{ field|add_class:"w-full px-4 py-2 border border-gray-300 bg-white/70 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600/50"|attr:"placeholder:First name" }}
+            {% else %}
+              {{ field|add_class:"w-full px-4 py-2 border border-gray-300 bg-white/70 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600/50" }}
+            {% endif %}
+          {% endif %}
 
-                        {% if redirect_field_value %}
-                            <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}">
-                        {% endif %}
+          {% if field.help_text %}
+            <p class="text-sm text-blue-600 mt-1">{{ field.help_text|striptags }}</p>
+          {% endif %}
 
-                        <div class="field mt-4">
-                            <button type="submit" class="button is-primary is-fullwidth">{% trans "Sign Up" %}</button>
-                        </div>
-                    </form>
-
-                    <div class="has-text-centered mt-5 mb-2">
-                        <p class="is-size-6">{% trans "Or sign up using:" %}</p>
-                    </div>
-
-                    <div class="buttons is-centered">
-                        <a href="{% provider_login_url 'google' %}"
-                           class="button is-primary is-fullwidth has-text-weight-bold">
-                            <span class="icon is-small">
-                                <img src="{% static 'img/google-logo.svg' %}" alt="Google" style="height: 1.2rem;">
-                            </span>
-                            <span>Sign up with Google</span>
-                        </a>
-
-                        <a href="#" class="button is-light is-fullwidth is-static has-text-grey"
-                           onclick="facebookUnavailable(event)">
-                            <span class="icon"><i class="fab fa-facebook-f"></i></span>
-                            <span>Facebook (coming soon)</span>
-                        </a>
-                    </div>
-
-                </div>
+          {% for error in field.errors %}
+            <div class="p-4 mb-4 text-sm text-yellow-900 font-medium rounded-lg bg-yellow-50 mt-2">
+              <i class="fas fa-exclamation-circle mr-2"></i>{{ error }}
             </div>
+          {% endfor %}
         </div>
-    </section>
-{% endblock %}
+        {% endfor %}
+
+        {% if redirect_field_value %}
+          <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}">
+        {% endif %}
+
+        <div class="mt-6">
+          <button type="submit"
+            class="w-full bg-red-700 text-white text-lg py-3 px-4 rounded-lg font-semibold hover:bg-red-800 transition border border-white/60">
+            {% trans "Sign Up" %}
+          </button>
+        </div>
+      </form>
+
+      <div class="text-center text-white text-xl font-semibold my-6">or</div>
+
+      <div class="flex flex-col gap-3">
+        <a href="{% provider_login_url 'google' %}"
+           class="flex items-center justify-center gap-3 bg-blue-900 text-white py-3 px-4 rounded-lg font-semibold hover:bg-blue-700 transition border border-white/60">
+          <img src="{% static 'img/google_logo.png' %}" alt="Google" class="h-5">
+          <span>Sign up with Google</span>
+        </a>
+
+        <a href="#" onclick="facebookUnavailable(event)"
+           class="flex items-center justify-center gap-2 bg-gray-300 text-gray-600 py-3 px-4 rounded-lg font-semibold cursor-not-allowed ">
+          <i class="fab fa-facebook-f"></i>
+          <span>Facebook (coming soon)</span>
+        </a>
+      </div>
+
+    </div>
+  </div>
+</section>
 
 <script>
-    function facebookUnavailable(event) {
-        event.preventDefault();
-        alert("Facebook sign-in is not available yet. Please use Google or create an account manually.");
-    }
+  function facebookUnavailable(event) {
+    event.preventDefault();
+    alert("Facebook sign-in is not available yet. Please use Google or create an account manually.");
+  }
 </script>
+{% endblock %}

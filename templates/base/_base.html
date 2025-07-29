@@ -39,14 +39,17 @@
     {#    {% include "partials/_navbar.html" %}#}
     {% include "partials/_drawer.html" %}
     {% if messages %}
-        <div class="p-4 max-w-3xl mx-auto">
+        <div class="p-4 max-w-3xl mx-auto" id="message-container">
             {% for message in messages %}
-                <div class="mb-2 p-3 rounded bg-blue-100 text-blue-800 border border-blue-300">
+                <div id="message-{{ forloop.counter }}"
+                     class="fade-message mb-2 p-3 rounded bg-blue-100 text-blue-800 border border-blue-300"
+                     style="opacity: 1; transition: opacity 1s ease;">
                     {{ message }}
                 </div>
             {% endfor %}
         </div>
     {% endif %}
+
     <main class="section">
         <div>
             {% block content %}{% endblock %}
@@ -59,6 +62,19 @@
     {% endblock %}
     {% block extra_js %}{% endblock %}
 </div>
-{% block scripts %}{% endblock %}
+{% block scripts %}
+{% endblock %}
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        setTimeout(() => {
+            document.querySelectorAll(".fade-message").forEach(el => {
+                el.style.opacity = "0";  // triggers the transition
+                setTimeout(() => el.remove(), 1000);  // remove after fade completes
+            });
+        }, 5000);  // delay before fading
+    });
+</script>
+
 </body>
 </html>

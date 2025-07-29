@@ -85,3 +85,41 @@ def tag_email_for_test_campaign(request):
         form = TestCampaignForm()
 
     return render(request, "mailchimp/test_campaign.html", {"form": form})
+
+from .forms import NewsletterSignupForm
+
+def newsletter_signup(request):
+    if request.method == "POST":
+        form = NewsletterSignupForm(request.POST)
+        if form.is_valid():
+            email = form.cleaned_data["email"]
+            member_id = hashlib.md5(email.lower().encode()).hexdigest()
+            client = get_mailchimp_client()
+            try:
+                # Create or update contact
+                client.lists.set_list_member(
+                    settings.MAILCHIMP_LIST_ID,
+                    member_id,
+                    {
+                        "email_address": email,
+                        "status_if_new": "subscribed",  # or "pending"
+                        "merge_fields": {},
+                    }
+                )
+
+                # Add a tag so you can segment for newsletters
+                client.lists.update_list_member_tags(
+                    settings.MAILCHIMP_LIST_ID,
+                    member_id,
+                    {"tags": [{"name": "Newsletter", "status": "active"}]}
+                )
+
+                messages.success(request, "Thanks for signing up for news!")
+            except Exception as e:
+                messages.error(request, f"Could not subscribe: {getattr(e, 'text', str(e))}")
+
+            return redirect("home")  # Or wherever you want to go after form submit
+    else:
+        form = NewsletterSignupForm()
+
+    return render(request, "mailchimp/newsletter_signup.html", {"form": form})

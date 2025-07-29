@@ -10,7 +10,7 @@ User = get_user_model()
 
 class CustomSignupForm(SignupForm):
     first_name = forms.CharField(max_length=150, required=True)
-    lessons = forms.BooleanField(label="I wish to apply for children's lessons",
+    lessons = forms.BooleanField(label="I wish to sign up for swimming lessons.",
                                  required=False)
 
     def __init__(self, *args, **kwargs):
@@ -18,6 +18,9 @@ class CustomSignupForm(SignupForm):
         self.fields['first_name'].required = True
         self.fields['password1'].help_text = (
             "Must be 8+ characters, not too common or all numbers."
+        )
+        self.fields['lessons'].help_text = (
+            "Do not check if signing up for schools lessons."
         )
 
     def save(self, request):

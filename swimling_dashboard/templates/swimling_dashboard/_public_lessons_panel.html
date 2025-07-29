@@ -13,7 +13,13 @@
                 {% if item.current_lessons %}
                     <ul class="mb-1">
                         {% for lesson in item.current_lessons %}
-                            <li>{{ lesson.name }}</li>
+                            <li class="is-flex is-justify-content-space-between is-align-items-center">
+                                <span>{{ lesson.name }}</span>
+                                <a href="{% url 'shopping_cart:direct_rebooking' item.swimling.id lesson.id %}"
+                                   class="button is-small is-info ml-2">
+                                    Rebook
+                                </a>
+                            </li>
                         {% endfor %}
                     </ul>
                     <p class="has-text-grey is-size-7">You may book additional lessons.</p>
@@ -21,6 +27,7 @@
                     <p><em class="has-text-grey-light">Not registered</em></p>
                 {% endif %}
             </div>
+
 
             <!-- Next Term -->
             <div class="column is-3">

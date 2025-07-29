@@ -19,9 +19,6 @@ class CustomSignupForm(SignupForm):
         self.fields['password1'].help_text = (
             "Must be 8+ characters, not too common or all numbers."
         )
-        self.fields['lessons'].help_text = (
-            "Do not check if signing up for schools lessons."
-        )
 
     def save(self, request):
         # Call the parent save method to create the user instance

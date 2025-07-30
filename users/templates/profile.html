@@ -5,226 +5,183 @@
 {% block head_title %}My Profile{% endblock %}
 
 {% block content %}
-    <section class="section">
-        <div class="container">
-            <div class="columns is-centered">
-                <div class="column is-two-thirds-tablet is-half-desktop">
+<section class="py-12 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto">
+    <!-- Page Header -->
+    <div class="text-center mb-10 text-white">
+        <h2 class="text-3xl md:text-4xl font-bold mb-2">
+            <i class="fas fa-user-circle mr-2"></i>My Profile
+        </h2>
+        <p class="text-gray-500">Update your personal information and preferences</p>
+    </div>
 
-                    <!-- Page Header -->
-                    <div class="has-text-centered mb-6">
-                        <h1 class="title is-3 has-text-primary">
-                            <i class="fas fa-user-circle mr-2"></i>My Profile
-                        </h1>
-                        <p class="subtitle is-6 has-text-grey">
-                            Update your personal information and preferences
-                        </p>
-                    </div>
-
-                    <!-- Profile Form Card -->
-                    <div class="card">
-                        <div class="card-header has-background-primary">
-                            <p class="card-header-title has-text-white">
-                                <i class="fas fa-edit mr-2"></i>
-                                Profile Information
-                            </p>
-                        </div>
-
-                        <div class="card-content">
-                            <form method="post">
-                                {% csrf_token %}
-
-                                <!-- Username Field -->
-                                <div class="field">
-                                    <label class="label" for="{{ u_form.username.id_for_label }}">
-                                        <i class="fas fa-at mr-1"></i>Username
-                                    </label>
-                                    <div class="control has-icons-left">
-                                        {{ u_form.username|add_class:"input" }}
-                                        <span class="icon is-small is-left">
-                    <i class="fas fa-user"></i>
-                  </span>
-                                    </div>
-                                    {% if u_form.username.help_text %}
-                                        <p class="help">{{ u_form.username.help_text }}</p>
-                                    {% endif %}
-                                    {% if u_form.username.errors %}
-                                        <p class="help is-danger">{{ u_form.username.errors.0 }}</p>
-                                    {% endif %}
-                                </div>
-
-                                <!-- First Name -->
-                                <div class="field">
-                                    <label class="label" for="{{ u_form.first_name.id_for_label }}">
-                                        <i class="fas fa-user mr-1"></i>First Name
-                                    </label>
-                                    <div class="control has-icons-left">
-                                        {{ u_form.first_name|add_class:"input" }}
-                                        <span class="icon is-small is-left">
-                    <i class="fas fa-signature"></i>
-                  </span>
-                                    </div>
-                                    {% if u_form.first_name.errors %}
-                                        <p class="help is-danger">{{ u_form.first_name.errors.0 }}</p>
-                                    {% endif %}
-                                </div>
-
-                                <!-- Last Name -->
-                                <div class="field">
-                                    <label class="label" for="{{ u_form.last_name.id_for_label }}">
-                                        <i class="fas fa-user mr-1"></i>Last Name
-                                    </label>
-                                    <div class="control has-icons-left">
-                                        {{ u_form.last_name|add_class:"input" }}
-                                        <span class="icon is-small is-left">
-                    <i class="fas fa-signature"></i>
-                  </span>
-                                    </div>
-                                    {% if u_form.last_name.errors %}
-                                        <p class="help is-danger">{{ u_form.last_name.errors.0 }}</p>
-                                    {% endif %}
-                                </div>
-
-                                <!-- Email (Read-only display) -->
-                                <div class="field">
-                                    <label class="label">
-                                        <i class="fas fa-envelope mr-1"></i>Email Address
-                                    </label>
-                                    <div class="control has-icons-left">
-                                        <input class="input" type="email" value="{{ user.email }}" readonly>
-                                        <span class="icon is-small is-left">
-                    <i class="fas fa-envelope"></i>
-                  </span>
-                                    </div>
-                                    <p class="help">Your email address cannot be changed here. Contact support if
-                                        needed.</p>
-                                </div>
-
-                                <!-- Notes -->
-                                <div class="field">
-                                    <label class="label" for="{{ u_form.admin_notes.id_for_label }}">
-                                        <i class="fas fa-sticky-note mr-1"></i>Notes
-                                    </label>
-                                    <div class="control">
-                                        {{ u_form.admin_notes|add_class:"textarea" }}
-                                    </div>
-                                    <p class="help">Add any personal notes or preferences</p>
-                                    {% if u_form.admin_notes.errors %}
-                                        <p class="help is-danger">{{ u_form.admin_notes.errors.0 }}</p>
-                                    {% endif %}
-                                </div>
-
-                                <!-- User Info Display -->
-                                <div class="notification is-info is-light">
-                                    <div class="columns is-vcentered">
-                                        <div class="column">
-                                            <p class="has-text-weight-semibold">
-                                                <i class="fas fa-info-circle mr-2"></i>Account Information
-                                            </p>
-                                            <p><strong>Account Type:</strong>
-                                                {% if user.groups.all %}
-                                                    {% for group in user.groups.all %}
-                                                        <span class="tag is-primary">{{ group.name }}</span>
-                                                    {% endfor %}
-                                                {% else %}
-                                                    <span class="tag">Standard User</span>
-                                                {% endif %}
-                                            </p>
-                                            <p><strong>Member Since:</strong> {{ user.date_joined|date:"F d, Y" }}</p>
-                                            <p><strong>Last
-                                                Login:</strong> {{ user.last_login|date:"F d, Y at g:i A"|default:"Never" }}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Form Actions -->
-                                <div class="field is-grouped is-grouped-centered">
-                                    <div class="control">
-                                        <button type="submit" class="button is-primary is-medium">
-                    <span class="icon">
-                      <i class="fas fa-save"></i>
-                    </span>
-                                            <span>Save Changes</span>
-                                        </button>
-                                    </div>
-                                    <div class="control">
-                                        <a href="/" class="button is-light is-medium">
-                    <span class="icon">
-                      <i class="fas fa-times"></i>
-                    </span>
-                                            <span>Cancel</span>
-                                        </a>
-                                    </div>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-
-                    <!-- Quick Actions Card -->
-                    <div class="card mt-5">
-                        <div class="card-header has-background-info">
-                            <p class="card-header-title has-text-white">
-                                <i class="fas fa-tools mr-2"></i>
-                                Quick Actions
-                            </p>
-                        </div>
-                        <div class="card-content">
-                            <div class="buttons">
-                                <a href="/account/password/change/" class="button is-warning">
-                <span class="icon">
-                  <i class="fas fa-key"></i>
-                </span>
-                                    <span>Change Password</span>
-                                </a>
-                                {% for group in user.groups.all %}
-                                    {% if group.name|lower == 'guardian' %}
-                                        <a href="{% url 'swimling_dashboard:guardian_dashboard' %}" class="button is-success">
-
-                    <span class="icon">
-                      <i class="fas fa-swimmer"></i>
-                    </span>
-                                            <span>Swim Center</span>
-                                        </a>
-                                    {% endif %}
-                                {% endfor %}
-                                <a href="{% url 'account_logout' %}" class="button is-danger is-outlined">
-                <span class="icon">
-                  <i class="fas fa-sign-out-alt"></i>
-                </span>
-                                    <span>Logout</span>
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-
-                </div>
-            </div>
+    <!-- Profile Form Card -->
+    <div class="bg-white shadow-lg rounded-xl overflow-hidden mb-6">
+        <div class="bg-blue-300 px-6 py-4">
+            <h2 class="text-blue-900 text-xl font-semibold flex items-center">
+                <i class="fas fa-edit mr-2"></i>Profile Information
+            </h2>
         </div>
-    </section>
+        <div class="p-6">
+            <form method="post">
+                {% csrf_token %}
 
-    {% if messages %}
-        <div class="modal is-active" id="messageModal">
-            <div class="modal-background"></div>
-            <div class="modal-content">
-                <div class="notification is-success">
-                    <button class="delete"
-                            onclick="document.getElementById('messageModal').classList.remove('is-active')"></button>
-                    {% for message in messages %}
-                        <p>{{ message }}</p>
-                    {% endfor %}
+                <!-- Username -->
+                <div class="mb-4">
+                    <label for="{{ u_form.username.id_for_label }}" class="block font-semibold mb-1 text-blue-800">
+                        <i class="fas fa-at mr-1"></i>Username
+                    </label>
+                    <div class="relative">
+                        {{ u_form.username|add_class:"input w-full border rounded px-4 py-2 pr-10 focus:outline-none focus:ring" }}
+                        <div class="absolute left-3 top-2.5 text-gray-400">
+                        </div>
+                    </div>
+                    {% if u_form.username.help_text %}
+                        <p class="text-sm text-gray-500 mt-1">{{ u_form.username.help_text }}</p>
+                    {% endif %}
+                    {% if u_form.username.errors %}
+                        <p class="text-sm text-red-600 mt-1">{{ u_form.username.errors.0 }}</p>
+                    {% endif %}
                 </div>
-            </div>
+
+                <!-- First Name -->
+                <div class="mb-4">
+                    <label for="{{ u_form.first_name.id_for_label }}" class="block font-semibold mb-1 text-blue-800">
+                        <i class="fas fa-user mr-1"></i>First Name
+                    </label>
+                    <div class="relative">
+                        {{ u_form.first_name|add_class:"input w-full border rounded px-4 py-2 pr-10 focus:outline-none focus:ring" }}
+                        <div class="absolute left-3 top-2.5 text-gray-400">
+                        </div>
+                    </div>
+                    {% if u_form.first_name.errors %}
+                        <p class="text-sm text-red-600 mt-1">{{ u_form.first_name.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Last Name -->
+                <div class="mb-4">
+                    <label for="{{ u_form.last_name.id_for_label }}" class="block font-semibold mb-1 text-blue-800">
+                        <i class="fas fa-user mr-1"></i>Last Name
+                    </label>
+                    <div class="relative">
+                        {{ u_form.last_name|add_class:"input w-full border rounded px-4 py-2 pr-10 focus:outline-none focus:ring" }}
+                        <div class="absolute left-3 top-2.5 text-gray-400">
+                        </div>
+                    </div>
+                    {% if u_form.last_name.errors %}
+                        <p class="text-sm text-red-600 mt-1">{{ u_form.last_name.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Email (read-only) -->
+                <div class="mb-4">
+                    <label class="block font-semibold mb-1 text-blue-800">
+                        <i class="fas fa-envelope mr-1"></i>Email Address
+                    </label>
+                    <div class="relative">
+                        <input type="email" value="{{ user.email }}" readonly
+                               class="w-full border rounded px-4 py-2 bg-gray-100 cursor-not-allowed text-gray-700">
+                        <div class="absolute left-3 top-2.5 text-gray-400">
+                        </div>
+                    </div>
+                    <p class="text-sm text-gray-500 mt-1">Your email address cannot be changed here. Contact support if needed.</p>
+                </div>
+
+                <!-- Admin Notes -->
+                <div class="mb-6">
+                    <label for="{{ u_form.admin_notes.id_for_label }}" class="block font-semibold mb-1 text-blue-800">
+                        <i class="fas fa-sticky-note mr-1"></i>Notes
+                    </label>
+                    {{ u_form.admin_notes|add_class:"textarea w-full border rounded p-3 focus:outline-none focus:ring" }}
+                    <p class="text-sm text-gray-500 mt-1">Add any personal notes or preferences</p>
+                    {% if u_form.admin_notes.errors %}
+                        <p class="text-sm text-red-600 mt-1">{{ u_form.admin_notes.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Account Info Display -->
+                <div class="bg-blue-100 border border-blue-200 rounded-lg p-4 mb-6">
+                    <p class="font-semibold text-blue-700 mb-2">
+                        <i class="fas fa-info-circle mr-1"></i>Account Information
+                    </p>
+                    <p class="mb-2"><strong>Account Type:</strong>
+                        {% if user.groups.all %}
+                            {% for group in user.groups.all %}
+                                <span class="inline-block bg-blue-700 text-white px-2 py-1 rounded text-sm mr-1">{{ group.name }}</span>
+                            {% endfor %}
+                        {% else %}
+                            <span class="inline-block bg-gray-200 text-gray-700 px-2 py-1 rounded text-sm">Standard User</span>
+                        {% endif %}
+                    </p>
+                    <p class="mb-2"><strong>Member Since:</strong> {{ user.date_joined|date:"F d, Y" }}</p>
+                    <p class="mb-2"><strong>Last Login:</strong> {{ user.last_login|date:"F j, Y \\a\\t g:i A"|default:"Never" }}</p>
+                </div>
+
+                <!-- Buttons -->
+                <div class="flex justify-center space-x-4">
+                    <button type="submit"
+                            class="inline-flex items-center px-6 py-3 text-white bg-blue-700 rounded-lg hover:bg-blue-800 focus:ring-4 focus:ring-blue-300">
+                        <i class="fas fa-save mr-2"></i>Save Changes
+                    </button>
+                    <a href="/"
+                       class="inline-flex items-center px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100">
+                        <i class="fas fa-times mr-2"></i>Cancel
+                    </a>
+                </div>
+            </form>
         </div>
-    {% endif %}
+    </div>
 
-    <script>
-        // Auto-hide messages after 3 seconds
-        setTimeout(function () {
-            const modal = document.getElementById('messageModal');
-            if (modal) {
-                modal.classList.remove('is-active');
-            }
-        }, 3000);
-    </script>
+    <!-- Quick Actions -->
+    <div class="bg-white shadow-lg rounded-xl overflow-hidden">
+        <div class="bg-blue-300 px-6 py-4">
+            <h2 class="text-blue-900 text-lg font-semibold flex items-center">
+                <i class="fas fa-tools mr-2"></i>Quick Actions
+            </h2>
+        </div>
+        <div class="p-6 flex flex-wrap gap-4">
+            <a href="/account/password/change/"
+               class="inline-flex items-center px-5 py-3 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600">
+                <i class="fas fa-key mr-2"></i>Change Password
+            </a>
 
+            {% for group in user.groups.all %}
+                {% if group.name|lower == 'guardian' %}
+                    <a href="{% url 'swimling_dashboard:guardian_dashboard' %}"
+                       class="inline-flex items-center px-5 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700">
+                        <i class="fas fa-swimmer mr-2"></i>Swim Center
+                    </a>
+                {% endif %}
+            {% endfor %}
+
+            <a href="{% url 'account_logout' %}"
+               class="inline-flex items-center px-5 py-3 border border-red-600 text-red-600 rounded-lg hover:bg-red-50">
+                <i class="fas fa-sign-out-alt mr-2"></i>Logout
+            </a>
+        </div>
+    </div>
+</section>
+
+{% if messages %}
+<div class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50" id="messageModal">
+    <div class="bg-white p-6 rounded-xl shadow-lg max-w-sm w-full relative">
+        <button onclick="document.getElementById('messageModal').remove()"
+                class="absolute top-2 right-2 text-gray-500 hover:text-black text-xl">&times;</button>
+        <div class="text-green-700">
+            {% for message in messages %}
+                <p>{{ message }}</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<script>
+    setTimeout(() => {
+        const modal = document.getElementById('messageModal');
+        if (modal) {
+            modal.remove();
+        }
+    }, 3000);
+</script>
+{% endif %}
 {% endblock %}

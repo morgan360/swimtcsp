@@ -14,10 +14,10 @@
       </div>
 
       <div class="flex flex-col sm:flex-row gap-4">
-        <input class="flex-1 rounded-lg border border-gray-300 p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        <input class="flex-1 rounded-lg border border-gray-300 p-3 focus:outline-none focus:ring-2 focus:ring-red-500"
                type="text" id="chat-input"
                placeholder="e.g. Why hasn't my child moved up a level?">
-        <button class="bg-blue-700 text-white px-6 py-3 rounded-lg hover:bg-blue-800 transition duration-200"
+        <button class="bg-red-700 text-white px-6 py-3 rounded-lg hover:bg-red-800 transition duration-200"
                 id="chat-send">
           Send
         </button>
@@ -38,7 +38,7 @@
 
     function appendUserMessage(message) {
       const div = document.createElement("div");
-      div.className = "bg-blue-300 text-blue-900 rounded-lg p-4";
+      div.className = "bg-blue-200 text-blue-900 rounded-lg p-4";
       div.innerHTML = `<strong>You:</strong> ${message}`;
       log.appendChild(div);
       log.scrollTop = log.scrollHeight;

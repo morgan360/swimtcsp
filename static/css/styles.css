@@ -1262,6 +1262,7 @@ video {
   border-color: rgb(255 255 255 / 0.6);
 }
 
+
 .border-blue-200 {
   --tw-border-opacity: 1;
   border-color: rgb(191 219 254 / var(--tw-border-opacity));
@@ -1463,6 +1464,7 @@ video {
 .bg-yellow-300 {
   --tw-bg-opacity: 1;
   background-color: rgb(253 224 71 / var(--tw-bg-opacity));
+
 }
 
 .bg-opacity-30 {
@@ -1627,9 +1629,11 @@ video {
   padding-top: 1rem;
 }
 
+
 .pr-10 {
   padding-right: 2.5rem;
 }
+
 
 .text-left {
   text-align: left;

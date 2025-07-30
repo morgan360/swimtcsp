@@ -1,7 +1,8 @@
+import os
 from django.contrib.admin import AdminSite, TabularInline, ModelAdmin
 from navigation.models import MenuGroup, MenuItem
 from waiting_list.models import WaitingList  # ✅ Import your model
-from django.contrib import admin
+from django.contrib import admin, messages
 from progress.models import (
     CoreAquaticSkill,
     Skill,
@@ -9,7 +10,9 @@ from progress.models import (
     SkillAssessment,
     InstructorNote
 )
-from chatbot.models import ChatbotQuery
+from chatbot.models import ChatbotQuery, FAQEntry
+import openai
+from openai import OpenAI
 
 class GeneralAdminSite(AdminSite):
     site_header = "⚙️ General Admin"
@@ -84,7 +87,7 @@ class InstructorNoteAdmin(ModelAdmin):
 
 
 class ChatbotQueryAdmin(admin.ModelAdmin):
-    list_display = ("source", "timestamp", "short_message", "response_type", "session_key")
+    list_display = ("source", "timestamp", "short_message", "response_type", "confidence_score")
 
     def short_message(self, obj):
         if not obj.message:
@@ -92,6 +95,39 @@ class ChatbotQueryAdmin(admin.ModelAdmin):
         return (obj.message[:50] + "...") if len(obj.message) > 50 else obj.message
 
     short_message.short_description = "Message"
+
+# Frequently Asked Questions
+
+client = OpenAI()  # Uses OPENAI_API_KEY from env automatically
+
+@admin.action(description="Generate embeddings using OpenAI (new client)")
+def generate_embeddings(modeladmin, request, queryset):
+    count = 0
+    for faq in queryset:
+        if not faq.question:
+            continue
+        try:
+            response = client.embeddings.create(
+                input=faq.question,
+                model="text-embedding-ada-002"
+            )
+            faq.embedding = response.data[0].embedding
+            faq.save()
+            count += 1
+        except Exception as e:
+            messages.warning(request, f"❌ Error for '{faq.question[:50]}': {e}")
+    messages.success(request, f"✅ Generated embeddings for {count} FAQs.")
+
+@admin.register(FAQEntry)
+class FAQEntryAdmin(admin.ModelAdmin):
+    list_display = ('question', 'short_answer', 'lessons_only', 'updated')
+    list_filter = ('lessons_only',)
+    search_fields = ('question', 'answer')
+    actions = [generate_embeddings]
+
+    def short_answer(self, obj):
+        return (obj.answer[:80] + '...') if len(obj.answer) > 80 else obj.answer
+    short_answer.short_description = 'Answer'
 
 
 # ✅ Register all skills-related models
@@ -106,3 +142,4 @@ general_admin_site.register(MenuGroup, MenuGroupAdmin)
 general_admin_site.register(WaitingList, WaitingListAdmin)  # ✅ Registered here
 general_admin_site.register(MenuItem, MenuItemAdmin)
 general_admin_site.register(ChatbotQuery, ChatbotQueryAdmin)
+general_admin_site.register(FAQEntry, FAQEntryAdmin)

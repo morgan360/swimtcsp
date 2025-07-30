@@ -1,34 +1,33 @@
-import openai
+import os
 import json
 import logging
+import markdown
 from pathlib import Path
 from django.conf import settings
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render
 from django.utils import timezone
-import markdown
+from openai import OpenAI
+
 from chatbot.models import ChatbotQuery
-from .helpers.faq import load_faq_embeddings, match_faq
+from .helpers.faq import match_faq
 from .helpers.swim import get_available_swims, format_swim_list
 from .helpers.lesson import get_upcoming_terms, get_active_lessons, format_lesson_list
 from chatbot.utils import get_skill_structure_summary
 from .helpers.gpt import build_swim_prompt, build_lesson_prompt, parse_markdown_reply
 
-
 logger = logging.getLogger(__name__)
-client = openai.OpenAI(api_key=settings.OPENAI_API_KEY)
-
-FAQ_PATH = Path(__file__).resolve().parent / "data" / "faq_with_embeddings.json"
-embedded_faqs = load_faq_embeddings(FAQ_PATH)
+client = OpenAI()  # Reads from OPENAI_API_KEY in environment or settings
 
 def get_query_embedding(text):
     response = client.embeddings.create(
-        input=[text],
+        input=text,
         model="text-embedding-ada-002"
     )
     return response.data[0].embedding
 
+# ✅ PUBLIC LESSON CHATBOT VIEW
 @csrf_exempt
 def public_lesson_chat_api(request):
     if request.method != "POST":
@@ -38,8 +37,8 @@ def public_lesson_chat_api(request):
         data = json.loads(request.body)
         user_message = data.get("message", "").strip()
         logger.info("📩 Lesson bot message: %s", user_message)
+        faq_answer,confidence = match_faq(user_message, embed_func=get_query_embedding, lessons_mode=True)
 
-        faq_answer = match_faq(user_message, embedded_faqs, embed_func=get_query_embedding)
         if faq_answer:
             logger.info("✅ Responding from FAQ")
             html_reply = markdown.markdown(faq_answer, extensions=["extra"])
@@ -75,7 +74,7 @@ def public_lesson_chat_api(request):
         logger.error("❌ Lesson chatbot error: %s", str(e), exc_info=True)
         return JsonResponse({"reply": f"⚠️ Error: {str(e)}"}, status=200)
 
-
+# ✅ PUBLIC SWIM CHATBOT VIEW
 @csrf_exempt
 def public_swim_chat(request):
     if request.method != "POST":
@@ -86,10 +85,10 @@ def public_swim_chat(request):
         user_message = data.get("message", "").strip()
         logger.info("📩 Swim bot message: %s", user_message)
 
-        # ✅ Ensure session exists
+        # Ensure session exists
         if not request.session.session_key:
             request.session.save()
-
+        confidence = None
         time_keywords = [
             "when is the next swim", "what swims are available", "swim today",
             "swim times", "weekend swims", "can I swim", "sessions", "next public swim"
@@ -97,20 +96,18 @@ def public_swim_chat(request):
         if any(kw in user_message.lower() for kw in time_keywords):
             faq_answer = None
         else:
-            faq_answer = match_faq(user_message, embedded_faqs, embed_func=get_query_embedding)
+            faq_answer,confidence = match_faq(user_message, embed_func=get_query_embedding, lessons_mode=False)
 
         if faq_answer:
             logger.info("✅ Responding from FAQ")
-
-            # ✅ Log query
             ChatbotQuery.objects.create(
                 user=request.user if request.user.is_authenticated else None,
                 session_key=request.session.session_key,
                 source="public_swim",
                 message=user_message,
-                response_type="FAQ"
+                response_type="FAQ",
+                confidence_score=confidence
             )
-
             html_reply = markdown.markdown(faq_answer, extensions=["extra"])
             return JsonResponse({"reply": html_reply})
 
@@ -127,13 +124,13 @@ def public_swim_chat(request):
             ]
         )
 
-        # ✅ Log GPT response
         ChatbotQuery.objects.create(
             user=request.user if request.user.is_authenticated else None,
             session_key=request.session.session_key,
             source="public_swim",
             message=user_message,
-            response_type="GPT"
+            response_type="GPT",
+            confidence_score=confidence
         )
 
         html_reply = parse_markdown_reply(response)
@@ -143,6 +140,7 @@ def public_swim_chat(request):
         logger.error("❌ Swim chatbot error: %s", str(e), exc_info=True)
         return JsonResponse({"error": "Something went wrong while processing your message."}, status=500)
 
+# ✅ UI ROUTES
 def public_lesson_chat_ui(request):
     return render(request, "chatbot/public_lesson_chat.html")
 
@@ -151,7 +149,3 @@ def public_swim_chat_ui(request):
 
 def chat_response(request):
     return JsonResponse({"reply": "This is the default chatbot endpoint. Try /chat/public-swim/ or /chat/public-lesson/."})
-
-
-
-

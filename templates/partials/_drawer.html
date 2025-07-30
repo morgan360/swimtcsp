@@ -82,9 +82,9 @@
           {% if item.label != "About" and item.label != "Contact" %}
           <li>
             <a href="{{ item.resolve_url }}" @click="drawerOpen = false"
-              class="flex items-center text-sm text-base-content hover:text-primary">
+              class="flex items-center text-md text-base-content text-black hover:font-bold rounded-lg px-3 py-1 transition-colors">
               {% if item.icon_class %}
-              <i class="{{ item.icon_class }} mr-2"></i>
+              <!-- <i class="{{ item.icon_class }} mr-2"></i> -->
               {% endif %}
               {{ item.label }}
             </a>

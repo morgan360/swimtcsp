@@ -66,7 +66,6 @@ These filters are used in `_navbar.html` to conditionally display menu sections:
 
 ## 🧱 Notes
 
-* Filters are loaded via `{% load group_filters %}`.
 * Ensure `templatetags/group_filters.py` exists and is in a registered Django app.
 * Run `python manage.py shell` to verify group names with: `Group.objects.values_list('name', flat=True)`.
 

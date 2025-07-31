@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django.contrib.sites',  # Allauth
     # Installed Apps
+    "ckeditor",
      # Core Allauth
     'allauth',
     'allauth.account',

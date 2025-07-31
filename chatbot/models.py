@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth import get_user_model
+from ckeditor.fields import RichTextField
 
 User = get_user_model()
 
@@ -19,7 +20,7 @@ class ChatbotQuery(models.Model):
 
 class FAQEntry(models.Model):
     question = models.TextField()
-    answer = models.TextField()
+    answer = RichTextField()
     embedding = models.JSONField(blank=True, null=True)
     updated = models.DateTimeField(auto_now=True)
     lessons_only = models.BooleanField(

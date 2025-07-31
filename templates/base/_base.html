@@ -15,8 +15,8 @@
     <meta property="og:type" content="website">
 
     <!-- Bulma CSS -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/1.0.3/css/bulma.min.css">
-    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    <!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/1.0.3/css/bulma.min.css">
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}"> -->
 
     <!-- Tailwind -->
     <link href="{% static 'css/styles.css' %}" rel="stylesheet">
@@ -36,8 +36,15 @@
 <body class="overflow-x-hidden">
 <div x-data="{ dark: false, drawerOpen: false }" class="bg-blue-900">
     {# ✅ Include Navbar inside body #}
-    {#    {% include "partials/_navbar.html" %}#}
+    <!-- Mobile Drawer -->
+    <div class="lg:hidden">
     {% include "partials/_drawer.html" %}
+    </div>
+
+    <!-- Desktop Navbar -->
+    <div class="hidden lg:block">
+    {% include "partials/_navbar.html" %}
+    </div>
     {% if messages %}
         <div class="p-4 max-w-3xl mx-auto" id="message-container">
             {% for message in messages %}

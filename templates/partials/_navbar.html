@@ -3,121 +3,151 @@
 {% load navigation_tags %}
 {% drawer_menu as drawer_menus %}
 
-<nav class="navbar bg-blue-100 shadow-lg px-4 py-3" x-data="{ mobileOpen: false }">
-  <!-- Left Section -->
-  <div class="flex items-center justify-between w-full lg:w-auto">
-    <a href="/" class="flex items-center gap-2">
-      <img src="{% static 'img/logo.png' %}" alt="Logo" width="40" height="40" />
-      <span class="text-lg font-bold text-primary">TCSP</span>
-    </a>
+<nav class="bg-blue-100 shadow-lg px-4 py-3 z-50" x-data="{ mobileOpen: false }">
 
-    <!-- Mobile burger -->
-    <button @click="mobileOpen = !mobileOpen" class="btn btn-ghost lg:hidden">
-      <i x-show="!mobileOpen" class="fas fa-bars"></i>
-      <i x-show="mobileOpen" class="fas fa-times"></i>
-    </button>
-  </div>
+	<!-- Centered Logo (Desktop Only) -->
+	<div class="hidden lg:flex flex-col items-center justify-center mb-4">
+		<a href="{% url 'home' %}" class="flex flex-col items-center">
+			<img src="{% static 'img/full-logo-transparent.png' %}" alt="Templeogue College Swim Pool Logo" width="180"
+				height="180" class="mb-2">
+		</a>
+	</div>
 
-  <!-- Center Links (Desktop) -->
-  <div class="hidden lg:flex flex-grow justify-center">
-    <ul class="menu menu-horizontal px-1 gap-2">
-      <li><a href="/">Home</a></li>
-      {% if user.is_authenticated %}
-      <li><a href="{% url 'swims:product_list' %}">Public Swims</a></li>
-      {% endif %}
+	<!-- Top Row: Mobile Logo & Burger -->
+	<div class="flex items-center justify-between w-full lg:hidden">
+		<a href="{% url 'home' %}" class="flex items-center">
+			<img src="{% static 'img/logo.png' %}" alt="Logo" width="40" height="40" class="mr-2">
+			<strong class="text-blue-800">TCSP</strong>
+		</a>
+		<!-- Mobile burger -->
+		<button @click="mobileOpen = !mobileOpen" class="text-blue-900 text-2xl">
+			<i x-show="!mobileOpen" class="fas fa-bars"></i>
+			<i x-show="mobileOpen" class="fas fa-times"></i>
+		</button>
+	</div>
 
-      {% if user|is_guardian_user %}
-      <li tabindex="0">
-        <details>
-          <summary>Swimming Lessons</summary>
-          <ul class="p-2 bg-base-100 rounded-box">
-            <li><a href="/lessons/lesson_list">Public Lessons</a></li>
-            <li><a href="{% url 'users:combined_swimling_mgmt' %}">Swimling Panel</a></li>
-            <li><a href="/lessons_bookings/booking_history/">Booking History</a></li>
-          </ul>
-        </details>
-      </li>
-      {% endif %}
+	<!-- Desktop Nav Row -->
+	<div class="hidden lg:flex w-full items-center justify-between mt-2 relative">
 
-      {% if user|is_school_user %}
-      <li tabindex="0">
-        <details>
-          <summary>School Programs</summary>
-          <ul class="p-2 bg-base-100 rounded-box">
-            <li><a href="/schools/school_list">School Bookings</a></li>
-            <li><a href="/school/register/">Register School</a></li>
-            <li><a href="/schools/school_dashboard/">School Dashboard</a></li>
-          </ul>
-        </details>
-      </li>
-      {% endif %}
+		<!-- Center Nav Links -->
 
-      {% if not user.is_authenticated %}
-      <li tabindex="0">
-        <details>
-          <summary>Programs</summary>
-          <ul class="p-2 bg-base-100 rounded-box">
-            <li><a href="{% url 'swims:product_list' %}">Public Swims</a></li>
-            <li><a href="/lessons/lesson_list">Swimming Lessons</a></li>
-            <li><a href="/schools/school_list">School Programs</a></li>
-          </ul>
-        </details>
-      </li>
-      {% endif %}
+		<div class="w-1/3">
+			<!-- Left spacer (used to offset the center) -->
+		</div>
 
-      <li><a href="{% url 'about' %}">About</a></li>
-      <li><a href="{% url 'contact' %}">Contact</a></li>
-    </ul>
-  </div>
+		<div class="absolute left-1/2 transform -translate-x-1/2 z-50">
+			<ul class="flex items-center gap-8 text-blue-900 font-medium text-lg">
+				{% for group, items in drawer_menus.items %}
+				{% if group != "User" and group != "Profile" %}
+				{% if items|length > 1 %}
+				<li x-data="{ open: false }" class="relative">
+					<button @click="open = !open"
+						:class="{'text-red-800': open}"
+						class=" transition flex items-center gap-1 focus:outline-none">
+						{{ group }}
+						<i class="fas fa-caret-down"></i>
+					</button>
+					<ul x-show="open" @click.away="open = false" x-transition
+						class="absolute left-0 top-full mt-2 p-2 bg-white shadow-lg rounded-lg w-64 text-left text-blue-900 z-50">
+						{% for item in items %}
+						<li>
+							<a href="{{ item.resolve_url }}"
+								class="block px-3 py-1 hover:bg-blue-100 flex items-center gap-2">
+								{% if item.icon_class %}<i class="{{ item.icon_class }} mr-1"></i>{% endif %}
+								{{ item.label }}
+							</a>
+						</li>
+						{% endfor %}
+					</ul>
+				</li>
+				{% else %}
+				{% with item=items.0 %}
+				<li>
+					<a href="{{ item.resolve_url }}" class="hover:text-blue-800 transition flex items-center gap-2">
+						{{ item.label }}
+					</a>
+				</li>
+				{% endwith %}
+				{% endif %}
+				{% endif %}
+				{% endfor %}
+			</ul>
+		</div>
 
-  <!-- Right Section (Desktop) -->
-  <div class="hidden lg:flex items-center gap-3">
-    {% if user.is_authenticated %}
-    <span class="text-sm">Welcome, <strong>{{ user.get_full_name|default:user.username }}</strong></span>
-    <div class="dropdown dropdown-end">
-      <label tabindex="0" class="btn btn-ghost btn-sm flex items-center gap-1">
-        <i class="fas fa-user"></i> My Account
-      </label>
-      <ul tabindex="0" class="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-64">
-        <li><a href="{% url 'users:profile' %}"><i class="fas fa-user-circle"></i> Profile</a></li>
-        {% if user|is_guardian_user %}
-        <li><a href="{% url 'users:combined_swimling_mgmt' %}"><i class="fas fa-swimmer"></i> Swim Center</a></li>
-        <li><a href="/lessons_bookings/booking_history/"><i class="fas fa-history"></i> My Bookings</a></li>
-        {% endif %}
-        {% if user|is_customer_user %}
-        <li><a href="/swims/my_bookings/"><i class="fas fa-swimming-pool"></i> My Swim Bookings</a></li>
-        {% endif %}
-        {% if user|is_school_user %}
-        <li><a href="/schools/school_dashboard/"><i class="fas fa-school"></i> School Dashboard</a></li>
-        {% endif %}
-        <li><a href="/account/password/change/"><i class="fas fa-key"></i> Change Password</a></li>
-        <li>
-          <hr class="border-t" />
-        </li>
-        <li><a href="{% url 'account_logout' %}" class="text-error"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
-      </ul>
-    </div>
-    {% else %}
-    <a href="{% url 'account_signup' %}"
-      class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-bold rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"><i
-        class="fas fa-user-plus"></i> Sign up</a>
-    <a href="{% url 'account_login' %}"
-      class="bg-red-600 hover:bg-red-700 focus:ring-4 focus:ring-red-300 font-bold rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-red-600 dark:hover:bg-red-700 focus:outline-none dark:focus:ring-red-800"><i
-        class="fas fa-sign-in-alt"></i> Login</a>
-    {% endif %}
-  </div>
+		<!-- Right Section: Hello User or Auth Links -->
+		<div class="flex items-center gap-4 text-blue-900 font-semibold pr-4">
+			{% if user.is_authenticated %}
+			<div x-data="{ open: false }" class="relative" @click.away="open = false">
+				<button @click="open = !open"
+					class="flex items-center gap-1 hover:text-blue-800 transition focus:outline-none"
+					aria-haspopup="true" :aria-expanded="open.toString()">
+					<i class="fas fa-user"></i>
+					<span class="text-md font-bold">
+						Hello, <strong>{{ user.get_full_name|default:user.username }}</strong>
+					</span>
+					<i class="fas fa-caret-down"></i>
+				</button>
 
-  <!-- Mobile Menu -->
-  <div class="w-full mt-3 lg:hidden" x-show="mobileOpen" x-transition>
-    <ul class="menu menu-vertical p-2 bg-base-100 w-full rounded-box">
-      <li><a href="/" @click="mobileOpen = false">Home</a></li>
-      {% if user.is_authenticated %}
-      <li><a href="{% url 'swims:product_list' %}" @click="mobileOpen = false">Public Swims</a></li>
-      {% endif %}
-      {% if not user.is_authenticated %}
-      <li><a href="{% url 'account_login' %}" @click="mobileOpen = false">Login</a></li>
-      <li><a href="{% url 'account_signup' %}" @click="mobileOpen = false">Sign Up</a></li>
-      {% endif %}
-    </ul>
-  </div>
+				<ul x-show="open" x-transition
+					class="absolute right-0 top-full mt-2 p-2 bg-white shadow-lg rounded-md w-64 text-left text-blue-900 z-50">
+					<li><a href="{% url 'users:profile' %}" class="block px-4 py-2 hover:bg-blue-100"><i
+								class="fas fa-user-circle"></i> Profile</a></li>
+
+					{% if user|is_guardian_user %}
+					<li><a href="{% url 'swimling_dashboard:guardian_dashboard' %}"
+							class="block px-4 py-2 hover:bg-blue-100"><i class="fas fa-swimmer"></i> Swimling
+							Dashboard</a></li>
+					<li><a href="#" class="block px-4 py-2 hover:bg-blue-100"><i class="fas fa-history"></i> My
+							Bookings</a></li>
+					{% endif %}
+
+					{% if user|is_customer_user %}
+					<li><a href="/swims/my_bookings/" class="block px-4 py-2 hover:bg-blue-100"><i
+								class="fas fa-swimming-pool"></i> My Swim Bookings</a></li>
+					{% endif %}
+
+					{% if user|is_school_user %}
+					<li><a href="/schools/school_dashboard/" class="block px-4 py-2 hover:bg-blue-100"><i
+								class="fas fa-school"></i> School Dashboard</a></li>
+					{% endif %}
+
+					<li><a href="/account/password/change/" class="block px-4 py-2 hover:bg-blue-100"><i
+								class="fas fa-key"></i> Change Password</a></li>
+					<li><a href="{% url 'account_logout' %}" class="block px-4 py-2 text-red-600 hover:bg-red-100"><i
+								class="fas fa-sign-out-alt"></i> Logout</a></li>
+				</ul>
+			</div>
+			{% else %}
+			<div class="flex gap-3">
+				<a href="{% url 'account_signup' %}"
+					class="bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-semibold hover:bg-blue-800 transition">
+					<i class="fas fa-user-plus"></i> Sign up
+				</a>
+				<a href="{% url 'account_login' %}"
+					class="bg-red-600 text-white px-4 py-2 rounded-md text-sm font-semibold hover:bg-red-700 transition">
+					<i class="fas fa-sign-in-alt"></i> Login
+				</a>
+			</div>
+			{% endif %}
+		</div>
+	</div>
+
+	<!-- Mobile Menu -->
+	<div class="w-full mt-3 lg:hidden" x-show="mobileOpen" x-transition>
+		<ul class="flex flex-col gap-2 bg-white rounded-md p-4 text-blue-900 font-semibold">
+			{% for group, items in drawer_menus.items %}
+			{% if group != "User" and group != "Profile" %}
+			<li class="font-bold">{{ group }}</li>
+			{% for item in items %}
+			<li>
+				<a href="{{ item.resolve_url }}" @click="mobileOpen = false"
+					class="block px-3 py-2 rounded hover:bg-blue-100 transition">
+					{{ item.label }}
+				</a>
+			</li>
+			{% endfor %}
+			{% endif %}
+			{% endfor %}
+		</ul>
+	</div>
 </nav>

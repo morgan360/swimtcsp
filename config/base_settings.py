@@ -2,7 +2,7 @@
 BASE SETTINGS
 """
 import os
-SESSION_SAVE_EVERY_REQUEST = True
+
 from pathlib import Path
 from decouple import config
 
@@ -303,6 +303,9 @@ MAILCHIMP_SERVER_PREFIX = config("MAILCHIMP_SERVER_PREFIX")
 MAILCHIMP_LIST_ID = config("MAILCHIMP_LIST_ID")
 
 # Already done, but double check:
-SESSION_COOKIE_AGE = 3600  # 1 hour
+SESSION_COOKIE_AGE = 86400  # 1 day
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
+SESSION_SAVE_EVERY_REQUEST = True
+CSRF_COOKIE_AGE = 86400
+
 

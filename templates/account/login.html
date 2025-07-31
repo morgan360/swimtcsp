@@ -1,5 +1,6 @@
 {% extends "base/_base.html" %}
 {% load account socialaccount %}
+{% load static %}
 
 {% block head_title %}Login{% endblock %}
 
@@ -58,12 +59,13 @@
         {% get_providers as socialaccount_providers %}
         {% if socialaccount_providers %}
         <div class="bg-white/50 p-6 rounded-lg font-semibold shadow mb-6 text-center">
-          <p class="mb-3 text-blue-900 text-lg">Sign in with:</p>
+          <p class="mb-3 text-blue-900 text-lg">Login with:</p>
           <div class="flex justify-center flex-wrap gap-3">
             {% for provider in socialaccount_providers %}
-            <a href="{% provider_login_url provider.id process='login' %}"
-              class="px-4 py-2 bg-orange-700 text-white rounded-lg hover:bg-gray-800 transition">
-              {{ provider.name }}
+            <a href="{% provider_login_url 'google' %}"
+              class="flex items-center justify-center gap-3 bg-blue-900 text-white py-3 px-4 rounded-lg font-semibold hover:bg-blue-700 transition border border-white/60">
+              <img src="{% static 'img/google_logo.png' %}" alt="Google" class="h-5">
+              <span>Login with Google</span>
             </a>
             {% endfor %}
           </div>
@@ -98,7 +100,8 @@
 
             {% if field.errors %}
             {% for error in field.errors %}
-            <div class="p-4 mb-4 text-sm text-yellow-900 font-medium rounded-lg bg-yellow-50 dark:bg-gray-800 dark:text-yellow-300 mt-2">
+            <div
+              class="p-4 mb-4 text-sm text-yellow-900 font-medium rounded-lg bg-yellow-50 dark:bg-gray-800 dark:text-yellow-300 mt-2">
               <i class="fas fa-exclamation-circle mr-2"></i>{{ error }}
             </div>
             {% endfor %}

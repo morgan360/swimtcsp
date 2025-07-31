@@ -81,5 +81,5 @@ import_csv/
 swimtcsp/share/jupyter/lab/schemas/
 swimtcsp/home/management/
 /static/css/output.css # adjust path as needed
-static/css/styles.css
+#static/css/styles.css
 .DS_Store

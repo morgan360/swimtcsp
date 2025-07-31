@@ -231,6 +231,11 @@ SOCIALACCOUNT_PROVIDERS = {
             'access_type': 'online',
         },
         'OAUTH_PKCE_ENABLED': True,
+        'APP': {
+            'client_id': config("GOOGLE_CLIENT_ID"),
+            'secret': config("GOOGLE_CLIENT_SECRET"),
+            'key': ''
+        }
     }, 'facebook': {
         'METHOD': 'oauth2',
         # 'SDK_URL': '//connect.facebook.net/{locale}/sdk.js',

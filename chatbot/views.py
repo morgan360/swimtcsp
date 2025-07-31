@@ -37,10 +37,18 @@ def public_lesson_chat_api(request):
         data = json.loads(request.body)
         user_message = data.get("message", "").strip()
         logger.info("📩 Lesson bot message: %s", user_message)
-        faq_answer,confidence = match_faq(user_message, embed_func=get_query_embedding, lessons_mode=True)
+        faq_answer, confidence = match_faq(user_message, embed_func=get_query_embedding, lessons_mode=True)
 
         if faq_answer:
             logger.info("✅ Responding from FAQ")
+            ChatbotQuery.objects.create(
+                user=request.user if request.user.is_authenticated else None,
+                session_key=request.session.session_key,
+                source="public_lesson",
+                message=user_message,
+                response_type="FAQ",
+                confidence_score=confidence
+            )
             html_reply = markdown.markdown(faq_answer, extensions=["extra"])
             return JsonResponse({"reply": html_reply})
 
@@ -68,6 +76,14 @@ def public_lesson_chat_api(request):
         )
 
         html_reply = parse_markdown_reply(response)
+        ChatbotQuery.objects.create(
+            user=request.user if request.user.is_authenticated else None,
+            session_key=request.session.session_key,
+            source="public_lesson",
+            message=user_message,
+            response_type="GPT",
+            confidence_score=confidence
+        )
         return JsonResponse({"reply": html_reply})
 
     except Exception as e:
@@ -88,6 +104,7 @@ def public_swim_chat(request):
         # Ensure session exists
         if not request.session.session_key:
             request.session.save()
+
         confidence = None
         time_keywords = [
             "when is the next swim", "what swims are available", "swim today",
@@ -96,7 +113,7 @@ def public_swim_chat(request):
         if any(kw in user_message.lower() for kw in time_keywords):
             faq_answer = None
         else:
-            faq_answer,confidence = match_faq(user_message, embed_func=get_query_embedding, lessons_mode=False)
+            faq_answer, confidence = match_faq(user_message, embed_func=get_query_embedding, lessons_mode=False)
 
         if faq_answer:
             logger.info("✅ Responding from FAQ")
@@ -119,7 +136,7 @@ def public_swim_chat(request):
         response = client.chat.completions.create(
             model="gpt-4",
             messages=[
-                {"role": "system", "content": "Answer customer questions about swim availability."},
+                {"role": "system", "content": "You are SplashBot — help customers with swim availability, pool policies, prices and timetables."},
                 {"role": "user", "content": prompt}
             ]
         )

@@ -47,7 +47,8 @@
     </div>
     {% if messages %}
         <div id="message-container"
-            class="fixed top-80 left-1/2 -translate-x-1/2 z-50 w-fit max-w-full px-4 shadow-lg text-lg mb-2 p-3 rounded bg-green-100 text-green-800 border-green-300 text-center">
+            class="fixed top-80 left-1/2 -translate-x-1/2 z-50 w-fit max-w-full px-4 shadow-lg text-lg mb-2 p-3 
+            rounded bg-green-100 text-green-800 border-green-300 text-center">
             {% for message in messages %}
                 <div id="message-{{ forloop.counter }}"
                     class="fade-message"
@@ -76,11 +77,19 @@
 <script>
     document.addEventListener("DOMContentLoaded", function () {
         setTimeout(() => {
-            document.querySelectorAll(".fade-message").forEach(el => {
+            const messages = document.querySelectorAll(".fade-message");
+            messages.forEach(el => {
                 el.style.opacity = "0";  // triggers the transition
-                setTimeout(() => el.remove(), 1000);  // remove after fade completes
+                setTimeout(() => {
+                    el.remove();
+                    // After all messages are removed, remove the container if it's empty
+                    const container = document.getElementById("message-container");
+                    if (container && container.children.length === 0) {
+                        container.remove();
+                    }
+                }, 1000);  // matches transition duration
             });
-        }, 5000);  // delay before fading
+        }, 3000);  // delay before fade starts
     });
 </script>
 

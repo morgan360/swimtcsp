@@ -9,6 +9,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render
 from django.utils import timezone
 from openai import OpenAI
+from lessons_bookings.models import Term
 
 from chatbot.models import ChatbotQuery
 from .helpers.faq import match_faq
@@ -20,12 +21,14 @@ from .helpers.gpt import build_swim_prompt, build_lesson_prompt, parse_markdown_
 logger = logging.getLogger(__name__)
 client = OpenAI()  # Reads from OPENAI_API_KEY in environment or settings
 
+
 def get_query_embedding(text):
     response = client.embeddings.create(
         input=text,
         model="text-embedding-ada-002"
     )
     return response.data[0].embedding
+
 
 # ✅ PUBLIC LESSON CHATBOT VIEW
 @csrf_exempt
@@ -70,7 +73,8 @@ def public_lesson_chat_api(request):
         response = client.chat.completions.create(
             model="gpt-4",
             messages=[
-                {"role": "system", "content": "You are an expert assistant helping parents understand swimming lessons, progression, and skills."},
+                {"role": "system",
+                 "content": "You are an expert assistant helping parents understand swimming lessons, progression, and skills."},
                 {"role": "user", "content": prompt}
             ]
         )
@@ -90,6 +94,7 @@ def public_lesson_chat_api(request):
         logger.error("❌ Lesson chatbot error: %s", str(e), exc_info=True)
         return JsonResponse({"reply": f"⚠️ Error: {str(e)}"}, status=200)
 
+
 # ✅ PUBLIC SWIM CHATBOT VIEW
 @csrf_exempt
 def public_swim_chat(request):
@@ -108,12 +113,17 @@ def public_swim_chat(request):
         confidence = None
         time_keywords = [
             "when is the next swim", "what swims are available", "swim today",
-            "swim times", "weekend swims", "can I swim", "sessions", "next public swim"
+            "swim times", "weekend swims", "can I swim", "sessions", "next public swim",
+            "lesson", "term", "rebooking", "booking", "assessment", "swim term"
         ]
         if any(kw in user_message.lower() for kw in time_keywords):
             faq_answer = None
         else:
-            faq_answer, confidence = match_faq(user_message, embed_func=get_query_embedding, lessons_mode=False)
+            faq_answer, confidence = match_faq(
+                user_message,
+                embed_func=get_query_embedding,
+                lessons_mode=False
+            )
 
         if faq_answer:
             logger.info("✅ Responding from FAQ")
@@ -128,19 +138,75 @@ def public_swim_chat(request):
             html_reply = markdown.markdown(faq_answer, extensions=["extra"])
             return JsonResponse({"reply": html_reply})
 
-        swims = get_available_swims()
-        swim_list = format_swim_list(swims)
-        today = timezone.now().date()
-        prompt = build_swim_prompt(user_message, swim_list, today.strftime('%A %d %B'))
+        # Get available swims and build swim list
 
+        swims = get_available_swims()
+
+        swim_list = format_swim_list(swims)
+
+        today = timezone.now().date()
+
+        current_term = Term.get_current_term()
+        next_term = Term.get_next_term()
+
+        # Format term info
+        def format_term_info(term, label):
+            if not term:
+                return f"{label}: No data available."
+            return (
+                f"{label} (ID {term.id}) runs from {term.start_date.strftime('%d %b %Y')} to {term.end_date.strftime('%d %b %Y')}.\n"
+                f"- Rebooking opens: {term.rebooking_date.strftime('%d %b %Y') if term.rebooking_date else 'TBA'}\n"
+                f"- Public booking opens: {term.booking_date.strftime('%d %b %Y') if term.booking_date else 'TBA'}\n"
+                f"- Assessments: {term.assessment_date.strftime('%d %b %Y') if term.assessment_date else 'TBA'}"
+            )
+
+        lesson_term_info = ""
+        if current_term:
+            lesson_term_info += format_term_info(current_term, "Current lesson term") + "\n\n"
+        if next_term:
+            lesson_term_info += format_term_info(next_term, "Next lesson term")
+
+        # Build swim prompt
+        swim_prompt = build_swim_prompt(user_message, swim_list, today.strftime('%A %d %B'))
+
+        # Final prompt with term info
+        full_prompt = (
+            f"You may find this lesson term info useful:\n\n{lesson_term_info}\n\n"
+            f"{swim_prompt}"
+        )
+
+
+
+
+        # GPT call
         response = client.chat.completions.create(
             model="gpt-4",
             messages=[
-                {"role": "system", "content": "You are SplashBot — help customers with swim availability, pool policies, prices and timetables."},
-                {"role": "user", "content": prompt}
+                {
+                    "role": "system",
+                    "content": """
+You are SplashBot — a helpful assistant who answers questions about public swims and lessons.
+You have access to lesson term dates, including rebooking, booking, and assessment dates.
+Use this info to answer when customers can book, rebook, or plan lessons.
+"""
+                },
+                {"role": "user", "content": full_prompt}
             ]
         )
 
+        # DEBUG: log raw GPT response
+        logger.info("🧠 Raw GPT response: %s", response)
+        print("🧠 GPT response raw:", response)
+
+        try:
+            raw_reply = response.choices[0].message.content
+            logger.info("🧠 GPT says:\n%s", raw_reply)
+            html_reply = markdown.markdown(raw_reply, extensions=["extra"])
+        except Exception as e:
+            logger.error("⚠️ Failed to parse GPT reply: %s", e)
+            html_reply = "⚠️ Sorry, I didn’t understand that. Please try again."
+
+        # Save query
         ChatbotQuery.objects.create(
             user=request.user if request.user.is_authenticated else None,
             session_key=request.session.session_key,
@@ -150,19 +216,22 @@ def public_swim_chat(request):
             confidence_score=confidence
         )
 
-        html_reply = parse_markdown_reply(response)
         return JsonResponse({"reply": html_reply})
 
     except Exception as e:
         logger.error("❌ Swim chatbot error: %s", str(e), exc_info=True)
         return JsonResponse({"error": "Something went wrong while processing your message."}, status=500)
 
+
 # ✅ UI ROUTES
 def public_lesson_chat_ui(request):
     return render(request, "chatbot/public_lesson_chat.html")
 
+
 def public_swim_chat_ui(request):
     return render(request, "chatbot/public_swim_chat.html")
 
+
 def chat_response(request):
-    return JsonResponse({"reply": "This is the default chatbot endpoint. Try /chat/public-swim/ or /chat/public-lesson/."})
+    return JsonResponse(
+        {"reply": "This is the default chatbot endpoint. Try /chat/public-swim/ or /chat/public-lesson/."})

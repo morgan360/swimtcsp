@@ -5,51 +5,57 @@
 {% endblock %}
 
 {% block content %}
-<section class="section">
-  <div class="container">
-    <div class="columns">
+<section class="py-10">
+  <div class="max-w-7xl mx-auto px-4">
+    <div class="grid md:grid-cols-4 gap-8">
+      
       <!-- 🔍 Filters Panel -->
-      <div class="column is-one-quarter">
-        <div class="box">
-          <h3 class="title is-5">Filters</h3>
-          <form method="get">
+      <div class="md:col-span-1">
+        <div class="bg-white border rounded-lg p-4 shadow-sm">
+          <h3 class="text-lg font-semibold mb-4">Filters</h3>
+          <form method="get" class="space-y-4 text-sm text-gray-800">
             {{ filter.form.as_p }}
-            <button type="submit" class="button is-book mt-3">Apply Filter</button>
+            <button type="submit" class="mt-2 w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded transition">
+              Apply Filter
+            </button>
           </form>
         </div>
       </div>
 
       <!-- 🛍️ Product List -->
-      <div class="column">
-        <h1 class="title is-4 has-text-primary mb-4">
+      <div class="md:col-span-3">
+        <h1 class="text-2xl font-bold text-blue-700 mb-6">
           {% if filter.q %}Filtered Products{% else %}All Products{% endif %}
         </h1>
 
         {% for product in filter.qs %}
-          <div class="card mb-5">
-            <div class="card-content">
-              <div class="columns is-vcentered">
-                <div class="column is-one-third">
-                  <a href="{{ product.get_absolute_url }}">
-                    <figure class="image is-4by3">
-                      <img src="{% if product.image %}{{ product.image.url }}{% else %}{% static 'img/no_image.png' %}{% endif %}"
-                           alt="{{ product.name }}"
-                           class="is-rounded">
-                    </figure>
-                  </a>
-                </div>
-                <div class="column">
-                  <h5 class="title is-5 mb-1">
-                    <a href="{{ product.get_absolute_url }}">{{ product.name }}</a>
-                  </h5>
-                  <p class="subtitle is-6 has-text-weight-bold mb-2">€{{ product.price }}</p>
-                  <p class="has-text-grey-dark">Places Left: {{ product.get_num_left }}</p>
-                </div>
+          <div class="bg-white border rounded-lg shadow-sm mb-6 overflow-hidden">
+            <div class="grid md:grid-cols-3 gap-6 items-center p-4">
+              
+              <!-- 🖼 Product Image -->
+              <div>
+                <a href="{{ product.get_absolute_url }}">
+                  <div class="aspect-w-4 aspect-h-3 rounded overflow-hidden">
+                    <img src="{% if product.image %}{{ product.image.url }}{% else %}{% static 'img/no_image.png' %}{% endif %}"
+                         alt="{{ product.name }}"
+                         class="object-cover w-full h-full">
+                  </div>
+                </a>
               </div>
+
+              <!-- 📄 Product Info -->
+              <div class="md:col-span-2">
+                <h5 class="text-xl font-semibold mb-1">
+                  <a href="{{ product.get_absolute_url }}" class="text-blue-700 hover:underline">{{ product.name }}</a>
+                </h5>
+                <p class="text-lg font-bold text-gray-900 mb-2">€{{ product.price }}</p>
+                <p class="text-sm text-gray-600">Places Left: {{ product.get_num_left }}</p>
+              </div>
+
             </div>
           </div>
         {% empty %}
-          <div class="notification is-warning">
+          <div class="bg-yellow-100 text-yellow-800 text-sm rounded px-4 py-3">
             No products match your filter criteria.
           </div>
         {% endfor %}

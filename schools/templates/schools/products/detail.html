@@ -2,69 +2,73 @@
 {% load static %}
 
 {% block title %}
-  {{ product.name }}
+{{ product.name }}
 {% endblock %}
 
 {% block content %}
-<section class="section">
-  <div class="container">
-    <div class="columns is-variable is-6">
+<section class="py-10">
+  <div class="max-w-7xl mx-auto px-4">
+    <div class="grid md:grid-cols-3 gap-8">
+
       <!-- 📸 Image Column -->
-      <div class="column is-one-third">
-        <figure class="image is-4by3">
-          <img src="{% if product.image %}{{ product.image.url }}{% else %}{% static 'img/no_image.png' %}{% endif %}" alt="{{ product.name }}">
-        </figure>
+      <div>
+        <div class="aspect-w-4 aspect-h-3 rounded overflow-hidden shadow">
+          <img class="object-cover w-full h-full"
+            src="{% if product.image %}{{ product.image.url }}{% else %}{% static 'img/no_image.png' %}{% endif %}"
+            alt="{{ product.name }}">
+        </div>
       </div>
 
       <!-- 📋 Details Column -->
-      <div class="column">
-        <h3 class="title is-4 mb-2">{{ product.name }}</h3>
-        <h4 class="subtitle is-6">
-          <a href="{{ product.category.get_absolute_url }}" class="has-text-link">
+      <div class="md:col-span-2">
+        <h3 class="text-2xl font-semibold mb-1">{{ product.name }}</h3>
+        <h4 class="text-sm text-blue-600 mb-4">
+          <a href="{{ product.category.get_absolute_url }}" class="hover:underline">
             {{ product.category }}
           </a>
         </h4>
 
-        <div class="content mt-4">
-          <p class="has-text-weight-semibold">€{{ product.price }}</p>
+        <div class="space-y-2 text-sm text-gray-700 mb-6">
+          <p class="font-semibold text-lg text-black">€{{ product.price }}</p>
           <p>Number of Places: {{ product.num_places }}</p>
           <p>Number Sold: {{ product.get_num_sold }}</p>
           <p>Number Left: {{ product.get_num_left }}</p>
         </div>
 
         <!-- 🛒 Add to Cart Form -->
-        <div class="box mt-5">
+        <div class="bg-gray-50 border rounded-lg p-4 mb-6 shadow-sm">
           <form method="post" action="{% url 'shopping_cart:cart_add' product.id 'school' %}">
             {% csrf_token %}
-            <div class="field">
-              <label class="label" for="id_swimling">Select Swimling</label>
-              <div class="control">
-                <div class="select is-fullwidth">
-                  <select name="swimling" id="id_swimling">
-                    {% for swimling in swimlings %}
-                      <option value="{{ swimling.id }}">{{ swimling }}</option>
-                    {% endfor %}
-                  </select>
-                </div>
-              </div>
+            <div class="mb-4">
+              <label for="id_swimling" class="block text-sm font-medium text-gray-700 mb-1">Select Swimling</label>
+              <select name="swimling" id="id_swimling"
+                class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                {% for swimling in swimlings %}
+                <option value="{{ swimling.id }}">{{ swimling }}</option>
+                {% endfor %}
+              </select>
             </div>
-            <div class="control mt-4">
-              <input type="submit" value="Add to Cart" class="button is-book is-fullwidth">
+            <div>
+              <button type="submit"
+                class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded transition">
+                Add to Cart
+              </button>
             </div>
           </form>
         </div>
 
         <!-- ➕ Add Swimling -->
-        <div class="mt-5">
+        <div class="mb-6">
           {% include 'partials/new_swimling_form.html' %}
         </div>
 
         <!-- 📝 Description -->
-        <hr class="my-4">
-        <div class="content">
+        <hr class="my-6 border-gray-300">
+        <div class="prose max-w-none">
           {{ product.description|linebreaks }}
         </div>
       </div>
+
     </div>
   </div>
 </section>

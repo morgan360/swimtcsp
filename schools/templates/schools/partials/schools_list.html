@@ -1,40 +1,44 @@
 {% load static %}
 
 {% block content %}
-<section class="section">
-  <div class="container">
+<section class="py-10">
+  <div class="max-w-7xl mx-auto px-4">
+
     <!-- 🔹 Page Title -->
-    <div class="box has-background-primary has-text-white">
-      <h1 class="title is-4 has-text-centered has-text-white">School Swim Lessons</h1>
+    <div class="bg-blue-600 text-white rounded-lg px-6 py-4 mb-6 shadow">
+      <h1 class="text-xl font-semibold text-center">School Swim Lessons</h1>
     </div>
 
     <!-- 🏫 Lessons Table -->
-    <div class="box">
-      <table class="table is-fullwidth is-striped is-hoverable">
-        <thead>
+    <div class="bg-white shadow rounded-lg overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-200 text-sm">
+        <thead class="bg-gray-50">
           <tr>
-            <th>Lesson</th>
-            <th>School</th>
-            <th>Spaces</th>
-            <th>Places</th>
-            <th>Action</th>
+            <th class="text-left px-4 py-2 font-medium text-gray-700">Lesson</th>
+            <th class="text-left px-4 py-2 font-medium text-gray-700">School</th>
+            <th class="text-left px-4 py-2 font-medium text-gray-700">Spaces</th>
+            <th class="text-left px-4 py-2 font-medium text-gray-700">Places</th>
+            <th class="text-left px-4 py-2 font-medium text-gray-700">Action</th>
           </tr>
         </thead>
-        <tbody>
+        <tbody class="divide-y divide-gray-100">
           {% for lesson in page_obj %}
-          <tr>
-            <td>{{ lesson.name }}</td>
-            <td>{{ lesson.school.sco_name }}</td>
-            <td>{{ lesson.num_places }}</td>
-            <td>
+          <tr class="hover:bg-gray-50">
+            <td class="px-4 py-2 text-gray-800">{{ lesson.name }}</td>
+            <td class="px-4 py-2 text-gray-800">{{ lesson.school.sco_name }}</td>
+            <td class="px-4 py-2 text-gray-800">{{ lesson.num_places }}</td>
+            <td class="px-4 py-2">
               {% if lesson.remaining_spaces <= 0 %}
-                <span class="tag is-danger is-light">Full</span>
+                <span class="inline-block bg-red-100 text-red-700 text-xs font-semibold px-2 py-1 rounded">Full</span>
               {% else %}
-                <span class="tag is-success is-light">{{ lesson.remaining_spaces }}</span>
+                <span class="inline-block bg-green-100 text-green-700 text-xs font-semibold px-2 py-1 rounded">{{ lesson.remaining_spaces }}</span>
               {% endif %}
             </td>
-            <td>
-              <a href="{% url 'schools:school_detail' slug=lesson.slug %}" class="button is-book is-small">Book</a>
+            <td class="px-4 py-2">
+              <a href="{% url 'schools:school_detail' slug=lesson.slug %}"
+                 class="inline-block bg-blue-100 text-blue-700 text-xs font-semibold px-3 py-1 rounded hover:bg-blue-200 transition">
+                Book
+              </a>
             </td>
           </tr>
           {% endfor %}
@@ -44,30 +48,33 @@
 
     <!-- 📄 Pagination -->
     {% if page_obj.has_other_pages %}
-    <nav class="pagination is-centered" role="navigation" aria-label="pagination">
+    <nav class="flex justify-center items-center gap-2 mt-6 text-sm flex-wrap">
+      <!-- Previous Buttons -->
       {% if page_obj.has_previous %}
-        <a class="pagination-previous" href="?page=1">««</a>
-        <a class="pagination-previous" href="?page={{ page_obj.previous_page_number }}">«</a>
+        <a href="?page=1" class="px-3 py-1 border rounded hover:bg-gray-100">««</a>
+        <a href="?page={{ page_obj.previous_page_number }}" class="px-3 py-1 border rounded hover:bg-gray-100">«</a>
       {% else %}
-        <a class="pagination-previous" disabled>««</a>
-        <a class="pagination-previous" disabled>«</a>
+        <span class="px-3 py-1 border rounded text-gray-400 cursor-not-allowed">««</span>
+        <span class="px-3 py-1 border rounded text-gray-400 cursor-not-allowed">«</span>
       {% endif %}
 
+      <!-- Page Numbers -->
+      {% for num in page_obj.paginator.page_range %}
+        {% if page_obj.number == num %}
+          <span class="px-3 py-1 bg-blue-600 text-white rounded">{{ num }}</span>
+        {% else %}
+          <a href="?page={{ num }}" class="px-3 py-1 border rounded hover:bg-gray-100">{{ num }}</a>
+        {% endif %}
+      {% endfor %}
+
+      <!-- Next Buttons -->
       {% if page_obj.has_next %}
-        <a class="pagination-next" href="?page={{ page_obj.next_page_number }}">»</a>
-        <a class="pagination-next" href="?page={{ page_obj.paginator.num_pages }}">»»</a>
+        <a href="?page={{ page_obj.next_page_number }}" class="px-3 py-1 border rounded hover:bg-gray-100">»</a>
+        <a href="?page={{ page_obj.paginator.num_pages }}" class="px-3 py-1 border rounded hover:bg-gray-100">»»</a>
       {% else %}
-        <a class="pagination-next" disabled>»</a>
-        <a class="pagination-next" disabled>»»</a>
+        <span class="px-3 py-1 border rounded text-gray-400 cursor-not-allowed">»</span>
+        <span class="px-3 py-1 border rounded text-gray-400 cursor-not-allowed">»»</span>
       {% endif %}
-
-      <ul class="pagination-list">
-        {% for num in page_obj.paginator.page_range %}
-        <li>
-          <a class="pagination-link {% if page_obj.number == num %}is-current{% endif %}" href="?page={{ num }}">{{ num }}</a>
-        </li>
-        {% endfor %}
-      </ul>
     </nav>
     {% endif %}
   </div>

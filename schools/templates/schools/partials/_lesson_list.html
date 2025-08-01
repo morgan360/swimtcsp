@@ -1,43 +1,44 @@
 {% if lessons %}
-<section class="section">
-  <div class="container">
-    <!-- 🏷️ Page Title -->
-    <h1 class="title is-4 has-text-primary mb-4">School Classes</h1>
+<section class="py-10">
+    <div class="max-w-7xl mx-auto px-4">
+      <!-- 🏷️ Page Title -->
+      <h2 class="text-2xl font-semibold text-blue-900 mb-4 text-center">School Classes</h2>
 
-    <div class="box has-shadow">
-      <table class="table is-fullwidth is-striped is-hoverable">
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Price</th>
-            <th>School</th>
-            <th class="has-text-right">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for lesson in lessons %}
-          <tr>
-            <td>{{ lesson.generate_name }}</td>
-            <td>€ {{ lesson.price|floatformat:2 }}</td>
-            <td>{{ lesson.school }}</td>
-            <td class="has-text-right">
-              <a href="{% url 'schools:school_detail' lesson.pk %}" class="button is-book is-small">
-                Book Now
-              </a>
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+      <div class="bg-white shadow rounded-lg overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200 text-sm">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="text-left px-4 py-2 font-medium text-gray-700">Name</th>
+              <th class="text-left px-4 py-2 font-medium text-gray-700">Price</th>
+              <th class="text-left px-4 py-2 font-medium text-gray-700">School</th>
+              <th class="text-right px-4 py-2 font-medium text-gray-700">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100">
+            {% for lesson in lessons %}
+            <tr class="hover:bg-gray-50">
+              <td class="px-4 py-2 text-gray-800">{{ lesson.generate_name }}</td>
+              <td class="px-4 py-2 text-gray-800">€ {{ lesson.price|floatformat:2 }}</td>
+              <td class="px-4 py-2 text-gray-800">{{ lesson.school }}</td>
+              <td class="px-4 py-2 text-right">
+                <a href="{% url 'schools:school_detail' lesson.pk %}"
+                  class="inline-block bg-white-100 text-green-800 text-xs font-semibold px-3 py-1 rounded hover:bg-green-200 transition">
+                  Book Now
+                </a>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
     </div>
-  </div>
 </section>
 {% else %}
-<section class="section">
-  <div class="container">
-    <h1 class="title is-4 has-text-primary mb-4">School Classes</h1>
-    <div class="box has-shadow">
-      <p class="has-text-grey-dark">No lessons found.</p>
+<section class="py-10">
+  <div class="max-w-7xl mx-auto px-4">
+    <h1 class="text-2xl font-semibold text-blue-900 mb-4 text-center">School Classes</h1>
+    <div class="bg-white shadow rounded-lg p-4">
+      <p class="text-gray-600">No lessons found.</p>
     </div>
   </div>
 </section>

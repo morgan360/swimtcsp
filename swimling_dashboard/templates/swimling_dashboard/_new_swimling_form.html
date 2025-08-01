@@ -1,72 +1,73 @@
 <!-- 🔘 Add Button -->
 <div class="mb-4">
-    <button class="button is-book" onclick="document.getElementById('addSwimlingModal').classList.add('is-active')">
-        ➕ Add New Swimling
-    </button>
+  <button class="inline-flex items-center px-4 py-2 text-red-700 bg-red-100 rounded-xl hover:bg-red-200 transition"
+    onclick="document.getElementById('addSwimlingModal').classList.add('is-active')">
+    ➕ Add New Swimling
+  </button>
 </div>
 
 <!-- 🧾 Modal -->
 <div id="addSwimlingModal" class="modal">
-    <div class="modal-background"
-         onclick="document.getElementById('addSwimlingModal').classList.remove('is-active')"></div>
-    <div class="modal-card">
-        <header class="modal-card-head has-background-primary">
-            <p class="modal-card-title has-text-white">Add New Swimling</p>
-            <button class="delete" aria-label="close"
-                    onclick="document.getElementById('addSwimlingModal').classList.remove('is-active')"></button>
-        </header>
+  <div class="modal-background"
+    onclick="document.getElementById('addSwimlingModal').classList.remove('is-active')"></div>
+  <div class="modal-card w-full max-w-xl mx-auto rounded-xl overflow-hidden shadow-lg bg-white">
+    <header class="bg-red-100 px-6 py-4 flex justify-between items-center rounded-t-xl">
+      <h3 class="text-lg font-bold text-red-900">Add New Swimling</h3>
+      <button aria-label="close" class="text-red-900 text-2xl leading-none font-bold"
+        onclick="document.getElementById('addSwimlingModal').classList.remove('is-active')">
+        &times;
+      </button>
+    </header>
 
-        <form method="POST"
-              action="{% url 'swimling_dashboard:add_swimling' %}"
-              hx-post="{% url 'swimling_dashboard:add_swimling' %}"
-              hx-target="#dashboard-panels"
-              hx-swap="outerHTML"
-              onsubmit="document.getElementById('addSwimlingModal').classList.remove('is-active')">
-            {% csrf_token %}
-            <section class="modal-card-body">
-                <div class="field">
-                    <label class="label">First Name</label>
-                    <div class="control">
-                        <input class="input" type="text" name="first_name" placeholder="John" required>
-                    </div>
-                </div>
+    <form method="POST"
+      action="{% url 'swimling_dashboard:add_swimling' %}"
+      hx-post="{% url 'swimling_dashboard:add_swimling' %}"
+      hx-target="#dashboard-panels"
+      hx-swap="outerHTML"
+      onsubmit="document.getElementById('addSwimlingModal').classList.remove('is-active')"
+      class="bg-white px-6 py-4 space-y-4">
+      {% csrf_token %}
 
-                <div class="field">
-                    <label class="label">Last Name</label>
-                    <div class="control">
-                        <input class="input" type="text" name="last_name" placeholder="Doe" required>
-                    </div>
-                </div>
+      <div>
+        <label class="block text-blue-900 text-sm font-semibold mb-1">First Name</label>
+        <input class="w-full px-4 py-2 border border-gray-300 bg-white/70 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600/50 focus:bg-white"
+          type="text" name="first_name" placeholder="John" required>
+      </div>
 
-                <div class="field">
-                    <label class="label">Date of Birth</label>
-                    <div class="control">
-                        <input class="input" type="date" name="dob" required>
-                    </div>
-                </div>
+      <div>
+        <label class="block text-blue-900 text-sm font-semibold mb-1">Last Name</label>
+        <input class="w-full px-4 py-2 border border-gray-300 bg-white/70 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600/50 focus:bg-white"
+          type="text" name="last_name" placeholder="Doe" required>
+      </div>
 
-                <div class="field">
-                    <label class="label">School Role Number</label>
-                    <div class="control">
-                        <input class="input" type="text" name="sco_role_num" placeholder="12345">
-                    </div>
-                </div>
+      <div>
+        <label class="block text-blue-900 text-sm font-semibold mb-1">Date of Birth</label>
+        <input class="w-full px-4 py-2 border border-gray-300 bg-white/70 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600/50 focus:bg-white"
+          type="date" name="dob" required>
+      </div>
 
-                <div class="field">
-                    <label class="label">Additional Notes</label>
-                    <div class="control">
-                        <textarea class="textarea" name="notes" placeholder="Enter additional notes here..."></textarea>
-                    </div>
-                </div>
-            </section>
+      <div>
+        <label class="block text-blue-900 text-sm font-semibold mb-1">School Role Number</label>
+        <input class="w-full px-4 py-2 border border-gray-300 bg-white/70 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600/50 focus:bg-white"
+          type="text" name="sco_role_num" placeholder="12345">
+      </div>
 
-            <footer class="modal-card-foot">
-                <input type="submit" value="Submit" class="button is-book">
-                <button type="button" class="button is-light"
-                        onclick="document.getElementById('addSwimlingModal').classList.remove('is-active')">
-                    Cancel
-                </button>
-            </footer>
-        </form>
-    </div>
+      <div>
+        <label class="block text-blue-900 text-sm font-semibold mb-1">Additional Notes</label>
+        <textarea class="w-full px-4 py-2 border border-gray-300 bg-white/70 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600/50 focus:bg-white"
+          name="notes" placeholder="Enter additional notes here..."></textarea>
+      </div>
+
+      <footer class="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+        <input type="submit"
+          value="Submit"
+          class="bg-red-700 text-white text-lg py-2 px-4 rounded-lg font-semibold hover:bg-red-800 transition border border-white/60">
+        <button type="button"
+          class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 transition"
+          onclick="document.getElementById('addSwimlingModal').classList.remove('is-active')">
+          Cancel
+        </button>
+      </footer>
+    </form>
+  </div>
 </div>

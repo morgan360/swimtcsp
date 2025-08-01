@@ -1,20 +1,19 @@
-<!-- templates/payment_failure.html -->
 {% extends 'base/_base.html' %}
 {% load static %}
+
 {% block title %}BOIPA | Payment Failure{% endblock %}
 
 {% block content %}
-<section class="section">
-  <div class="container">
-    <div class="box has-text-centered">
-      <h1 class="title has-text-danger">❌ Payment Failure</h1>
-      <p class="subtitle">Unfortunately, your payment could not be processed.</p>
-      <p><strong>Order ID:</strong> {{ order_ref }}</p>
-      <p><strong>Reason:</strong> {{ message }}</p>
-      <a href="{% url 'home' %}" class="button is-danger is-light mt-4">
-        🔙 Return to Home
-      </a>
-    </div>
+<section class="py-12">
+  <div class="max-w-xl mx-auto bg-white backdrop-blur-md border border-white/20 rounded-xl shadow-lg p-10 text-center text-blue-900">
+    <h1 class="text-3xl sm:text-4xl font-bold text-red-600 mb-4">❌ Payment Failure</h1>
+    <p class="text-lg sm:text-xl mb-2">Unfortunately, your payment could not be processed.</p>
+    <p class="mb-2"><strong>Order ID:</strong> {{ order_ref }}</p>
+    <p class="mb-6"><strong>Reason:</strong> {{ message }}</p>
+    <a href="{% url 'home' %}" class="inline-block bg-red-100 hover:bg-red-200 text-red-700 font-semibold px-6 py-2 rounded-lg transition">
+      <i class="fas fa-chevron-left"></i> 
+      Return to Home
+    </a>
   </div>
 </section>
 {% endblock %}

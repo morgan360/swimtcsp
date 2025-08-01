@@ -4,28 +4,28 @@
 {% block title %}Secure Checkout{% endblock %}
 
 {% block content %}
-<section class="section">
-  <div class="container is-max-desktop">
-    <div class="box has-shadow">
-      <h1 class="title is-4 has-text-primary mb-4">💳 Complete Your Payment</h1>
+<section class="py-12">
+  <div
+    class="max-w-3xl mx-auto bg-white backdrop-blur-md border border-white/20 rounded-xl shadow-lg p-8 text-blue-900">
 
-      <p class="subtitle is-6 has-text-grey mb-5">
-        You are securely completing your payment via our trusted payment partner.
-        All card details are handled externally over an encrypted connection.
-      </p>
+    <h1 class="text-3xl sm:text-4xl font-bold text-blue-900 mb-4">💳 Complete Your Payment</h1>
 
-      <div class="notification is-light is-info is-size-7 mb-5">
-        🔒 <strong>Secure Payment:</strong> Your information is protected using 3D Secure (Verified by Visa / Mastercard SecureCode).
-      </div>
+    <p class="text-base sm:text-lg text-blue-800 mb-5">
+      You are securely completing your payment via our trusted payment partner.
+      All card details are handled externally over an encrypted connection.
+    </p>
 
-      <div class="box" style="padding: 0;">
-        <iframe src="{{ hpp_url }}"
-                style="width: 100%; height: 500px; border: none;"
-                allowpaymentrequest
-                frameborder="0">
-        </iframe>
-      </div>
+    <div class="bg-blue-100 text-blue-900 text-sm rounded-md px-4 py-3 mb-6 flex items-start gap-2">
+      <span>🔒</span>
+      <p><strong>Secure Payment:</strong> Your information is protected using 3D Secure (Verified by Visa / Mastercard
+        SecureCode).</p>
     </div>
+
+    <div class="rounded-lg overflow-hidden border border-blue-200 shadow-inner">
+      <iframe src="{{ hpp_url }}" class="w-full h-[500px] border-none" allowpaymentrequest frameborder="0">
+      </iframe>
+    </div>
+
   </div>
 </section>
 {% endblock %}

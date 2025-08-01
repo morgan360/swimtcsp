@@ -3,8 +3,8 @@
 <html lang="en">
 
 <head>
-    <meta charset="utf-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
     {% block subhead %}{% endblock %}
 
@@ -26,6 +26,14 @@
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
 
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/static/favicon/favicon-96x96.png" sizes="96x96" />
+    <link rel="icon" type="image/svg+xml" href="/static/favicon/favicon.svg" />
+    <link rel="shortcut icon" href="/static/favicon/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/static/favicon/apple-touch-icon.png" />
+    <link rel="manifest" href="/static/favicon/site.webmanifest" />
+
+
     <title>{% block title %}TCSP Home{% endblock %}</title>
 
 
@@ -34,64 +42,63 @@
 </head>
 
 <body class="overflow-x-hidden">
-<div x-data="{ dark: false, drawerOpen: false }" class="bg-blue-900">
-    {# ✅ Include Navbar inside body #}
-    <!-- Mobile Drawer -->
-    <div class="lg:hidden">
-    {% include "partials/_drawer.html" %}
-    </div>
+    <div x-data="{ dark: false, drawerOpen: false }" class="bg-blue-900">
+        {# ✅ Include Navbar inside body #}
+        <!-- Mobile Drawer -->
+        <div class="lg:hidden">
+            {% include "partials/_drawer.html" %}
+        </div>
 
-    <!-- Desktop Navbar -->
-    <div class="hidden lg:block">
-    {% include "partials/_navbar.html" %}
-    </div>
-    {% if messages %}
-        <div id="message-container"
-            class="fixed top-80 left-1/2 -translate-x-1/2 z-50 w-fit max-w-full px-4 shadow-lg text-lg mb-2 p-3 
+        <!-- Desktop Navbar -->
+        <div class="hidden lg:block">
+            {% include "partials/_navbar.html" %}
+        </div>
+        {% if messages %}
+        <div id="message-container" class="fixed top-80 left-1/2 -translate-x-1/2 z-50 w-fit max-w-full px-4 shadow-lg text-lg mb-2 p-3 
             rounded bg-green-100 text-green-800 border-green-300 text-center">
             {% for message in messages %}
-                <div id="message-{{ forloop.counter }}"
-                    class="fade-message"
-                    style="opacity: 1; transition: opacity 1s ease;">
-                    {{ message }}
-                </div>
+            <div id="message-{{ forloop.counter }}" class="fade-message"
+                style="opacity: 1; transition: opacity 1s ease;">
+                {{ message }}
+            </div>
             {% endfor %}
         </div>
-    {% endif %}
+        {% endif %}
 
-    <main class="section">
-        <div>
-            {% block content %}{% endblock %}
-        </div>
-    </main>
+        <main class="section">
+            <div>
+                {% block content %}{% endblock %}
+            </div>
+        </main>
 
-    {# ✅ Optional per-page footer override #}
-    {% block footer %}
+        {# ✅ Optional per-page footer override #}
+        {% block footer %}
         {% include "partials/_footer.html" %}
+        {% endblock %}
+        {% block extra_js %}{% endblock %}
+    </div>
+    {% block scripts %}
     {% endblock %}
-    {% block extra_js %}{% endblock %}
-</div>
-{% block scripts %}
-{% endblock %}
 
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        setTimeout(() => {
-            const messages = document.querySelectorAll(".fade-message");
-            messages.forEach(el => {
-                el.style.opacity = "0";  // triggers the transition
-                setTimeout(() => {
-                    el.remove();
-                    // After all messages are removed, remove the container if it's empty
-                    const container = document.getElementById("message-container");
-                    if (container && container.children.length === 0) {
-                        container.remove();
-                    }
-                }, 1000);  // matches transition duration
-            });
-        }, 3000);  // delay before fade starts
-    });
-</script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            setTimeout(() => {
+                const messages = document.querySelectorAll(".fade-message");
+                messages.forEach(el => {
+                    el.style.opacity = "0";  // triggers the transition
+                    setTimeout(() => {
+                        el.remove();
+                        // After all messages are removed, remove the container if it's empty
+                        const container = document.getElementById("message-container");
+                        if (container && container.children.length === 0) {
+                            container.remove();
+                        }
+                    }, 1000);  // matches transition duration
+                });
+            }, 3000);  // delay before fade starts
+        });
+    </script>
 
 </body>
+
 </html>

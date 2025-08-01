@@ -1,64 +1,67 @@
 {% extends "base/_base.html" %}
 
 {% block content %}
-<section class="section">
-  <div class="container category-skill-matrix">
+<section class="py-6">
+  <div class="container mx-auto p-4 category-skill-matrix bg-white/90 rounded-lg shadow-lg">
 
-    <div class="level mb-4">
-      <div class="level-left">
-        <h1 class="title is-3">Category–Skill Cross Reference</h1>
-      </div>
-      <div class="level-right">
-        <button class="button is-link" onclick="window.print()">
-          <span class="icon"><i class="fas fa-print"></i></span>
-          <span>Print</span>
-        </button>
-      </div>
+    <div class="flex justify-between items-center mb-4">
+      <h1 class="text-3xl text-blue-900">Category–Skill Cross Reference</h1>
+      <button class="inline-flex items-center bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+        onclick="window.print()">
+        <span class="mr-2">
+          <i class="fas fa-print"></i>
+        </span>
+        <span>Print</span>
+      </button>
     </div>
 
-    <table class="table is-fullwidth is-bordered is-striped">
-      <thead>
-        <tr>
-          <th>Category</th>
-          <th>Skills</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for category in categories %}
-          <tr>
-            <td>{{ category.name }}</td>
-            <td>
-              <ul style="margin-left: 1em;">
+    <div class="overflow-x-auto">
+      <table class="min-w-full border border-blue-900/80 border-collapse">
+        <thead>
+          <tr class="bg-blue-100 text-blue-900">
+            <th class="border border-blue-900/80 px-4 py-2 text-left">Category</th>
+            <th class="border border-blue-900/80 px-4 py-2 text-left">Skills</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for category in categories %}
+          <tr class="odd:bg-white even:bg-gray-50">
+            <td class="border border-blue-900/80 px-4 py-2 align-top">{{ category.name }}</td>
+            <td class="border border-blue-900/80 px-4 py-2 align-top">
+              <ul class="list-disc ml-5">
                 {% for cs in category.categoryskill_set.all %}
-                  <li>{{ cs.skill.name }} ({{ cs.skill.code }})</li>
+                <li>{{ cs.skill.name }} ({{ cs.skill.code }})</li>
                 {% endfor %}
               </ul>
             </td>
           </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
 
   </div>
 </section>
 {% endblock %}
+
 {% block head %}
-  {{ block.super }}
-  <style>
-    @media print {
-      button,
-      .navbar,
-      .footer {
-        display: none !important;
-      }
+{{ block.super }}
+<style>
+  @media print {
 
-      .section {
-        padding: 0 !important;
-      }
-
-      table {
-        font-size: 12px;
-      }
+    button,
+    .navbar,
+    .footer {
+      display: none !important;
     }
-  </style>
+
+    .section {
+      padding: 0 !important;
+    }
+
+    table {
+      font-size: 12px;
+    }
+  }
+</style>
 {% endblock %}

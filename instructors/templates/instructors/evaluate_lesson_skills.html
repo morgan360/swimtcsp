@@ -1,81 +1,72 @@
 {% extends "base/_base.html" %}
 {% load progress_tags %}
 {% block content %}
-<section class="section">
-  <div class="container">
-    <h1 class="title is-4 mb-4">📝 Evaluate Skills for {{ lesson.name }}</h1>
-    <h2 class="subtitle is-6">Term {{ term.id }}: {{ term.start_date }} to {{ term.end_date }}</h2>
+<section class="py-6">
+  <div class="container mx-auto px-4">
+    <h1 class="text-xl font-semibold mb-4">📝 Evaluate Skills for {{ lesson.name }}</h1>
+    <h2 class="text-sm text-gray-600 mb-6">Term {{ term.id }}: {{ term.start_date }} to {{ term.end_date }}</h2>
 
     {% if swimlings and skills %}
-    <form method="post">
+    <form method="post" class="overflow-x-auto">
       {% csrf_token %}
-      <table class="table is-fullwidth is-striped is-hoverable">
+      <table class="min-w-full border-collapse border border-gray-300">
         <thead>
-          <tr>
-            <th>Swimling</th>
+          <tr class="bg-gray-100">
+            <th class="border border-gray-300 px-3 py-2 text-left">Swimling</th>
             {% for skill in skills %}
-              <th>
-                <strong>{{ skill.code }}</strong><br>
-                <span class="is-size-7 has-text-grey">{{ skill.name }}</span><br>
-                <span class="is-size-7 has-text-grey-light">
-                  {{ skill.cas.abbreviation }}
-                </span>
-              </th>
+            <th class="border border-gray-300 px-3 py-2 text-left align-top">
+              <strong>{{ skill.code }}</strong><br />
+              <span class="text-xs text-gray-600">{{ skill.name }}</span><br />
+              <span class="text-xs text-gray-400">{{ skill.cas.abbreviation }}</span>
+            </th>
             {% endfor %}
-            <th>General Note</th>
+            <th class="border border-gray-300 px-3 py-2 text-left align-top">General Note</th>
           </tr>
         </thead>
         <tbody>
           {% for swimling in swimlings %}
-          <tr>
-            <td>
-              <strong>{{ swimling.first_name }} {{ swimling.last_name }}</strong>
+          <tr class="odd:bg-white even:bg-gray-50">
+            <td class="border border-gray-300 px-3 py-2 font-semibold">
+              {{ swimling.first_name }} {{ swimling.last_name }}
             </td>
 
             {% for skill in skills %}
-              {% with assessment=assessments|dict_get:swimling.id|dict_get:skill.id %}
-              <td>
-                <div class="field">
-                  <div class="control">
-                    <div class="select is-small">
-                      <select name="level_{{ swimling.id }}_{{ skill.id }}">
-                        <option value="">–</option>
-                        {% for i in "12345" %}
-                          <option value="{{ i }}"
-                            {% if assessment and assessment.level|stringformat:"s" == i %}selected{% endif %}>
-                            {{ i }}
-                          </option>
-                        {% endfor %}
-                      </select>
-                    </div>
-                  </div>
-                  <input class="input is-small mt-1"
-                         type="text"
-                         name="notes_{{ swimling.id }}_{{ skill.id }}"
-                         placeholder="Optional note"
-                         value="{{ assessment.notes|default_if_none:'' if assessment }}">
-                </div>
-              </td>
-              {% endwith %}
+            {% with assessment=assessments|dict_get:swimling.id|dict_get:skill.id %}
+            <td class="border border-gray-300 px-3 py-2 align-top">
+              <div>
+                <select name="level_{{ swimling.id }}_{{ skill.id }}"
+                  class="block w-full text-sm border border-gray-300 rounded-sm focus:ring-blue-500 focus:border-blue-500">
+                  <option value="">–</option>
+                  {% for i in "12345" %}
+                  <option value="{{ i }}" {% if assessment and assessment.level|stringformat:"s"==i %}selected{% endif
+                    %}>{{ i }}</option>
+                  {% endfor %}
+                </select>
+                <input type="text" name="notes_{{ swimling.id }}_{{ skill.id }}" placeholder="Optional note"
+                  value="{{ assessment.notes|default_if_none:'' if assessment }}"
+                  class="mt-1 block w-full text-sm border border-gray-300 rounded-sm px-2 py-1 focus:ring-blue-500 focus:border-blue-500" />
+              </div>
+            </td>
+            {% endwith %}
             {% endfor %}
 
-            <td>
-              <textarea class="textarea is-small" name="note_{{ swimling.id }}" rows="2"
-                        placeholder="General note">{{ notes|dict_get:swimling.id|default_if_none:"" }}</textarea>
+            <td class="border border-gray-300 px-3 py-2 align-top">
+              <textarea name="note_{{ swimling.id }}" rows="2" placeholder="General note"
+                class="w-full text-sm border border-gray-300 rounded-sm px-2 py-1 focus:ring-blue-500 focus:border-blue-500">{{ notes|dict_get:swimling.id|default_if_none:"" }}</textarea>
             </td>
           </tr>
           {% endfor %}
         </tbody>
       </table>
 
-      <div class="field mt-4">
-        <div class="control">
-          <button class="button is-primary is-medium">💾 Save Evaluations</button>
-        </div>
+      <div class="mt-6">
+        <button type="submit" class="bg-blue-600 text-white px-6 py-3 rounded-md text-lg hover:bg-blue-700 transition">
+          💾 Save Evaluations
+        </button>
       </div>
     </form>
     {% else %}
-      <p>No swimlings or skills available for this lesson and term.</p>
+    <p>No swimlings or skills available for this lesson and term.</p>
     {% endif %}
   </div>
 </section>

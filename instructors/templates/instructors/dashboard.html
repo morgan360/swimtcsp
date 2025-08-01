@@ -1,27 +1,30 @@
 {% extends "base/_base.html" %}
 
 {% block content %}
-<section class="section">
-  <div class="container">
-    <h1 class="title is-4 mb-4">📘 My Instructor Dashboard</h1>
+<section class="py-20">
+  <div class="container mx-auto p-10 bg-white/80 rounded-lg shadow-lg">
+      <h1 class="text-xl text-blue-900 font-semibold mb-4">
+        <i class="fa-solid fa-chalkboard-user"></i>
+        My Instructor Dashboard
+      </h1>
 
-    {% if assignments %}
+      {% if assignments %}
       {% for assignment in assignments %}
-        <div class="box">
-          <p><strong>Term:</strong> {{ assignment.term.label }}</p>
-          <p><strong>Lesson:</strong> {{ assignment.lesson.name }}</p>
-          <p><strong>Day:</strong> {{ assignment.lesson.get_day_of_week_display }}</p>
-          <p><strong>Time:</strong> {{ assignment.lesson.start_time }}–{{ assignment.lesson.end_time }}</p>
+      <div class="bg-white border border-blue-300 rounded-md p-4 mb-4 shadow-sm">
+        <p><strong>Term:</strong> {{ assignment.term.label }}</p>
+        <p><strong>Lesson:</strong> {{ assignment.lesson.name }}</p>
+        <p><strong>Day:</strong> {{ assignment.lesson.get_day_of_week_display }}</p>
+        <p><strong>Time:</strong> {{ assignment.lesson.start_time }}–{{ assignment.lesson.end_time }}</p>
 
-          <a class="button is-link is-small mt-2"
-             href="{% url 'instructors:evaluate_lesson_skills' assignment.lesson.id assignment.term.id %}">
-            📝 Evaluate Skills
-          </a>
-        </div>
+        <a href="{% url 'instructors:evaluate_lesson_skills' assignment.lesson.id assignment.term.id %}"
+          class="inline-block mt-2 px-3 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition">
+          📝 Evaluate Swimling Skills
+        </a>
+      </div>
       {% endfor %}
-    {% else %}
+      {% else %}
       <p>You have no assigned lessons.</p>
-    {% endif %}
-  </div>
+      {% endif %}
+    </div>
 </section>
 {% endblock %}

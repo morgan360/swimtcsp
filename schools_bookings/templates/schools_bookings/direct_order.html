@@ -2,83 +2,97 @@
 {% load widget_tweaks %}
 
 {% block content %}
-    <section class="section">
-        <div class="container">
-            <div class="box">
-                <h2 class="title is-4">Enroll {{ swimling.first_name }} {{ swimling.last_name }}</h2>
+<section class="py-12 px-4 bg-gray-50">
+    <div class="max-w-4xl mx-auto">
+        <div class="bg-white p-8 rounded-lg shadow">
 
-                {% if school %}
-                    <p><strong>School:</strong> {{ school.name }}</p>
-                {% endif %}
+            <!-- 🔹 Title -->
+            <h2 class="text-2xl font-semibold text-blue-700 mb-4">
+                Enroll {{ swimling.first_name }} {{ swimling.last_name }}
+            </h2>
 
-                <p><strong>Term:</strong> {{ term.name }} ({{ term.start_date }} → {{ term.end_date }})</p>
+            <!-- 🏫 School Info -->
+            {% if school %}
+            <p class="mb-1 text-gray-700"><strong>School:</strong> {{ school.name }}</p>
+            {% endif %}
+            <p class="mb-4 text-gray-700">
+                <strong>Term:</strong> {{ term.name }} ({{ term.start_date }} → {{ term.end_date }})
+            </p>
 
-                <form method="post" action="{% url 'schools_bookings:book_lesson' swimling.id term.id %}">
+            <!-- ⚠️ Error Display -->
+            {% if form.errors %}
+            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
+                <strong class="block font-semibold">Form error(s):</strong>
+                <ul class="mt-2 list-disc list-inside text-sm">
+                    {% for field in form %}
+                    {% for error in field.errors %}
+                    <li><strong>{{ field.label }}:</strong> {{ error }}</li>
+                    {% endfor %}
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
 
-                    {% csrf_token %}
+            <!-- 📝 Enrollment Form -->
+            <form method="post" action="{% url 'schools_bookings:book_lesson' swimling.id term.id %}">
+                {% csrf_token %}
 
-                    {% if form.errors %}
-                        <div class="notification is-danger">
-                            <strong>Form error(s):</strong>
-                            <ul>
-                                {% for field in form %}
-                                    {% for error in field.errors %}
-                                        <li>{{ field.label }}: {{ error }}</li>
-                                    {% endfor %}
-                                {% endfor %}
-                            </ul>
-                        </div>
-                    {% endif %}
-
-                    <table class="table is-fullwidth is-bordered is-striped">
-                        <thead>
-                        <tr>
-                            <th></th>
-                            <th>Lesson Name</th>
-                            <th>Day</th>
-                            <th>Time</th>
-                            <th>Places</th>
-                            <th>Price</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        {% for lesson in form.fields.lesson.queryset %}
+                <!-- 📋 Lessons Table -->
+                <div class="overflow-x-auto mb-6">
+                    <table class="min-w-full text-sm border border-gray-300 rounded overflow-hidden">
+                        <thead class="bg-gray-100 text-gray-700 uppercase text-xs">
                             <tr>
-                                <td>
-                                    <input type="radio" name="lesson" value="{{ lesson.id }}"
-                                           {% if lesson.id|stringformat:"s" == form.lesson.value|stringformat:"s" %}checked{% endif %}>
-
-                                </td>
-                                <td>{{ lesson.name }}</td>
-                                <td>{{ lesson.get_day_of_week_display }}</td>
-                                <td>{{ lesson.start_time }} - {{ lesson.end_time }}</td>
-                                <td>{{ lesson.num_places }}</td>
-                                <td>€{{ lesson.price }}</td>
+                                <th class="text-left px-4 py-2"></th>
+                                <th class="text-left px-4 py-2">Lesson Name</th>
+                                <th class="text-left px-4 py-2">Day</th>
+                                <th class="text-left px-4 py-2">Time</th>
+                                <th class="text-left px-4 py-2">Places</th>
+                                <th class="text-left px-4 py-2">Price</th>
                             </tr>
-                        {% endfor %}
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            {% for lesson in form.fields.lesson.queryset %}
+                            <tr>
+                                <td class="px-4 py-2">
+                                    <input type="radio" name="lesson" value="{{ lesson.id }}"
+                                        class="text-blue-600 focus:ring-blue-500" {% if
+                                        lesson.id|stringformat:"s"==form.lesson.value|stringformat:"s" %}checked{% endif
+                                        %}>
+                                </td>
+                                <td class="px-4 py-2">{{ lesson.name }}</td>
+                                <td class="px-4 py-2">{{ lesson.get_day_of_week_display }}</td>
+                                <td class="px-4 py-2">{{ lesson.start_time }} - {{ lesson.end_time }}</td>
+                                <td class="px-4 py-2">{{ lesson.num_places }}</td>
+                                <td class="px-4 py-2">€{{ lesson.price }}</td>
+                            </tr>
+                            {% endfor %}
                         </tbody>
                     </table>
+                </div>
 
-                    <div class="field mt-4">
-                        <label class="label">Coupon Code (optional)</label>
-                        <div class="control">
-                            <input
-                                    class="input"
-                                    type="text"
-                                    name="code"
-                                    placeholder="Enter coupon code"
-                                    value="{{ request.POST.code|default_if_none:'' }}"
-                            >
-                        </div>
-                    </div>
-                    <div class="field mt-4">
-                        <button type="submit" class="button is-primary is-medium">
-                            <span class="icon"><i class="fas fa-shopping-cart"></i></span>
-                            <span>Proceed to Payment</span>
-                        </button>
-                    </div>
-                </form>
-            </div>
+                <!-- 🎟️ Coupon Code -->
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Coupon Code (optional)</label>
+                    <input
+                        class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        type="text" name="code" placeholder="Enter coupon code"
+                        value="{{ request.POST.code|default_if_none:'' }}">
+                </div>
+
+                <!-- 💳 Submit -->
+                <div>
+                    <button type="submit"
+                        class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded flex items-center justify-center gap-2 transition">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M3 3h18M9 13h6m-3-3v6m4 4H5a2 2 0 01-2-2V7h18v10a2 2 0 01-2 2z" />
+                        </svg>
+                        Proceed to Payment
+                    </button>
+                </div>
+            </form>
+
         </div>
-    </section>
+    </div>
+</section>
 {% endblock %}

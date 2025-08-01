@@ -1,43 +1,43 @@
-<h2 class="title is-5 mb-4">Waiting List Panel</h2>
+<h2 class="text-xl font-semibold mb-4 text-gray-800">Waiting List Panel</h2>
 
-<table class="table is-fullwidth is-hoverable">
-    <thead>
-    <tr class="has-background-warning-light">
-        <th class="has-text-weight-semibold is-size-6">🧒 Swimling</th>
-        <th class="has-text-weight-semibold is-size-6">🎯 Requested Lesson</th>
-        <th class="has-text-weight-semibold is-size-6">📌 Assigned Lesson</th>
-        <th class="has-text-weight-semibold is-size-6">💌 Action</th>
+<table class="w-full table-auto border-collapse shadow-sm">
+  <thead>
+    <tr class="bg-yellow-100 text-left">
+      <th class="px-4 py-3 text-sm font-semibold text-gray-700">🧒 Swimling</th>
+      <th class="px-4 py-3 text-sm font-semibold text-gray-700">🎯 Requested Lesson</th>
+      <th class="px-4 py-3 text-sm font-semibold text-gray-700">📌 Assigned Lesson</th>
+      <th class="px-4 py-3 text-sm font-semibold text-gray-700">💌 Action</th>
     </tr>
-    </thead>
-    <tbody>
+  </thead>
+  <tbody>
     {% for entry in waiting_list_data %}
-        <tr>
-            <td class="is-size-6">{{ entry.swimling_name }}</td>
-            <td class="is-size-6">{{ entry.requested_lesson }}</td>
-            <td class="is-size-6">{{ entry.assigned_lesson }}</td>
-            <td class="is-size-6">
-                <div class="buttons are-small">
-                    {% if entry.can_book and entry.assigned_lesson_id %}
-                        <a href="{% url 'lessons:product_detail' id=entry.assigned_lesson_id %}?swimling={{ entry.swimling_id }}"
-                           class="button is-success is-light is-small">
-                            ✅ Book Now
-                        </a>
+      <tr class="hover:bg-gray-50 border-t">
+        <td class="px-4 py-2 text-sm text-gray-800">{{ entry.swimling_name }}</td>
+        <td class="px-4 py-2 text-sm text-gray-800">{{ entry.requested_lesson }}</td>
+        <td class="px-4 py-2 text-sm text-gray-800">{{ entry.assigned_lesson }}</td>
+        <td class="px-4 py-2 text-sm text-gray-800">
+          <div class="flex flex-wrap items-center gap-2">
+            {% if entry.can_book and entry.assigned_lesson_id %}
+              <a href="{% url 'lessons:product_detail' id=entry.assigned_lesson_id %}?swimling={{ entry.swimling_id }}"
+                class="bg-green-100 text-green-800 px-3 py-1 rounded-md text-xs font-medium hover:bg-green-200 transition">
+                ✅ Book Now
+              </a>
+            {% else %}
+              <button class="bg-gray-100 text-gray-500 px-3 py-1 rounded-md text-xs font-medium cursor-not-allowed" disabled>
+                Awaiting Offer
+              </button>
+            {% endif %}
 
-                    {% else %}
-                        <button class="button is-light is-small has-text-grey" disabled>
-                            Awaiting Offer
-                        </button>
-                    {% endif %}
-
-                    <form method="POST" action="{% url 'waiting_list:remove' entry.id %}">
-                        {% csrf_token %}
-                        <button class="button is-danger is-light is-small">
-                            🗑️ Remove
-                        </button>
-                    </form>
-                </div>
-            </td>
-        </tr>
+            <form method="POST" action="{% url 'waiting_list:remove' entry.id %}">
+              {% csrf_token %}
+              <button type="submit"
+                class="bg-red-100 text-red-700 px-3 py-1 rounded-md text-xs font-medium hover:bg-red-200 transition">
+                🗑️ Remove
+              </button>
+            </form>
+          </div>
+        </td>
+      </tr>
     {% endfor %}
-    </tbody>
+  </tbody>
 </table>

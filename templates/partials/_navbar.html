@@ -9,7 +9,7 @@
 	<div class="hidden lg:flex flex-col items-center justify-center mb-4">
 		<a href="{% url 'home' %}" class="flex flex-col items-center">
 			<img src="{% static 'img/full-logo-transparent.png' %}" alt="Templeogue College Swim Pool Logo" width="180"
-				height="180" class="mb-2">
+				height="180" class="m-2">
 		</a>
 	</div>
 
@@ -76,31 +76,35 @@
 		<!-- Right Section: Hello User or Auth Links -->
 		<div class="flex items-center gap-4 text-blue-900 font-semibold pr-4">
 			{% if user.is_authenticated %}
-			<div x-data="{ open: false }" class="relative" @click.away="open = false">
+			<div x-data="{ open: false }" class="relative font-bold text-lg text-blue-900 
+			hover:text-red-600" @click.away="open = false">
 				<button @click="open = !open"
-					class="flex items-center gap-1 hover:text-blue-800 transition focus:outline-none"
+					class="py-2.5 px-5 mb-2 flex items-center gap-1 outline-blue-900 transition focus:outline-none bg-white rounded-lg hover:bg-white "
 					aria-haspopup="true" :aria-expanded="open.toString()">
-					<i class="fas fa-user"></i>
-					<span class="text-md font-bold">
-						Hello, <strong>{{ user.get_full_name|default:user.username }}</strong>
-					</span>
+					<i class="fas fa-user-circle mr-1 text-2xl"></i>
 					<i class="fas fa-caret-down"></i>
 				</button>
 
+				<!-- User Dropdown box -->
 				<ul x-show="open" x-transition
 					class="absolute right-0 top-full mt-2 p-2 bg-white shadow-lg rounded-md w-64 text-left text-blue-900 z-50">
-					<a href="{% url 'info' %}"
-						class="px-4 py-2 text-sm font-bold text-blue-900 focus:outline-none bg-blue-300 rounded-lg hover:bg-white hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-100">
-						<i class="fas fa-info-circle"></i>
-						<span class="hidden sm:inline">About</span>
-					</a>
+
+					<span class="hidden sm:inline text-smd font-medium text-blue-900 block px-6 py-6 text-center w-full">
+						<strong>Hello, {{ user.get_full_name|default:user.username }}!</strong>
+					</span>
+
+					<hr class="border-t border-gray-200 mx-4 my-2">
+
+					<li><a href="{% url 'info' %}" class="block px-4 py-2 hover:bg-blue-100">
+						<i class="fas fa-info-circle mr-1"></i>About</a></li>
+
 					<li><a href="{% url 'users:profile' %}" class="block px-4 py-2 hover:bg-blue-100"><i
-								class="fas fa-user-circle"></i> Profile</a></li>
+								class="fas fa-user-circle mr-1"></i> Profile</a></li>
 
 					{% if user|is_guardian_user %}
 					<li><a href="{% url 'swimling_dashboard:guardian_dashboard' %}"
-							class="block px-4 py-2 hover:bg-blue-100"><i class="fas fa-swimmer"></i> Swimling
-							Dashboard</a></li>
+							class="block px-4 py-2 hover:bg-blue-100">
+							<i class="fas fa-swimmer"></i> Swimling Dashboard</a></li>
 					<li><a href="#" class="block px-4 py-2 hover:bg-blue-100"><i class="fas fa-history"></i> My
 							Bookings</a></li>
 					{% endif %}
@@ -117,8 +121,7 @@
 
 					<li><a href="/account/password/change/" class="block px-4 py-2 hover:bg-blue-100"><i
 								class="fas fa-key"></i> Change Password</a></li>
-					<li><a href="{% url 'account_logout' %}" class="block px-4 py-2 text-red-600 hover:bg-red-100"><i
-								class="fas fa-sign-out-alt"></i> Logout</a></li>
+					<li><a href="{% url 'account_logout' %}" class="block px-4 py-2 text-red-600 hover:bg-red-100"><i class="fas fa-sign-out-alt"></i>Logout</a></li>
 				</ul>
 			</div>
 			{% else %}

@@ -37,13 +37,12 @@
       </ul>
     </div>
 
-
     <!-- 🗓 Weekly Lessons -->
     <div x-show="currentTab === 'lessons'" class="w-full overflow-x-auto">
-      <div class="grid grid-cols-7 min-w-[700px] sm:min-w-full gap-4 bg-white/50 p-6 rounded-lg shadow-lg">
+      <div class="grid grid-cols-7 min-w-[1120px] gap-4 bg-white/50 p-6 rounded-lg shadow-lg">
         <template x-for="(day, index) in 7" :key="index">
-          <div class="flex flex-col px-2 text-blue-900"
-            :class="{ 'bg-white/60 border border-red-500 rounded-md pt-2 pb-2': dateFor(index) === today }">
+          <div class="flex flex-col px-2 text-blue-900 min-w-[160px] pt-2 pb-2"
+            :class="{ 'bg-white/60 border border-red-500 rounded-md': dateFor(index) === today }">
             <div class="text-center font-semibold text-md mb-3 h-10 flex items-center justify-center"
               x-text="dayLabel(index)">
             </div>
@@ -70,12 +69,11 @@
 
     <!-- 🏊 Public Swims -->
     <div x-show="currentTab === 'swims'" class="w-full overflow-x-auto">
-      <div class="grid grid-cols-7 min-w-[700px] gap-4 bg-white/50 p-6 rounded-lg shadow-lg">
+      <div class="grid grid-cols-7 min-w-[1120px] gap-4 bg-white/50 p-6 rounded-lg shadow-lg">
         <template x-for="(day, index) in 7" :key="index">
-          <div class="flex flex-col px-2 text-blue-900"
-            :class="{ 'bg-white/60 border border-red-500 rounded-md pt-2 pb-2': dateFor(index) === today }">
+          <div class="flex flex-col px-2 text-blue-900 min-w-[160px] pt-2 pb-2"
+            :class="{ 'bg-white/60 border border-red-500 rounded-md': dateFor(index) === today }">
             <div class="text-center font-semibold text-md mb-3 h-10 flex items-center justify-center"
-              style="height: 2.5rem; display: flex; align-items: center; justify-content: center;"
               x-text="dayLabel(index)">
             </div>
             <template
@@ -105,17 +103,6 @@
     </div>
   </div>
 </section>
-
-<!-- 💅 Highlight today -->
-<style>
-  .highlight-today {
-    background-color: #e0f7fa;
-    border: 1px solid #00b5ad;
-    border-radius: 6px;
-    padding-top: 0.5rem;
-    padding-bottom: 0.5rem;
-  }
-</style>
 
 <!-- 📆 FullCalendar -->
 <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet" />

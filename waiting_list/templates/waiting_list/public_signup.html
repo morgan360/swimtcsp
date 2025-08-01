@@ -1,0 +1,70 @@
+{% extends 'base/_base.html' %}
+{% load static %}
+{% load form_tags %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto p-6 mt-10 bg-white shadow-lg rounded-lg border border-blue-300">
+  <h1 class="text-2xl font-bold text-center text-blue-900 mb-6">Join the Waiting List</h1>
+
+  <form method="post" class="space-y-6">
+    {% csrf_token %}
+
+    <!-- Guardian Section -->
+    <div>
+      <h2 class="text-lg font-semibold text-gray-800 mb-2">Your Details</h2>
+      <div class="space-y-4">
+        {{ form.email.label_tag }}
+        {{ form.email|add_class:"w-full border border-gray-300 rounded p-2" }}
+
+        {{ form.full_name.label_tag }}
+        {{ form.full_name|add_class:"w-full border border-gray-300 rounded p-2" }}
+      </div>
+    </div>
+
+    <!-- Swimling Section -->
+    <div>
+      <h2 class="text-lg font-semibold text-gray-800 mt-4 mb-2">Swimling Details</h2>
+      <div class="space-y-4">
+        {{ form.swimling.label_tag }}
+        {{ form.swimling|add_class:"w-full border border-gray-300 rounded p-2" }}
+
+        {{ form.swimling_name.label_tag }}
+        {{ form.swimling_name|add_class:"w-full border border-gray-300 rounded p-2" }}
+
+        {{ form.swimling_dob.label_tag }}
+        {{ form.swimling_dob|add_class:"w-full border border-gray-300 rounded p-2" }}
+      </div>
+    </div>
+
+    <!-- Preferences Section -->
+    <div>
+      <h2 class="text-lg font-semibold text-gray-800 mt-4 mb-2">Lesson Preferences</h2>
+      <div class="space-y-4">
+        {{ form.is_transfer_request.label_tag }}
+        {{ form.is_transfer_request }}
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
+          <div>
+            {{ form.preferred_lesson_1.label_tag }}
+            {{ form.preferred_lesson_1|add_class:"w-full border border-gray-300 rounded p-2" }}
+          </div>
+          <div>
+            {{ form.preferred_lesson_2.label_tag }}
+            {{ form.preferred_lesson_2|add_class:"w-full border border-gray-300 rounded p-2" }}
+          </div>
+          <div>
+            {{ form.preferred_lesson_3.label_tag }}
+            {{ form.preferred_lesson_3|add_class:"w-full border border-gray-300 rounded p-2" }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="text-center mt-6">
+      <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded shadow">
+        Join the Waiting List
+      </button>
+    </div>
+  </form>
+</div>
+{% endblock %}

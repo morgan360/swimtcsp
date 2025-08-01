@@ -11,6 +11,7 @@ from custom_admins.generaladmin import general_admin_site
 from custom_admins.instructorsadmin import instructors_admin_site
 from custom_admins.coupons_admin import coupons_admin_site
 from users.views import CustomSignupView
+from waiting_list.views import enter_email_for_waiting_list
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -86,3 +87,6 @@ urlpatterns += [
 path("chatbot/", include("chatbot.urls")),
 path("instructors/", include("instructors.urls")),
 ]
+# Custom URL Shortcuts
+urlpatterns += [
+path('join-waitlist/', enter_email_for_waiting_list, name='join_waitlist')]

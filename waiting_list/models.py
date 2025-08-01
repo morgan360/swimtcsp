@@ -1,21 +1,37 @@
 from django.conf import settings
 from django.db import models
 from django.utils import timezone
-from django.core.mail import send_mail
 from django.core.exceptions import ValidationError
-from lessons.models import Product
-from users.models import Swimling
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
+from lessons.models import Product
+from users.models import Swimling
+
 
 class WaitingList(models.Model):
     swimling = models.ForeignKey(Swimling, on_delete=models.CASCADE)
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    is_transfer_request = models.BooleanField(default=False)
+    has_sibling_booked = models.BooleanField(default=False)
+
+    preferred_lesson_1 = models.ForeignKey(
+        Product, related_name='preferred_1', null=True, blank=True, on_delete=models.SET_NULL
+    )
+    preferred_lesson_2 = models.ForeignKey(
+        Product, related_name='preferred_2', null=True, blank=True, on_delete=models.SET_NULL
+    )
+    preferred_lesson_3 = models.ForeignKey(
+        Product, related_name='preferred_3', null=True, blank=True, on_delete=models.SET_NULL
+    )
+
     is_notified = models.BooleanField(default=False)
     notification_date = models.DateTimeField(null=True, blank=True)
-    assigned_lesson = models.ForeignKey(Product, related_name='assigned_lessons', on_delete=models.SET_NULL, null=True, blank=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    assigned_lesson = models.ForeignKey(
+        Product, related_name='assigned_lessons', on_delete=models.SET_NULL, null=True, blank=True
+    )
     completed = models.BooleanField(default=False)
 
     class Meta:
@@ -25,23 +41,30 @@ class WaitingList(models.Model):
         if WaitingList.objects.filter(swimling=self.swimling, product=self.product).exclude(id=self.id).exists():
             raise ValidationError('This swimling is already on the waiting list for this lesson.')
 
+    def check_sibling_bookings(self):
+        siblings = Swimling.objects.filter(guardian=self.swimling.guardian).exclude(id=self.swimling.id)
+        current_term_bookings = Product.objects.filter(
+            booking__swimling__in=siblings,
+            term__is_current=True  # assumes you have a `term__is_current` filter
+        ).distinct()
+        self.has_sibling_booked = current_term_bookings.exists()
+
     def save(self, *args, **kwargs):
         is_new = self.pk is None
-
-        # Get the old state before saving
         old_assigned_lesson = None
+
+        # Check for sibling
+        self.check_sibling_bookings()
+
         if not is_new:
             old = WaitingList.objects.get(pk=self.pk)
             old_assigned_lesson = old.assigned_lesson
 
-        # Save the object first (to get a valid PK if new)
         super().save(*args, **kwargs)
 
-        # Handle new entry
         if is_new:
             self.send_joined_waiting_list_email()
 
-        # Auto-notify when lesson is assigned
         if self.assigned_lesson and self.assigned_lesson != old_assigned_lesson:
             if not self.is_notified:
                 self.is_notified = True
@@ -55,16 +78,13 @@ class WaitingList(models.Model):
             subject = "Lesson Available for Your Swimling"
             from_email = settings.DEFAULT_FROM_EMAIL
             to = [guardian.email]
-
             context = {
                 'guardian': guardian,
                 'swimling': self.swimling,
                 'lesson': self.assigned_lesson,
             }
-
             text_content = render_to_string('emails/waiting_list_notification.txt', context)
             html_content = render_to_string('emails/waiting_list_notification.html', context)
-
             email = EmailMultiAlternatives(subject, text_content, from_email, to)
             email.attach_alternative(html_content, "text/html")
             email.send()
@@ -75,16 +95,13 @@ class WaitingList(models.Model):
             subject = "You've Been Added to the Waiting List"
             from_email = settings.DEFAULT_FROM_EMAIL
             to = [guardian.email]
-
             context = {
                 'guardian': guardian,
                 'swimling': self.swimling,
                 'product': self.product,
             }
-
             text_content = render_to_string('emails/waiting_list_joined.txt', context)
             html_content = render_to_string('emails/waiting_list_joined.html', context)
-
             email = EmailMultiAlternatives(subject, text_content, from_email, to)
             email.attach_alternative(html_content, "text/html")
             email.send()

@@ -5,104 +5,110 @@
 {% block title %}{{ product.name }}{% endblock %}
 
 {% block content %}
-    <section class="section">
-        <div class="container">
-            <div class="columns">
-                <!-- Product Image Column -->
-                <div class="column is-one-third">
-                    <figure class="image is-4by3">
-                        <img src="
+<section class="py-12 px-4 sm:px-6 lg:px-8 text-white">
+    <div class="max-w-6xl mx-auto">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-10 items-start">
 
-                                {% if product.image %}{{ product.image.url }}{% else %}{% static 'images/no_image.png' %}{% endif %}"
-                             alt="{{ product.name }}" class="has-shadow is-rounded">
-                    </figure>
+            <!-- 📸 Product Image -->
+            <div class="w-full overflow-hidden shadow-lg">
+                <div class="flex items-center justify-between mb-4">
+                    <!-- back button -->
+                    <a href="{% url 'swims:product_list' %}"
+                        class="inline-flex items-center gap-2 text-blue-900 bg-blue-100 hover:text-blue-600 hover:bg-blue-200 text-md font-semibold rounded-lg px-3 py-1 transition">
+                        <i class="fas fa-chevron-left"></i>
+                        Back to Products
+                    </a>
+                </div>
+                <div
+                    class="aspect-w-4 aspect-h-3 bg-white/10 backdrop-blur-sm rounded-lg overflow-hidden border border-white/20">
+                    <img src="{% if product.image %}{{ product.image.url }}{% else %}{% static 'img/laneswim3.jpeg' %}{% endif %}"
+                        alt="{{ product.name }}" class="w-full h-full object-cover">
+                </div>
+            </div>
+
+            <!-- 📋 Product Info -->
+            <div class="md:col-span-2 space-y-6">
+
+                <!-- 🏷️ Title -->
+                <div>
+                    <h2 class="text-4xl font-bold text-white mb-2">{{ product.name }}</h2>
+                    <p class="text-lg font-medium text-red-400">
+                        Booking for: <span class="text-white font-semibold">{{ next_occurrence_date }}</span>
+                    </p>
                 </div>
 
-                <!-- Product Details Column -->
-                <div class="column is-two-thirds">
-                    <h1 class="title is-3 mb-4">
-                        <span>{{ product.name }}</span>
-                        <span class="has-text-weight-normal">Booking for:</span>
-                        <span class="has-text-primary">{{ next_occurrence_date }}</span>
-                    </h1>
+                <!-- 🧾 Booking Form -->
+                <div class="bg-white/40 backdrop-blur-lg border border-white/20 p-6 rounded-lg shadow-lg text-gray-900">
+                    <form method="post">
+                        {% csrf_token %}
 
-                    <div class="box animate__animated animate__fadeIn">
-                        <form method="post">
-                            {% csrf_token %}
-
-                            <table class="table is-fullwidth is-hoverable">
-                                <thead>
-                                <tr>
-                                    <th class="has-text-primary">Variant</th>
-                                    <th class="has-text-primary">Quantity</th>
-                                    <th class="has-text-primary">Price</th>
-                                </tr>
-                                </thead>
-                                <tbody>
-                                {% for variant in price_variants %}
+                        <!-- 🪙 Price Table -->
+                        <div class="overflow-x-auto rounded-lg shadow">
+                            <table class="min-w-full text-sm">
+                                <thead class="bg-white/70 text-blue-900 uppercase text-sm font-semibold">
                                     <tr>
-                                        <td>{{ variant.variant }}</td>
-                                        <td>
-                                            <div class="select is-fullwidth">
-                                                <div class="select is-fullwidth">
-                                                    <select
-                                                            name="quantity_{{ variant.id }}"
-                                                            hx-trigger="change"
-                                                            hx-post="{% url 'swims:calculate_total' %}"
-                                                            hx-target="#totalPrice span"
-                                                            hx-swap="innerHTML">
-                                                        {% for quantity in quantities %}
-                                                            <option value="{{ quantity }}">{{ quantity }}</option>
-                                                        {% endfor %}
-                                                    </select>
-                                                </div>
-                                            </div>
-
-                                        </td>
-                                        <td>€{{ variant.price }}</td>
+                                        <th class="px-4 py-2 text-left">Variant</th>
+                                        <th class="px-4 py-2 text-left">Quantity</th>
+                                        <th class="px-4 py-2 text-left">Price</th>
                                     </tr>
-                                {% endfor %}
+                                </thead>
+                                <tbody class="divide-y divide-gray-300 bg-white/80 text-blue-800 font-medium text-sm">
+                                    {% for variant in price_variants %}
+                                    <tr>
+                                        <td class="px-4 py-2">{{ variant.variant }}</td>
+                                        <td class="px-4 py-2">
+                                            <select name="quantity_{{ variant.id }}"
+                                                class="w-full border border-gray-300 rounded px-2 py-1 focus:ring-blue-500"
+                                                hx-trigger="change" hx-post="{% url 'swims:calculate_total' %}"
+                                                hx-target="#totalPrice span" hx-swap="innerHTML">
+                                                {% for quantity in quantities %}
+                                                <option value="{{ quantity }}">{{ quantity }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </td>
+                                        <td class="px-4 py-2">€{{ variant.price }}</td>
+                                    </tr>
+                                    {% endfor %}
                                 </tbody>
                             </table>
+                        </div>
 
-                            <div class="field mt-4">
-                                <label class="label">Coupon Code</label>
-                                <div class="control">
-                                    <input class="input" type="text" name="coupon_code"
-                                           placeholder="Enter coupon code (optional)"
-                                           value="{{ entered_coupon|default:'' }}">
-                                </div>
+                        <!-- 🎟️ Coupon -->
+                        <div class="mt-6">
+                            <label class="block text-sm font-semibold text-blue-900 mb-1">Coupon Code</label>
+                            <input type="text" name="coupon_code" placeholder="Enter coupon code (optional)"
+                                value="{{ entered_coupon|default:'' }}"
+                                class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500">
+                        </div>
+
+                        <!-- 💰 Total -->
+                        <div class="mt-6 bg-blue-100/60 border-l-4 border-blue-500 text-blue-900 p-4 rounded">
+                            <div class="text-lg font-semibold" id="totalPrice">
+                                Total to pay: €<span>0.00</span>
                             </div>
+                        </div>
 
-                            <div class="notification is-light is-primary mt-4">
-                                <div class="is-size-4" id="totalPrice">
-                                    <strong>Total to pay:</strong> €<span>0.00</span>
-                                </div>
-                            </div>
+                        <!-- ✅ Submit -->
+                        <div class="mt-6">
+                            <button type="submit"
+                                class="w-full bg-red-700 hover:bg-red-800 text-white font-semibold py-3 px-4 rounded flex items-center justify-center gap-2 transition">
+                                <i class="fas fa-credit-card"></i>
+                                Pay Now
+                            </button>
+                        </div>
+                    </form>
+                </div>
 
-                            <div class="field mt-5">
-                                <div class="control">
-                                    <button type="submit" class="button is-book">
-                  <span class="icon">
-                    <i class="fas fa-credit-card"></i>
-                  </span>
-                                        <span>Pay Now</span>
-                                    </button>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
-
-                    <!-- Product Description -->
-                    <div class="content mt-5">
-                        <h3 class="title is-5">About this session</h3>
-                        <p>{{ product.description }}</p>
-                    </div>
+                <!-- 📝 Description -->
+                <div class="bg-white/10 backdrop-blur-sm p-6 rounded-lg border border-white/10">
+                    <h3 class="text-2xl font-semibold text-white mb-3">About this session</h3>
+                    <p class="text-white/90">{{ product.description }}</p>
                 </div>
             </div>
         </div>
-    </section>
+    </div>
+</section>
 
-    <!-- Include Animate.css for animations -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+<!-- Animate.css (optional for fade-ins) -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
 {% endblock %}

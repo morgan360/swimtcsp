@@ -4,25 +4,25 @@
 {% block title %}Your Shopping Cart{% endblock %}
 
 {% block content %}
-<section class="section">
-  <div class="container is-max-desktop">
-    <div class="box">
-      <h2 class="title is-4 has-text-warning">Review Order</h2>
+<section class="py-12 px-4 sm:px-6 lg:px-8 text-white">
+  <div class="max-w-3xl mx-auto px-4">
+    <div class="bg-white/50 rounded-2xl shadow-md p-6 space-y-6">
+      <h2 class="text-2xl font-bold text-white">Review Order</h2>
 
-      <div class="content">
-        <p><strong>Swimling:</strong> {{ swimling }}</p>
-        <p><strong>Lesson:</strong> {{ lesson.name }}</p>
-        <p><strong>Price:</strong> €{{ lesson.price }}</p>
+      <div class="text-gray-800 text-base space-y-2">
+        <p><strong class="text-blue-900">Swimling:</strong> {{ swimling }}</p>
+        <p><strong class="text-blue-900">Lesson:</strong> {{ lesson.name }}</p>
+        <p><strong class="text-blue-900">Price:</strong> €{{ lesson.price }}</p>
       </div>
 
-      <form method="POST" action="{% url 'shopping_cart:confirm_rebooking' swimling.id lesson.id %}">
+      <form method="POST" action="{% url 'shopping_cart:confirm_rebooking' swimling.id lesson.id %}" class="space-y-4">
         {% csrf_token %}
-        <div class="field">
-          <div class="control">
-            <button type="submit" class="button is-primary is-fullwidth">
-              Confirm and Pay
-            </button>
-          </div>
+        <div>
+          <button type="submit"
+                  class="w-full bg-red-700 hover:bg-red-800 text-white font-semibold py-3 px-4 rounded flex items-center justify-center gap-2 transition">
+            <i class="fas fa-check mr-2"></i>
+            Confirm and Pay
+          </button>
         </div>
       </form>
     </div>

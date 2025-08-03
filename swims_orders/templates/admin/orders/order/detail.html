@@ -5,88 +5,87 @@
 {% endblock %}
 
 {% block breadcrumbs %}
-  <div class="breadcrumbs">
-    <a href="{% url "admin:index" %}">Home</a> &rsaquo;
-    <a href="{% url "admin:orders_order_changelist" %}">Orders</a>
-    &rsaquo;
-    <a href="{% url "admin:orders_order_change" order.id %}">Order {{ order.id }}</a>
-    &rsaquo; Detail
-  </div>
+  <nav class="text-sm text-gray-500 mb-4 space-x-1">
+    <a href="{% url 'admin:index' %}" class="text-blue-600 hover:underline">Home</a> &rsaquo;
+    <a href="{% url 'admin:orders_order_changelist' %}" class="text-blue-600 hover:underline">Orders</a> &rsaquo;
+    <a href="{% url 'admin:orders_order_change' order.id %}" class="text-blue-600 hover:underline">Order {{ order.id }}</a> &rsaquo;
+    <span>Detail</span>
+  </nav>
 {% endblock %}
 
 {% block content %}
-<div class="module">
-  <h1>Order {{ order.id }}</h1>
-  <ul class="object-tools">
-    <li>
-      <a href="#" onclick="window.print();">
-        Print order
-      </a>
-    </li>
-  </ul>
-  <table>
-    <tr>
-      <th>Created</th>
-      <td>{{ order.created }}</td>
-    </tr>
-    <tr>
-      <th>Customer</th>
-      <td>{{ order.first_name }} {{ order.last_name }}</td>
-    </tr>
-    <tr>
-      <th>E-mail</th>
-      <td><a href="mailto:{{ order.email }}">{{ order.email }}</a></td>
-    </tr>
-    <tr>
-      <th>Address</th>
-    <td>
-      {{ order.address }},
-      {{ order.postal_code }} {{ order.city }}
-    </td>
-    </tr>
-    <tr>
-      <th>Total amount</th>
-      <td>${{ order.get_total_cost }}</td>
-    </tr>
-    <tr>
-      <th>Status</th>
-      <td>{% if order.paid %}Paid{% else %}Pending payment{% endif %}</td>
-    </tr>
-    <tr>
-      <th>Stripe payment</th>
-      <td>
-        {% if order.stripe_id %}
-          <a href="{{ order.get_stripe_url }}" target="_blank">
-            {{ order.stripe_id }}
-          </a>
-        {% endif %}
-      </td>
-    </tr>
+<div class="bg-white shadow-md rounded p-6 mb-6">
+  <div class="flex justify-between items-center mb-4">
+    <h2 class="text-xl font-semibold">Order {{ order.id }}</h2>
+    <a href="#" onclick="window.print();" class="text-blue-600 hover:underline">
+      Print order
+    </a>
+  </div>
+  <table class="table-auto w-full text-left text-sm">
+    <tbody class="divide-y divide-gray-200">
+      <tr>
+        <th class="py-2 font-medium text-gray-700 w-1/4">Created</th>
+        <td class="py-2">{{ order.created }}</td>
+      </tr>
+      <tr>
+        <th class="py-2 font-medium text-gray-700">Customer</th>
+        <td class="py-2">{{ order.first_name }} {{ order.last_name }}</td>
+      </tr>
+      <tr>
+        <th class="py-2 font-medium text-gray-700">E-mail</th>
+        <td class="py-2"><a href="mailto:{{ order.email }}" class="text-blue-600 hover:underline">{{ order.email }}</a></td>
+      </tr>
+      <tr>
+        <th class="py-2 font-medium text-gray-700">Address</th>
+        <td class="py-2">
+          {{ order.address }}, {{ order.postal_code }} {{ order.city }}
+        </td>
+      </tr>
+      <tr>
+        <th class="py-2 font-medium text-gray-700">Total amount</th>
+        <td class="py-2">${{ order.get_total_cost }}</td>
+      </tr>
+      <tr>
+        <th class="py-2 font-medium text-gray-700">Status</th>
+        <td class="py-2">{% if order.paid %}Paid{% else %}Pending payment{% endif %}</td>
+      </tr>
+      <tr>
+        <th class="py-2 font-medium text-gray-700">Stripe payment</th>
+        <td class="py-2">
+          {% if order.stripe_id %}
+            <a href="{{ order.get_stripe_url }}" target="_blank" class="text-blue-600 hover:underline">
+              {{ order.stripe_id }}
+            </a>
+          {% endif %}
+        </td>
+      </tr>
+    </tbody>
   </table>
 </div>
-<div class="module">
-  <h2>Items bought</h2>
-  <table style="width:100%">
+
+<div class="bg-white shadow-md rounded p-6">
+  <h2 class="text-xl font-semibold mb-4">Items bought</h2>
+  <table class="table-auto w-full text-sm text-left border-collapse">
     <thead>
-      <tr>
-        <th>Product</th>
-        <th>Price</th>
-        <th>Quantity</th>
-        <th>Total</th>
+      <tr class="border-b border-gray-300">
+        <th class="py-2">Product</th>
+        <th class="py-2">Price</th>
+        <th class="py-2">Quantity</th>
+        <th class="py-2">Total</th>
       </tr>
     </thead>
     <tbody>
       {% for item in order.items.all %}
-        <tr class="row{% cycle "1" "2" %}">
-          <td>{{ item.product.name }}</td>
-          <td class="num">${{ item.price }}</td>
-          <td class="num">{{ item.quantity }}</td>
-          <td class="num">${{ item.get_cost }}</td>
+        <tr class="{% cycle 'bg-white' 'bg-gray-50' %}">
+          <td class="py-2">{{ item.product.name }}</td>
+          <td class="py-2 text-right">${{ item.price }}</td>
+          <td class="py-2 text-right">{{ item.quantity }}</td>
+          <td class="py-2 text-right">${{ item.get_cost }}</td>
         </tr>
       {% endfor %}
-      <tr class="total">
-        <td colspan="3">Total</td>
-        <td class="num">${{ order.get_total_cost }}</td>
+      <tr class="font-semibold border-t border-gray-300">
+        <td colspan="3" class="py-2">Total</td>
+        <td class="py-2 text-right">${{ order.get_total_cost }}</td>
       </tr>
     </tbody>
   </table>

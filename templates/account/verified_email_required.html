@@ -5,19 +5,34 @@
 {% block head_title %}{% trans "Verify Your E-mail Address" %}{% endblock %}
 
 {% block content %}
-<h1>{% trans "Verify Your E-mail Address" %}</h1>
+<div class="flex justify-center px-4 py-10">
+    <div
+        class="w-full max-w-md bg-white/40 backdrop-blur-md border border-white/20 rounded-xl p-6 shadow-lg text-blue-900">
+        <h2 class="text-2xl font-bold mb-5 text-center text-white">{% trans "Verify Your E-mail Address" %}</h2>
 
-{% url 'account_email' as email_url %}
+        {% url 'account_email' as email_url %}
 
-<p>{% blocktrans %}This part of the site requires us to verify that
-you are who you claim to be. For this purpose, we require that you
-verify ownership of your e-mail address. {% endblocktrans %}</p>
+        <p class="mb-4 text-md text-white font-medium">
+            {% blocktrans %}
+            This part of the site requires us to verify that
+            you are who you claim to be. For this purpose, we require that you
+            verify ownership of your e-mail address.
+            {% endblocktrans %}
+        </p>
 
-<p>{% blocktrans %}We have sent an e-mail to you for
-verification. Please click on the link inside that e-mail. If you do not see the verification e-mail in your main inbox, check your spam folder. Otherwise
-contact us if you do not receive it within a few minutes.{% endblocktrans %}</p>
+        <p class="mb-4 text-md text-white font-medium">
+            {% blocktrans %}
+            We have sent an e-mail to you for
+            verification. Please click on the link inside that e-mail. If you do not see the verification e-mail in your
+            main inbox, check your spam folder. Please
+            contact us if you do not receive it within a few minutes.
+            {% endblocktrans %}
+        </p>
 
-<p>{% blocktrans %}<strong>Note:</strong> you can still <a href="{{ email_url }}">change your e-mail address</a>.{% endblocktrans %}</p>
-
-
+        <p class="mb-4 text-md text-white font-medium">
+            {% blocktrans %}<strong class="text-red-900">Note:</strong> you can still <a href="{{ email_url }}" class="text-blue-900 hover:underline">change
+                your e-mail
+                address</a>.{% endblocktrans %}</p>
+    </div>
+</div>
 {% endblock %}

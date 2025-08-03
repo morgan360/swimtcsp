@@ -1,23 +1,23 @@
 {% extends "base/_base.html" %}
 
 {% block content %}
-<section class="section">
-  <div class="container">
-    <div class="box">
-      <h1 class="title is-4 has-text-primary">Join the Schools Program</h1>
-      <p class="mb-4">Gain access to booking for school swimming terms and manage school-linked swimlings.</p>
+<section class="py-12">
+  <div class="max-w-3xl mx-auto px-4">
+    <div class="bg-white shadow-md rounded-lg p-8">
+      <h1 class="text-2xl font-semibold text-blue-600 mb-4">Join our Schools Program</h1>
+      <p class="mb-6 text-gray-700">Gain booking access for school swimming terms and manage school-linked swimlings.</p>
 
       <form method="post">
         {% csrf_token %}
-        <div class="field">
-          <div class="control">
-            {{ form.join_schools }}
-            <label class="checkbox ml-2" for="{{ form.join_schools.id_for_label }}">
-              {{ form.join_schools.label }}
-            </label>
-          </div>
+        <div class="flex items-center mb-6">
+          {{ form.join_schools }}
+          <label for="{{ form.join_schools.id_for_label }}" class="ml-3 text-gray-800 cursor-pointer">
+            {{ form.join_schools.label }}
+          </label>
         </div>
-        <button class="button is-primary mt-4">Join Program</button>
+        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded transition">
+          Join Program
+        </button>
       </form>
     </div>
   </div>

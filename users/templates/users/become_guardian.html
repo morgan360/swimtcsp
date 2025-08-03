@@ -1,13 +1,13 @@
 {% extends "base/_base.html" %}
 {% block content %}
-<section class="section">
-  <div class="container">
-    <div class="box">
-      <h1 class="title is-4 has-text-primary">Upgrade to Book Swimming Lessons</h1>
-      <p class="mb-4">
+<section class="py-8">
+  <div class="max-w-3xl mx-auto px-4">
+    <div class="bg-white shadow rounded-lg p-6">
+      <h1 class="text-2xl font-semibold text-blue-600 mb-4">Upgrade to Guardian</h1>
+      <p class="mb-6 text-gray-700">
         When you upgrade, you will gain access to features such as:
       </p>
-      <ul class="content mb-5">
+      <ul class="list-inside mb-8 text-gray-700">
         <li>✔ Register your children for lessons</li>
         <li>✔ View and manage your children's lesson schedules</li>
         <li>✔ Book and rebook swimming sessions with ease</li>
@@ -15,19 +15,17 @@
 
       <form method="post">
         {% csrf_token %}
-        <div class="field">
-          <div class="control">
+        <div class="mb-6">
+          <label for="{{ form.become_guardian.id_for_label }}" class="inline-flex items-center cursor-pointer">
             {{ form.become_guardian }}
-            <label class="checkbox ml-2" for="{{ form.become_guardian.id_for_label }}">
-              {{ form.become_guardian.label }}
-            </label>
-          </div>
+            <span class="ml-2 text-gray-800">{{ form.become_guardian.label }}</span>
+          </label>
         </div>
 
-        <div class="field mt-4">
-          <div class="control">
-            <button type="submit" class="button is-link is-medium">Upgrade</button>
-          </div>
+        <div>
+          <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-md transition">
+            Upgrade
+          </button>
         </div>
       </form>
     </div>

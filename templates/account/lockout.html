@@ -2,8 +2,20 @@
 {% extends "base/_base.html" %}
 
 {% block content %}
-<div class="container">
-    <h1>Account Locked</h1>
-    <p>Your account has been temporarily locked due to too many failed login attempts. Please try again later.</p>
+<div class="flex justify-center px-4 py-10">
+    <div class="w-full max-w-md bg-white/40 backdrop-blur-md border border-white/20 rounded-xl p-6 shadow-lg items-center">
+        <h2 class="text-2xl font-bold mb-5 text-center text-white">
+            <i class="fa fa-solid fa-lock"></i>
+            Account Locked
+        </h2>
+        <p class="mb-2 text-md text-white font-medium text-center">Your account has been temporarily locked due to too
+            many failed login attempts. Please try again later.</p>
+        <div class="flex justify-center">
+            <a href="/"
+                class=" bg-red-700 text-white text-lg py-3 px-4 rounded-lg font-semibold hover:bg-red-800 transition border border-white/60 mt-2">
+                Go Home
+            </a>
+        </div>
+    </div>
 </div>
 {% endblock %}

@@ -15,6 +15,7 @@ from django.urls import reverse
 from lessons_orders.models import Order as LessonOrder, OrderItem as LessonOrderItem
 from schools_orders.models import Order as SchoolOrder, OrderItem as SchoolOrderItem
 from lessons_bookings.models import Term
+from utils.terms_utils import get_term_context_data
 from schools_bookings.models import ScoTerm
 from utils.terms_utils import get_current_term, get_current_sco_term, get_next_term
 from boipa.views import initiate_boipa_payment_session
@@ -25,6 +26,7 @@ from coupons.models import Coupon
 from coupons.services import CouponService
 from django.core.exceptions import ValidationError
 import logging
+
 
 # Create a logger object
 logger = logging.getLogger('cart')
@@ -137,7 +139,20 @@ def payment_process(request):
     # Step 1: Create order based on cart type
     if cart_type == 'lesson':
         order = LessonOrder.objects.create(user=request.user)
-        total_price = process_order_items(cart, LessonOrderItem, order, Product, get_current_term)
+        from utils.terms_utils import get_term_context_data
+
+        term_data = get_term_context_data()
+        phase = term_data['current_phase_id']
+        term = term_data['next_term'] if phase in ['RB', 'BN'] else term_data['current_term']
+
+        # Pass a lambda so the function signature stays the same
+        total_price = process_order_items(
+            cart,
+            LessonOrderItem,
+            order,
+            Product,
+            lambda: term
+        )
     elif cart_type == 'school':
         order = SchoolOrder.objects.create(user=request.user)
         total_price = process_order_items(cart, SchoolOrderItem, order, ScoLessons, get_current_sco_term)

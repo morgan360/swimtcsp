@@ -22,6 +22,7 @@ from boipa.views import initiate_boipa_payment_session
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.conf import settings
+from django.urls import reverse
 
 
 @login_required
@@ -129,9 +130,22 @@ def refresh_school_panel(request):
     return HttpResponse(html)
 
 
+
 @login_required
 def refresh_waiting_list_panel(request):
-    html = render_to_string('swimling_dashboard/_waiting_list_panel.html', {}, request=request)
+    try:
+        print("🔍 About to fetch waiting list data...")
+        waiting_list_data = fetch_waiting_list_data(request.user)
+        print("✅ Fetched:", waiting_list_data)
+    except Exception as e:
+        print("❌ Error while fetching data:", e)
+        return HttpResponse("⚠️ Error loading panel.", status=500)
+
+    html = render_to_string(
+        'swimling_dashboard/_waiting_list_panel.html',
+        {"waiting_list_data": waiting_list_data},
+        request=request
+    )
     return HttpResponse(html)
 
 
@@ -183,12 +197,16 @@ def add_swimling(request):
                     enrollments__swimling=s
                 ).distinct()
                 actions = []
-                if current_phase in ['BK', 'RB'] and not current_lessons.exists():
-                    actions.append({'label': 'Book Current', 'url': f'/book/current/{s.id}/', 'disabled': False})
+                if current_phase in ['BK', 'RB']:
+                    book_url = reverse('lessons:lesson_list') + f'?swimling={swimling.id}'
+                    actions.append({'label': 'Book', 'url': book_url, 'disabled': False})
+
                 if current_phase == 'RB' and current_lessons.exists():
-                    actions.append({'label': 'Rebook', 'url': f'/rebook/{s.id}/', 'disabled': False})
+                    actions.append({'label': 'Rebook', 'url': f'/rebook/{swimling.id}/', 'disabled': False})
+
                 if current_phase == 'BN':
-                    actions.append({'label': 'Book Next', 'url': f'/book/next/{s.id}/', 'disabled': False})
+                    book_url = reverse('lessons:lesson_list') + f'?swimling={swimling.id}'
+                    actions.append({'label': 'Book', 'url': book_url, 'disabled': False})
 
                 public_lessons_data.append({
                     'swimling': s,
@@ -242,11 +260,15 @@ def guardian_dashboard(request):
 
         actions = []
         if current_phase in ['BK', 'RB']:
-            actions.append({'label': 'Book Current', 'url': f'/book/current/{swimling.id}/', 'disabled': False})
+            url = reverse('lessons:lesson_list') + f'?swimling={swimling.id}'
+            actions.append({'label': 'Book', 'url': url, 'disabled': False})
+
         if current_phase == 'RB' and current_lessons.exists():
             actions.append({'label': 'Rebook', 'url': f'/rebook/{swimling.id}/', 'disabled': False})
+
         if current_phase == 'BN':
-            actions.append({'label': 'Book Next', 'url': f'/book/next/{swimling.id}/', 'disabled': False})
+            url = reverse('lessons:lesson_list') + f'?swimling={swimling.id}'
+            actions.append({'label': 'Book', 'url': url, 'disabled': False})
 
         public_lessons_data.append({
             'swimling': swimling,

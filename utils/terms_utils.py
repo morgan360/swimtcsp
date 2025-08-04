@@ -28,10 +28,6 @@ def get_current_sco_term():
     return current_sco_term
 
 def get_term_context_data():
-    """
-    Returns a dictionary with the current term, next term, previous term,
-    and the current booking phase (BK, RB, BN).
-    """
     today = timezone.now().date()
 
     current_term = get_current_term()

@@ -122,10 +122,12 @@ def product_detail(request, id):
         except Swimling.DoesNotExist:
             selected_swimling = None
 
+    term_data = get_term_context_data()
+    phase = term_data['current_phase_id']
+    selected_term = term_data['next_term'] if phase in ['RB', 'BN'] else term_data['current_term']
 
-    current_term = get_current_term()
-    num_sold = product.get_num_sold(current_term) if current_term else 0
-    num_left = product.get_num_left(current_term) if current_term else 0
+    num_sold = product.get_num_sold(selected_term) if selected_term else 0
+    num_left = product.get_num_left(selected_term) if selected_term else 0
 
     return render(request, 'lessons/products/detail.html', {
         'product': product,

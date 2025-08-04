@@ -91,19 +91,50 @@ class Command(BaseCommand):
                     Program.objects.update_or_create(id=row['id'], defaults={'name': row['name']})
 
                 # Categories
+                CATEGORY_NAME_MAPPING = {
+                    "Lengths - L3": {"new_name": "Lengths(l3)", "short_name": "Len~l3"},
+                    "Advanced": {"new_name": "Advanced", "short_name": "Adv"},
+                    "Lengths - L2": {"new_name": "Lengths(l2)", "short_name": "Len~l2"},
+                    "Lengths - L1": {"new_name": "Lengths(l1)", "short_name": "Len~l1"},
+                    "Improvers - 1": {"new_name": "Improvers(1)", "short_name": "Imp~1"},
+                    "Improvers - 2": {"new_name": "Improvers(2)", "short_name": "Imp~2"},
+                    "Improvers - C": {"new_name": "Improvers(c)", "short_name": "Imp~c"},
+                    "Beginners - 1": {"new_name": "Beginners(1)", "short_name": "Beg~1"},
+                    "Beginners - 2": {"new_name": "Beginners(2)", "short_name": "Beg~2"},
+                    "Beginners - C": {"new_name": "Beginners(c)", "short_name": "Beg~c"},
+                    "Adult Begin & Improvers": {"new_name": "Adult Begin & Improvers", "short_name": "Adult~Beg:Imp"},
+                    "Beginners 1 - BG": {"new_name": "Beginners 1(s)", "short_name": "Beg1~(s)"},
+                    "Improvers 1 - BG": {"new_name": "Improvers 1(s))", "short_name": "Imp1~(s)"},
+                    "Improvers 2 - BG": {"new_name": "Improvers 2(s)", "short_name": "Imp2~(s)"},
+                    "Advanced - BG": {"new_name": "Advanced(s)", "short_name": "Adv(s)"},
+                    "Test Classes": {"new_name": "Test", "short_name": "Test"},
+                    "Beginners 2 - BG": {"new_name": "Beginners 2(s))", "short_name": "Beg2~(s)"},
+                    "Beginners 8+": {"new_name": "Beginners(8+)", "short_name": "Beg~8+"},
+
+                }
+
                 self.stdout.write("📂 Importing Categories...")
                 cursor.execute("SELECT id, Module_id AS program, lesson AS name FROM mor_lessons")
+
                 for row in cursor.fetchall():
                     program = Program.objects.filter(id=row['program']).first()
-                    if program:
-                        Category.objects.update_or_create(
-                            id=row['id'],
-                            defaults={
-                                'name': row['name'],
-                                'program': program,
-                                'slug': slugify(row['name'])
-                            }
-                        )
+                    if not program:
+                        continue
+
+                    original_name = row['name']
+                    mapped = CATEGORY_NAME_MAPPING.get(original_name, {})
+                    new_name = mapped.get('new_name', original_name)
+                    short_name = mapped.get('short_name', None)
+
+                    Category.objects.update_or_create(
+                        id=row['id'],
+                        defaults={
+                            'name': new_name,
+                            'short_name': short_name,
+                            'program': program,
+                            'slug': slugify(new_name)
+                        }
+                    )
 
                 # Lessons (Products)
                 self.stdout.write("📚 Importing Lessons...")

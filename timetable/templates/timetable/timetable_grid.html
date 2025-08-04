@@ -4,111 +4,111 @@
 {% block title %}Timetable{% endblock %}
 
 {% block content %}
-<section class="py-6">
-  <div
-    class="bg-white/40 backdrop-blur-md border border-white/20 rounded-xl shadow-md p-10 w-full max-w-7xl mx-auto px-4"
-    x-data="timetableApp()" x-init="fetchEvents()">
-    <h2 class="text-3xl font-bold mb-6 text-white text-center">Pool Timetable</h2>
+    <section class="py-6">
+        <div
+                class="bg-white/40 backdrop-blur-md border border-white/20 rounded-xl shadow-md p-10 w-full max-w-7xl mx-auto px-4"
+                x-data="timetableApp()" x-init="fetchEvents()">
+            <h2 class="text-3xl font-bold mb-6 text-white text-center">Pool Timetable</h2>
 
-    <!-- 🗂 Responsive Tabs -->
-    <div class="flex justify-center mb-6 text-lg">
-      <ul class="flex flex-col sm:flex-row items-center gap-y-2 sm:gap-x-4 sm:w-auto">
-        <li class="w-full sm:w-auto">
-          <a href="#" @click.prevent="switchTab('lessons')" :class="currentTab === 'lessons' ? 
+            <!-- 🗂 Responsive Tabs -->
+            <div class="flex justify-center mb-6 text-lg">
+                <ul class="flex flex-col sm:flex-row items-center gap-y-2 sm:gap-x-4 sm:w-auto">
+                    <li class="w-full sm:w-auto">
+                        <a href="#" @click.prevent="switchTab('lessons')" :class="currentTab === 'lessons' ?
            'block text-white font-semibold px-4 py-2 rounded-md bg-blue-900 text-center w-full' : 
            'block bg-white hover:bg-blue-600 hover:text-white rounded-md px-4 py-2 text-center w-full'">
-            Lessons
-          </a>
-        </li>
-        <li class="w-full sm:w-auto">
-          <a href="#" @click.prevent="switchTab('swims')" :class="currentTab === 'swims' ? 
-           'block text-white font-semibold px-4 py-2 rounded-md bg-blue-900 text-center w-full' : 
-           'block bg-white hover:bg-blue-600 hover:text-white rounded-md px-4 py-2 text-center w-full'">
-            Public Swims
-          </a>
-        </li>
-        <li class="w-full sm:w-auto">
-          <a href="#" @click.prevent="switchTab('calendar')" :class="currentTab === 'calendar' ? 
-           'block text-white font-semibold px-4 py-2 rounded-md bg-blue-900 text-center w-full' : 
-           'block bg-white hover:bg-blue-600 hover:text-white rounded-md px-4 py-2 text-center w-full'">
-            Calendar Overview
-          </a>
-        </li>
-      </ul>
-    </div>
-
-    <!-- 🗓 Weekly Lessons -->
-    <div x-show="currentTab === 'lessons'" class="w-full overflow-x-auto">
-      <div class="grid grid-cols-7 min-w-[1120px] gap-4 bg-white/50 p-6 rounded-lg shadow-lg">
-        <template x-for="(day, index) in 7" :key="index">
-          <div class="flex flex-col px-2 text-blue-900 min-w-[160px] pt-2 pb-2"
-            :class="{ 'bg-white/60 border border-red-500 rounded-md': dateFor(index) === today }">
-            <div class="text-center font-semibold text-md mb-3 h-10 flex items-center justify-center"
-              x-text="dayLabel(index)">
-            </div>
-            <template
-              x-for="[timeBlock, events] of Object.entries(groupedEventsForDay(index, 'lesson')).sort((a, b) => a[0].localeCompare(b[0]))"
-              :key="timeBlock">
-              <div class="mb-2 text-md">
-                <p class="text-blue-900 mb-1">
-                  🕘 <strong x-text="formatTimeRange(timeBlock)"></strong>
-                </p>
-                <ul class="ml-3 list-none pl-4" style="list-style-type: none; padding-left: 1rem;">
-                  <template x-for="event in events" :key="event.title + event.start">
-                    <li>
-                      <span x-text="eventIcon(event.type, event.category) + ' ' + cleanTitle(event.title)"></span>
+                            Lessons
+                        </a>
                     </li>
-                  </template>
-                </ul>
-              </div>
-            </template>
-          </div>
-        </template>
-      </div>
-    </div>
-
-    <!-- 🏊 Public Swims -->
-    <div x-show="currentTab === 'swims'" class="w-full overflow-x-auto">
-      <div class="grid grid-cols-7 min-w-[1120px] gap-4 bg-white/50 p-6 rounded-lg shadow-lg">
-        <template x-for="(day, index) in 7" :key="index">
-          <div class="flex flex-col px-2 text-blue-900 min-w-[160px] pt-2 pb-2"
-            :class="{ 'bg-white/60 border border-red-500 rounded-md': dateFor(index) === today }">
-            <div class="text-center font-semibold text-md mb-3 h-10 flex items-center justify-center"
-              x-text="dayLabel(index)">
-            </div>
-            <template
-              x-for="[timeBlock, events] of Object.entries(groupedEventsForDay(index, 'swim')).sort((a, b) => a[0].localeCompare(b[0]))"
-              :key="timeBlock">
-              <div class="mb-2 text-sm sm:text-md">
-                <p class="text-blue-900 mb-1">
-                  🕘 <strong x-text="formatTimeRange(timeBlock)"></strong>
-                </p>
-                <ul class="ml-3 list-none pl-4" style="list-style-type: none; padding-left: 1rem;">
-                  <template x-for="event in events" :key="event.title + event.start">
-                    <li>
-                      <span x-text="eventIcon(event.type, event.category) + ' ' + cleanTitle(event.title)"></span>
+                    <li class="w-full sm:w-auto">
+                        <a href="#" @click.prevent="switchTab('swims')" :class="currentTab === 'swims' ?
+           'block text-white font-semibold px-4 py-2 rounded-md bg-blue-900 text-center w-full' : 
+           'block bg-white hover:bg-blue-600 hover:text-white rounded-md px-4 py-2 text-center w-full'">
+                            Public Swims
+                        </a>
                     </li>
-                  </template>
+                    <li class="w-full sm:w-auto">
+                        <a href="#" @click.prevent="switchTab('calendar')" :class="currentTab === 'calendar' ?
+           'block text-white font-semibold px-4 py-2 rounded-md bg-blue-900 text-center w-full' : 
+           'block bg-white hover:bg-blue-600 hover:text-white rounded-md px-4 py-2 text-center w-full'">
+                            Calendar Overview
+                        </a>
+                    </li>
                 </ul>
-              </div>
-            </template>
-          </div>
-        </template>
-      </div>
-    </div>
+            </div>
 
-    <!-- 📅 Calendar Overview -->
-    <div x-show="currentTab === 'calendar'" class="rounded-lg">
-      <div id="calendar" class="bg-white rounded-xl shadow-lg p-4 text-sm text-blue-900"></div>
-    </div>
-  </div>
-</section>
+            <!-- 🗓 Weekly Lessons -->
+            <div x-show="currentTab === 'lessons'" class="w-full overflow-x-auto">
+                <div class="grid grid-cols-7 min-w-[1120px] gap-4 bg-white/50 p-6 rounded-lg shadow-lg">
+                    <template x-for="(day, index) in 7" :key="index">
+                        <div class="flex flex-col px-2 text-blue-900 min-w-[160px] pt-2 pb-2"
+                             :class="{ 'bg-white/60 border border-red-500 rounded-md': dateFor(index) === today }">
+                            <div class="text-center font-semibold text-md mb-3 h-10 flex items-center justify-center"
+                                 x-text="dayLabel(index)">
+                            </div>
+                            <template
+                                    x-for="[timeBlock, events] of Object.entries(groupedEventsForDay(index, 'lesson')).sort((a, b) => a[0].localeCompare(b[0]))"
+                                    :key="timeBlock">
+                                <div class="mb-2 text-md">
+                                    <p class="text-blue-900 mb-1">
+                                        🕘 <strong x-text="formatTimeRange(timeBlock)"></strong>
+                                    </p>
+                                    <ul class="ml-3 list-none pl-4" style="list-style-type: none; padding-left: 1rem;">
+                                        <template x-for="event in events" :key="event.title + event.start">
+                                            <li>
+                                                <span x-text="eventIcon(event.type, event.category) + ' ' + (event.category_short_name || event.short_name || event.title)"></span>
+                                            </li>
+                                        </template>
+                                    </ul>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+                </div>
+            </div>
 
-<!-- 📆 FullCalendar -->
-<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet" />
-<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@fullcalendar/list@6.1.8/index.global.min.js"></script>
+            <!-- 🏊 Public Swims -->
+            <div x-show="currentTab === 'swims'" class="w-full overflow-x-auto">
+                <div class="grid grid-cols-7 min-w-[1120px] gap-4 bg-white/50 p-6 rounded-lg shadow-lg">
+                    <template x-for="(day, index) in 7" :key="index">
+                        <div class="flex flex-col px-2 text-blue-900 min-w-[160px] pt-2 pb-2"
+                             :class="{ 'bg-white/60 border border-red-500 rounded-md': dateFor(index) === today }">
+                            <div class="text-center font-semibold text-md mb-3 h-10 flex items-center justify-center"
+                                 x-text="dayLabel(index)">
+                            </div>
+                            <template
+                                    x-for="[timeBlock, events] of Object.entries(groupedEventsForDay(index, 'swim')).sort((a, b) => a[0].localeCompare(b[0]))"
+                                    :key="timeBlock">
+                                <div class="mb-2 text-sm sm:text-md">
+                                    <p class="text-blue-900 mb-1">
+                                        🕘 <strong x-text="formatTimeRange(timeBlock)"></strong>
+                                    </p>
+                                    <ul class="ml-3 list-none pl-4" style="list-style-type: none; padding-left: 1rem;">
+                                        <template x-for="event in events" :key="event.title + event.start">
+                                            <li>
+                                                <span x-text="eventIcon(event.type, event.category) + ' ' + cleanTitle(event.title)"></span>
+                                            </li>
+                                        </template>
+                                    </ul>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+                </div>
+            </div>
 
-<!-- ✅ Load JS logic -->
-<script src="{% static 'js/timetable.js' %}"></script>
+            <!-- 📅 Calendar Overview -->
+            <div x-show="currentTab === 'calendar'" class="rounded-lg">
+                <div id="calendar" class="bg-white rounded-xl shadow-lg p-4 text-sm text-blue-900"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 📆 FullCalendar -->
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet"/>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/list@6.1.8/index.global.min.js"></script>
+
+    <!-- ✅ Load JS logic -->
+    <script src="{% static 'js/timetable.js' %}"></script>
 {% endblock %}

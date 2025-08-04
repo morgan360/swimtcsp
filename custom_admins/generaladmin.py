@@ -13,6 +13,10 @@ from progress.models import (
 from chatbot.models import ChatbotQuery, FAQEntry
 import openai
 from openai import OpenAI
+from lessons_bookings.models import LessonEnrollment, Term
+from django.contrib.admin import SimpleListFilter
+
+### START ###
 
 class GeneralAdminSite(AdminSite):
     site_header = "⚙️ General Admin"
@@ -46,11 +50,67 @@ class MenuItemAdmin(ModelAdmin):
     list_filter = ('group', 'is_active', 'requires_login', 'requires_staff')
     search_fields = ('label', 'url_name', 'external_url')
 
-# ✅ Optional: customize WaitingList admin
-class WaitingListAdmin(ModelAdmin):
-    list_display = ['swimling', 'product', 'is_notified', 'notification_date', "completed"]
-    list_filter = ['is_notified', 'completed']
-    search_fields = ['swimling__name', 'user__email', 'product__name']
+# ✅ WAITIG LIST
+class HasSiblingEnrolledFilter(SimpleListFilter):
+    title = 'Sibling Enrolled'
+    parameter_name = 'sibling_enrolled'
+
+    def lookups(self, request, model_admin):
+        return (
+            ('yes', 'Yes'),
+            ('no', 'No'),
+        )
+
+    def queryset(self, request, queryset):
+        current_term_id = Term.get_current_term_id()
+        if not current_term_id:
+            return queryset
+
+        swimling_ids_with_sibling = set()
+        for obj in queryset.select_related('swimling'):
+            guardian = obj.swimling.guardian
+            has_sibling = LessonEnrollment.objects.filter(
+                swimling__guardian=guardian,
+                term_id=current_term_id
+            ).exclude(swimling=obj.swimling).exists()
+            if has_sibling:
+                swimling_ids_with_sibling.add(obj.id)
+
+        if self.value() == 'yes':
+            return queryset.filter(id__in=swimling_ids_with_sibling)
+        elif self.value() == 'no':
+            return queryset.exclude(id__in=swimling_ids_with_sibling)
+
+        return queryset
+class WaitingListAdmin(admin.ModelAdmin):
+    list_display = (
+        'swimling', 'product', 'get_guardian', 'is_transfer_request',
+        'has_enrolled_sibling', 'is_notified', 'assigned_lesson', 'completed', 'created_at'
+    )
+    list_filter = ('is_notified', 'is_transfer_request', 'created_at', HasSiblingEnrolledFilter)
+
+    search_fields = (
+        'swimling__first_name', 'swimling__last_name', 'product__name', 'swimling__guardian__username'
+    )
+
+    def get_guardian(self, obj):
+        return obj.swimling.guardian
+    get_guardian.short_description = "Guardian"
+    get_guardian.admin_order_field = 'swimling__guardian'
+
+    def has_enrolled_sibling(self, obj):
+        current_term_id = Term.get_current_term_id()
+        if not current_term_id:
+            return False
+
+        return LessonEnrollment.objects.filter(
+            swimling__guardian=obj.swimling.guardian,
+            term_id=current_term_id
+        ).exclude(
+            swimling=obj.swimling
+        ).exists()
+    has_enrolled_sibling.short_description = "Sibling Enrolled"
+    has_enrolled_sibling.boolean = True  # ✅ shows a tick/cross in the admin
 
 try:
     general_admin_site.unregister(MenuItem)

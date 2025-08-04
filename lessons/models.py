@@ -23,6 +23,7 @@ class Program(models.Model):
 # A list of categores of lessons
 class Category(models.Model):
     name = models.CharField(max_length=200)
+    short_name = models.CharField(max_length=50, blank=True, null=True)
     slug = models.SlugField(max_length=200,
                             unique=True, blank=True)
     program = models.ForeignKey(Program, on_delete=models.CASCADE, related_name="categories")
@@ -101,7 +102,7 @@ class Product(models.Model):
     def __str__(self):
         start_time_formatted = self.start_time.strftime("%H:%M %p")
         day_of_week = dict(self.DAY_CHOICES).get(self.day_of_week)
-        return f"{self.category} {day_of_week} {start_time_formatted}"
+        return f"{self.category}: {day_of_week}-{start_time_formatted}"
 
     def get_num_sold(self, term):
         from lessons_bookings.models import LessonEnrollment

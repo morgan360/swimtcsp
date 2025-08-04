@@ -38,14 +38,18 @@ class WaitingList(models.Model):
         unique_together = ('swimling', 'product')
 
     def clean(self):
-        if WaitingList.objects.filter(swimling=self.swimling, product=self.product).exclude(id=self.id).exists():
-            raise ValidationError('This swimling is already on the waiting list for this lesson.')
+        if self.swimling and self.product:
+            if WaitingList.objects.filter(swimling=self.swimling, product=self.product).exclude(id=self.id).exists():
+                raise ValidationError('This swimling is already on the waiting list for this lesson.')
 
     def check_sibling_bookings(self):
+        if not self.swimling or not self.swimling.guardian:
+            return
         siblings = Swimling.objects.filter(guardian=self.swimling.guardian).exclude(id=self.swimling.id)
         current_term_bookings = Product.objects.filter(
-            booking__swimling__in=siblings,
-            term__is_current=True  # assumes you have a `term__is_current` filter
+            enrollments__swimling__in=siblings,
+            enrollments__term__start_date__lte=timezone.now().date(),
+            enrollments__term__end_date__gte=timezone.now().date()
         ).distinct()
         self.has_sibling_booked = current_term_bookings.exists()
 

@@ -27,34 +27,10 @@ from django.contrib import messages
 from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.contrib.auth import get_user_model
-from .forms import EmailOnlyForm, PublicWaitingListForm
+from .forms import PublicWaitingListForm
 from urllib.parse import quote
 
 User = get_user_model()
-
-
-def enter_email_for_waiting_list(request):
-    if request.method == 'POST':
-        form = EmailOnlyForm(request.POST)
-        if form.is_valid():
-            email = form.cleaned_data['email']
-
-            if not request.user.is_authenticated and User.objects.filter(email=email).exists():
-                messages.info(
-                    request,
-                    "You already have an account. Please log in to continue your waiting list application."
-                )
-                next_url = f"{reverse('waiting_list:public_signup')}?email={email}"
-                encoded_next = quote(next_url)
-                login_url = reverse('account_login')
-                return redirect(f"{login_url}?next={encoded_next}")
-
-            # Otherwise: go to step 2 of the form
-            return redirect(f"{reverse('waiting_list:public_signup')}?email={email}")
-    else:
-        form = EmailOnlyForm()
-
-    return render(request, 'waiting_list/enter_email.html', {'form': form})
 
 
 def public_waiting_list_signup(request):
@@ -113,23 +89,34 @@ def public_waiting_list_signup(request):
     return render(request, 'waiting_list/public_signup.html', {'form': form})
 
 @login_required
-def join_waiting_list(request, product_id):
-    product = get_object_or_404(Product, id=product_id)
-    swimlings = Swimling.objects.filter(guardian=request.user)  # Assuming Swimling has a guardian field
+def join_waiting_list(request, swimling_id):
+    swimling = get_object_or_404(Swimling, id=swimling_id, guardian=request.user)
 
     if request.method == 'POST':
-        swimling_id = request.POST.get('swimling')
-        swimling = get_object_or_404(Swimling, id=swimling_id)
+        form = PublicWaitingListForm(request.POST, swimling=swimling)
 
-        WaitingList.objects.create(
-            swimling=swimling,
-            product=product,
-        )
-        return redirect('waiting_list:waiting_list_success')  # You can create this view/template for a success message
+        # ✅ Set swimling manually
+        form.instance.swimling = swimling
+
+        # ✅ Extract and assign product
+        product_id = form.data.get('preferred_lesson_1')
+        if product_id:
+            try:
+                form.instance.product = Product.objects.get(id=product_id)
+            except Product.DoesNotExist:
+                form.add_error('preferred_lesson_1', 'Invalid lesson selected')
+
+        if form.is_valid():
+            form.save()
+
+            messages.success(request, "You're on the list! We'll holler if a spot opens up.")
+            return redirect('swimling_dashboard:guardian_dashboard')
+    else:
+        form = PublicWaitingListForm(swimling=swimling)
 
     return render(request, 'waiting_list/join_waiting_list.html', {
-        'swimlings': swimlings,
-        'product': product,
+        'form': form,
+        'swimling': swimling,
     })
 
 
@@ -160,7 +147,6 @@ def manage_waiting_list(request):
         'waiting_list': waiting_list,
     })
 
-
 @staff_member_required
 def notify_customer(request, waiting_list_id):
     waiting_entry = get_object_or_404(WaitingList, id=waiting_list_id)
@@ -170,12 +156,15 @@ def notify_customer(request, waiting_list_id):
     # send_waiting_list_notification(waiting_entry.user.email, waiting_entry.swimling.name, waiting_entry.product.name)
     return redirect('manage_waiting_list')
 
-
-def waiting_list_success(request):
-    return render(request, 'waiting_list/success.html')
-
 def remove_waiting_list_entry(request, id):
     entry = get_object_or_404(WaitingList, id=id)
     if request.method == 'POST':
         entry.delete()
+    return redirect('swimling_dashboard:guardian_dashboard')
+
+@login_required
+def redirect_to_swimling_waiting_list(request):
+    swimlings = Swimling.objects.filter(guardian=request.user)
+    if swimlings.count() == 1:
+        return redirect('waiting_list:join_waiting_list', swimling_id=swimlings.first().id)
     return redirect('swimling_dashboard:guardian_dashboard')

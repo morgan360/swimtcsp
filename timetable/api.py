@@ -54,6 +54,7 @@ def weekly_timetable(request):
                     "title": product.name,
                     "type": "lesson",
                     "category": product.category.slug,
+                    "category_short_name": product.category.short_name,  # ← NEW
                     "date": current_date.isoformat(),
                     "start": product.start_time.strftime('%H:%M'),
                     "end": product.end_time.strftime('%H:%M'),

@@ -34,11 +34,17 @@
     </section>
     {% endif %}
 
-    {% if show_waiting_list %}
+{#    {% if show_waiting_list %}#}
     <section class="bg-white rounded-2xl shadow-md p-6 mt-8">
-      {% include "swimling_dashboard/_waiting_list_panel.html" %}
-    </section>
-    {% endif %}
+  <div id="waiting-list-panel"
+       hx-get="{% url 'swimling_dashboard:refresh_waiting_list' %}"
+       hx-trigger="load"
+       hx-swap="outerHTML">
+    <p class="text-gray-500 text-sm italic">Loading waiting list...</p>
+  </div>
+</section>
+
+{#    {% endif %}#}
 
   </div>
 </section>

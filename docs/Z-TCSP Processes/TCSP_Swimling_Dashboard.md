@@ -13,6 +13,7 @@ The dashboard provides Guardians with full control over their Swimling(s)’ les
 ## 🔹 Panels Overview
 
 ### 1. Public Lessons Panel
+Showld be arranged as a table with action buttons on the Right
 **Rows**: One per Swimling  
 **Columns**:
 - **Swimling Name**
@@ -22,6 +23,7 @@ The dashboard provides Guardians with full control over their Swimling(s)’ les
   - `Book Current`: If unregistered for current term and booking is open.
   - `Rebook`: If registered and inside rebooking window.
   - `Book Next`: If after general booking date and not already booked.
+  - `Waiting List`: Can join waiting list for New registration or Transfer
 
 **Note**: Even if already booked, additional lessons may be booked. No restriction on multiple bookings.
 
@@ -61,14 +63,21 @@ Allows Guardians to:
 - ✏️ Edit existing Swimlings (name, DOB, notes, school role number)
 
 ---
+## Phases
+In every term there are a number of phases:
+
+| Phase              | Book Current Term |
+| Before Booking | From **start_date** to **rebooking_date** |
+| Rebooking Window| From **rebooking_date** to **booking_date** |
+| Open Booking | From **booking_date** to **end_date** |
 
 ## 📘 Booking Rules
 
-| Phase              | Book Current Term | Rebook for Next Term | Book Next Term |
-|-------------------|-------------------|----------------------|----------------|
-| **Before Rebooking** | ✅ Yes            | ❌ No                | ❌ No          |
-| **Rebooking Window** | ✅ Yes            | ✅ Yes               | ❌ No          |
-| **Open Booking**     | ❌ No             | ❌ No                | ✅ Yes         |
+| Phase              | Book Current Term | Rebook for Next Term | Book Next Term |Waiting List|
+|-------------------|-------------------|----------------------|----------------|-------------|
+| **Before Rebooking** | ✅ Yes            | ❌ No                | ❌ No          |✅ Yes |
+| **Rebooking Window** | ✅ Yes            | ✅ Yes               | ❌ No          |✅ Yes |
+| **Open Booking**     | ❌ No             | ❌ No                | ✅ Yes         |✅ Yes |
 
 ---
 

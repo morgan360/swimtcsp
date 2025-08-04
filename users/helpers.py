@@ -5,7 +5,7 @@ from schools.models import ScoSchool
 from django.urls import reverse
 from waiting_list.models import WaitingList
 from lessons.models import Product
-
+from django.utils.timezone import now
 
 def fetch_swimling_management_data(user):
     """
@@ -147,25 +147,53 @@ def fetch_school_lessons_data(user):
 
     return school_lessons_data
 
+###  WAITING LIST ###
+
 def fetch_waiting_list_data(user):
-    swimlings = Swimling.objects.filter(guardian=user)
+    today = now().date()
+
     waiting_list_entries = WaitingList.objects.filter(
         swimling__guardian=user,
-        completed=False  # ✅ exclude completed entries
-    ).select_related('product', 'swimling', 'assigned_lesson')
+        completed=False
+    ).select_related(
+        'swimling',
+        'preferred_lesson_1',
+        'preferred_lesson_2',
+        'preferred_lesson_3',
+        'assigned_lesson'
+    )
 
     waiting_list_data = []
 
     for entry in waiting_list_entries:
+        swimling = entry.swimling
+        guardian = swimling.guardian
+        current_term_id = Term.get_current_term_id()
+
+        if current_term_id:
+            has_enrolled_sibling = LessonEnrollment.objects.filter(
+                swimling__guardian=guardian,
+                term_id=current_term_id
+            ).exclude(
+                swimling=swimling
+            ).exists()
+        else:
+            has_enrolled_sibling = False
+
         waiting_list_data.append({
             'id': entry.id,
-            'swimling_id': entry.swimling.id,
-            'swimling_name': f"{entry.swimling.first_name} {entry.swimling.last_name}",
-            'requested_lesson': entry.product.name,
+            'swimling_id': swimling.id,
+            'swimling_name': f"{swimling.first_name} {swimling.last_name}",
+            'is_transfer': entry.is_transfer_request,
+            'has_enrolled_sibling': has_enrolled_sibling,
+
+            'preference_1': entry.preferred_lesson_1 if entry.preferred_lesson_1 else None,
+            'preference_2': entry.preferred_lesson_2 if entry.preferred_lesson_2 else None,
+            'preference_3': entry.preferred_lesson_3 if entry.preferred_lesson_3 else None,
+
             'assigned_lesson': entry.assigned_lesson.name if entry.assigned_lesson else "Not assigned",
             'assigned_lesson_id': entry.assigned_lesson.id if entry.assigned_lesson else None,
             'can_book': entry.is_notified,
         })
 
     return waiting_list_data
-

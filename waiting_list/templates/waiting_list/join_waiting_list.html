@@ -1,28 +1,46 @@
 {% extends 'base/_base.html' %}
 {% load static %}
 
-{% block title %}Waiting List{% endblock %}
+{% block title %}Join Waiting List{% endblock %}
 
 {% block content %}
 <section class="section">
   <div class="container">
     <div class="box" style="max-width: 600px; margin: 0 auto;">
-      <h2 class="title is-4 has-text-primary">Join Waiting List</h2>
-      <p class="mb-4"><strong>Lesson:</strong> {{ product.name }}</p>
+      <h2 class="title is-4 has-text-primary">Join the Waiting List</h2>
+
+      <div class="notification is-info mb-4">
+        <p><strong>Swimling:</strong> {{ swimling }}</p>
+      </div>
 
       <form method="POST">
         {% csrf_token %}
 
         <div class="field">
-          <label for="swimling" class="label">Select Swimling</label>
+          <label class="label">{{ form.is_transfer_request.label }}</label>
           <div class="control">
-            <div class="select is-fullwidth">
-              <select id="swimling" name="swimling">
-                {% for swimling in swimlings %}
-                  <option value="{{ swimling.id }}">{{ swimling }}</option>
-                {% endfor %}
-              </select>
-            </div>
+            {{ form.is_transfer_request }}
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="label">{{ form.preferred_lesson_1.label }}</label>
+          <div class="control">
+            {{ form.preferred_lesson_1 }}
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="label">{{ form.preferred_lesson_2.label }}</label>
+          <div class="control">
+            {{ form.preferred_lesson_2 }}
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="label">{{ form.preferred_lesson_3.label }}</label>
+          <div class="control">
+            {{ form.preferred_lesson_3 }}
           </div>
         </div>
 

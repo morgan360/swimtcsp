@@ -1,0 +1,22 @@
+{% extends 'base/_base.html' %}
+{% load static %}
+
+{% block title %}All Done{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="container has-text-centered">
+    <div class="box" style="max-width: 600px; margin: 0 auto;">
+      <h2 class="title is-4 has-text-success">You're on the list!</h2>
+      <p class="mb-4">Nice one — we've got your details. Hang tight, we’ll be in touch if a spot opens up!</p>
+      <p class="is-size-7 has-text-grey">Redirecting you back to your dashboard...</p>
+    </div>
+  </div>
+</section>
+
+<script>
+  setTimeout(function() {
+    window.location.href = "{% url 'swimling_dashboard:guardian_dashboard' %}";
+  }, 3000);
+</script>
+{% endblock %}

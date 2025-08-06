@@ -5,16 +5,15 @@
 {% block content %}
 <section class="py-12 px-4 sm:px-6 lg:px-8">
   <div class="max-w-7xl mx-auto">
-  
+
     {% if section == 'about' or section == 'both' %}
     <!-- About Section -->
-    <section
-      class="relative bg-cover bg-center bg-no-repeat rounded-lg overflow-hidden"
-      style="background-image: url('{% static 'img/teacher-class.jpeg' %}');"
-      id="about-section">
+    <section class="relative bg-cover bg-center bg-no-repeat rounded-lg overflow-hidden"
+      style="background-image: url('{% static "img/teacher-class.jpeg" %}');" id="about-section">
       <div class="bg-white/80 backdrop-blur-sm p-8 md:p-12 lg:p-16 text-gray-800">
 
-        <div><img src="{% static 'img/logo.png' %}" alt="Templeogue College Swim Pool Logo" class="h-12 mx-auto mb-5" /></div>
+        <div><img src="{% static 'img/logo.png' %}" alt="Templeogue College Swim Pool Logo" class="h-12 mx-auto mb-5" />
+        </div>
 
         <h2 class="text-3xl md:text-4xl lg:text-5xl font-extrabold mb-6 text-blue-900 text-center">
           Templeogue College Swim Pool
@@ -36,12 +35,147 @@
           simple and free - all you need is your email address.
         </p>
 
-        <a href="{% url 'account_signup' %}" class="inline-flex items-center gap-2 px-5 py-3 bg-red-700 text-white font-semibold rounded-lg hover:bg-red-800 transition border border-white">
+        <a href="{% url 'account_signup' %}"
+          class="inline-flex items-center gap-2 px-5 py-3 bg-red-700 text-white font-semibold rounded-lg hover:bg-red-800 transition border border-white">
           <i class="fas fa-user-plus"></i> Sign up
         </a>
         <p class="text-gray-600 mt-5">
-            Already have an account? <a href="{% url 'account_login' %}" class="text-blue-600 hover:underline font-bold">Log in</a> instead.
+          Already have an account? <a href="{% url 'account_login' %}"
+            class="text-blue-600 hover:underline font-bold">Log in</a> instead.
         </p>
+      </div>
+    </section>
+
+    <section>
+      <div class="mt-12 bg-white/50 backdrop-blur-md border border-white/20 rounded-lg shadow-md p-6">
+        <h2 class="text-3xl md:text-4xl lg:text-5xl font-extrabold text-white mb-6 mt-10 text-center">Our Services</h2>
+        <p class="text-xl md:text-xl text-blue-900 mb-8 text-center">Explore our range of services designed for all ages
+          and skill levels.</p>
+        <div class="items-center flex justify-center space-x-4 mb-12">
+          <a href="{% url 'timetable:timetable_grid' %}" class="items-center w-fit px-5 py-4 text-2xl text-center font-semibold
+            border border-white text-white bg-red-700 rounded-lg hover:bg-red-800 
+            focus:ring-4 focus:outline-none focus:ring-red-300 dark:bg-red-600 
+            dark:hover:bg-red-700 dark:focus:ring-red-800">
+                <i class="fas fa-calendar mr-3"></i>
+                Pool Timetable
+            </a>
+        </div>
+            
+
+          <!-- Children's Lessons -->
+        <div class="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2 gap-6">
+          <div class="flex flex-col justify-between h-full bg-white/60 backdrop-blur-md border border-white/20 rounded-xl shadow-md p-6">
+            <div class="text-3xl font-semibold text-blue-900 text-center">
+              <i class="fas fa-child"></i><i class="fas fa-child text-blue-600"></i><i class="fas fa-child text-red-700"></i>
+            </div>
+            <h3 class="text-3xl font-semibold text-blue-900 text-center p-4">Children's Swimming Lessons</h3>
+            <p class="text-gray-900 text-left px-8">Our Learn to Swim program takes your child from
+              their first experience in the water to confident, fitness-focused swimming. Starting with Beginners,
+              children build confidence and essential water skills. As they progress through Improvers and Advanced levels, they
+              refine technique, develop stamina, and gain deepwater experience. In the final stages—Lengths Levels 1 to
+              3—the focus shifts to swimming for fitness, stroke refinement, and endurance.
+              Each level builds on the last, helping swimmers grow in ability, confidence, and enjoyment of the water.
+            </p>
+            <p class="text-gray-900 mb-8 text-left px-8">Unsure what level would suit your child best? Please <a href="/info#contact-form" class="text-red-600 hover:underline">contact
+                us</a> for guidance.</p>
+          <!-- <div class="mt-6 space-x-2 text-center">
+            <a href="#" class="bg-red-100 rounded-lg p-3 text-red-700 hover:bg-red-200 outline font-semibold">Book a place</a>
+          </div> -->
+            
+          </div>
+
+          <!-- Adult's Beginners Lessons -->
+          <div class="flex flex-col justify-between h-full bg-white/60 backdrop-blur-md border border-white/20 rounded-xl shadow-md p-6 ">
+            <div class="text-3xl font-semibold text-blue-900 text-center">
+              <i class="fas fa-users text-red-700"></i>
+            </div>
+            <h3 class="text-3xl font-semibold text-blue-900 text-center mb-4 mt-4 ">Adult's Beginners Lessons</h3>
+            <p class="text-gray-900 mb-8 text-left px-8">Our adult swimming lessons support you from your first steps in the water through to confident, fitness-focused swimming. Whether you're a complete beginner or returning after time away, we have a space for you. This session is split into three progressive levels: the first for absolute beginners building confidence and safety skills, the second for developing technique and strength, and a lane-based level focused on increasing distance and endurance.
+
+            <p class="text-gray-900 mb-8 text-left px-8">Each level is designed to help adults grow at their own pace, guided by experienced instructors in a supportive, inclusive environment.</p>
+
+            <p class="text-gray-900 mb-8 text-left px-8">Not sure which level is right for you? Please <a href="/info#contact-form" class="text-red-600 hover:underline">contact us</a> for guidance.</p>
+
+            <!-- <div class="mt-6 space-x-2 text-center">
+              <a href="#" class="bg-red-100 rounded-lg p-3 text-red-700 hover:bg-red-200 outline font-semibold">Book a place</a>
+            </div> -->
+          </div>
+
+          <!-- Adults & Teens -->
+          <div class="flex flex-col justify-between h-full bg-white/60 backdrop-blur-md border border-white/20 rounded-xl shadow-md p-6">
+            <div class="text-3xl font-semibold text-blue-600 text-center">
+              <i class="fa-solid fa-people-group"></i>
+            </div>
+            <h3 class="text-xl font-semibold text-blue-900 mb-4 text-center p-4">Adults & Teens</h3>
+            <p class="text-gray-900 mb-8 text-left px-8">Ideal for swimmers progressing from our beginner classes or those
+              seeking distance without the intensity of Masters sessions, these coached lessons focus on improving
+              fitness in a supportive, structured environment. Suitable for both adults and teens.</p>
+            <!-- <div class="mt-6 space-x-2 text-center">
+              <a href="#" class="bg-red-100 rounded-lg p-3 text-red-700 hover:bg-red-200 outline font-semibold">Book a place</a>
+            </div> -->
+          </div>
+
+          <!-- Masters -->
+          <div class="flex flex-col justify-between h-full bg-white/60 backdrop-blur-md border border-white/20 rounded-xl shadow-md p-6">
+            <div class="text-3xl font-semibold text-blue-900 text-center">
+              <i class="fas fa-solid fa-person-swimming text-red-700"></i>
+            </div>
+            <h3 class="text-xl font-semibold text-blue-900 mb-4 text-center p-4">Masters Swims</h3>
+            <p class="text-gray-900 mb-8 text-left px-8">Our coached lane swims are designed for swimmers aged 16+ who are
+              confident swimming lengths and want to take their training to the next level. These sessions focus on
+              building endurance, improving technique, and increasing overall intensity—perfect for those training for
+              competitions, open water events, or triathlons. Led by experienced coaches, each session offers structured
+              sets aimed at enhancing performance over distance. Held every Monday and Wednesday, with convenient
+              pay-as-you-go access.</p>
+            <!-- <div class="mt-6 space-x-2 text-center">
+              <a href="#" class="bg-red-100 rounded-lg p-3 text-red-700 hover:bg-red-200 outline font-semibold">Book a place</a>
+            </div> -->
+          </div>
+
+          <!-- Aqua Aerobics -->
+          <div class="flex flex-col justify-between h-full bg-white/60 backdrop-blur-md border border-white/20 rounded-xl shadow-md p-6">
+            <div class="text-3xl font-semibold text-blue-900 text-center">
+              <i class="fas fa-users text-blue-700"></i>
+            </div>
+            <h3 class="text-xl font-semibold text-blue-900 mb-4 text-center p-4">Aqua Aerobics</h3>
+            <p class="text-gray-600 mb-8 text-left px-8"> Dive into fitness with our Aqua Aerobics classes - fun, energetic,
+              and set to music! Suitable for all ages and genders, these sessions are perfect for burning calories,
+              improving overall fitness, and toning muscles in a supportive, low-impact environment.</p>
+            <!-- <div class="mt-6 space-x-2 text-center">
+              <a href="#" class="bg-red-100 rounded-lg p-3 text-red-700 hover:bg-red-200 outline font-semibold">Book a place</a>
+            </div> -->
+          </div>
+
+          <!-- Ladies Swims -->
+          <div class="flex flex-col justify-between h-full bg-white/60 backdrop-blur-md border border-white/20 rounded-xl shadow-md p-6">
+            <div class="text-3xl font-semibold text-blue-900 text-center">
+              <i class="fa-solid fa-person-dress"></i><i class="fa-solid fa-person-dress text-blue-600"></i><i class="fa-solid fa-person-dress text-red-700"></i>
+            </div>
+            <h3 class="text-xl font-semibold text-blue-900 mb-4 text-center p-4">Ladies Swims</h3>
+            <p class="text-gray-900 mb-8 text-left px-8">We offer a selection of ladies-only swim sessions, including coached
+              lane swims on Wednesday mornings and Fridays for those seeking distance and structure. For those new to
+              swimming or building confidence, our ladies-only beginners class provides the perfect place to start or
+              continue your swimming journey.</p>
+            <!-- <div class="mt-6 space-x-2 text-center">
+              <a href="#" class="bg-red-100 rounded-lg p-3 text-red-700 hover:bg-red-200 outline font-semibold">Book a place</a>
+            </div> -->
+          </div>
+
+          <!-- Public Swims -->
+          <div class="flex flex-col justify-between h-full bg-white/60 backdrop-blur-md border border-white/20 rounded-xl shadow-md p-6">
+            <div class="text-3xl font-semibold text-blue-700 text-center">
+              <i class="fa-solid fa-water-ladder"></i>
+            </div>
+            <h3 class="text-xl font-semibold text-blue-900 mb-4 text-center p-4">Public Swims</h3>
+            <p class="text-gray-900 mb-8 text-left px-8">Our public swim sessions are open to everyone in the community - whether you're coming for a
+              relaxing solo dip, bringing the whole family, or enjoying some time in the water with friends. We welcome individuals,
+              families, senior citizens, and ladies. Some sessions also include designated lanes for length swimming. Public swims
+              are available throughout the week, including weekdays, evenings, and weekend afternoons.</p>
+            <!-- <div class="mt-6 space-x-2 text-center">
+              <a href="#" class="bg-red-100 rounded-lg p-3 text-red-700 hover:bg-red-200 outline font-semibold">Book a place</a>
+            </div> -->
+          </div>
+        </div>
       </div>
     </section>
     {% endif %}
@@ -52,7 +186,7 @@
 
     {% if section == 'contact' or section == 'both' %}
     <!-- Contact Section -->
-    
+
 
     {% if success %}
     <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-6" role="alert">
@@ -93,7 +227,8 @@
           {% endfor %}
 
           <div>
-            <button type="submit" class="w-full bg-red-700 text-white text-lg py-3 px-4 rounded-lg font-semibold hover:bg-red-800 transition border border-white/60">
+            <button type="submit"
+              class="w-full bg-red-700 text-white text-lg py-3 px-4 rounded-lg font-semibold hover:bg-red-800 transition border border-white/60">
               Submit
               <i class="fas fa-paper-plane ml-2"></i>
             </button>

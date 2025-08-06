@@ -1,82 +1,221 @@
 {% load custom_filters %}
 
-<table class="min-w-full bg-white rounded shadow text-sm">
-    <thead class="bg-red-100 text-red-900">
-    <tr>
-        <th class="px-4 py-2 text-left">Swimmer</th>
-        <th class="px-4 py-2 text-left">📘 Current Term</th>
-        <th class="px-4 py-2 text-left">📗 Next Term</th>
-        <th class="px-4 py-2 text-center" colspan="3">🎯 Activities</th>
-    </tr>
-    <tr class="bg-red-50 text-xs text-red-700">
-        <th></th>
-        <th></th>
-        <th></th>
-        <th class="text-center">Book</th>
-        <th class="text-center">Rebook</th>
-        <th class="text-center">Waiting List</th>
-    </tr>
-    </thead>
-    <tbody class="divide-y divide-gray-100">
-    {% for item in public_lessons_data %}
-        {% with swimling=item.swimling %}
-            {% for lesson in item.current_lessons %}
-                <tr class="hover:bg-gray-50">
+<!-- Houses all info for swimlings -->
+<section class="bg-red-50 py-6 px-4 rounded-lg shadow-md">
+    <h3 class="text-3xl font-bold text-center text-red-700 mt-12 mb-8">
+        <i class="fa-solid fa-children"></i>
+        Swimlings Panel
+    </h3>
+    <p class="text-md font-bold text-center text-red-700">Manage your swimling’s details, book lessons, rebook for the
+        following term, and join the waiting list below.</p>
+    <p class="text-md text-center text-red-700 mt-1 mb-8 italic">Note: All level-changes are handled by our staff. Just
+        rebook and we'll do the rest!</p>
+
+    <div class="overflow-x-auto rounded-lg">
+        <table id="swimlings-table" class="min-w-full bg-white rounded-lg shadow-lg">
+            <thead class="bg-red-600/80 px-6 py-3 text-white">
+                <tr class="rounded-tr-lg">
+                    <th class="px-2 sm:px-4 py-2 text-left whitespace-nowrap">Swimling</th>
+                    <th class="px-2 sm:px-4 py-2 text-left whitespace-nowrap">📘 Current Term</th>
+                    <th class="px-2 sm:px-4 py-2 text-left whitespace-nowrap">📗 Next Term</th>
+                    <th class="px-2 sm:px-4 py-2 text-center whitespace-nowrap" colspan="3">🎯 Actions</th>
+                </tr>
+                <tr class="bg-red-100/70 text-xs text-red-700">
+                    <th></th>
+                    <th></th>
+                    <th></th>
+                    <th class="text-center whitespace-nowrap">Book</th>
+                    <th class="text-center whitespace-nowrap">Rebook</th>
+                    <th class="text-center whitespace-nowrap">Waiting List</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+                {% for item in public_lessons_data %}
+                {% with swimling=item.swimling current_lessons=item.current_lessons %}
+                {% if current_lessons %}
+                {% for lesson in current_lessons %}
+                <tr class="hover:bg-red-50">
                     {% if forloop.first %}
-                        <td class="px-4 py-2 font-semibold text-red-700 align-top"
-                            rowspan="{{ item.current_lessons|length }}">
-                            🧒 {{ swimling.first_name }} {{ swimling.last_name }}
-                        </td>
+                    <td class="px-2 sm:px-4 py-2 font-semibold text-gray-900 align-top whitespace-nowrap"
+                        rowspan="{{ current_lessons|length }}">
+                        {{ swimling.first_name }} {{ swimling.last_name }}
+                        <!-- Button to load edit modal via HTMX -->
+                        <a href="{% url 'swimling_dashboard:edit-swimling' swimling.id %}"
+                            class="text-blue-600 hover:underline m-2">
+                            <i class="fa-solid fa-user-pen text-red-600 hover:text-blue-800 cursor-pointer"
+                                title="Edit Swimling"></i>
+                        </a>
+                    </td>
                     {% endif %}
 
                     <!-- 📘 Current Term -->
-                    <td class="px-4 py-2 align-top">
+                    <td class="px-2 sm:px-4 py-2 align-top whitespace-nowrap">
                         {{ lesson }}
                     </td>
 
                     <!-- 📗 Next Term -->
                     {% with item.next_lessons|get_next_for:lesson as next_lesson %}
-                        <td class="px-4 py-2 align-top">
-                            {% if next_lesson %}
-                                {{ next_lesson }}<br>
-                            {% else %}
-                                <span class="italic text-gray-400">Not registered</span>
-                            {% endif %}
-                        </td>
+                    <td class="px-2 sm:px-4 py-2 align-top whitespace-nowrap">
+                        {% if next_lesson %}
+                        {{ next_lesson }}
+                        {% else %}
+                        <span class="italic text-gray-600">Not registered</span>
+                        {% endif %}
+                    </td>
                     {% endwith %}
 
-
-                    <!-- ✅ Book/ Book Next-->
-                    <td class="px-4 py-2 text-center align-top">
+                    <!-- 🎯 Actions -->
+                    <td class="px-2 sm:px-4 py-2 text-center align-top whitespace-nowrap">
                         {% with action=item.actions|get_action:'Book' %}
-                            <a href="{{ action.url }}"
-                               class="px-3 py-1 text-xs rounded {{ action.disabled|yesno:'bg-gray-300 text-gray-500 cursor-not-allowed,pointer-events-auto bg-green-600 text-white hover:bg-green-700' }}">
-                                Book
-                            </a>
+                        <a href="{{ action.url }}"
+                            class="px-3 py-1 text-xs rounded {{ action.disabled|yesno:'bg-gray-300 text-gray-500 cursor-not-allowed,pointer-events-auto bg-green-700 text-white hover:bg-green-600' }}">
+                            Book
+                        </a>
                         {% endwith %}
                     </td>
-
-
-                    <!-- 🔁 Rebook -->
-                    <td class="px-4 py-2 text-center align-top">
+                    <td class="px-2 sm:px-4 py-2 text-center align-top whitespace-nowrap">
                         {% with action=item.actions|get_action:'Rebook' %}
-                            <a href="{% url 'shopping_cart:direct_rebooking' swimling.id lesson.id %}"
-                               class="px-3 py-1 text-xs rounded {{ action.disabled|yesno:'bg-gray-300 text-gray-500 cursor-not-allowed,pointer-events-auto bg-blue-600 text-white hover:bg-blue-700' }}">
-                                Rebook
-                            </a>
+                        <a href="{% url 'shopping_cart:direct_rebooking' swimling.id lesson.id %}"
+                            class="px-3 py-1 text-xs rounded {{ action.disabled|yesno:'bg-gray-300 text-gray-800 cursor-not-allowed,pointer-events-auto bg-blue-600 text-white hover:bg-blue-700' }}"
+                            {% if action.disabled %}title="Rebooking is not yet open" {% endif %}>
+                            Rebook
+                        </a>
                         {% endwith %}
                     </td>
-
-                    <!-- 🕓 Waiting List -->
-                    <td class="px-4 py-2 text-center align-top">
+                    <td class="px-2 sm:px-4 py-2 text-center align-top whitespace-nowrap">
                         <a href="{% url 'waiting_list:join_waiting_list' swimling.id %}"
-                           class="px-3 py-1 text-xs rounded bg-yellow-400 text-black hover:bg-yellow-500">
+                            class="px-3 py-1 text-xs rounded bg-yellow-400 text-black hover:bg-yellow-500">
                             Join
                         </a>
                     </td>
                 </tr>
-            {% endfor %}
-        {% endwith %}
-    {% endfor %}
-    </tbody>
-</table>
+                {% endfor %}
+                {% else %}
+                <!-- 🟥 Unregistered Swimling Row -->
+                <tr class="bg-gray-100 hover:bg-red-100">
+                    <td class="px-2 sm:px-4 py-2 font-semibold text-gray-900 whitespace-nowrap">
+                        {{ swimling.first_name }} {{ swimling.last_name }}
+                        <a href="{% url 'swimling_dashboard:edit-swimling' swimling.id %}"
+                            class="text-blue-600 hover:underline m-2">
+                            <i class="fa-solid fa-user-pen text-red-600 hover:text-blue-800 cursor-pointer"
+                                title="Edit Swimling"></i>
+                        </a>
+
+                    </td>
+                    <td class="px-2 sm:px-4 py-2 italic text-gray-600 whitespace-nowrap">
+                        Not registered
+                    </td>
+                    <td class="px-2 sm:px-4 py-2 italic text-gray-600 whitespace-nowrap">
+                        Not registered
+                    </td>
+                    <td class="px-2 sm:px-4 py-2 text-center whitespace-nowrap">
+                        {% with action=item.actions|get_action:'Book' %}
+                        <a href="{{ action.url }}"
+                            class="px-3 py-1 text-xs rounded {{ action.disabled|yesno:'bg-gray-300 text-gray-500 cursor-not-allowed,pointer-events-auto bg-green-700 text-white hover:bg-green-600' }}">
+                            Book
+                        </a>
+                        {% endwith %}
+                    </td>
+                    <td class="px-2 sm:px-4 py-2 text-center whitespace-nowrap text-gray-400">
+                        —
+                    </td>
+                    <td class="px-2 sm:px-4 py-2 text-center whitespace-nowrap">
+                        <a href="{% url 'waiting_list:join_waiting_list' swimling.id %}"
+                            class="px-3 py-1 text-xs rounded bg-yellow-400 text-black hover:bg-yellow-500">
+                            Join
+                        </a>
+                    </td>
+                </tr>
+                {% endif %}
+                {% endwith %}
+                {% endfor %}
+                <tr>
+
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- ➕ Add Button -->
+        <div class="text-right m-4 pb-4">
+            <button
+                class="inline-flex items-center px-4 py-2 text-white bg-red-600/80 rounded-xl hover:bg-red-600 transition outline"
+                onclick="document.getElementById('addSwimlingModal').classList.add('block'); document.getElementById('addSwimlingModal').classList.remove('hidden')">
+
+                <!-- Icon always visible -->
+                <span class="mr-0 sm:mr-2">
+                    <i class="fas fa-plus"></i>
+                </span>
+
+                <!-- Text hidden on small screens -->
+                <span class="hidden sm:inline">Add New Swimling</span>
+            </button>
+        </div>
+
+        <!-- ✅ Modal for Adding Swimling -->
+        <div id="addSwimlingModal"
+            class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+            <div class="bg-blue-200 rounded-lg shadow-lg max-w-lg w-full p-6">
+                <div class="bg-white/80 rounded-lg">
+                    <header class="px-6 py-4 flex justify-between items-center rounded-t-lg bg-blue-300">
+                        <h3 class="text-lg font-bold text-blue-900">Add New Swimling</h3>
+                        <button aria-label="close" class="text-blue-900 text-2xl leading-none font-bold"
+                            onclick="document.getElementById('addSwimlingModal').classList.add('hidden'); document.getElementById('addSwimlingModal').classList.remove('flex')">
+                            &times;
+                        </button>
+                    </header>
+
+                    <form method="POST" action="{% url 'swimling_dashboard:add_swimling' %}"
+                        hx-post="{% url 'swimling_dashboard:add_swimling' %}" hx-target="#swimlings-table"
+                        hx-swap="outerHTML"
+                        onsubmit="document.getElementById('addSwimlingModal').classList.add('hidden'); document.getElementById('addSwimlingModal').classList.remove('flex')"
+                        class="px-6 py-4 space-y-4">
+                        {% csrf_token %}
+                        <div>
+                            <label for="first_name" class="block text-blue-900 text-lg font-semibold mb-2">First
+                                Name</label>
+                            <input id="first_name" name="first_name" type="text" placeholder="John" required
+                                class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500">
+                        </div>
+
+                        <div>
+                            <label for="last_name" class="block text-blue-900 text-lg font-semibold mb-2">Last
+                                Name</label>
+                            <input id="last_name" name="last_name" type="text" placeholder="Doe" required
+                                class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500">
+                        </div>
+
+                        <div>
+                            <label for="dob" class="block text-blue-900 text-lg font-semibold mb-2">Date of
+                                Birth</label>
+                            <input id="dob" name="dob" type="date"
+                                class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500">
+                        </div>
+
+                        <div>
+                            <label for="sco_role_num" class="block text-blue-900 text-lg font-semibold mb-2">School Role
+                                Number</label>
+                            <input id="sco_role_num" name="sco_role_num" type="text" placeholder="e.g. 30297A"
+                                class="rounded-lg w-full border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500">
+                        </div>
+
+                        <div>
+                            <label for="notes" class="block text-blue-900 text-lg font-semibold mb-2">Notes</label>
+                            <textarea id="notes" name="notes" placeholder="Optional notes..." rows="3"
+                                class="rounded-lg w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"></textarea>
+                        </div>
+
+                        <footer class="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+                            <button type="submit"
+                                class="bg-blue-600 text-white font-bold p-4 rounded-lg hover:bg-blue-700 transition">Submit</button>
+                            <button type="button"
+                                class="bg-gray-200 text-gray-700 px-4 py-2 rounded-xl hover:bg-gray-300 transition"
+                                onclick="document.getElementById('addSwimlingModal').classList.add('hidden'); document.getElementById('addSwimlingModal').classList.remove('flex')">
+                                Cancel
+                            </button>
+                        </footer>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

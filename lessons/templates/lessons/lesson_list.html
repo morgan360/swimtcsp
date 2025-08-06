@@ -3,30 +3,30 @@
 
 {% block content %}
 
-<div class="m-3">
-    <div class="w-full max-w-6xl px-4 md:px-8 mx-auto py-10 bg-white/50 rounded-xl shadow-lg mt-10 mb-10">
+    <div class="m-3">
+        <div class="w-full max-w-6xl px-4 md:px-8 mx-auto py-10 bg-white/50 rounded-xl shadow-lg mt-10 mb-10">
 
-        <section class="text-white py-10">
-            <div class="text-center max-w-4xl mx-auto">
-                <h2 class="text-4xl text-white font-bold">Public Swim Lessons</h2>
-                {% if current_phase %}
-                <p class="text-lg mt-2 text-blue-100">
-                    {{ current_phase }}
-                </p>
-                {% endif %}
-            </div>
-        </section>
+            <section class="text-white py-10">
+                <div class="text-center max-w-4xl mx-auto">
+                    <h2 class="text-4xl text-white font-bold">Public Swim Lessons</h2>
+                    {% if current_phase %}
+                        <p class="text-lg mt-2 text-blue-100">
+                            {{ current_phase }}
+                        </p>
+                    {% endif %}
+                </div>
+            </section>
 
-        <!-- Booking Term Information -->
-        {% include "swimling_dashboard/_term_summary.html" %}
-        {% include "swimling_dashboard/_phase_banner.html" %}
+            <!-- Booking Term Information -->
+            {% include "swimling_dashboard/_term_summary.html" %}
+            {% include "swimling_dashboard/_phase_banner.html" %}
 
-        <!-- Lessons Table -->
-        <div class="container mx-auto mt-10 px-4">
-            <div class="bg-white shadow-md rounded-md p-6">
-                <div class="overflow-x-auto">
-                    <table class="min-w-full table-auto text-left text-sm">
-                        <thead class="bg-blue-200 text-blue-900">
+            <!-- Lessons Table -->
+            <div class="container mx-auto mt-10 px-4">
+                <div class="bg-white shadow-md rounded-md p-6">
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full table-auto text-left text-sm">
+                            <thead class="bg-blue-200 text-blue-900">
                             <tr>
                                 <th class="px-4 py-2 font-medium">Lessons</th>
                                 <th class="px-4 py-2 font-medium">Price</th>
@@ -34,104 +34,107 @@
                                 <th class="px-4 py-2 font-medium">Places Left</th>
                                 <th class="px-4 py-2 font-medium">Action</th>
                             </tr>
-                        </thead>
-                        <tbody>
+                            </thead>
+                            <tbody>
                             {% for lesson_info in page_obj %}
-                            <tr class="{% cycle '' 'bg-gray-50' %} border-t">
-                                <td class="px-4 py-3 font-semibold">{{ lesson_info.lesson.name }}</td>
-                                <td class="px-4 py-3 font-semibold">€{{ lesson_info.lesson.price }}</td>
-                                <td class="px-4 py-3">{{ lesson_info.num_places }}</td>
-                                <td class="px-4 py-3">
-                                    {% if lesson_info.is_full %}
-                                    <span
-                                        class="inline-block px-2 py-1 text-sm text-red-800 bg-red-100 rounded">Full</span>
-                                    {% elif lesson_info.remaining_spaces <= 3 %} <span
-                                        class="inline-block px-2 py-1 text-sm text-yellow-800 bg-yellow-100 rounded">
+                                <tr class="{% cycle '' 'bg-gray-50' %} border-t">
+                                    <td class="px-4 py-3 font-semibold">{{ lesson_info.lesson.name }}</td>
+                                    <td class="px-4 py-3 font-semibold">€{{ lesson_info.lesson.price }}</td>
+                                    <td class="px-4 py-3">{{ lesson_info.num_places }}</td>
+                                    <td class="px-4 py-3">
+                                        {% if lesson_info.is_full %}
+                                            <span
+                                                    class="inline-block px-2 py-1 text-sm text-red-800 bg-red-100 rounded">Full</span>
+                                        {% elif lesson_info.remaining_spaces <= 3 %} <span
+                                                class="inline-block px-2 py-1 text-sm text-yellow-800 bg-yellow-100 rounded">
                                         Only {{ lesson_info.remaining_spaces }} left!
                                         </span>
                                         {% else %}
-                                        <span
-                                            class="inline-block px-2 py-1 text-sm text-green-800 bg-green-100 rounded">
+                                            <span
+                                                    class="inline-block px-2 py-1 text-sm text-green-800 bg-green-100 rounded">
                                             {{ lesson_info.remaining_spaces }} available
                                         </span>
                                         {% endif %}
-                                </td>
-                                <td class="px-4 py-3">
-                                    {% if lesson_info.remaining_spaces > 0 %}
-                                    <a href="{% url 'lessons:product_detail' id=lesson_info.lesson.id %}?swimling={{ selected_swimling.id }}"
-                                        class="inline-flex items-center gap-2 px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700">
-                                        <i class="fas fa-ticket-alt"></i>
-                                        <span>Book Now</span>
-                                    </a>
-                                    {% else %}
-                                    <a href="{% url 'waiting_list:join_waiting_list' product_id=lesson_info.lesson.id %}"
-                                        class="inline-flex items-center gap-2 px-3 py-1 bg-yellow-400 text-yellow-900 text-sm rounded hover:bg-yellow-500">
-                                        <i class="fas fa-clock"></i>
-                                        <span>Join Waiting List</span>
-                                    </a>
-                                    {% endif %}
-                                </td>
-                            </tr>
+                                    </td>
+                                    <td class="px-4 py-3">
+                                        {% if lesson_info.remaining_spaces > 0 %}
+                                            <a href="{% url 'lessons:product_detail' id=lesson_info.lesson.id %}?swimling={{ selected_swimling.id }}"
+                                               class="inline-flex items-center gap-2 px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700">
+                                                <i class="fas fa-ticket-alt"></i>
+                                                <span>Book Now</span>
+                                            </a>
+                                        {% else %}
+                                            <a href="{% url 'waiting_list:join_waiting_list' swimling_id=selected_swimling.id %}?product={{ lesson_info.lesson.id }}"
+                                               class="inline-flex items-center gap-2 px-3 py-1 bg-yellow-400 text-yellow-900 text-sm rounded hover:bg-yellow-500">
+                                                <i class="fas fa-clock"></i>
+                                                <span>Join Waiting List</span>
+                                            </a>
+                                        {% endif %}
+                                    </td>
+                                </tr>
                             {% empty %}
-                            <tr>
-                                <td colspan="5" class="text-center py-6">
-                                    <div class="flex flex-col items-center text-gray-400">
-                                        <i class="fas fa-inbox fa-3x mb-3"></i>
-                                        <span class="font-medium text-lg">No lessons available</span>
-                                    </div>
-                                </td>
-                            </tr>
+                                <tr>
+                                    <td colspan="5" class="text-center py-6">
+                                        <div class="flex flex-col items-center text-gray-400">
+                                            <i class="fas fa-inbox fa-3x mb-3"></i>
+                                            <span class="font-medium text-lg">No lessons available</span>
+                                        </div>
+                                    </td>
+                                </tr>
                             {% endfor %}
-                        </tbody>
-                    </table>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Pagination -->
-        {% if page_obj.paginator.num_pages > 1 %}
-        <div class="container mx-auto mt-10 mb-6 px-4">
-            <div class="bg-white shadow-md rounded-md p-6">
-                <nav class="flex flex-wrap justify-center gap-2 text-sm" role="navigation" aria-label="pagination">
-                    {% if page_obj.has_previous %}
-                    <a href="?page=1" class="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300">First</a>
-                    <a href="?page={{ page_obj.previous_page_number }}"
-                        class="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300">Previous</a>
-                    {% else %}
-                    <span class="px-3 py-1 bg-gray-100 text-gray-400 rounded cursor-not-allowed">First</span>
-                    <span class="px-3 py-1 bg-gray-100 text-gray-400 rounded cursor-not-allowed">Previous</span>
-                    {% endif %}
+            <!-- Pagination -->
+            {% if page_obj.paginator.num_pages > 1 %}
+                <div class="container mx-auto mt-10 mb-6 px-4">
+                    <div class="bg-white shadow-md rounded-md p-6">
+                        <nav class="flex flex-wrap justify-center gap-2 text-sm" role="navigation"
+                             aria-label="pagination">
+                            {% if page_obj.has_previous %}
+                                <a href="?page=1" class="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300">First</a>
+                                <a href="?page={{ page_obj.previous_page_number }}"
+                                   class="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300">Previous</a>
+                            {% else %}
+                                <span class="px-3 py-1 bg-gray-100 text-gray-400 rounded cursor-not-allowed">First</span>
+                                <span class="px-3 py-1 bg-gray-100 text-gray-400 rounded cursor-not-allowed">Previous</span>
+                            {% endif %}
 
-                    {% if page_obj.has_next %}
-                    <a href="?page={{ page_obj.next_page_number }}"
-                        class="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300">Next</a>
-                    <a href="?page={{ page_obj.paginator.num_pages }}"
-                        class="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300">Last</a>
-                    {% else %}
-                    <span class="px-3 py-1 bg-gray-100 text-gray-400 rounded cursor-not-allowed">Next</span>
-                    <span class="px-3 py-1 bg-gray-100 text-gray-400 rounded cursor-not-allowed">Last</span>
-                    {% endif %}
-                </nav>
+                            {% if page_obj.has_next %}
+                                <a href="?page={{ page_obj.next_page_number }}"
+                                   class="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300">Next</a>
+                                <a href="?page={{ page_obj.paginator.num_pages }}"
+                                   class="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300">Last</a>
+                            {% else %}
+                                <span class="px-3 py-1 bg-gray-100 text-gray-400 rounded cursor-not-allowed">Next</span>
+                                <span class="px-3 py-1 bg-gray-100 text-gray-400 rounded cursor-not-allowed">Last</span>
+                            {% endif %}
+                        </nav>
 
-                <ul class="flex justify-center mt-4 space-x-1 text-sm">
-                    {% for num in page_obj.paginator.page_range %}
-                    {% if page_obj.number == num %}
-                    <li><span class="px-3 py-1 bg-blue-600 text-white rounded">{{ num }}</span></li>
-                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %} <li><a
-                            href="?page={{ num }}" class="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300">{{ num }}</a>
-                        </li>
-                        {% elif num == page_obj.number|add:'-3' or num == page_obj.number|add:'3' %}
-                        <li><span class="px-2 py-1 text-gray-400">…</span></li>
-                        {% endif %}
-                        {% endfor %}
-                </ul>
+                        <ul class="flex justify-center mt-4 space-x-1 text-sm">
+                            {% for num in page_obj.paginator.page_range %}
+                                {% if page_obj.number == num %}
+                                    <li><span class="px-3 py-1 bg-blue-600 text-white rounded">{{ num }}</span></li>
+                                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                    <li><a
+                                            href="?page={{ num }}"
+                                            class="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300">{{ num }}</a>
+                                    </li>
+                                {% elif num == page_obj.number|add:'-3' or num == page_obj.number|add:'3' %}
+                                    <li><span class="px-2 py-1 text-gray-400">…</span></li>
+                                {% endif %}
+                            {% endfor %}
+                        </ul>
 
-                <div class="text-center text-gray-500 text-xs mt-3">
-                    Showing page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                        <div class="text-center text-gray-500 text-xs mt-3">
+                            Showing page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </div>
-    </div>
-</div>
-{% endif %}
+                </div>
+                </div>
+            {% endif %}
 {% endblock %}

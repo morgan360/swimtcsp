@@ -23,7 +23,7 @@ from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.conf import settings
 from django.urls import reverse
-
+from .forms import SwimlingForm
 
 @login_required
 def school_checkout(request, swimling_id, term_id):
@@ -134,9 +134,9 @@ def refresh_school_panel(request):
 @login_required
 def refresh_waiting_list_panel(request):
     try:
-        print("🔍 About to fetch waiting list data...")
+        # print("🔍 About to fetch waiting list data...")
         waiting_list_data = fetch_waiting_list_data(request.user)
-        print("✅ Fetched:", waiting_list_data)
+        # print("✅ Fetched:", waiting_list_data)
     except Exception as e:
         print("❌ Error while fetching data:", e)
         return HttpResponse("⚠️ Error loading panel.", status=500)
@@ -174,12 +174,13 @@ def edit_swimling(request, id):
 @login_required
 def add_swimling(request):
     if request.method == 'POST':
-        form = NewSwimlingForm(request.POST)
+        form = SwimlingForm(request.POST)
         if form.is_valid():
             swimling = form.save(commit=False)
             swimling.guardian = request.user
             swimling.save()
 
+            # rebuild dashboard data
             swimlings = Swimling.objects.filter(guardian=request.user)
             term_info = get_term_info(request)
             current_term_id = term_info['current_term_id']
@@ -196,16 +197,17 @@ def add_swimling(request):
                     enrollments__term_id=next_term_id,
                     enrollments__swimling=s
                 ).distinct()
+
                 actions = []
                 if current_phase in ['BK', 'RB']:
-                    book_url = reverse('lessons:lesson_list') + f'?swimling={swimling.id}'
+                    book_url = reverse('lessons:lesson_list') + f'?swimling={s.id}'
                     actions.append({'label': 'Book', 'url': book_url, 'disabled': False})
 
                 if current_phase == 'RB' and current_lessons.exists():
-                    actions.append({'label': 'Rebook', 'url': f'/rebook/{swimling.id}/', 'disabled': False})
+                    actions.append({'label': 'Rebook', 'url': f'/rebook/{s.id}/', 'disabled': False})
 
                 if current_phase == 'BN':
-                    book_url = reverse('lessons:lesson_list') + f'?swimling={swimling.id}'
+                    book_url = reverse('lessons:lesson_list') + f'?swimling={s.id}'
                     actions.append({'label': 'Book', 'url': book_url, 'disabled': False})
 
                 public_lessons_data.append({
@@ -228,10 +230,10 @@ def add_swimling(request):
             return HttpResponse(html, status=400)
 
     else:
-        form = NewSwimlingForm()
+        print("🧪 GET request received for Add Swimling")
+        form = SwimlingForm()
         html = render_to_string('swimling_dashboard/_new_swimling_form.html', {'form': form}, request=request)
         return HttpResponse(html)
-
 
 @login_required
 def guardian_dashboard(request):

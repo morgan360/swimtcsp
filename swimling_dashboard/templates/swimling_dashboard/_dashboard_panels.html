@@ -4,6 +4,19 @@
   {% include "swimling_dashboard/_public_lessons_panel.html" %}
 </div>
 
-<div id="swimlings-panel">
-  {% include "swimling_dashboard/_swimlings_panel.html" %}
-</div>
+{% block scripts %}
+<script>
+  function openAddSwimlingModal() {
+    document.getElementById("addSwimlingModal").classList.remove("hidden");
+    document.getElementById("addSwimlingModal").classList.add("flex");
+
+    // Load form content via HTMX
+    htmx.ajax('GET', "{% url 'swimling_dashboard:add_swimling' %}", '#addSwimlingFormTarget');
+  }
+
+  function closeAddSwimlingModal() {
+    document.getElementById("addSwimlingModal").classList.remove("flex");
+    document.getElementById("addSwimlingModal").classList.add("hidden");
+  }
+</script>
+{% endblock %}

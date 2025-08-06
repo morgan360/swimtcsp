@@ -5,7 +5,7 @@ This is a Django-based web application designed for managing lessons, swims, sch
 
 ---
 📚 Looking for full developer documentation?
-See [docs/README.md](docs/README.md) for:
+See [docs/README.md](docs/legacy_notes/README.md) for:
 - Architecture
 - Deployment (PythonAnywhere)
 - Tailwind/HTMX frontend setup

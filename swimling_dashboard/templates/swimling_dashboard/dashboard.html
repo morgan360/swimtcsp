@@ -44,8 +44,46 @@
   </div>
 </section>
 
-{#    {% endif %}#}
 
+
+<!-- 🧒 Add Swimling Modal -->
+<div id="addSwimlingModal"
+     class="fixed inset-0 z-50 hidden bg-black bg-opacity-50 flex items-center justify-center">
+
+  <!-- Modal Card -->
+  <div class="bg-white rounded-lg shadow-xl w-full max-w-md max-h-[80vh] overflow-y-auto">
+
+    <!-- Header -->
+    <div class="flex justify-between items-center px-4 py-3 border-b">
+      <h2 class="text-lg font-semibold text-red-800">Add New Swimling</h2>
+      <button onclick="closeAddSwimlingModal()" class="text-xl font-bold text-red-800 leading-none">&times;</button>
+    </div>
+
+    <!-- Body -->
+    <div id="addSwimlingFormTarget" class="px-4 py-4 space-y-4">
+      <div class="text-center text-gray-500 text-sm italic">Loading form...</div>
+    </div>
   </div>
-</section>
+</div>
+
+
+{% endblock %}
+
+
+
+{# SCRIPTS #}
+{% block scripts %}
+<script>
+  function openAddSwimlingModal() {
+    const modal = document.getElementById("addSwimlingModal");
+    modal.classList.remove("hidden");
+    modal.classList.add("flex");
+  }
+
+  function closeAddSwimlingModal() {
+    const modal = document.getElementById("addSwimlingModal");
+    modal.classList.remove("flex");
+    modal.classList.add("hidden");
+  }
+</script>
 {% endblock %}

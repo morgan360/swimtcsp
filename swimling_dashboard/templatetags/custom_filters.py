@@ -1,5 +1,8 @@
 from django import template
 from schools_bookings.utils.swimling_utils import get_latest_active_school_term, swimling_is_enrolled
+from django.utils.safestring import mark_safe
+
+
 
 register = template.Library()
 
@@ -32,3 +35,7 @@ def get_action(actions, label):
         if action.get('label') == label:
             return action
     return {'url': '#', 'disabled': True}
+
+@register.filter(name='add_class')
+def add_class(field, css_class):
+    return field.as_widget(attrs={"class": css_class})

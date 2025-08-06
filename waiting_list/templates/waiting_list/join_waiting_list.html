@@ -4,55 +4,60 @@
 {% block title %}Join Waiting List{% endblock %}
 
 {% block content %}
-<section class="section">
-  <div class="container">
-    <div class="box" style="max-width: 600px; margin: 0 auto;">
-      <h2 class="title is-4 has-text-primary">Join the Waiting List</h2>
+    <section class="section">
+        <div class="container">
+            <div class="box" style="max-width: 600px; margin: 0 auto;">
+                <h2 class="title is-4 has-text-primary">Join the Waiting List</h2>
 
-      <div class="notification is-info mb-4">
-        <p><strong>Swimling:</strong> {{ swimling }}</p>
-      </div>
+                <div class="notification is-info mb-4">
+                    <p><strong>Swimling:</strong> {{ swimling }}</p>
+                </div>
 
-      <form method="POST">
-        {% csrf_token %}
+                <form method="POST">
+                    {% csrf_token %}
 
-        <div class="field">
-          <label class="label">{{ form.is_transfer_request.label }}</label>
-          <div class="control">
-            {{ form.is_transfer_request }}
-          </div>
+                    <div class="field">
+                        <label class="label">{{ form.is_transfer_request.label }}</label>
+                        <div class="control">
+                            {{ form.is_transfer_request }}
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <label class="label">{{ form.preferred_lesson_1.label }}</label>
+                        <div class="control">
+                            {{ form.preferred_lesson_1 }}
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <label class="label">{{ form.preferred_lesson_2.label }}</label>
+                        <div class="control">
+                            {{ form.preferred_lesson_2 }}
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <label class="label">{{ form.preferred_lesson_3.label }}</label>
+                        <div class="control">
+                            {{ form.preferred_lesson_3 }}
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label class="label">{{ form.notes.label }}</label>
+                        <div class="control">
+                            {{ form.notes }}
+                        </div>
+                    </div>
+                    <div class="field mt-5">
+                        <div class="control">
+                            <button type="submit" class="button is-book is-fullwidth">
+                                Join Waiting List
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
         </div>
-
-        <div class="field">
-          <label class="label">{{ form.preferred_lesson_1.label }}</label>
-          <div class="control">
-            {{ form.preferred_lesson_1 }}
-          </div>
-        </div>
-
-        <div class="field">
-          <label class="label">{{ form.preferred_lesson_2.label }}</label>
-          <div class="control">
-            {{ form.preferred_lesson_2 }}
-          </div>
-        </div>
-
-        <div class="field">
-          <label class="label">{{ form.preferred_lesson_3.label }}</label>
-          <div class="control">
-            {{ form.preferred_lesson_3 }}
-          </div>
-        </div>
-
-        <div class="field mt-5">
-          <div class="control">
-            <button type="submit" class="button is-book is-fullwidth">
-              Join Waiting List
-            </button>
-          </div>
-        </div>
-      </form>
-    </div>
-  </div>
-</section>
+    </section>
 {% endblock %}

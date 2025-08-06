@@ -8,6 +8,15 @@ class PublicWaitingListForm(forms.ModelForm):
         widget=forms.RadioSelect,
         label="Application Type"
     )
+    notes = forms.CharField(
+        required=False,
+        widget=forms.Textarea(attrs={
+            'rows': 3,
+            'placeholder': 'Add any special considerations or preferences…',
+            'class': 'w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500'
+        }),
+        label="Notes (optional)"
+    )
 
     class Meta:
         model = WaitingList
@@ -16,6 +25,7 @@ class PublicWaitingListForm(forms.ModelForm):
             'preferred_lesson_1',
             'preferred_lesson_2',
             'preferred_lesson_3',
+            'notes',
         ]
 
     def __init__(self, *args, **kwargs):

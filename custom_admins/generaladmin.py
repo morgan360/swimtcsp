@@ -84,7 +84,7 @@ class HasSiblingEnrolledFilter(SimpleListFilter):
         return queryset
 class WaitingListAdmin(admin.ModelAdmin):
     list_display = (
-        'swimling', 'product', 'get_guardian', 'is_transfer_request',
+        'swimling', 'product', 'get_guardian', 'is_transfer_request', 'notes',
         'has_enrolled_sibling', 'is_notified', 'assigned_lesson', 'completed', 'created_at'
     )
     list_filter = ('is_notified', 'is_transfer_request', 'created_at', HasSiblingEnrolledFilter)

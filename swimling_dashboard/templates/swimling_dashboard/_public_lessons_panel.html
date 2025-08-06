@@ -17,66 +17,114 @@
         <th class="text-center">Waiting List</th>
     </tr>
     </thead>
-    <tbody class="divide-y divide-gray-100">
-    {% for item in public_lessons_data %}
-        {% with swimling=item.swimling %}
-            {% for lesson in item.current_lessons %}
-                <tr class="hover:bg-gray-50">
-                    {% if forloop.first %}
-                        <td class="px-4 py-2 font-semibold text-red-700 align-top"
-                            rowspan="{{ item.current_lessons|length }}">
-                            🧒 {{ swimling.first_name }} {{ swimling.last_name }}
-                        </td>
-                    {% endif %}
+<tbody class="divide-y divide-gray-100">
+{% for item in public_lessons_data %}
+  {% with swimling=item.swimling %}
+    {% if item.current_lessons %}
+      {% for lesson in item.current_lessons %}
+        <tr class="hover:bg-gray-50">
+          {% if forloop.first %}
+            <td class="px-4 py-2 font-semibold text-red-700 align-top"
+                rowspan="{{ item.current_lessons|length }}">
+              <div class="flex items-center gap-2">
+                🧒 {{ swimling.first_name }} {{ swimling.last_name }}
+                <a href="{% url 'swimling_dashboard:edit-swimling' id=swimling.id %}"
+                   class="text-blue-600 hover:text-blue-800 text-xs"
+                   title="Edit {{ swimling.first_name }}">
+                  ✏️
+                </a>
+              </div>
+            </td>
+          {% endif %}
 
-                    <!-- 📘 Current Term -->
-                    <td class="px-4 py-2 align-top">
-                        {{ lesson }}
-                    </td>
+          <td class="px-4 py-2 align-top">{{ lesson }}</td>
 
-                    <!-- 📗 Next Term -->
-                    {% with item.next_lessons|get_next_for:lesson as next_lesson %}
-                        <td class="px-4 py-2 align-top">
-                            {% if next_lesson %}
-                                {{ next_lesson }}<br>
-                            {% else %}
-                                <span class="italic text-gray-400">Not registered</span>
-                            {% endif %}
-                        </td>
-                    {% endwith %}
+          {% with item.next_lessons|get_next_for:lesson as next_lesson %}
+            <td class="px-4 py-2 align-top">
+              {% if next_lesson %}
+                {{ next_lesson }}
+              {% else %}
+                <span class="italic text-gray-400">Not registered</span>
+              {% endif %}
+            </td>
+          {% endwith %}
 
+          <td class="px-4 py-2 text-center align-top">
+            {% with action=item.actions|get_action:'Book' %}
+              <a href="{{ action.url }}"
+                 class="px-3 py-1 text-xs rounded {{ action.disabled|yesno:'bg-gray-300 text-gray-500 cursor-not-allowed,pointer-events-auto bg-green-600 text-white hover:bg-green-700' }}">
+                Book
+              </a>
+            {% endwith %}
+          </td>
 
-                    <!-- ✅ Book/ Book Next-->
-                    <td class="px-4 py-2 text-center align-top">
-                        {% with action=item.actions|get_action:'Book' %}
-                            <a href="{{ action.url }}"
-                               class="px-3 py-1 text-xs rounded {{ action.disabled|yesno:'bg-gray-300 text-gray-500 cursor-not-allowed,pointer-events-auto bg-green-600 text-white hover:bg-green-700' }}">
-                                Book
-                            </a>
-                        {% endwith %}
-                    </td>
+          <td class="px-4 py-2 text-center align-top">
+            {% with action=item.actions|get_action:'Rebook' %}
+              <a href="{% url 'shopping_cart:direct_rebooking' swimling.id lesson.id %}"
+                 class="px-3 py-1 text-xs rounded {{ action.disabled|yesno:'bg-gray-300 text-gray-500 cursor-not-allowed,pointer-events-auto bg-blue-600 text-white hover:bg-blue-700' }}">
+                Rebook
+              </a>
+            {% endwith %}
+          </td>
 
+          <td class="px-4 py-2 text-center align-top">
+            <a href="{% url 'waiting_list:join_waiting_list' swimling.id %}"
+               class="px-3 py-1 text-xs rounded bg-yellow-400 text-black hover:bg-yellow-500">
+              Join
+            </a>
+          </td>
+        </tr>
+      {% endfor %}
+    {% else %}
+      <tr class="hover:bg-gray-50">
+        <td class="px-4 py-2 font-semibold text-red-700 align-top">
+          <div class="flex items-center gap-2">
+            🧒 {{ swimling.first_name }} {{ swimling.last_name }}
+            <a href="{% url 'swimling_dashboard:edit-swimling' id=swimling.id %}"
+               class="text-blue-600 hover:text-blue-800 text-xs"
+               title="Edit {{ swimling.first_name }}">
+              ✏️
+            </a>
+          </div>
+        </td>
+        <td class="px-4 py-2 italic text-gray-400 align-top">No current lessons</td>
+        <td class="px-4 py-2 italic text-gray-400 align-top">Not registered</td>
 
-                    <!-- 🔁 Rebook -->
-                    <td class="px-4 py-2 text-center align-top">
-                        {% with action=item.actions|get_action:'Rebook' %}
-                            <a href="{% url 'shopping_cart:direct_rebooking' swimling.id lesson.id %}"
-                               class="px-3 py-1 text-xs rounded {{ action.disabled|yesno:'bg-gray-300 text-gray-500 cursor-not-allowed,pointer-events-auto bg-blue-600 text-white hover:bg-blue-700' }}">
-                                Rebook
-                            </a>
-                        {% endwith %}
-                    </td>
+        <td class="px-4 py-2 text-center align-top">
+          {% with action=item.actions|get_action:'Book' %}
+            <a href="{{ action.url }}"
+               class="px-3 py-1 text-xs rounded {{ action.disabled|yesno:'bg-gray-300 text-gray-500 cursor-not-allowed,pointer-events-auto bg-green-600 text-white hover:bg-green-700' }}">
+              Book
+            </a>
+          {% endwith %}
+        </td>
 
-                    <!-- 🕓 Waiting List -->
-                    <td class="px-4 py-2 text-center align-top">
-                        <a href="{% url 'waiting_list:join_waiting_list' swimling.id %}"
-                           class="px-3 py-1 text-xs rounded bg-yellow-400 text-black hover:bg-yellow-500">
-                            Join
-                        </a>
-                    </td>
-                </tr>
-            {% endfor %}
-        {% endwith %}
-    {% endfor %}
-    </tbody>
+        <td class="px-4 py-2 text-center align-top text-gray-400 text-xs italic">N/A</td>
+
+        <td class="px-4 py-2 text-center align-top">
+          <a href="{% url 'waiting_list:join_waiting_list' swimling.id %}"
+             class="px-3 py-1 text-xs rounded bg-yellow-400 text-black hover:bg-yellow-500">
+            Join
+          </a>
+        </td>
+      </tr>
+    {% endif %}
+  {% endwith %}
+{% endfor %}
+</tbody>
+
 </table>
+<div class="text-right mt-4">
+  <button
+  onclick="openAddSwimlingModal()"
+  hx-get="{% url 'swimling_dashboard:add_swimling' %}"
+  hx-target="#addSwimlingFormTarget"
+  hx-swap="innerHTML"
+  class="inline-flex items-center px-4 py-2 text-red-700 bg-red-100 rounded-xl hover:bg-red-200 transition">
+  <span class="mr-2">
+    <i class="fas fa-plus"></i>
+  </span>
+  <span>Add New Swimling</span>
+</button>
+
+</div>

@@ -32,7 +32,7 @@ import pymysql
 from datetime import datetime, time
 from django.core.management.base import BaseCommand
 from django.utils.text import slugify
-from django.utils.timezone import make_aware
+from django.utils.timezone import make_aware, is_naive
 from decouple import config
 from lessons.models import Program, Category, Product
 from lessons_bookings.models import Term, LessonEnrollment
@@ -226,7 +226,14 @@ class Command(BaseCommand):
                     created_dt = row['created']
                     if isinstance(created_dt, str):
                         try:
-                            created_dt = make_aware(datetime.strptime(created_dt, "%Y-%m-%d %H:%M:%S"))
+                            created_dt = datetime.strptime(created_dt, "%Y-%m-%d %H:%M:%S")
+                        except:
+                            created_dt = None
+
+                    # Make it timezone-aware if it's naive
+                    if isinstance(created_dt, datetime) and is_naive(created_dt):
+                        try:
+                            created_dt = make_aware(created_dt)
                         except:
                             created_dt = None
 

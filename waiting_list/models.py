@@ -26,7 +26,7 @@ class WaitingList(models.Model):
     preferred_lesson_3 = models.ForeignKey(
         Product, related_name='preferred_3', null=True, blank=True, on_delete=models.SET_NULL
     )
-
+    notes = models.TextField(blank=True, null=True)
     is_notified = models.BooleanField(default=False)
     notification_date = models.DateTimeField(null=True, blank=True)
     assigned_lesson = models.ForeignKey(

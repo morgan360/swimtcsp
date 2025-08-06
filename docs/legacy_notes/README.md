@@ -1,44 +1,52 @@
+# 🗂 TCSP Developer Documentation
+
+Welcome to the internal documentation for the TCSP Swimming Pool web platform. This site supports swimming lessons, 
+school bookings, and public swim sessions — with integrated e-commerce, admin tools, and Bulma styled user interactions.
+
 ---
-description: https://developer.bankofireland.com/#!/
+
+## 📚 Documentation Index
+
+### 🔧 Setup
+- [Setup Instructions](setup.md)
+- [Deployment (PythonAnywhere)](TCSP Processes/TCSP_deployment.md)
+
+### 🧱 Architecture
+- [Django App Structure](../Z-TCSP%20Processes/architecture.md)
+- [Imported Libraries and Tools](../Z-TCSP%20Processes/architecture.md#django-apps)
+- [Frontend: Bulma, Alpine, HTMX](../Z-TCSP%20Processes/frontend.md)
+
+### 🛠 Development
+- [Admin Access & Management](../admin/Restricting-management.md)
+- [CSV Import/Export Guide](../guides/import-export.md)
+
+### ✅ Tracking & Notes
+- [To-Do List](../todos.md)
+- [Git Log & History](git-log.md)
+
 ---
 
-# BOIP
+## 🧩 Folder Overview
 
-Hosted Payment Page Integration is designed for technologically enabled merchants who manage systems that provide and manage the full customer shopping experience, but do not have PCI Compliant environments to process payment cards and other cardholder sensitive data. The primary feature of this integration method with the Gateway is that the merchant incorporates the Gateway’s Hosted Payment Page into the website’s checkout page.
+| Folder             | Contents |
+|--------------------|----------|
+| `/admin/`          | Admin-specific notes (custom dashboards) |
+| `/guides/`         | How-to guides (e.g., data import/export) |
+| `/legacy_notes/`   | Archived older notes & structure drafts |
+| `/assets/`         | SVGs, images, and visual assets for documentation |
 
-The Hosted Payment Page will provide for card payments and alternate payment methods.
+---
 
-Merchants may have:
+## 🧠 Tips
 
-* eCommerce websites or apps where their customers shop and pay for goods and services online – ECOM transactions
-* and/or Customer Order Management system where merchant operators take orders over the phone or from other remote communications methods – MOTO transactions
+- Use `SUMMARY.md` to generate navigation if using a static site generator
+- Update `git-log.md` regularly as you push features or fix bugs
+- Keep `.env` keys out of this folder and version control
 
-The merchant’s applications use the Gateway to process payment authorisations and the supporting functionality (captures, voids, refunds, etc.) and 3DS authentications.
+---
 
-An additional feature of this integration method is a Hybrid Integration, where Hosted Payment Page Integrated merchants will also use the Direct API integration in other scenarios (e.g. for repeat transactions (recurring) using a stored card token generated using the Hosted Payment Page).
+## 🔗 Project Entry Point
 
-There are 3 integration modes available for the Hosted Payment Page:
+See the main [README.md](../../README.md) in the project root for GitHub-level setup and project intro.
 
-**1. HostedPayPage** (a standard payment page with static **BOIPA/EVO** branding), fully redirected from the merchant site;
-
-**2. Standalone** iFrame (a customisable payment page where fonts/colours may be changed), fully redirected from the merchant site;
-
-**3. Embedded** iFrame (a customisable payment page where fonts/colours may be changed), embedded in a container within the merchant site;
-
-merchant ID: 100121
-
-The Merchant id is 100121, Its Brand id is 1001210000, API password is u0AYACBNI2643G87wk4o
-
-New Message UAT Test Mode
-
-MID: 100121 Brand ID: 1001210000 API Password: qWGEJQQAkhROSTGpwS5O
-
-Please ensure test mode is ticked on the back end. Card Number: 4111 1111 1111 1111 CVV: 111 Expiry: 12/23\
-
-
-brian.sweeney@tcsp.ie
-
-tcspool1
-
-
-
+---

@@ -1,14 +1,25 @@
 {% load custom_filters %}
 {% if show_school_panel %}
 <section class="bg-green-50 py-6 px-4 rounded-lg shadow-md">
+  <h3 class="text-2xl md:text-3xl font-bold text-center text-green-700 mt-8 md:mt-12 mb-6 md:mb-8">
+    <i class="fa-solid fa-school mr-2"></i>
+    School Panel
+  </h3>
+
+  <p class="text-green-700 text-center mb-6 text-sm md:text-base max-w-2xl mx-auto px-2">
+    <i class="fa-solid fa-circle-info mr-1"></i>
+    Please add a swimling in the 'My Swimlings Overview' section and add a role number 
+    to register them for schools classes.
+  </p>
+
   <div class="bg-white rounded-lg shadow overflow-hidden">
 
     <!-- Header -->
-    <header class="bg-green-600 px-6 py-3">
-      <p class="text-white flex items-center font-semibold text-lg">
-        <strong class="ml-2">School Lessons Management</strong>
+    <header class="bg-green-700 px-4 md:px-6 py-3">
+      <p class="text-white flex flex-col md:flex-row md:items-center font-semibold text-base md:text-lg">
+        <strong class="ml-0 md:ml-2">My School Swimlings</strong>
         {% if first_active_term %}
-          <span class="ml-6 text-green-200 font-normal text-sm">
+          <span class="mt-1 md:mt-0 md:ml-6 text-green-100 font-normal text-sm">
             <strong>Term:</strong> {{ first_active_term.start_date|date:"d M Y" }} → {{ first_active_term.end_date|date:"d M Y" }}
           </span>
         {% endif %}
@@ -16,37 +27,34 @@
     </header>
 
     <!-- Content -->
-    <div class="p-6 space-y-4">
+    <div class="p-4 md:p-6 space-y-4">
       {% for item in school_panel_data %}
         {% with swimling=item.swimling term=item.term is_enrolled=item.is_enrolled lesson_name=item.lesson_name school_name=item.school_name %}
           {% if term %}
-            <div class="flex justify-between items-center bg-gray-50 rounded-md p-4 shadow-sm">
+            <div class="flex flex-col md:flex-row justify-between md:items-center bg-gray-50 rounded-md p-4 shadow-sm space-y-3 md:space-y-0">
 
               <!-- Left: Swimling Info -->
-              <div class="flex items-center space-x-4">
-                <p class="font-semibold text-lg">{{ swimling.first_name }} {{ swimling.last_name }}</p>
+              <div class="flex flex-col md:flex-row md:items-center md:space-x-4 space-y-1 md:space-y-0">
+                <p class="font-semibold text-base md:text-lg">{{ swimling.first_name }} {{ swimling.last_name }}</p>
                 <span class="text-gray-500 text-sm">School ID: {{ swimling.sco_role_num }}</span>
               </div>
 
               <!-- Right: Action -->
-              <div class="flex flex-col items-end">
+              <div class="flex flex-col items-start md:items-end space-y-2">
                 {% if is_enrolled %}
-                  <span class="inline-block bg-green-100 text-green-800 text-sm font-semibold px-3 py-1 rounded mb-1">
+                  <span class="inline-block bg-green-100 text-green-800 text-xs md:text-sm font-semibold px-3 py-1 rounded">
                     ✔ Already Booked
                   </span>
-                  <p class="text-gray-700 text-sm mb-0">
+                  <p class="text-gray-700 text-xs md:text-sm">
                     {{ lesson_name }} — {{ school_name }}
                   </p>
                 {% else %}
-                  <p class="text-gray-700 text-sm font-semibold mb-0 mr-4 leading-tight">
+                  <p class="text-gray-700 text-sm font-semibold">
                     Not registered yet
                   </p>
                   <a href="{% url 'swimling_dashboard:school_checkout' swimling.id term.id %}"
-                     class="mt-1 inline-flex items-center bg-green-600 hover:bg-green-700 text-white text-xs px-3 py-1 rounded transition">
-                    <span class="mr-1">
-                      <i class="fas fa-plus-circle"></i>
-                    </span>
-                    <span>Book Now</span>
+                     class="inline-flex items-center bg-green-700 hover:bg-green-800 text-white text-xs px-3 py-1 rounded transition">
+                    <i class="fas fa-plus-circle mr-1"></i> Book Now
                   </a>
                 {% endif %}
               </div>

@@ -1,35 +1,39 @@
 {% if phase_summary %}
-  <div class="bg-blue-100 text-blue-800 shadow rounded-lg p-4 mb-5">
-    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+<div class="bg-white/50 text-blue-800 shadow-lg rounded-lg p-4 mb-5">
+  <h3 class="text-xl font-bold text-center text-blue-900 mt-3 mb-6">Booking Phases</h3>
 
-      <!-- 📅 Current Phase -->
-      <div class="text-left">
-        <p class="mt-2 mb-2 flex items-start gap-2">
-          <span>📅</span>
-          <span>
-            <strong>Current Phase:</strong> {{ phase_summary.current.label }}
-            {% if phase_summary.current.until %}
-              (until {{ phase_summary.current.until }})
-            {% endif %}
-          </span>
-        </p>
+  <div class="flex flex-col md:flex-row items-center justify-evenly gap-8 text-center">
+
+    <!-- 📅 Current Phase -->
+    <div class="flex flex-col items-center">
+      <div class="flex items-center gap-2 mb-1 text-blue-900">
+        <i class="fa-solid fa-calendar-days"></i>
+        <strong>Current Phase</strong>
       </div>
-
-      <!-- 🕐 Next Phase -->
-      {% if phase_summary.next.label %}
-        <div class="text-left md:text-right">
-          <p class="mt-2 mb-2 flex items-start gap-2 md:justify-end">
-            <span>🕐</span>
-            <span>
-              <strong>Next Phase:</strong> {{ phase_summary.next.label }}
-              {% if phase_summary.next.starts %}
-                (starts {{ phase_summary.next.starts }})
-              {% endif %}
-            </span>
-          </p>
-        </div>
-      {% endif %}
-
+      <div>
+        {{ phase_summary.current.label }}
+        {% if phase_summary.current.until %}
+        <br>(until {{ phase_summary.current.until }})
+        {% endif %}
+      </div>
     </div>
+
+    <!-- 🕐 Next Phase -->
+    {% if phase_summary.next.label %}
+    <div class="flex flex-col items-center">
+      <div class="flex items-center gap-2 mb-1 text-blue-900">
+        <i class="fa-solid fa-hourglass-start"></i>
+        <strong>Next Phase</strong>
+      </div>
+      <div>
+        {{ phase_summary.next.label }}
+        {% if phase_summary.next.starts %}
+        <br>(starts {{ phase_summary.next.starts }})
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+
   </div>
+</div>
 {% endif %}

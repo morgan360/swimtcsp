@@ -1,6 +1,10 @@
 {% load custom_filters %}
-    <form method="POST" hx-post="{% url 'swimling_dashboard:add_swimling' %}" hx-target="#dashboard-panels"
-        hx-swap="outerHTML" onsubmit="closeAddSwimlingModal()" class="bg-white/50 p-6 rounded-lg shadow-lg">
+    <form 
+        method="POST" 
+        hx-post="{% url 'swimling_dashboard:add_swimling' %}" hx-target="#dashboard-panels"
+        hx-swap="outerHTML" 
+        onsubmit="closeAddSwimlingModal()" 
+        class="bg-white/50 p-6 rounded-lg shadow-lg">
         {% csrf_token %}
         {{ form.non_field_errors }}
 
@@ -32,9 +36,9 @@
             <label class="block text-blue-900 text-lg font-semibold mt-4 mb-2">Notes</label>
             <textarea name="notes" rows="3"
                 class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500">
-            {{ form.notes.value }}
+                {{ form.notes.value }}
         </textarea>
-            {{ form.notes.errors }}
+                {{ form.notes.errors }}
         </div>
 
         <div class="text-right">

@@ -59,10 +59,10 @@
 
     <!-- 🧒 Add Swimling Modal -->
     <div id="addSwimlingModal"
-      class="fixed inset-0 z-50 hidden bg-black bg-opacity-50 flex items-center justify-center">
+      class="fixed inset-0 z-50 hidden bg-black bg-opacity-50 flex items-start justify-center pt-20">
 
       <!-- Modal Card -->
-      <div class="flex justify-center w-full">
+      <div class="flex justify-center w-full m-3">
         <div class="bg-blue-900/80 backdrop-blur-md border border-white/20 rounded-xl shadow-md p-10 w-full max-w-xl">
 
         <!-- Header -->
@@ -75,8 +75,30 @@
         <div id="addSwimlingFormTarget" class="px-4 py-4 space-y-4">
           <div class="text-center text-gray-500 text-sm italic">Loading form...</div>
         </div>
+        </div>
       </div>
     </div>
+
+    <!-- 🧒 Edit Swimling Modal -->
+    <div id="editSwimlingModal"
+      class="fixed inset-0 z-50 hidden bg-black bg-opacity-50 flex items-start justify-center">
+
+      <!-- Modal Card -->
+      <div class="flex justify-center w-full m-3">
+        <div class="bg-blue-900/80 backdrop-blur-md border border-white/20 rounded-xl shadow-md p-10 w-full max-w-xl">
+
+        <!-- Header -->
+        <div class="flex justify-between items-center px-4 py-3">
+          <h2 class="text-3xl font-bold text-center text-white mb-8">Edit Swimling</h2>
+          <button onclick="closeEditSwimlingModal()" class="text-xl font-bold text-white leading-none mb-8">&times;</button>
+        </div>
+
+        <!-- Body -->
+        <div id="editSwimlingFormTarget" class="px-4 py-4 space-y-4">
+          <div class="text-center text-gray-500 text-sm italic">Loading form...</div>
+        </div>
+        </div>
+      </div>
     </div>
 
 
@@ -97,6 +119,55 @@
         const modal = document.getElementById("addSwimlingModal");
         modal.classList.remove("flex");
         modal.classList.add("hidden");
+      }
+
+      function openEditSwimlingModal(swimlingId) {
+        console.log("Opening edit modal for swimling:", swimlingId);
+        const modal = document.getElementById("editSwimlingModal");
+        console.log("Modal element:", modal);
+        
+        if (modal) {
+          // Get the clicked button's position
+          const clickedButton = event.target.closest('button');
+          const buttonRect = clickedButton.getBoundingClientRect();
+          const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+          
+          // Calculate position relative to button
+          const modalContainer = modal.querySelector('.flex.justify-center');
+          
+          // Position modal near the clicked button
+          modal.style.paddingTop = Math.max(20, buttonRect.top + scrollTop - 350) + 'px';
+          
+          // First open the modal
+          modal.classList.remove("hidden");
+          modal.classList.add("flex");
+          console.log("Modal classes after opening:", modal.classList.toString());
+          
+          // Then trigger HTMX to load the form
+          const editUrl = clickedButton.getAttribute('data-edit-url');
+          
+          if (editUrl) {
+            console.log("Loading form from:", editUrl);
+            htmx.ajax('GET', editUrl, {
+              target: '#editSwimlingFormTarget',
+              swap: 'innerHTML'
+            });
+          }
+        } else {
+          console.error("Edit modal not found!");
+        }
+      }
+
+      function closeEditSwimlingModal() {
+        console.log("Closing edit modal");
+        const modal = document.getElementById("editSwimlingModal");
+        if (modal) {
+          modal.classList.remove("flex");
+          modal.classList.add("hidden");
+          // Reset dynamic positioning
+          modal.style.paddingTop = '';
+          console.log("Modal classes after closing:", modal.classList.toString());
+        }
       }
 
       function toggleAccordion(id) {

@@ -14,23 +14,24 @@
   <div class="hidden md:block p-4 space-y-4">
     {% for item in public_lessons_data %}
     {% with swimling=item.swimling %}
-    <div class="bg-red-100 rounded-xl shadow p-6 space-y-2">
+    <div class="rounded-xl shadow p-6 space-y-2 bg-red-200">
       <!-- Header -->
       <div class="flex items-center justify-between border-b border-red-300 pb-3 mb-3">
         <div class="flex items-center gap-3">
           <p class="text-lg font-semibold text-red-800">
             {{ swimling.first_name }} {{ swimling.last_name }}
           </p>
-          <a href="{% url 'swimling_dashboard:edit-swimling' id=swimling.id %}"
+          <button onclick="openEditSwimlingModal({{ swimling.id }})"
+             data-edit-url="{% url 'swimling_dashboard:edit-swimling' id=swimling.id %}"
             class="text-red-600 hover:text-red-900 text-sm" title="Edit {{swimling.first_name}}'s details">
             <i class="fa-solid fa-user-pen"></i>
-          </a>
+          </button>
         </div>
       </div>
 
       {% if item.current_lessons %}
       {% for lesson in item.current_lessons %}
-      <div class="bg-white rounded-lg shadow-inner p-4 flex justify-between flex-wrap gap-4">
+      <div class="bg-red-50 rounded-lg shadow-inner p-4 flex justify-between flex-wrap gap-4">
         <!-- Lesson Info -->
         <div class="space-y-1 text-sm text-gray-800">
           <p><strong>📘 Current:</strong> {{ lesson }}</p>
@@ -68,7 +69,7 @@
       </div>
       {% endfor %}
       {% else %}
-      <div class="bg-white rounded-lg shadow-inner p-4 flex justify-between flex-wrap gap-4">
+      <div class="bg-red-50 rounded-lg shadow-inner p-4 flex justify-between flex-wrap gap-4">
         <div class="space-y-1 text-sm text-gray-600 italic">
           <p>No current lessons</p>
           <p>Not registered</p>
@@ -97,23 +98,24 @@
   </div>
 
   <!-- ✅ Mobile Version (sm) -->
-  <div class="md:hidden space-y-4 p-4">
+  <div class="md:hidden space-y-4 p-4 m-4">
     {% for item in public_lessons_data %}
     {% with swimling=item.swimling %}
-    <div class="bg-red-100 rounded-lg shadow p-4 space-y-2">
+    <div class="bg-red-200 rounded-lg shadow p-4 space-y-2">
       <div class="flex items-center">
         <p class="font-semibold text-red-900">
           {{ swimling.first_name }} {{ swimling.last_name }}
         </p>
-        <a href="{% url 'swimling_dashboard:edit-swimling' id=swimling.id %}"
+        <button onclick="openEditSwimlingModal({{ swimling.id }})"
+           data-edit-url="{% url 'swimling_dashboard:edit-swimling' id=swimling.id %}"
           class="text-red-600 hover:text-red-900 text-sm" title="Edit {{swimling.first_name}}'s details">
           <i class="fa-solid fa-user-pen ml-2"></i>
-        </a>
+        </button>
       </div>
 
       {% if item.current_lessons %}
       {% for lesson in item.current_lessons %}
-      <div class="bg-white p-3 rounded-md space-y-1">
+      <div class="bg-red-50 p-3 rounded-md space-y-1">
         <p><strong>📘 Current:</strong> {{ lesson }}</p>
         {% with item.next_lessons|get_next_for:lesson as next_lesson %}
         <p>
@@ -147,7 +149,7 @@
       </div>
       {% endfor %}
       {% else %}
-      <div class="bg-white p-3 rounded-md space-y-1">
+      <div class="bg-red-50 p-3 rounded-md space-y-1">
         <p class="italic text-gray-600">No current lessons</p>
         <p class="italic text-gray-600">Not registered</p>
         <div class="flex flex-wrap gap-2 pt-2 items-start">

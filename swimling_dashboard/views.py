@@ -164,6 +164,16 @@ def edit_swimling(request, id):
         if form.is_valid():
             form.save()
             messages.success(request, 'Swimling updated successfully.')
+            
+            # If this is an HTMX request, return a script to close modal and refresh page
+            if request.headers.get('HX-Request'):
+                return HttpResponse("""
+                    <script>
+                        closeEditSwimlingModal();
+                        window.location.reload();
+                    </script>
+                """)
+            
             return redirect('swimling_dashboard:guardian_dashboard')
     else:
         form = NewSwimlingForm(instance=swimling)

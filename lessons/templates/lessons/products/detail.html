@@ -24,14 +24,32 @@
 
                 <!-- Title -->
                 <div>
-                    <h2 class="text-4xl font-bold text-white mb-2 ">{{ product.name }}</h2>
+                    <h2 class="text-4xl font-bold text-white mb-2 text-center">{{ product.name }}</h2>
                 </div>
 
                 <!-- Price & Availability -->
                 <div class="bg-white/40 backdrop-blur-lg border border-white/20 p-6 rounded-lg shadow-lg text-gray-900">
-                    <div class="bg-white backdrop-blur-lg border border-white/20 p-6 rounded-lg shadow text-gray-900">
-                        <div class="flex justify-between items-center mb-4">
-                            <span class="text-2xl font-semibold text-blue-900">€{{ product.price }}</span>
+
+                    <div class="bg-white backdrop-blur-lg border border-white/20 p-5 rounded-lg shadow text-gray-900">
+                        <!-- Spaces Summary -->
+                        <div
+                            class="grid grid-cols-3 gap-4 text-sm bg-blue-50 text-blue-900 font-medium text-center rounded-lg px-4 py-1">
+                            <div>
+                                <p class="font-semibold">Total Places:</p>
+                                <p>{{ product.num_places }}</p>
+                            </div>
+                            <div>
+                                <p class="font-semibold">Occupied:</p>
+                                <p>{{ num_sold }}</p>
+                            </div>
+                            <div>
+                                <p class="font-semibold">Remaining:</p>
+                                <p>{{ num_left }}</p>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-between items-center">
+                            <span class="text-2xl font-semibold text-blue-900">Total Price: €{{ product.price }}</span>
                             {% if num_left > 1 %}
                             <span
                                 class="px-3 py-1 bg-green-100 text-green-700 text-sm font-medium rounded-full">Available</span>
@@ -39,24 +57,9 @@
                             <span class="px-3 py-1 bg-yellow-100 text-yellow-800 text-sm font-medium rounded-full">Only
                                 1 place left</span>
                             {% else %}
-                            <span class="px-3 py-1 bg-red-100 text-red-700 text-sm font-medium rounded-full">Sold
+                            <span class="px-4 py-3 bg-red-100 text-red-700 text-sm font-medium rounded-full">Sold
                                 Out</span>
                             {% endif %}
-                        </div>
-
-                        <div class="grid grid-cols-3 gap-4 text-sm text-blue-900 font-medium">
-                            <div>
-                                <p class="font-semibold">Places:</p>
-                                <p>{{ product.num_places }}</p>
-                            </div>
-                            <div>
-                                <p class="font-semibold">Sold:</p>
-                                <p>{{ num_sold }}</p>
-                            </div>
-                            <div>
-                                <p class="font-semibold">Remaining:</p>
-                                <p>{{ num_left }}</p>
-                            </div>
                         </div>
                     </div>
 
@@ -67,7 +70,7 @@
                         {% csrf_token %}
                         {% if selected_swimling %}
                         <div>
-                            <label class="block text-sm font-medium text-blue-900 mb-1">Selected Swimling:</label>
+                            <label class="block text-md font-medium text-blue-900 mb-2 mt-10">Selected Swimling:</label>
                             <input type="hidden" name="swimling" value="{{ selected_swimling.id }}">
                             <input type="text" readonly
                                 value="{{ selected_swimling.first_name }} {{ selected_swimling.last_name }}"
@@ -87,10 +90,15 @@
                         </div>
                         {% endif %}
 
-                        <div>
+                        <div class="flex flex-col sm:flex-row gap-3 mt-6 items-right">
+                            <button type="button" onclick="history.back()"
+                                class="inline-flex items-center justify-center w-full sm:w-auto px-6 py-3 text-blue-900 bg-blue-100 hover:text-blue-600 hover:bg-blue-200 text-sm font-medium rounded-lg transition">
+                                <i class="fas fa-chevron-left mr-2"></i>
+                                Go back
+                            </button>
                             <button type="submit"
-                                class="w-full bg-red-700 hover:bg-red-800 text-white font-semibold mt-6 py-3 px-4 rounded flex items-center justify-center gap-2 transition">
-                                <i class="fas fa-shopping-cart"></i>
+                                class="inline-flex items-center justify-center w-full sm:w-auto px-6 py-3 bg-red-700 hover:bg-red-800 text-white text-sm font-medium rounded-lg transition">
+                                <i class="fas fa-shopping-cart mr-2"></i>
                                 Add to Cart
                             </button>
                         </div>

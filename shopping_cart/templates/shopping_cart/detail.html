@@ -7,43 +7,44 @@
 <section class="py-12 px-4 sm:px-6 lg:px-8 text-white">
     <div class="max-w-6xl mx-auto px-4">
         <div class="bg-white/50 rounded-2xl shadow-md p-6">
-            <h1 class="text-3xl font-bold text-white text-center mb-8">
+            <h2 class="text-3xl font-bold text-white text-center mb-8">
                 <i class="fas fa-shopping-cart"></i>
                 Your Shopping Cart
-            </h1>
+            </h2>
 
             {% if cart_items %}
             <form method="post" action="{% url 'shopping_cart:payment_process' %}" class="space-y-6">
                 {% csrf_token %}
-                <div class="overflow-x-auto rounded-lg shadow">
-                    <table class="min-w-full text-sm">
-                        <thead class="bg-white/70 text-blue-900 uppercase text-sm font-semibold">
+                <!-- Desktop Table View (lg screens and up) -->
+                <div class="hidden lg:block overflow-x-auto rounded-lg shadow">
+                    <table class="min-w-full text-sm mx-auto">
+                        <thead class="bg-blue-300 text-center text-sm font-semibold uppercase">
                             <tr>
-                                <th class="px-4 py-2 text-left">Product</th>
-                                <th class="px-4 py-2 text-left">Price</th>
-                                <th class="px-4 py-2 text-left">Swimling</th>
-                                <th class="px-4 py-2 text-left">Lesson Details</th>
-                                <th class="px-4 py-2 text-left">Remove</th>
+                                <th class="px-5 py-2 text-blue-900">Product</th>
+                                <th class="px-5 py-2 text-blue-900">Price</th>
+                                <th class="px-5 py-2 text-blue-900">Swimling</th>
+                                <th class="px-5 py-2 text-blue-900">Lesson Details</th>
+                                <th class="px-5 py-2 text-blue-900">Actions</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-300 bg-white/80 text-blue-900 font-medium text-sm">
+                        <tbody class="divide-y divide-blue-300 bg-white text-center text-blue-800 font-medium text-sm">
                             {% for item in cart_items %}
                             <tr>
-                                <td class="px-4 py-2">{{ item.product.name }}</td>
-                                <td class="px-4 py-2">€{{ item.price }}</td>
-                                <td class="px-4 py-2">{{ item.swimling.first_name }} {{ item.swimling.last_name }}</td>
-                                <td class="px-6 py-4">
+                                <td class="px-4 py-5">{{ item.product.name }}</td>
+                                <td class="px-4 py-5">€{{ item.price }}</td>
+                                <td class="px-4 py-5">{{ item.swimling.first_name }} {{ item.swimling.last_name }}</td>
+                                <td class="px-6 py-5">
                                     {% if item.swimling.registered_lessons %}
-                                    <ul class="list-disc list-inside text-gray-700">
+                                    <ul class="list-none text-blue-800 space-y-1">
                                         {% for lesson in item.swimling.registered_lessons %}
                                         <li>{{ lesson.name }} (ID: {{ lesson.id }})</li>
                                         {% endfor %}
                                     </ul>
                                     {% else %}
-                                    <span class="text-blue-900 italic">No lessons registered</span>
+                                    <span class="text-blue-800 italic font-medium">No details available</span>
                                     {% endif %}
                                 </td>
-                                <td class="px-6 py-4">
+                                <td class="px-4 py-5 text-center">
                                     <form
                                         action="{% url 'shopping_cart:cart_remove' product_id=item.product_id type=item.type swimling_id=item.swimling.id %}"
                                         method="post">
@@ -57,34 +58,103 @@
                             </tr>
                             {% endfor %}
                         </tbody>
-                        <tfoot class="divide-y divide-blue-300 bg-white/80 text-blue-900 font-medium text-sm">
-                            <tr class="bg-blue-200">
-                                <td colspan="4" class="px-4 py-2 font-semibold">Total Price:</td>
-                                <td class="px-4 py-2 font-semibold">€{{ total_price }}</td>
+                        <tfoot class="bg-white/80 text-blue-900 text-right font-medium text-sm">
+                            <tr class="bg-blue-100">
+                                <td colspan="5" class="px-4 py-2 font-bold">Total Price: €{{ total_price }}</td>
                             </tr>
                         </tfoot>
                     </table>
                 </div>
 
-                <!-- Coupon Input -->
-                <div>
-                    <label class="block text-sm font-medium text-blue-900 mb-1">Have a Coupon?</label>
-                    <div>
-                        {{ coupon_form.code }}
+                <!-- Mobile Card View (smaller screens) -->
+                <div class="lg:hidden space-y-4">
+                    {% for item in cart_items %}
+                    <div class="bg-white/80 rounded-lg shadow-sm border border-gray-200 p-4">
+                        <div class="space-y-3">
+                            <!-- Product Name -->
+                            <div class="text-center">
+                                <p class="text-lg font-semibold text-blue-900 mb-5 mt-3">{{ item.product.name }}</p>
+                            </div>
+                            
+                            <!-- Swimling Info -->
+                            <div class="bg-white rounded p-3 text-center">
+                                <div class="text-sm text-blue-900 font-semibold">Swimling</div>
+                                <div class="font-medium text-blue-800 font-bold">{{ item.swimling.first_name }} {{ item.swimling.last_name }}</div>
+                            </div>
+                            
+                            <!-- Lesson Details -->
+                            <div class="bg-gray-50 rounded p-3 mt-5">
+                                <div class="text-sm text-blue-900 text-center font-semibold mb-2">Lesson Details</div>
+                                <div class="text-center">
+                                    {% if item.swimling.registered_lessons %}
+                                    <ul class="list-none text-blue-800 space-y-1">
+                                        {% for lesson in item.swimling.registered_lessons %}
+                                        <li class="text-sm font-bold">{{ lesson.name }} (ID: {{ lesson.id }})</li>
+                                        {% endfor %}
+                                    </ul>
+                                    {% else %}
+                                    <span class="text-blue-800 italic font-medium text-sm">No details available</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <!-- Remove Button -->
+                            <div class="text-center pt-2">
+                                <form
+                                    action="{% url 'shopping_cart:cart_remove' product_id=item.product_id type=item.type swimling_id=item.swimling.id %}"
+                                    method="post"
+                                    class="inline-block">
+                                    {% csrf_token %}
+                                    <button type="submit"
+                                        class="inline-flex items-center px-4 py-2 bg-red-100 text-red-700 text-sm font-medium rounded-lg hover:bg-red-200 transition-colors">
+                                        ❌ Remove Item
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    
+                    <!-- Mobile Total -->
+                    <div class="bg-blue-200 rounded-lg p-4 text-center">
+                        <div class="text-blue-900 font-semibold text-lg">
+                            Total Price: <span class="text-xl">€{{ total_price }}</span>
+                        </div>
                     </div>
                 </div>
 
-                <div class="text-right">
-                    <a href="{% url 'swims:product_list' %}"
-                        class="inline-flex items-center px-6 py-3 text-blue-900 bg-blue-100 hover:text-blue-600 hover:bg-blue-200 text-sm font-medium rounded-lg transition">
-                        <i class="fas fa-chevron-left"></i>
-                        Go back
-                    </a>
-                    <button type="submit"
-                        class="inline-flex items-center px-6 py-3 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                        <i class="fas fa-solid fa-credit-card mr-2"></i>
-                        Pay Now
-                    </button>
+                <!-- Coupon Input -->
+                <div class="bg-white rounded-lg p-4 border-2 border-blue-200">
+                    <label class="block text-sm font-semibold text-blue-900 mb-3">Have a Coupon?</label>
+                    <div class="flex flex-col sm:flex-row gap-3">
+                        <div class="flex-1">
+                            <input 
+                                type="text" 
+                                name="code" 
+                                id="id_code"
+                                placeholder="Enter coupon code (optional)"
+                                class="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none text-sm font-medium"
+                                maxlength="20"
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+                    <div class="order-2 sm:order-1">
+                        <button type="button" onclick="history.back()"
+                            class="inline-flex items-center justify-center w-full sm:w-auto px-6 py-3 text-blue-900 bg-blue-100 hover:text-blue-600 hover:bg-blue-200 text-sm font-medium rounded-lg transition">
+                            <i class="fas fa-chevron-left mr-2"></i>
+                            Go back
+                        </button>
+                    </div>
+                    <div class="order-1 sm:order-2">
+                        <button type="submit"
+                            class="inline-flex items-center justify-center w-full sm:w-auto px-6 py-3 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition">
+                            <i class="fas fa-solid fa-credit-card mr-2"></i>
+                            Pay Now
+                        </button>
+                    </div>
                 </div>
             </form>
             {% else %}

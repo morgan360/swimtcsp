@@ -1,0 +1,93 @@
+{% load progress_tags %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Skill Report – {{ swimling.first_name }} {{ swimling.last_name }}</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        th, td {
+            border: 1px solid #ccc;
+            padding: 8px;
+            text-align: center;
+        }
+
+        th {
+            background-color: #f0f0f0;
+        }
+
+        .cas-header td {
+            font-weight: bold;
+            background-color: #ddd;
+            text-align: left;
+        }
+
+        .notes {
+            background-color: #ffe;
+            padding: 10px;
+            margin-bottom: 20px;
+        }
+
+        .muted {
+            color: #666;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+
+<h1>{{ swimling.first_name }} {{ swimling.last_name }}</h1>
+
+{% for note in notes %}
+    <div class="notes">
+        <strong>Term ({{ note.term.id }})</strong>
+        {% if note.term.short_name %}<span class="muted">· {{ note.term.short_name }}</span>{% endif %}
+        : {{ note.note }}
+    </div>
+{% endfor %}
+
+<table>
+    <thead>
+    <tr>
+        <th>CAS</th>
+        <th>Skill</th>
+        {% for term in terms %}
+            <th>
+                Term ({{ term.id }})
+                {% if term.short_name %}<br><span class="muted">{{ term.short_name }}</span>{% endif %}
+            </th>
+        {% endfor %}
+    </tr>
+    </thead>
+    <tbody>
+    {% for cas, skills in report_rows %}
+        <tr class="cas-header">
+            <td colspan="{{ terms|length|add:2 }}">{{ cas }}</td>
+        </tr>
+        {% for skill, ratings_by_term in skills %}
+            <tr>
+                <td></td>
+                <td style="text-align: left;">{{ skill }}</td>
+                {% for term in terms %}
+                    {% with r=ratings_by_term|get_item:term.id %}
+                        <td>{% if r %}{{ r }}{% else %}–{% endif %}</td>
+                    {% endwith %}
+                {% endfor %}
+            </tr>
+        {% endfor %}
+    {% endfor %}
+    </tbody>
+
+</table>
+
+</body>
+</html>

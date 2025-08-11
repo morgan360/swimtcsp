@@ -15,8 +15,12 @@ import openai
 from openai import OpenAI
 from lessons_bookings.models import LessonEnrollment, Term
 from django.contrib.admin import SimpleListFilter
+from django.conf import settings
+import time
+import logging
 
 ### START ###
+logger = logging.getLogger(__name__)
 
 class GeneralAdminSite(AdminSite):
     site_header = "⚙️ General Admin"
@@ -136,8 +140,8 @@ class CategorySkillAdmin(ModelAdmin):
     list_filter = ['category']
 
 class SkillAssessmentAdmin(ModelAdmin):
-    list_display = ['swimling', 'skill', 'term', 'level', 'instructor']
-    list_filter = ['term', 'level', 'instructor']
+    list_display = ['swimling', 'skill', 'term', 'rating', 'instructor']
+    list_filter = ['term', 'rating', 'instructor']
     search_fields = ['swimling__first_name', 'swimling__last_name', 'skill__name']
 
 class InstructorNoteAdmin(ModelAdmin):
@@ -145,6 +149,11 @@ class InstructorNoteAdmin(ModelAdmin):
     search_fields = ['swimling__first_name', 'swimling__last_name', 'note']
     list_filter = ['term', 'instructor']
 
+######## AI Splash BOT ############
+EMBED_MODEL = os.getenv(
+    "OPENAI_EMBED_MODEL",
+    getattr(settings, "OPENAI_EMBED_MODEL", "text-embedding-3-small"),
+)
 
 class ChatbotQueryAdmin(admin.ModelAdmin):
     list_display = ("source", "timestamp", "short_message", "response_type", "confidence_score")
@@ -158,36 +167,53 @@ class ChatbotQueryAdmin(admin.ModelAdmin):
 
 # Frequently Asked Questions
 
-client = OpenAI()  # Uses OPENAI_API_KEY from env automatically
+client = OpenAI()
 
-@admin.action(description="Generate embeddings using OpenAI (new client)")
+@admin.action(description="Generate embeddings using OpenAI")
 def generate_embeddings(modeladmin, request, queryset):
+    """
+    Re-embed selected FAQs using the model from OPENAI_EMBED_MODEL.
+    """
     count = 0
-    for faq in queryset:
+    errors = 0
+
+    for faq in queryset.iterator():
         if not faq.question:
             continue
         try:
-            response = client.embeddings.create(
-                input=faq.question,
-                model="text-embedding-ada-002"
+            resp = client.embeddings.create(
+                model=EMBED_MODEL,
+                input=faq.question.strip(),
             )
-            faq.embedding = response.data[0].embedding
-            faq.save()
+            faq.embedding = resp.data[0].embedding
+            faq.save(update_fields=["embedding", "updated"])
             count += 1
+
         except Exception as e:
-            messages.warning(request, f"❌ Error for '{faq.question[:50]}': {e}")
-    messages.success(request, f"✅ Generated embeddings for {count} FAQs.")
+            errors += 1
+            logger.exception("Embedding failed for FAQ id=%s question=%r", faq.id, faq.question[:80])
+            messages.warning(request, f"❌ Error for '{faq.question[:60]}': {e}")
+            # optional tiny backoff for transient rate limits
+            time.sleep(0.25)
+
+    if count:
+        messages.success(request, f"✅ Generated embeddings for {count} FAQ(s) using {EMBED_MODEL}.")
+    if errors and not count:
+        messages.error(request, f"⚠️ No embeddings created. Last error: {e}")
+    elif errors:
+        messages.warning(request, f"⚠️ {errors} item(s) failed; see logs for details.")
+
 
 @admin.register(FAQEntry)
 class FAQEntryAdmin(admin.ModelAdmin):
-    list_display = ('question', 'short_answer', 'lessons_only', 'updated')
-    list_filter = ('lessons_only',)
-    search_fields = ('question', 'answer')
+    list_display = ("question", "short_answer", "lessons_only", "updated")
+    list_filter = ("lessons_only",)
+    search_fields = ("question", "answer")
     actions = [generate_embeddings]
 
     def short_answer(self, obj):
-        return (obj.answer[:80] + '...') if len(obj.answer) > 80 else obj.answer
-    short_answer.short_description = 'Answer'
+        return (obj.answer[:80] + "...") if obj.answer and len(obj.answer) > 80 else obj.answer
+    short_answer.short_description = "Answer"
 
 
 # ✅ Register all skills-related models

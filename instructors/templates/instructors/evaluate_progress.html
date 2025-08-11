@@ -1,0 +1,150 @@
+{% extends "base/_base.html" %}
+{% load progress_tags %}
+
+{% block content %}
+    <div class="p-6">
+
+        <!-- Sticky header with Save / Preview -->
+        <div class="sticky top-0 z-10 -mx-6 mb-4 bg-white/80 backdrop-blur border-b p-3 flex items-center justify-between">
+            <div class="text-sm">
+                📝 Progress: <span class="font-semibold">{{ swimling.first_name }} {{ swimling.last_name }}</span>
+            </div>
+            <div class="space-x-2">
+                <a href="{% url 'instructors:generate_skill_report' swimling.id %}" target="_blank"
+                   class="px-3 py-2 rounded bg-emerald-600 text-white hover:bg-emerald-700 text-sm">
+                    📄 Preview PDF
+                </a>
+                <button form="progress-form" type="submit"
+                        class="px-3 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 text-sm">
+                    💾 Save all
+                </button>
+            </div>
+        </div>
+
+        <form id="progress-form" method="post" action="{% url 'instructors:evaluate_progress' swimling.id %}"
+              class="space-y-6">
+            {% csrf_token %}
+
+            <!-- Notes (current term only) -->
+            <div class="bg-gray-50 border rounded p-3">
+                <label class="block text-sm font-medium mb-1">Instructor notes (this term)</label>
+                {{ note_form.note }}
+            </div>
+
+            <!-- Ratings table -->
+            <div class="overflow-x-auto">
+                <table class="min-w-full text-sm border text-white">
+                    <thead class="bg-gray-700 text-white">
+                    <tr>
+                        <th class="border px-2 py-1 text-left table-strong">Skill</th>
+                        {% for term in terms %}
+                            <th class="border px-2 py-1 text-center">
+                                <span class="table-strong font-semibold">Term ({{ term.id }})</span><br>
+                                {% with label=header_map|get_item:term.id %}
+                                    {% if label %}
+                                        <span class="text-xs table-strong italic">{{ label }}</span>
+                                    {% else %}
+                                        <span class="text-xs table-muted italic">–</span>
+                                    {% endif %}
+                                {% endwith %}
+                            </th>
+                        {% endfor %}
+                    </tr>
+                    </thead>
+
+
+                    <tbody class="text-slate-100">
+                    {% regroup formset.forms by form.instance.skill.cas as cas_groups %}
+                    {% for group in cas_groups %}
+                        <tr>
+                            <td colspan="{{ terms|length|add:1 }}" class="bg-gray-800 table-strong font-bold px-2 py-1">
+                                {{ group.grouper.name }}
+                            </td>
+                        </tr>
+
+                        {% for form in group.list %}
+                            {% with s=form.instance.skill %}
+                                <tr>
+                                    <td class="border px-2 py-1 table-skill">{{ s.name }}</td>
+
+                                    {% for term in terms %}
+                                        {% if term.id == current_term.id %}
+                                            <td class="border px-2 py-1 text-center bg-slate-900">
+                                                {{ form.rating }} {# has class="rating-select" from the form widget #}
+                                            </td>
+                                        {% else %}
+                                            {% with r=history_map|get_item:s.id|get_item:term.id %}
+                                                <td class="border px-2 py-1 text-center table-skill">
+                                                    {% if r %}
+                                                        <span class="inline-block text-xs px-2 py-0.5 border rounded">{{ r }}</span>
+                                                    {% else %}
+                                                        <span class="table-muted">—</span>
+                                                    {% endif %}
+                                                </td>
+                                            {% endwith %}
+                                        {% endif %}
+                                    {% endfor %}
+                                </tr>
+                            {% endwith %}
+                        {% endfor %}
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            {{ formset.management_form }}
+            {# Include hidden ids for each form in the formset #}
+            {% for f in formset.forms %}
+                {{ f.id }}
+            {% endfor %}
+
+            <!-- Bottom Save (optional duplicate) -->
+            <div class="pt-3">
+                <button type="submit" class="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700">
+                    💾 Save all
+                </button>
+            </div>
+        </form>
+    </div>
+    <style>
+        /* Make dropdowns match the dark table */
+        .rating-select {
+            background-color: #1f2937; /* slate-800 */
+            color: #ffffff;
+            border: 1px solid #64748b; /* slate-500 */
+            border-radius: 0.375rem; /* rounded-md */
+            padding: 0.25rem 0.5rem; /* px-2 py-1 */
+            font-size: 0.875rem; /* text-sm */
+        }
+
+        .rating-select:focus {
+            outline: none;
+            border-color: #60a5fa; /* blue-400 */
+            box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.6); /* focus ring */
+        }
+
+        /* Ensure the dropdown options aren’t bright white */
+        .rating-select option {
+            background-color: #1f2937; /* slate-800 */
+            color: #ffffff;
+        }
+
+        /* Lighten table text for readability on dark bg */
+        .table-skill {
+            color: #e5e7eb;
+        }
+
+        /* text-gray-200 */
+        .table-muted {
+            color: #cbd5e1;
+        }
+
+        /* text-slate-300 */
+        .table-strong {
+            color: #ffffff;
+        }
+
+        /* white */
+    </style>
+
+{% endblock %}

@@ -1,8 +1,11 @@
 from django.urls import path
 from . import views
+
 app_name = "instructors"
 urlpatterns = [
     path("dashboard/", views.instructor_dashboard, name="instructor_dashboard"),
-    path("evaluate/<int:lesson_id>/<int:term_id>/skills/", views.evaluate_lesson_skills, name="evaluate_lesson_skills"),
+    path("progress/<int:swimling_id>/", views.evaluate_progress, name="evaluate_progress"),
     path('category-skill-matrix/', views.category_skill_matrix, name='category_skill_matrix'),
+    path('report/<int:swimling_id>/', views.generate_skill_report, name='generate_skill_report'),
+    path("lesson/<int:lesson_id>/swimlings/", views.lesson_swimlings, name="lesson_swimlings"),
 ]

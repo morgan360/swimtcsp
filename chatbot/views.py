@@ -19,13 +19,18 @@ from chatbot.utils import get_skill_structure_summary
 from .helpers.gpt import build_swim_prompt, build_lesson_prompt, parse_markdown_reply
 
 logger = logging.getLogger(__name__)
-client = OpenAI()  # Reads from OPENAI_API_KEY in environment or settings
 
+# Initialise OpenAI client – will pick up key from env
+client = OpenAI()
+
+# Read model names from env or Django settings, with sensible defaults
+CHAT_MODEL = os.getenv("OPENAI_CHAT_MODEL", getattr(settings, "OPENAI_CHAT_MODEL", "gpt-4o-mini"))
+EMBED_MODEL = os.getenv("OPENAI_EMBED_MODEL", getattr(settings, "OPENAI_EMBED_MODEL", "text-embedding-3-small"))
 
 def get_query_embedding(text):
     response = client.embeddings.create(
         input=text,
-        model="text-embedding-ada-002"
+        model=EMBED_MODEL
     )
     return response.data[0].embedding
 
@@ -71,7 +76,7 @@ def public_lesson_chat_api(request):
 
         prompt = build_lesson_prompt(user_message, term_info, lesson_list, skill_summary)
         response = client.chat.completions.create(
-            model="gpt-4",
+            model=CHAT_MODEL,
             messages=[
                 {"role": "system",
                  "content": "You are an expert assistant helping parents understand swimming lessons, progression, and skills."},
@@ -138,18 +143,12 @@ def public_swim_chat(request):
             html_reply = markdown.markdown(faq_answer, extensions=["extra"])
             return JsonResponse({"reply": html_reply})
 
-        # Get available swims and build swim list
-
         swims = get_available_swims()
-
         swim_list = format_swim_list(swims)
-
         today = timezone.now().date()
-
         current_term = Term.get_current_term()
         next_term = Term.get_next_term()
 
-        # Format term info
         def format_term_info(term, label):
             if not term:
                 return f"{label}: No data available."
@@ -166,21 +165,14 @@ def public_swim_chat(request):
         if next_term:
             lesson_term_info += format_term_info(next_term, "Next lesson term")
 
-        # Build swim prompt
         swim_prompt = build_swim_prompt(user_message, swim_list, today.strftime('%A %d %B'))
-
-        # Final prompt with term info
         full_prompt = (
             f"You may find this lesson term info useful:\n\n{lesson_term_info}\n\n"
             f"{swim_prompt}"
         )
 
-
-
-
-        # GPT call
         response = client.chat.completions.create(
-            model="gpt-4",
+            model=CHAT_MODEL,
             messages=[
                 {
                     "role": "system",
@@ -194,10 +186,6 @@ Use this info to answer when customers can book, rebook, or plan lessons.
             ]
         )
 
-        # DEBUG: log raw GPT response
-        logger.info("🧠 Raw GPT response: %s", response)
-        print("🧠 GPT response raw:", response)
-
         try:
             raw_reply = response.choices[0].message.content
             logger.info("🧠 GPT says:\n%s", raw_reply)
@@ -206,7 +194,6 @@ Use this info to answer when customers can book, rebook, or plan lessons.
             logger.error("⚠️ Failed to parse GPT reply: %s", e)
             html_reply = "⚠️ Sorry, I didn’t understand that. Please try again."
 
-        # Save query
         ChatbotQuery.objects.create(
             user=request.user if request.user.is_authenticated else None,
             session_key=request.session.session_key,
@@ -221,6 +208,7 @@ Use this info to answer when customers can book, rebook, or plan lessons.
     except Exception as e:
         logger.error("❌ Swim chatbot error: %s", str(e), exc_info=True)
         return JsonResponse({"error": "Something went wrong while processing your message."}, status=500)
+
 
 
 # ✅ UI ROUTES

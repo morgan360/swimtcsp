@@ -1,5 +1,13 @@
 from django.db import models
 from django.conf import settings
+from users.models import Swimling
+from lessons_bookings.models import Term
+from lessons.models import Product as Lesson
+from django.contrib.auth import get_user_model
+from django.db.models import Index
+from django.core.validators import MinValueValidator, MaxValueValidator
+User = get_user_model()
+
 
 class CoreAquaticSkill(models.Model):
     abbreviation = models.CharField(max_length=10, null=True, blank=True, unique=False) # e.g. "B1", "L2"
@@ -30,16 +38,30 @@ class CategorySkill(models.Model):
         ordering = ["order"]
 
 class SkillAssessment(models.Model):
-    swimling = models.ForeignKey('users.Swimling', on_delete=models.CASCADE)
+    swimling = models.ForeignKey(Swimling, on_delete=models.CASCADE)
     skill = models.ForeignKey(Skill, on_delete=models.CASCADE)
-    term = models.ForeignKey('lessons_bookings.Term', on_delete=models.CASCADE)
-    instructor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
-    level = models.PositiveIntegerField(choices=[(i, f"Level {i}") for i in range(1, 6)])
-    notes = models.TextField(blank=True)
+    term = models.ForeignKey(Term, on_delete=models.CASCADE)
+    rating = models.PositiveSmallIntegerField(
+        null=True, blank=True,
+        validators=[MinValueValidator(1), MaxValueValidator(5)]
+    )
+    lesson = models.ForeignKey(Lesson, on_delete=models.SET_NULL, null=True)
+    instructor = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    updated = models.DateTimeField(auto_now=True)
 
     class Meta:
         unique_together = ('swimling', 'skill', 'term')
+        indexes = [
+            models.Index(fields=['swimling', 'term']),
+            models.Index(fields=['term', 'skill']),
+        ]
 
+    def __str__(self):
+        return f"{self.swimling} – {self.skill} – {self.term}: {self.rating or '—'}"
+
+    def clean(self):
+        if self.lesson and self.lesson.term != self.term:
+            raise ValidationError("Lesson term does not match assessment term.")
 
 class InstructorNote(models.Model):
     swimling = models.ForeignKey('users.Swimling', on_delete=models.CASCADE)

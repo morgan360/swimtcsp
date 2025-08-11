@@ -6,7 +6,19 @@ from lessons.models import Product, Category
 from lessons_bookings.models import Term, LessonEnrollment
 from progress.models import SkillAssessment, InstructorNote, CategorySkill, Skill, CoreAquaticSkill
 from users.models import Swimling
+import weasyprint
+from django.template.loader import render_to_string
+from django.http import HttpResponse
+from collections import defaultdict
+from lessons_bookings.models import Term
+from lessons_bookings.models import LessonEnrollment
+from django.views.decorators.http import require_POST
+from .forms import AssessmentFormSet, InstructorNoteForm
+from django.db import transaction
+from django.contrib import messages
 
+
+#### START ####
 @login_required
 def instructor_dashboard(request):
     term_data = get_term_context_data()
@@ -25,80 +37,153 @@ def instructor_dashboard(request):
         "terms": terms,
     })
 
-
+@transaction.atomic
 @login_required
-def evaluate_lesson_skills(request, lesson_id, term_id):
-    lesson = get_object_or_404(Product, id=lesson_id)
-    term = get_object_or_404(Term, id=term_id)
+def evaluate_progress(request, swimling_id):
+    # Terms this swimling was actually enrolled in
+    enrollments = (
+        LessonEnrollment.objects
+        .filter(swimling_id=swimling_id)
+        .select_related("term", "lesson", "lesson__category", "swimling")
+        .order_by("term__id")
+    )
+    if not enrollments.exists():
+        return render(request, "instructors/evaluate_progress_empty.html", {"swimling_id": swimling_id})
 
-    if not request.user.groups.filter(name='instructor').exists():
-        return redirect('not_authorized')
+    # Build terms in order + map header label from the lesson's category short_name
+    terms, header_map, seen = [], {}, set()
+    for e in enrollments:
+        if e.term_id not in seen:
+            terms.append(e.term)
+            seen.add(e.term_id)
+        cat_short = getattr(getattr(e.lesson, "category", None), "short_name", None)
+        header_map[e.term_id] = cat_short  # e.g. "Beg-1", etc. (may be None)
 
-    swimlings = Swimling.objects.filter(
-        enrollments__lesson=lesson,
-        enrollments__term=term
-    ).distinct()
+    swimling = enrollments.first().swimling
+    current_term = terms[-1]
 
-    # Get skills for the lesson's category
-    if not lesson.category:
-        return render(request, "instructors/error.html", {
-            "message": "This lesson has no associated category, so no skills can be evaluated."
-        })
+    # Ensure there is one SkillAssessment per skill for the current term
+    skills = Skill.objects.select_related("cas").order_by("cas__name", "name")
+    existing = SkillAssessment.objects.filter(swimling=swimling, term=current_term)
+    existing_by_skill = {a.skill_id: a for a in existing}
+    to_create = [
+        SkillAssessment(swimling=swimling, term=current_term, skill=s)
+        for s in skills if s.id not in existing_by_skill
+    ]
+    if to_create:
+        SkillAssessment.objects.bulk_create(to_create)
 
-    category_skills = CategorySkill.objects.filter(category=lesson.category).select_related('skill')
+    qs = (
+        SkillAssessment.objects
+        .filter(swimling=swimling, term=current_term)
+        .select_related("skill", "skill__cas")
+        .order_by("skill__cas__name", "skill__name")
+    )
 
-    if request.method == 'POST':
-        for swimling in swimlings:
-            for category_skill in category_skills:
-                level_key = f"level_{swimling.id}_{category_skill.skill.id}"
-                notes_key = f"notes_{swimling.id}_{category_skill.skill.id}"
+    # Past-term history (read-only)
+    past_terms = [t for t in terms if t.id != current_term.id]
+    history_map = {}
+    if past_terms:
+        rows = (
+            SkillAssessment.objects
+            .filter(swimling=swimling, term__in=past_terms)
+            .values("skill_id", "term_id", "rating")
+        )
+        for r in rows:
+            history_map.setdefault(r["skill_id"], {})[r["term_id"]] = r["rating"]
 
-                level_val = request.POST.get(level_key)
-                notes_val = request.POST.get(notes_key, '')
+    if request.method == "POST":
+        formset = AssessmentFormSet(request.POST, queryset=qs, prefix="assess")
+        note_form = InstructorNoteForm(request.POST)
+        if formset.is_valid() and note_form.is_valid():
+            with transaction.atomic():
+                formset.save()
+                InstructorNote.objects.update_or_create(
+                    swimling=swimling,
+                    term=current_term,
+                    defaults={"note": note_form.cleaned_data.get("note", "")},
+                )
+            messages.success(request, "Progress saved.")
+            return redirect("instructors:evaluate_progress", swimling_id=swimling.id)
+    else:
+        formset = AssessmentFormSet(queryset=qs, prefix="assess")
+        existing_note = (
+            InstructorNote.objects
+            .filter(swimling=swimling, term=current_term)
+            .values_list("note", flat=True)
+            .first() or ""
+        )
+        note_form = InstructorNoteForm(initial={"note": existing_note})
 
-                if level_val:
-                    SkillAssessment.objects.update_or_create(
-                        swimling=swimling,
-                        skill=category_skill.skill,
-                        term=term,
-                        defaults={
-                            'instructor': request.user,
-                            'level': int(level_val),
-                            'notes': notes_val
-                        }
-                    )
+    return render(request, "instructors/evaluate_progress.html", {
+        "swimling": swimling,
+        "terms": terms,
+        "header_map": header_map,      # <- use in template for the sublabel
+        "current_term": current_term,
+        "past_terms": past_terms,
+        "formset": formset,
+        "note_form": note_form,
+        "history_map": history_map,    # {skill_id: {term_id: rating}}
+    })
+#### UNSURE ####
+def evaluate_swimling_progress(request, swimling_id):
+    swimling = get_object_or_404(Swimling, id=swimling_id)
 
-            general_note = request.POST.get(f"note_{swimling.id}", "")
-            if general_note:
+    # Terms the swimling is enrolled in
+    enrollments = (
+        LessonEnrollment.objects
+        .filter(swimling=swimling)
+        .select_related("term", "lesson__category")
+    )
+    terms = sorted({e.term for e in enrollments}, key=lambda t: t.start_date)
+
+    # Map each term -> lesson short name (if available)
+    lesson_map = {}
+    for e in enrollments:
+        if e.lesson and getattr(e.lesson, "category", None):
+            lesson_map[e.term.id] = e.lesson.category.short_name
+
+    # Skills/CAS lists
+    cas_list = CoreAquaticSkill.objects.prefetch_related("skills").all()
+    # assessments nested dict: assessments[skill_id][term_id] = SkillAssessment
+    assessments = defaultdict(dict)
+    for a in SkillAssessment.objects.filter(swimling=swimling):
+        assessments[a.skill_id][a.term_id] = a
+
+    # notes map: notes[term_id] = InstructorNote
+    notes = {n.term_id: n for n in InstructorNote.objects.filter(swimling=swimling)}
+
+    # Only the notes form posts here; ratings are saved via HTMX in update_skill_rating
+    if request.method == "POST":
+        for term in terms:
+            key = f"note_{term.id}"
+            note_val = request.POST.get(key)
+            if note_val is None:
+                continue  # field not present
+            note_text = note_val.strip()
+            if note_text == "":
+                # Optional: blank deletes note
+                InstructorNote.objects.filter(swimling=swimling, term=term).delete()
+            else:
                 InstructorNote.objects.update_or_create(
                     swimling=swimling,
                     term=term,
-                    defaults={
-                        'instructor': request.user,
-                        'note': general_note
-                    }
+                    defaults={"instructor": request.user, "note": note_text},
                 )
+        return redirect("instructors:evaluate_swimling_progress", swimling_id=swimling.id)
 
-        return redirect("instructors:instructor_dashboard")
-
-    assessments = SkillAssessment.objects.filter(term=term, swimling__in=swimlings).select_related('skill', 'swimling')
-    notes = InstructorNote.objects.filter(term=term, swimling__in=swimlings)
-
-    assessments_by_key = {
-        (a.swimling_id, a.skill_id): a for a in assessments
-    }
-    notes_by_id = {n.swimling_id: n for n in notes}
-
-    return render(request, "instructors/evaluate_lesson_skills.html", {
-        "lesson": lesson,
-        "term": term,
-        "swimlings": swimlings,
-        "skills": [cs.skill for cs in category_skills],
-        "assessments": assessments_by_key,
-        "notes": notes_by_id
-    })
-
-### Skill Charts ###
+    return render(
+        request,
+        "instructors/evaluate_swimling_progress.html",
+        {
+            "swimling": swimling,
+            "terms": terms,
+            "cas_list": cas_list,
+            "assessments": assessments,
+            "notes": notes,
+            "lesson_map": lesson_map,
+        },
+    )### Skill Charts ###
 
 def category_skill_matrix(request):
     # Categories and their skills
@@ -113,3 +198,75 @@ def category_skill_matrix(request):
         'categories': categories,
         'cas_list': cas_list,
     })
+
+def generate_skill_report(request, swimling_id):
+    swimling = get_object_or_404(Swimling, id=swimling_id)
+
+    # Only terms that have assessments for this swimling, ordered by start
+    terms = (
+        Term.objects
+        .filter(skillassessment__swimling=swimling)
+        .distinct()
+        .order_by("start_date")
+    )
+
+    assessments = (
+        SkillAssessment.objects
+        .filter(swimling=swimling)
+        .select_related("skill__cas", "term")
+    )
+    notes = (
+        InstructorNote.objects
+        .filter(swimling=swimling)
+        .select_related("term")
+        .order_by("term__start_date")
+    )
+
+    # Build CAS -> Skill -> {term_id: rating}
+    nested = defaultdict(lambda: defaultdict(dict))
+    for a in assessments:
+        nested[a.skill.cas.name][a.skill.name][a.term_id] = a.rating  # rating may be None
+
+    # Make it template‑friendly and sorted
+    report_rows = []
+    for cas_name, skills_map in sorted(nested.items()):
+        skill_rows = []
+        for skill_name, ratings_map in sorted(skills_map.items()):
+            # normalize per-term dict so template access is simple
+            ratings_by_term = {t.id: ratings_map.get(t.id) for t in terms}
+            skill_rows.append((skill_name, ratings_by_term))
+        report_rows.append((cas_name, skill_rows))
+
+    html_string = render_to_string(
+        "instructors/skill_report_template.html",
+        {
+            "swimling": swimling,
+            "terms": terms,
+            "notes": notes,
+            "report_rows": report_rows,   # <— use this in template
+        },
+    )
+    pdf_file = weasyprint.HTML(string=html_string).write_pdf()
+    return HttpResponse(pdf_file, content_type="application/pdf")
+@login_required
+def lesson_swimlings(request, lesson_id):
+    assignment = get_object_or_404(
+        InstructorAssignment.objects.select_related("lesson", "term"),
+        instructor=request.user,
+        lesson_id=lesson_id,
+    )
+    lesson = assignment.lesson
+
+    # ⬇️ Only enrollments for THIS term
+    enrollments = (
+        LessonEnrollment.objects
+        .filter(lesson=lesson, term=assignment.term)
+        .select_related("swimling")
+        .order_by("swimling__last_name", "swimling__first_name", "id")
+    )
+
+    return render(request, "instructors/lesson_swimlings.html", {
+        "lesson": lesson,
+        "enrollments": enrollments,
+    })
+

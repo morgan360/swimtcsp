@@ -2,7 +2,6 @@
 BASE SETTINGS
 """
 import os
-
 from pathlib import Path
 from decouple import config
 
@@ -20,19 +19,48 @@ STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static_files/')
 
 # Specify additional directories to search for static files
-import os
-
 STATICFILES_DIRS = [
     BASE_DIR / "static",           # your global assets
 ]
-
 
 MEDIA_URL = '/media/'
 
 # Specify the directory where uploaded media files are stored
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
+DEBUG = True
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
 
+    'formatters': {
+        'verbose': {
+            'format': '{asctime} [{levelname}] {name}: {message}',
+            'style': '{',
+        },
+    },
+
+    'handlers': {
+        'chatbot_file': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(BASE_DIR, 'logs', 'application.log'),
+            'formatter': 'verbose',
+        },
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+    },
+
+    'loggers': {
+        'chatbot': {  # anything under chatbot.* will use this
+            'handlers': ['chatbot_file', 'console'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+    },
+}
 
 # Application definition
 
@@ -298,8 +326,7 @@ HIJACK_ALLOW_GET_REQUESTS = True
 HIJACK_URL_ALLOWED_ATTRIBUTES = ['username', ]
 HIJACK_PERMISSION_CHECK = "hijack.permissions.superusers_and_staff"
 
-# AI Key
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+
 # Default Email
 DEFAULT_SUPPORT_EMAIL = "swim@tcsp.ie"
 # Mailchimp

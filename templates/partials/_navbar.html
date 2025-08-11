@@ -3,7 +3,7 @@
 {% load navigation_tags %}
 {% drawer_menu as drawer_menus %}
 
-<nav class="bg-blue-100 shadow-lg px-4 py-3 z-50" x-data="{ mobileOpen: false }">
+<nav class="bg-blue-100 shadow-lg px-4 py-3 z-50" x-data="{ mobileOpen: false, showLogoutModal: false }">
 
 	<!-- Centered Logo (Desktop Only) -->
 	<div class="hidden lg:flex flex-col items-center justify-center mb-4">
@@ -53,7 +53,7 @@
 						<li>
 							<a href="{{ item.resolve_url }}"
 								class="block px-3 py-1 hover:bg-blue-100 flex items-center gap-2">
-								{% if item.icon_class %}<i class="{{ item.icon_class }} mr-1"></i>{% endif %}
+								{% if item.icon_class %}<i class="{{ item.icon_class }} mr-2"></i>{% endif %}
 								{{ item.label }}
 							</a>
 						</li>
@@ -88,57 +88,90 @@
 
 				<!-- User Dropdown box -->
 				<ul x-show="open" x-transition
-					class="absolute right-0 top-full mt-2 p-2 bg-white shadow-lg rounded-md w-64 text-left text-blue-900 z-50">
+					class="absolute right-0 top-full mt-2 p-2 bg-white shadow-lg rounded-md w-80 text-blue-900 z-50">
 
-					<span class="hidden sm:inline text-smd font-medium text-blue-900 block px-6 py-6 text-center w-full">
+					<div class="hidden sm:inline font-medium text-blue-900 px-8 py-8 text-center w-full">
 						<strong>Hello, {{ user.get_full_name|default:user.username }}!</strong>
-					</span>
+					</div>
 
 					<hr class="border-t border-gray-200 mx-4 my-2">
 
-					<li><a href="{% url 'info' %}" class="block px-4 py-2 hover:bg-blue-100">
-						<i class="fas fa-info-circle mr-1"></i>About</a></li>
+					<li>
+						<a href="{% url 'info' %}" class="block px-4 py-2 hover:bg-blue-100">
+							<i class="fas fa-info-circle mr-1"></i>
+							About
+						</a>
+					</li>
 
-					<li><a href="{% url 'users:profile' %}" class="block px-4 py-2 hover:bg-blue-100"><i
-								class="fas fa-user-circle mr-1"></i> Profile</a></li>
+					<li>
+						<a href="{% url 'users:profile' %}" class="block px-4 py-2 hover:bg-blue-100">
+							<i class="fas fa-user-circle mr-1"></i>
+							My Profile
+						</a>
+					</li>
 
 					{% if user|is_guardian_user %}
-					<li><a href="{% url 'swimling_dashboard:guardian_dashboard' %}"
+					<li>
+						<a href="{% url 'swimling_dashboard:guardian_dashboard' %}"
 							class="block px-4 py-2 hover:bg-blue-100">
-							<i class="fas fa-swimmer"></i> Swimling Dashboard</a></li>
-					<li><a href="#" class="block px-4 py-2 hover:bg-blue-100"><i class="fas fa-history"></i> My
-							Bookings</a></li>
+							<i class="fas fa-swimmer mr-1"></i>
+							Swimling Dashboard
+						</a>
+					</li>
+					<li>
+						<a href="#" class="block px-4 py-2 hover:bg-blue-100">
+							<i class="fas fa-history mr-1"></i> My Bookings
+						</a>
+					</li>
 					{% endif %}
 
 					{% if user|is_customer_user %}
-					<li><a href="/swims/my_bookings/" class="block px-4 py-2 hover:bg-blue-100"><i
-								class="fas fa-swimming-pool"></i> My Swim Bookings</a></li>
+					<li>
+						<a href="/swims/my_bookings/" class="block px-4 py-2 hover:bg-blue-100">
+							<i class="fas fa-swimming-pool mr-1"></i>
+							My Swim Bookings
+						</a>
+					</li>
 					{% endif %}
 
 					{% if user|is_school_user %}
-					<li><a href="/schools/school_dashboard/" class="block px-4 py-2 hover:bg-blue-100"><i
-								class="fas fa-school"></i> School Dashboard</a></li>
+					<li>
+						<a href="/schools/school_dashboard/" class="block px-4 py-2 hover:bg-blue-100">
+							<i class="fas fa-school mr-1"></i>
+							School Dashboard
+						</a>
+					</li>
 					{% endif %}
 
-					<li><a href="/account/password/change/" class="block px-4 py-2 hover:bg-blue-100"><i
-								class="fas fa-key"></i> Change Password</a></li>
-					<li><a href="{% url 'account_logout' %}" class="block px-4 py-2 text-red-600 hover:bg-red-100"><i class="fas fa-sign-out-alt"></i>Logout</a></li>
+					<li>
+						<a href="/account/password/change/" class="block px-4 py-2 hover:bg-blue-100">
+							<i class="fas fa-key mr-1"></i>
+							Change Password
+						</a>
+					<li>
+					<li>
+						<button @click="showLogoutModal = true"
+							class="block w-full text-left px-4 py-2 text-red-600 hover:bg-red-100">
+							<i class="fas fa-sign-out-alt mr-1"></i> Logout
+						</button>
+					</li>
+
 				</ul>
 			</div>
 			{% else %}
-			<a href="{% url 'info' %}"
-				class="px-4 py-2 text-sm font-bold text-blue-900 focus:outline-none bg-blue-300 rounded-lg hover:bg-white hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-100">
-				<i class="fas fa-info-circle"></i>
-				<span class="hidden sm:inline">About</span>
-			</a>
 			<div class="flex gap-3">
+				<a href="{% url 'info' %}"
+					class="px-4 py-2 text-sm font-semibold text-white focus:outline-none bg-red-700 rounded-lg hover:bg-red-600 focus:z-10 focus:ring-4 focus:ring-gray-100">
+					<i class="fas fa-info-circle mr-1"></i>
+					<span class="hidden sm:inline">About</span>
+				</a>
 				<a href="{% url 'account_signup' %}"
-					class="bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-semibold hover:bg-blue-800 transition">
-					<i class="fas fa-user-plus"></i> Sign up
+					class="bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-800 transition">
+					<i class="fas fa-user-plus mr-1"></i> Sign up
 				</a>
 				<a href="{% url 'account_login' %}"
-					class="bg-red-600 text-white px-4 py-2 rounded-md text-sm font-semibold hover:bg-red-700 transition">
-					<i class="fas fa-sign-in-alt"></i> Login
+					class="px-4 py-2 text-sm font-semibold text-blue-900 focus:outline-none bg-blue-300 rounded-lg hover:bg-blue-200 focus:z-10 focus:ring-4 focus:ring-gray-100">
+					<i class="fas fa-sign-in-alt mr-1"></i> Login
 				</a>
 			</div>
 			{% endif %}
@@ -163,4 +196,26 @@
 			{% endfor %}
 		</ul>
 	</div>
+
+	<!-- Logout Confirmation Modal -->
+	<div x-show="showLogoutModal" x-transition
+		class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+		<div @click.away="showLogoutModal = false" class="bg-white rounded-lg shadow-lg p-6 w-full max-w-sm">
+			<h2 class="text-lg font-semibold text-gray-800 mb-4">Confirm Logout</h2>
+			<p class="text-gray-600 mb-6">Are you sure you want to log out?</p>
+			<div class="flex justify-end gap-4">
+				<button @click="showLogoutModal = false"
+					class="px-4 py-2 rounded-md bg-blue-200 text-gray-800 hover:bg-blue-300">
+					Cancel
+				</button>
+				<form method="POST" action="{% url 'account_logout' %}">
+					{% csrf_token %}
+					<button type="submit" class="px-4 py-2 rounded-md bg-red-600 text-white hover:bg-red-700">
+						Logout
+					</button>
+				</form>
+			</div>
+		</div>
+	</div>
+
 </nav>

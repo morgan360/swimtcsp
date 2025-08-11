@@ -3,7 +3,7 @@
 {% drawer_menu as drawer_menus %}
 
 
-<div x-data="{ drawerOpen: false }">
+<div x-data="{ drawerOpen: false, showLogoutModal: false  }">
   <!-- Top Bar -->
   <div class="navbar bg-blue-100 shadow-sm px-4 py-2 flex justify-between items-center">
     <div class="flex items-center space-x-3">
@@ -20,38 +20,30 @@
 
     <div class="flex items-center space-x-2">
 
-      <a href="{% url 'info' %}"
-        class="py-2.5 px-5 mb-2 text-sm font-bold text-blue-900 focus:outline-none 
-        bg-blue-300 rounded-lg hover:bg-white hover:text-blue-700 
-        focus:z-10 focus:ring-4 focus:ring-gray-100">
+      <a href="{% url 'info' %}" class="py-2.5 px-5 text-sm mb-2 font-bold text-white focus:outline-none bg-blue-500 bg-red-700 rounded-lg hover:bg-red-600 focus:z-10 focus:ring-4 focus:ring-gray-100">
         <i class="fas fa-info-circle"></i>
         <span class="hidden sm:inline">About</span>
       </a>
 
       {% if user.is_authenticated %}
-      <div class="py-2.5 px-5 mb-2 text-sm font-bold text-blue-900 bg-white rounded-lg hover:bg-blue-300 hover:text-blue-700 focus:outline-none focus:ring-4 focus:ring-gray-100">
-        <i class="fas fa-user-circle text-blue-800"></i>
-        <span class="hidden sm:inline text-sm font-semibold text-blue-900 mb-1 px-2">
-          Hello, {{ user.get_full_name|default:user.username }}!
-        </span>
-      </div>
-      <a href="{% url 'account_logout' %}"
-        class="bg-red-100 text-red-600 hover:bg-red-700 hover:text-red-100 font-bold text-sm rounded-lg px-5 py-2.5 me-2 mb-2 dark:bg-red-600 dark:hover:bg-red-700 
-        focus:outline-none dark:focus:ring-red-800">
-        <i class="fas fa-sign-out-alt"></i>&nbsp;Logout
+      <a href="{% url 'users:profile' %}" 
+        class="w-fit flex items-center gap-2 py-2.5 px-5 mb-2 text-sm font-bold text-blue-900 bg-white rounded-lg hover:bg-blue-300 hover:text-blue-700 focus:outline-none focus:ring-4 focus:ring-gray-100">
+        <i class="fas fa-user-circle text-blue-800 inline-block"></i>
+        <span class="hidden sm:inline">{{ user.get_full_name|default:user.username }}'s profile</span>
       </a>
+      <button @click="showLogoutModal = true" class="bg-red-100 text-red-600 hover:bg-red-700 hover:text-red-100 font-bold text-sm rounded-lg px-5 py-2.5 me-2 mb-2 dark:bg-red-600 dark:hover:bg-red-700 focus:outline-none dark:focus:ring-red-800 text-left">
+        <i class="fas fa-sign-out-alt mr-1"></i>
+        <span class="hidden sm:inline">&nbsp;Logout</span>
+      </button>
       {% else %}
-      <a href="{% url 'account_signup' %}"
-        class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 
+      <a href="{% url 'account_signup' %}" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 
         font-bold rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 
         focus:outline-none dark:focus:ring-blue-800">
         <i class="fas fa-user-plus"></i>
         <span class="hidden sm:inline">&nbsp;Sign up</span>
       </a>
       <a href="{% url 'account_login' %}"
-        class="text-white bg-red-600 hover:bg-red-700 focus:ring-4 focus:ring-red-300 font-bold 
-        rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-red-600 dark:hover:bg-red-700 focus:outline-none 
-        dark:focus:ring-red-800">
+        class="px-4 text-sm font-bold text-blue-900 focus:outline-none bg-blue-300 font-bold rounded-lg text-sm px-5 py-2.5 me-2 mb-2 hover:bg-blue-200 focus:z-10 focus:ring-4 focus:ring-gray-100">
         <i class="fas fa-sign-in-alt"></i>
         <span class="hidden sm:inline">&nbsp;Login</span>
       </a>
@@ -86,20 +78,19 @@
     <nav class="p-4">
       {% for group, items in drawer_menus.items %}
       <div class="mb-3" x-data="{ open: '{{ group|lower }}' === 'main' }">
-        <button
-          class="w-auto flex items-center justify-between text-left text-blue-800 font-semibold"
+        <button class="w-auto flex items-center justify-between text-left text-blue-900 font-bold"
           @click="open = !open">
           <span>{{ group }}</span>
           <i :class="open ? 'fas fa-caret-down ml-2' : 'fas fa-caret-right ml-2'"></i>
         </button>
-        <ul x-show="open" class="pl-4 mt-2 space-y-2">
+        <ul x-show="open" class="pl-4 mt-2 space-y-2 text-blue-800">
           {% for item in items %}
           {% if item.label != "About" and item.label != "Contact" %}
           <li>
             <a href="{{ item.resolve_url }}" @click="drawerOpen = false"
-              class="flex items-center text-md text-base-content text-black hover:font-bold rounded-lg px-3 py-1 transition-colors">
+              class="flex items-center text-md text-base-content hover:font-bold rounded-lg px-3 py-1 transition-colors">
               {% if item.icon_class %}
-              <!-- <i class="{{ item.icon_class }} mr-2"></i> -->
+              <i class="{{ item.icon_class }} mr-1"></i>
               {% endif %}
               {{ item.label }}
             </a>
@@ -110,5 +101,26 @@
       </div>
       {% endfor %}
     </nav>
+  </div>
+
+  <!-- Logout Confirmation Modal -->
+  <div x-show="showLogoutModal" x-cloak x-transition
+    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div @click.away="showLogoutModal = false" class="bg-white rounded-lg shadow-lg p-6 w-full max-w-sm">
+      <h2 class="text-lg font-semibold text-gray-800 mb-4">Confirm Logout</h2>
+      <p class="text-gray-600 mb-6">Are you sure you want to log out?</p>
+      <div class="flex justify-end gap-4">
+        <button @click="showLogoutModal = false"
+          class="px-4 py-2 rounded-md bg-blue-200 text-gray-800 hover:bg-gray-300">
+          Cancel
+        </button>
+        <form method="POST" action="{% url 'account_logout' %}">
+          {% csrf_token %}
+          <button type="submit" class="px-4 py-2 rounded-md bg-red-600 text-white hover:bg-blue-700">
+            Logout
+          </button>
+        </form>
+      </div>
+    </div>
   </div>
 </div>

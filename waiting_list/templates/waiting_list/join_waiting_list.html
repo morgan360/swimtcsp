@@ -1,63 +1,72 @@
 {% extends 'base/_base.html' %}
 {% load static %}
+{% load widget_tweaks %}
 
 {% block title %}Join Waiting List{% endblock %}
 
 {% block content %}
-    <section class="section">
-        <div class="container">
-            <div class="box" style="max-width: 600px; margin: 0 auto;">
-                <h2 class="title is-4 has-text-primary">Join the Waiting List</h2>
+<section class="py-10 px-4">
+    <div class="flex justify-center">
+        <div class="bg-white/40 backdrop-blur-md border border-white/20 rounded-xl shadow-md p-10 w-full max-w-2xl">
 
-                <div class="notification is-info mb-4">
-                    <p><strong>Swimling:</strong> {{ swimling }}</p>
-                </div>
+            <h2 class="text-3xl font-bold text-center text-blue-900 mb-8">
+                <i class="fa-solid fa-person-circle-plus mr-2"></i>
+                Join the Waiting List
+            </h2>
 
-                <form method="POST">
-                    {% csrf_token %}
-
-                    <div class="field">
-                        <label class="label">{{ form.is_transfer_request.label }}</label>
-                        <div class="control">
-                            {{ form.is_transfer_request }}
-                        </div>
-                    </div>
-
-                    <div class="field">
-                        <label class="label">{{ form.preferred_lesson_1.label }}</label>
-                        <div class="control">
-                            {{ form.preferred_lesson_1 }}
-                        </div>
-                    </div>
-
-                    <div class="field">
-                        <label class="label">{{ form.preferred_lesson_2.label }}</label>
-                        <div class="control">
-                            {{ form.preferred_lesson_2 }}
-                        </div>
-                    </div>
-
-                    <div class="field">
-                        <label class="label">{{ form.preferred_lesson_3.label }}</label>
-                        <div class="control">
-                            {{ form.preferred_lesson_3 }}
-                        </div>
-                    </div>
-                    <div class="field">
-                        <label class="label">{{ form.notes.label }}</label>
-                        <div class="control">
-                            {{ form.notes }}
-                        </div>
-                    </div>
-                    <div class="field mt-5">
-                        <div class="control">
-                            <button type="submit" class="button is-book is-fullwidth">
-                                Join Waiting List
-                            </button>
-                        </div>
-                    </div>
-                </form>
+            <div class="bg-blue-50 text-blue-900 border border-blue-200 px-4 py-3 rounded mb-6">
+                <p><strong>Swimling:</strong> {{ swimling }}</p>
             </div>
+
+            <form method="POST" class="bg-white/50 p-6 rounded-lg shadow">
+                {% csrf_token %}
+
+                {% for field in form %}
+                <div class="mb-5">
+                    <label class="block text-blue-900 text-xl font-semibold mb-2">
+                        {{ field.label }}
+                    </label>
+
+                    {% if field.name == "is_transfer_request" %}
+                    <div class="flex items-center gap-6">
+                        {% for subwidget in field %}
+                        <label class="inline-flex items-center space-x-2">
+                            {{ subwidget.tag }}
+                            <span class="text-blue-900 text-lg font-medium">{{ subwidget.choice_label }}</span>
+                        </label>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    {% render_field field class="w-full mb-2 px-4 py-2 border border-gray-300 bg-white/70 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600/50 focus:bg-white" %}
+                    {% endif %}
+
+                    {% if field.help_text %}
+                    <p class="text-sm text-zinc-600 mt-1">{{ field.help_text }}</p>
+                    {% endif %}
+
+                    {% for error in field.errors %}
+                    <p class="text-sm text-red-600 mt-1">{{ error }}</p>
+                    {% endfor %}
+                </div>
+                {% endfor %}
+
+
+                <div class="flex flex-col sm:flex-row gap-4 justify-between items-center mt-6 text-center">
+                    <a href="/dashboard/"
+                        class="w-full sm:w-1/2 bg-gray-200 text-gray-800 text-lg py-3 px-4 rounded-lg font-semibold hover:bg-blue-300 transition border border-white/60">
+                        <i class="fa-solid fa-arrow-left mr-2"></i>
+                        Back to Dashboard
+                    </a>
+
+                    <button type="submit"
+                        class="w-full sm:w-1/2 bg-blue-800 text-white text-lg py-3 px-4 rounded-lg font-semibold hover:bg-blue-900 transition border border-white/60">
+                        <i class="fa-solid fa-clock mr-2"></i>
+                        Join Waiting List
+                    </button>
+                </div>
+            </form>
+
         </div>
-    </section>
+    </div>
+</section>
 {% endblock %}

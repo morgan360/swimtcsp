@@ -1,50 +1,49 @@
 {% load custom_filters %}
-<form method="POST"
-      hx-post="{% url 'swimling_dashboard:add_swimling' %}"
-      hx-target="#dashboard-panels"
-      hx-swap="outerHTML"
-      onsubmit="closeAddSwimlingModal()"
-      class="space-y-4">
-    {% csrf_token %}
-    {{ form.non_field_errors }}
+    <form 
+        method="POST" 
+        hx-post="{% url 'swimling_dashboard:add_swimling' %}" hx-target="#dashboard-panels"
+        hx-swap="outerHTML" 
+        onsubmit="closeAddSwimlingModal()" 
+        class="bg-white/50 p-6 rounded-lg shadow-lg">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
 
-    <div>
-        <label class="block text-sm font-medium text-gray-700">First Name</label>
-        {{ form.first_name|add_class:"w-full mt-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500" }}
-        {{ form.first_name.errors }}
-    </div>
+        <div>
+            <label class="block text-blue-900 text-lg font-semibold mt-4 mb-2">First Name</label>
+            {{ form.first_name|add_class:"w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500" }}
+            {{ form.first_name.errors }}
+        </div>
 
-    <div>
-        <label class="block text-sm font-medium text-gray-700">Last Name</label>
-        {{ form.last_name|add_class:"w-full mt-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500" }}
-        {{ form.last_name.errors }}
-    </div>
+        <div>
+            <label class="block text-blue-900 text-lg font-semibold mt-4 mb-2">Last Name</label>
+            {{ form.last_name|add_class:"w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500" }}
+            {{ form.last_name.errors }}
+        </div>
 
-    <div>
-        <label class="block text-sm font-medium text-gray-700">Date of Birth</label>
-        {{ form.dob|add_class:"w-full mt-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500" }}
-        {{ form.dob.errors }}
-    </div>
+        <div>
+            <label class="block text-blue-900 text-lg font-semibold mt-4 mb-2">Date of Birth</label>
+            {{ form.dob|add_class:"w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500" }}
+            {{ form.dob.errors }}
+        </div>
 
-    <div>
-        <label class="block text-sm font-medium text-gray-700">School Role Number</label>
-        {{ form.sco_role_num|add_class:"w-full mt-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500" }}
-        {{ form.sco_role_num.errors }}
-    </div>
+        <div>
+            <label class="block text-blue-900 text-lg font-semibold mt-4 mb-2">School Role Number</label>
+            {{ form.sco_role_num|add_class:"w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500" }}
+            {{ form.sco_role_num.errors }}
+        </div>
 
-    <div>
-        <label class="block text-sm font-medium text-gray-700">Notes</label>
-        <textarea name="notes" rows="3"
-                  class="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500">
-  {{ form.notes.value }}
-</textarea>
-        {{ form.notes.errors }}
-    </div>
+        <div>
+            <label class="block text-blue-900 text-lg font-semibold mt-4 mb-2">Notes</label>
+            <textarea name="notes" rows="3"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500">
+                {{ form.notes.value }}
+        </textarea>
+                {{ form.notes.errors }}
+        </div>
 
-    <div class="text-right">
-        <button type="submit"
-                class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition">
-            Submit
-        </button>
-    </div>
-</form>
+        <div class="text-right">
+            <button type="submit" class="w-full bg-red-700 text-white text-lg py-3 px-4 mt-2 rounded-lg font-semibold hover:bg-red-800 transition border border-white/60">
+                Create
+            </button>
+        </div>
+    </form>

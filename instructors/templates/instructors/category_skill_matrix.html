@@ -1,43 +1,45 @@
 {% extends "base/_base.html" %}
 
 {% block content %}
-<section class="section">
-  <div class="container category-skill-matrix">
+<section class="py-8">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
-    <div class="level mb-4">
-      <div class="level-left">
-        <h1 class="title is-3">Category–Skill Cross Reference</h1>
+    <div class="flex justify-between items-center mb-6">
+      <div>
+        <h1 class="text-3xl font-bold text-gray-900">Category–Skill Cross Reference</h1>
       </div>
-      <div class="level-right">
-        <button class="button is-link" onclick="window.print()">
-          <span class="icon"><i class="fas fa-print"></i></span>
+      <div>
+        <button class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg inline-flex items-center transition-colors" onclick="window.print()">
+          <i class="fas fa-print mr-2"></i>
           <span>Print</span>
         </button>
       </div>
     </div>
 
-    <table class="table is-fullwidth is-bordered is-striped">
-      <thead>
-        <tr>
-          <th>Category</th>
-          <th>Skills</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for category in categories %}
+    <div class="overflow-x-auto">
+      <table class="min-w-full border border-gray-300 divide-y divide-gray-200">
+        <thead class="bg-gray-50">
           <tr>
-            <td>{{ category.name }}</td>
-            <td>
-              <ul style="margin-left: 1em;">
-                {% for cs in category.categoryskill_set.all %}
-                  <li>{{ cs.skill.name }} ({{ cs.skill.code }})</li>
-                {% endfor %}
-              </ul>
-            </td>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-300">Category</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Skills</th>
           </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+          {% for category in categories %}
+            <tr class="{% cycle 'bg-white' 'bg-gray-50' %}">
+              <td class="px-6 py-4 whitespace-nowrap border-r border-gray-300 font-medium text-gray-900">{{ category.name }}</td>
+              <td class="px-6 py-4">
+                <ul class="ml-4 space-y-1">
+                  {% for cs in category.categoryskill_set.all %}
+                    <li class="text-gray-700">{{ cs.skill.name }} ({{ cs.skill.code }})</li>
+                  {% endfor %}
+                </ul>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
 
   </div>
 </section>
@@ -52,12 +54,27 @@
         display: none !important;
       }
 
-      .section {
+      section {
         padding: 0 !important;
+      }
+
+      .max-w-7xl {
+        max-width: none !important;
+      }
+
+      .px-4,
+      .sm\\:px-6,
+      .lg\\:px-8 {
+        padding-left: 0 !important;
+        padding-right: 0 !important;
       }
 
       table {
         font-size: 12px;
+      }
+
+      .text-3xl {
+        font-size: 1.5rem !important;
       }
     }
   </style>

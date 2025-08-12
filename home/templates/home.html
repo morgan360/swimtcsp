@@ -14,16 +14,15 @@
         <div class="absolute inset-0" style="background-color: rgba(0, 0, 0, 0.7);"></div>
 
         <div
-            class="relative z-10 flex flex-col justify-center items-center h-full text-center text-white px-4 animate-fade-in">
-            <div>
+            class="hero-content relative z-10 flex flex-col justify-center items-center h-full text-center text-white px-4">
+            <!-- Carousel content will be dynamically inserted here -->
+            <div class="loading-content">
                 <h2 class="text-4xl font-bold leading-tight mb-4 drop-shadow-lg">
                     Swimming is for <span class="text-red-400">life!</span>
                 </h2>
-
-                <!-- Subtitle -->
                 <p
                     class="text-lg sm:text-xl md:text-2xl font-medium text-white/90 mb-8 max-w-2xl mx-auto drop-shadow-md">
-                    Dive in with our community - whether you’re a beginner or expert, we’re here to support your
+                    Dive in with our community - whether you're a beginner or expert, we're here to support your
                     swimming journey.
                 </p>
             </div>
@@ -90,7 +89,7 @@
 
     <!-- Feature Cards -->
     <div
-        class="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 gap-8 pt-8 px-4 sm:px-6 lg:px-8 max-w-screen-lg mx-auto pb-10">
+        class="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 gap-8 pt-8 px-4 sm:px-6 lg:px-8 max-w-screen-lg mx-auto">
 
         <!-- Public Swims Card -->
         <div class="bg-blue-200/60 backdrop-blur-md border border-white/20 rounded-xl shadow-md flex flex-col h-full">
@@ -99,8 +98,7 @@
             <div class="p-6 flex-grow">
                 <h2 class="text-xl font-semibold mb-4 text-white">Public Swims</h2>
                 <p class="text-sm text-base-content text-white">
-                    Just book your slot and dive in! Our public swim sessions are perfect for fun, fitness, and
-                    relaxation.
+                    Create an account to book your slot and dive in! Our public swim sessions are perfect for fun, fitness, and relaxation.
                 </p>
             </div>
             <div class="mt-auto w-full flex divide-x divide-white/20">
@@ -126,29 +124,53 @@
                     We provide a range of lessons, catering to all ages and abilities.
                     All lessons are coached by Swim Ireland certified staff.
                 </p>
+                <p class="text-sm text-base-content text-white mt-2">
+                    Create an account, (or visit your profile to update to a <strong>Guardian</strong>) to book your lessons! All lessons and swimmers can be managed in the new <strong>swimling dashboard</strong>.
+                </p>
             </div>
             <div class="mt-auto w-full flex divide-x divide-white/20">
-                <a href="/lessons/lesson_list/"
+                <a href="#" onclick="checkGuardianAccess('/lessons/lesson_list/')"
                     class="w-1/2 text-center px-4 py-3 text-md font-medium text-white bg-blue-700 hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 rounded-bl-xl">
                     Book Lessons
                 </a>
-                <a href="/dashboard/"
+                <a href="#" onclick="checkGuardianAccess('/dashboard/')"
                     class="w-1/2 text-center px-4 py-3 text-md font-medium text-white bg-red-700 hover:bg-red-800 focus:outline-none focus:ring-4 focus:ring-red-300 dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-800 rounded-br-xl">
                     Swimling Dashboard
                 </a>
             </div>
         </div>
+    </div>
 
+    <!-- Bottom Cards Grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-8 pt-4 px-4 sm:px-6 lg:px-8 max-w-screen-xl mx-auto pb-10 mt-5">
+
+        <!-- Our Services Card -->
+        <div class="bg-blue-200/60 backdrop-blur-md border border-white/20 rounded-xl shadow-md flex flex-col ">
+            <div class="p-6 flex-grow">
+                <h2 class="text-xl font-semibold mb-4 text-white">Our Services</h2>
+                <p class="text-sm text-base-content text-white">
+                    Learn about our range of services designed to accommodate all your swimming needs.
+                </p>
+            </div>
+            <div class="mt-auto w-full">
+                <a href="/info/#our-services" class="block w-full text-center px-4 py-3 text-md font-medium 
+                text-white bg-blue-700 border-t border-white/20 hover:bg-blue-800 
+                focus:outline-none focus:ring-4 focus:ring-blue-300 dark:bg-blue-600 
+                dark:hover:bg-blue-700 dark:focus:ring-blue-800 rounded-b-xl">
+                    Explore
+                </a>
+            </div>
+        </div>
 
         <!-- Community Card -->
-        <div class="bg-blue-200/60 backdrop-blur-md border border-white/20 rounded-xl shadow-md flex flex-col h-full">
-            <img src="{% static 'img/girls-and-teacher.jpeg' %}" alt="Community events"
-                class="w-full h-60 rounded-t object-cover object-top p-3">
+        <div class="bg-blue-200/60 backdrop-blur-md border border-white/20 rounded-xl shadow-md flex flex-col ">
+            <!-- <img src="{% static 'img/girls-and-teacher.jpeg' %}" alt="Community events"
+                class="w-full h-60 rounded-t object-cover object-top p-3"> -->
             <div class="p-6 flex-grow">
                 <h2 class="text-xl font-semibold mb-4 text-white">Keep in touch</h2>
                 <p class="text-sm text-base-content text-white">
-                    Events, galas, charity swims, intensive lessons — be part of something bigger.
                     Sign up to our newsletter for the latest updates.
+                    Events, galas, charity swims, intensive lessons — be part of something bigger.
                 </p>
             </div>
             <div class="mt-auto w-full">
@@ -160,9 +182,9 @@
         </div>
 
         <!-- About Us (info) Card -->
-        <div class="bg-blue-200/60 backdrop-blur-md border border-white/20 rounded-xl shadow-md flex flex-col h-full">
-            <img src="{% static 'img/kid-and-teacher.jpeg' %}" alt="About Us"
-                class="w-full h-60 max-h-80 rounded-t object-cover object-top p-3 sm:object-center md:object-center">
+        <div class="bg-blue-200/60 backdrop-blur-md border border-white/20 rounded-xl shadow-md flex flex-col">
+            <!-- <img src="{% static 'img/kid-and-teacher.jpeg' %}" alt="About Us"
+                class="w-full h-60 max-h-80 rounded-t object-cover object-top p-3 sm:object-center md:object-center"> -->
             <div class="p-6 flex-grow">
                 <h2 class="text-xl font-semibold mb-4 text-white">More Information</h2>
                 <p class="text-sm text-base-content text-white">
@@ -212,6 +234,12 @@
     </div>
 </div>
 {% endblock %}
+
+{% block extra_js %}
+<!-- Hero Carousel Script -->
+<script src="{% static 'js/hero-carousel.js' %}"></script>
+{% endblock %}
+
 {% block scripts %}
 <script>
     function openPopup() {
@@ -220,6 +248,62 @@
 
     function closePopup() {
         document.getElementById("newsletter-popup").classList.add("hidden");
+    }
+
+    function checkGuardianAccess(targetUrl) {
+        // Get CSRF token
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || getCookie('csrftoken');
+        
+        // Check if user is authenticated and has guardian role
+        fetch('/api/check-guardian-access/', {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                ...(csrfToken && {'X-CSRFToken': csrfToken})
+            },
+            credentials: 'same-origin'
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.is_authenticated) {
+                if (data.is_guardian) {
+                    // User is authenticated and is a guardian - allow access
+                    window.location.href = targetUrl;
+                } else {
+                    // User is authenticated but not a guardian - redirect to profile with guardian prompt
+                    window.location.href = '/users/profile/?guardian_required=true&from=' + encodeURIComponent(targetUrl);
+                }
+            } else {
+                // User is not authenticated - redirect to sign in
+                window.location.href = '/accounts/login/?next=' + encodeURIComponent(targetUrl);
+            }
+        })
+        .catch(error => {
+            console.error('Error checking guardian access:', error);
+            // Fallback: redirect to login
+            window.location.href = '/accounts/login/?next=' + encodeURIComponent(targetUrl);
+        });
+    }
+
+    // Helper function to get CSRF token from cookies
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
     }
 
     document.addEventListener("DOMContentLoaded", function () {

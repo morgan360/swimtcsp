@@ -145,14 +145,20 @@
                 <i class="fas fa-key mr-2"></i>Change Password
             </a>
 
-            {% for group in user.groups.all %}
-                {% if group.name|lower == 'guardian' %}
-                    <a href="{% url 'swimling_dashboard:guardian_dashboard' %}"
-                       class="inline-flex items-center px-5 py-3 bg-green-700 text-white rounded-lg hover:bg-green-600 font-semibold">
-                        <i class="fas fa-swimmer mr-2"></i>Swimling Dashboard
-                    </a>
-                {% endif %}
-            {% endfor %}
+                        <!-- Guardian Actions -->
+            {% if is_guardian %}
+                <!-- User is already a guardian, show dashboard link -->
+                <a href="{% url 'swimling_dashboard:guardian_dashboard' %}"
+                   class="inline-flex items-center px-5 py-3 bg-green-700 text-white rounded-lg hover:bg-green-600 font-semibold">
+                    <i class="fas fa-swimmer mr-2"></i>Swimling Dashboard
+                </a>
+            {% else %}
+                <!-- User is not a guardian, show become guardian button -->
+                <button onclick="showGuardianModal()"
+                        class="inline-flex items-center px-5 py-3 bg-blue-700 text-white rounded-lg hover:bg-blue-600 font-semibold">
+                    <i class="fas fa-shield-alt mr-2"></i>Become Guardian
+                </button>
+            {% endif %}
 
             <a href="{% url 'account_logout' %}"
                class="inline-flex items-center px-5 py-3 text-white rounded-lg bg-red-700 hover:bg-red-600 font-semibold">
@@ -184,4 +190,18 @@
     }, 3000);
 </script>
 {% endif %}
+
+<!-- Include Guardian Prompt Modal -->
+{% include "modals/guardian_prompt_modal.html" %}
+
+<!-- Show Guardian Modal only if Required (from URL redirect) -->
+{% if guardian_required %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Show the guardian prompt modal when page loads (only from guardian access redirect)
+    showGuardianModal();
+});
+</script>
+{% endif %}
+
 {% endblock %}

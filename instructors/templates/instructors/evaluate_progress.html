@@ -54,41 +54,43 @@
 
 
                     <tbody class="text-slate-100">
-                    {% regroup formset.forms by form.instance.skill.cas as cas_groups %}
-                    {% for group in cas_groups %}
-                        <tr>
-                            <td colspan="{{ terms|length|add:1 }}" class="bg-gray-800 table-strong font-bold px-2 py-1">
-                                {{ group.grouper.name }}
-                            </td>
-                        </tr>
+  {% for cas_name, forms_in_cas in cas_groups %}
+    <tr>
+      <td colspan="{{ terms|length|add:1 }}" class="bg-gray-800 table-strong font-bold px-2 py-1">
+        {{ cas_name|default:"Uncategorised" }}
+      </td>
+    </tr>
 
-                        {% for form in group.list %}
-                            {% with s=form.instance.skill %}
-                                <tr>
-                                    <td class="border px-2 py-1 table-skill">{{ s.name }}</td>
+    {% for form in forms_in_cas %}
+      {% with s=form.instance.skill %}
+        <tr>
+          <td class="border px-2 py-1 table-skill">{{ s.name }}</td>
 
-                                    {% for term in terms %}
-                                        {% if term.id == current_term.id %}
-                                            <td class="border px-2 py-1 text-center bg-slate-900">
-                                                {{ form.rating }} {# has class="rating-select" from the form widget #}
-                                            </td>
-                                        {% else %}
-                                            {% with r=history_map|get_item:s.id|get_item:term.id %}
-                                                <td class="border px-2 py-1 text-center table-skill">
-                                                    {% if r %}
-                                                        <span class="inline-block text-xs px-2 py-0.5 border rounded">{{ r }}</span>
-                                                    {% else %}
-                                                        <span class="table-muted">—</span>
-                                                    {% endif %}
-                                                </td>
-                                            {% endwith %}
-                                        {% endif %}
-                                    {% endfor %}
-                                </tr>
-                            {% endwith %}
-                        {% endfor %}
-                    {% endfor %}
-                    </tbody>
+          {% for term in terms %}
+            {% if term.id == current_term.id %}
+              <td class="border px-2 py-1 text-center bg-slate-900">
+                {{ form.rating }} {# has class="rating-select" from the widget #}
+              </td>
+            {% else %}
+              {% with r=history_map|get_item:s.id|get_item:term.id %}
+                <td class="border px-2 py-1 text-center table-skill">
+                  {% if r %}
+                    <span class="inline-block text-xs px-2 py-0.5 border rounded">{{ r }}</span>
+                  {% else %}
+                    <span class="table-muted">—</span>
+                  {% endif %}
+                </td>
+              {% endwith %}
+            {% endif %}
+          {% endfor %}
+        </tr>
+      {% endwith %}
+    {% endfor %}
+  {% endfor %}
+</tbody>
+
+
+
                 </table>
             </div>
 

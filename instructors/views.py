@@ -107,6 +107,27 @@ def evaluate_progress(request, swimling_id):
             return redirect("instructors:evaluate_progress", swimling_id=swimling.id)
     else:
         formset = AssessmentFormSet(queryset=qs, prefix="assess")
+        forms_by_skill = {f.instance.skill_id: f for f in formset.forms}
+
+        cas_groups = []
+        current_cas = None
+        bucket = []
+
+        for a in qs:  # qs already ordered by "skill__cas__name", "skill__name"
+            cas_name = a.skill.cas.name if a.skill and a.skill.cas_id else "Uncategorised"
+            f = forms_by_skill.get(a.skill_id)
+            if f is None:
+                continue  # (defensive) shouldn't happen
+
+            if cas_name != current_cas:
+                if bucket:
+                    cas_groups.append((current_cas, bucket))
+                current_cas = cas_name
+                bucket = []
+            bucket.append(f)
+
+        if bucket:
+            cas_groups.append((current_cas, bucket))
         existing_note = (
             InstructorNote.objects
             .filter(swimling=swimling, term=current_term)
@@ -123,7 +144,8 @@ def evaluate_progress(request, swimling_id):
         "past_terms": past_terms,
         "formset": formset,
         "note_form": note_form,
-        "history_map": history_map,    # {skill_id: {term_id: rating}}
+        "history_map": history_map,
+        "cas_groups": cas_groups,
     })
 #### UNSURE ####
 def evaluate_swimling_progress(request, swimling_id):
@@ -249,24 +271,32 @@ def generate_skill_report(request, swimling_id):
     pdf_file = weasyprint.HTML(string=html_string).write_pdf()
     return HttpResponse(pdf_file, content_type="application/pdf")
 @login_required
-def lesson_swimlings(request, lesson_id):
+def lesson_swimlings(request, lesson_id, term_id):
+    # Ensure this lesson+term is assigned to the current instructor
     assignment = get_object_or_404(
         InstructorAssignment.objects.select_related("lesson", "term"),
         instructor=request.user,
         lesson_id=lesson_id,
+        term_id=term_id,
     )
-    lesson = assignment.lesson
 
-    # ⬇️ Only enrollments for THIS term
+    # Enrollments for that lesson & term (deduplicate by swimling)
     enrollments = (
         LessonEnrollment.objects
-        .filter(lesson=lesson, term=assignment.term)
+        .filter(lesson_id=lesson_id, term_id=term_id)
         .select_related("swimling")
         .order_by("swimling__last_name", "swimling__first_name", "id")
     )
 
-    return render(request, "instructors/lesson_swimlings.html", {
-        "lesson": lesson,
-        "enrollments": enrollments,
-    })
+    # de-dupe per swimling_id (MySQL doesn’t support DISTINCT ON)
+    seen = set()
+    unique_enrollments = []
+    for e in enrollments:
+        if e.swimling_id not in seen:
+            seen.add(e.swimling_id)
+            unique_enrollments.append(e)
 
+    return render(request, "instructors/lesson_swimlings.html", {
+        "assignment": assignment,
+        "enrollments": unique_enrollments,
+    })

@@ -15,7 +15,7 @@ class CoreAquaticSkill(models.Model):
     description = models.TextField(blank=True)
 
     def __str__(self):
-        return f"{self.abbreviation} – {self.name}"
+        return f"{self.name}"
 
 
 

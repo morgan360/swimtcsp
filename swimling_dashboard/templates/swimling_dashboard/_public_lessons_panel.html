@@ -7,7 +7,7 @@
   </h3>
   <p class="text-red-700 text-center mb-6 text-sm md:text-base max-w-2xl mx-auto px-2">
     <i class="fa-solid fa-circle-info mr-1"></i>
-    Please add a swimling to register for classes.
+    Please add a swimling to register for lessons.
   </p>
 
   <!-- Desktop layout (md+) -->
@@ -52,18 +52,21 @@
           {% with action=item.actions|get_action:'Book' %}
           <a href="{{ action.url }}"
             class="inline-block px-3 py-1 text-xs rounded {{ action.disabled|yesno:'bg-gray-300 text-gray-500 cursor-not-allowed,pointer-events-auto bg-green-700 text-white hover:bg-green-800' }}">
+            <i class="fa-solid fa-plus mr-1"></i>
             Book
           </a>
           {% endwith %}
           {% with action=item.actions|get_action:'Rebook' %}
           <a href="{% url 'shopping_cart:direct_rebooking' swimling.id lesson.id %}"
             class="inline-block px-3 py-1 text-xs rounded {{ action.disabled|yesno:'bg-gray-300 text-gray-700 cursor-not-allowed,pointer-events-auto bg-blue-600 text-white hover:bg-blue-700' }}">
+            <i class="fa-solid fa-repeat"></i>
             Rebook
           </a>
           {% endwith %}
           <a href="{% url 'waiting_list:join_waiting_list' swimling.id %}"
             class="inline-block px-3 py-1 text-xs rounded bg-yellow-400 text-black hover:bg-yellow-500">
-            Join
+            <i class="fa-solid fa-clock"></i>
+            Join Waiting List
           </a>
         </div>
       </div>
@@ -79,15 +82,18 @@
           {% with action=item.actions|get_action:'Book' %}
           <a href="{{ action.url }}"
             class="inline-block px-3 py-1 text-xs rounded {{ action.disabled|yesno:'bg-gray-300 text-gray-500 cursor-not-allowed,pointer-events-auto bg-green-700 text-white hover:bg-green-800' }}">
+            <i class="fa-solid fa-plus mr-1"></i>
             Book
           </a>
           {% endwith %}
           <span class="inline-block px-3 py-1 text-xs rounded bg-gray-300 text-gray-700 text-center">
-            N/A
+            <i class="fa-solid fa-ban"></i>
+            Rebooking N/A
           </span>
           <a href="{% url 'waiting_list:join_waiting_list' swimling.id %}"
             class="inline-block px-3 py-1 text-xs rounded bg-yellow-400 text-black hover:bg-yellow-500 text-center">
-            Join
+            <i class="fa-solid fa-clock mr-1"></i>
+            Join Waiting List
           </a>
         </div>
       </div>
@@ -132,18 +138,21 @@
           {% with action=item.actions|get_action:'Book' %}
           <a href="{{ action.url }}"
             class="inline-block px-3 py-1 text-xs rounded text-center {{ action.disabled|yesno:'bg-gray-300 text-gray-500 cursor-not-allowed,pointer-events-auto bg-green-700 text-white hover:bg-green-800' }}">
+            <i class="fa-solid fa-plus mr-1"></i>
             Book
           </a>
           {% endwith %}
           {% with action=item.actions|get_action:'Rebook' %}
           <a href="{% url 'shopping_cart:direct_rebooking' swimling.id lesson.id %}"
             class="inline-block px-3 py-1 text-xs rounded text-center {{ action.disabled|yesno:'bg-gray-300 text-gray-700 cursor-not-allowed,pointer-events-auto bg-blue-600 text-white hover:bg-blue-700' }}">
+            <i class="fa-solid fa-repeat mr-1"></i>
             Rebook
           </a>
           {% endwith %}
           <a href="{% url 'waiting_list:join_waiting_list' swimling.id %}"
             class="inline-block px-3 py-1 text-xs rounded bg-yellow-400 text-black hover:bg-yellow-500 text-center">
-            Join
+            <i class="fa-solid fa-clock mr-1"></i>
+            Join Waiting List
           </a>
         </div>
       </div>
@@ -156,15 +165,18 @@
           {% with action=item.actions|get_action:'Book' %}
           <a href="{{ action.url }}"
             class="inline-block px-3 py-1 text-xs rounded text-center {{ action.disabled|yesno:'bg-gray-300 text-gray-500 cursor-not-allowed,pointer-events-auto bg-green-700 text-white hover:bg-green-800' }}">
+            <i class="fa-solid fa-plus mr-1"></i>
             Book
           </a>
           {% endwith %}
           <span class="inline-block px-3 py-1 text-xs rounded text-center bg-gray-300 text-gray-700">
-            N/A
+            <i class="fa-solid fa-ban mr-1"></i>
+            Rebooking N/A
           </span>
           <a href="{% url 'waiting_list:join_waiting_list' swimling.id %}"
             class="inline-block px-3 py-1 text-xs rounded bg-yellow-400 text-black hover:bg-yellow-500 text-center">
-            Join
+            <i class="fa-solid fa-clock mr-1"></i>
+            Join Waiting List
           </a>
         </div>
       </div>

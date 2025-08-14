@@ -1,0 +1,76 @@
+/* Instructor Progress Evaluation Styles */
+
+/* Enhanced rating dropdowns for the new design */
+.rating-select {
+  background-color: #ffffff;
+  color: #374151; /* gray-700 */
+  border: 2px solid #e5e7eb; /* gray-200 */
+  border-radius: 0.5rem; /* rounded-lg */
+  padding: 0.5rem 0.75rem; /* px-3 py-2 */
+  font-size: 0.875rem; /* text-sm */
+  font-weight: 500;
+  transition: all 0.2s ease-in-out;
+  min-width: 100px;
+}
+
+.rating-select:focus {
+  outline: none;
+  border-color: #3b82f6; /* blue-500 */
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); /* blue focus ring */
+  background-color: #ffffff;
+}
+
+.rating-select:hover {
+  border-color: #6b7280; /* gray-500 */
+}
+
+/* Enhanced dropdown options */
+.rating-select option {
+  background-color: #ffffff;
+  color: #374151; /* gray-700 */
+  padding: 0.5rem;
+}
+
+.rating-select option:checked {
+  background-color: #3b82f6; /* blue-500 */
+  color: #ffffff;
+}
+
+/* Responsive table enhancements */
+@media (max-width: 768px) {
+  .rating-select {
+    min-width: 80px;
+    padding: 0.375rem 0.5rem;
+    font-size: 0.75rem;
+  }
+}
+
+/* Sticky column shadow effect */
+.sticky {
+  box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Hover effects for table rows */
+tr:hover .sticky {
+  background-color: #f8fafc; /* slate-50 */
+}
+
+/* Style the notes textarea */
+textarea[name="note"] {
+  padding: 12px;
+  width: 100%;
+  border: 1px solid #d1d5db; /* gray-300 */
+  border-radius: 0.375rem; /* rounded */
+  font-family: inherit;
+  font-size: 0.875rem; /* text-sm */
+  line-height: 1.5;
+  resize: vertical;
+  min-height: 100px;
+  transition: border-color 0.2s ease-in-out;
+}
+
+textarea[name="note"]:focus {
+  outline: none;
+  border-color: #3b82f6; /* blue-500 */
+  box-shadow: 0 0 0 1px #3b82f6; /* blue-500 ring */
+}

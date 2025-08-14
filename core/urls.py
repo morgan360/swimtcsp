@@ -86,6 +86,7 @@ path("dashboard/", include(("dashboard.urls", "dashboard"), namespace="dashboard
 urlpatterns += [
 path("chatbot/", include("chatbot.urls")),
 path("instructors/", include("instructors.urls")),
+path("anseo/", include("anseo.urls")),
 ]
 # Custom URL Shortcuts
 urlpatterns += [

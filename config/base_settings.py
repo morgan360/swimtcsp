@@ -117,6 +117,7 @@ INSTALLED_APPS = [
     'instructors',
     'coupons',
     'mailchimp',
+    'anseo',
 ]
 
 MIDDLEWARE = [

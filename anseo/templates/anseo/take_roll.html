@@ -1,0 +1,160 @@
+{% extends "base/_base.html" %}
+{% load static %}
+
+{% block title %}Attendance · {{ product.name }} · {{ term.name|default:term.id }}{% endblock %}
+
+{% block content %}
+<div class="mx-auto max-w-6xl px-4 py-6">
+    <!-- Header -->
+    <div class="mb-6 rounded-2xl bg-white shadow">
+        <div class="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+                <h1 class="text-2xl font-semibold tracking-tight">Attendance</h1>
+                <p class="mt-1 text-sm text-gray-600">
+                    <span class="font-medium">Lesson:</span> {{ product }}
+                    <span class="mx-2 text-gray-300">•</span>
+                    <span class="font-medium">Term:</span>
+                    {{ term.name|default:"Term " }} ({{ term.start_date|date:"Y-m-d" }} → {{ term.end_date|date:"Y-m-d" }})
+                </p>
+                <p class="mt-1 text-sm text-gray-600">
+                    <span class="font-medium">Roll window:</span>
+                    {{ roll.window_start|date:"Y-m-d H:i" }} – {{ roll.window_end|date:"H:i" }}
+                </p>
+            </div>
+
+            <a href="{% url 'instructors:instructor_dashboard' %}"
+               class="rounded-xl border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+                ← Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Bulk actions -->
+    <div class="mb-3 flex flex-wrap gap-2">
+        <button type="button" id="markAllPresent"
+                class="rounded-xl bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700">
+            Mark all Present
+        </button>
+        <button type="button" id="markAllAbsent"
+                class="rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700">
+            Mark all Absent
+        </button>
+        <button type="button" id="clearAll"
+                class="rounded-xl bg-gray-200 px-4 py-2 text-sm font-semibold text-gray-800 hover:bg-gray-300">
+            Clear all
+        </button>
+    </div>
+
+    <!-- Form -->
+    <form method="post" class="rounded-2xl bg-white shadow" id="attendanceForm">
+        {% csrf_token %}
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-600">#</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-600">Swimling</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-600">Status</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-600">Note</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100 bg-white">
+                    {% for e in enrolments %}
+                        {% with existing_entry=existing.e.id %}
+                        <tr data-row data-enrolment="{{ e.id }}">
+                            <td class="px-4 py-3 text-sm text-gray-500">{{ forloop.counter }}</td>
+                            <td class="px-4 py-3">
+                                <div class="font-medium text-gray-900">
+                                    {{ e.swimling.first_name }} {{ e.swimling.last_name }}
+                                </div>
+                                <div class="text-xs text-gray-500">#{{ e.id }}</div>
+                            </td>
+                            <td class="px-4 py-3">
+                                <div class="flex flex-wrap gap-2">
+                                    {% for status in status_choices %}
+                                        <label class="inline-flex items-center mr-3">
+                                            <input type="radio" name="status_{{ e.id }}" value="{{ status.0 }}"
+                                                {% if existing.e.id and existing.e.id.status == status.0 %}
+                                                    checked
+                                                {% elif not existing.e.id and status.0 == "unknown" %}
+                                                    checked
+                                                {% endif %}
+                                                class="form-radio text-indigo-600">
+                                            <span class="ml-1 text-sm">{{ status.1 }}</span>
+                                        </label>
+                                    {% endfor %}
+                                </div>
+                            </td>
+                            <td class="px-4 py-3">
+                                <input type="text" name="note_{{ e.id }}"
+                                       value="{{ existing.e.id.note|default:'' }}"
+                                       class="w-full rounded border px-3 py-2 text-sm">
+                            </td>
+                        </tr>
+                        {% endwith %}
+                    {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center px-4 py-6 text-gray-500">
+                                No enrolments for this lesson & term.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="mt-4 text-right">
+            <button type="submit" class="rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700">
+                Save Attendance
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+(function () {
+    const form = document.getElementById('attendanceForm');
+    const rows = Array.from(document.querySelectorAll('tr[data-row]'));
+
+    function inputsForRow(row) {
+        return Array.from(row.querySelectorAll('input[type="radio"][name^="status_"]'));
+    }
+
+    function setRowStatus(row, value) {
+        inputsForRow(row).forEach(r => { if (r.value === value) r.checked = true; });
+    }
+
+    function recalc() {
+        let present = 0, absent = 0, unmarked = 0;
+        rows.forEach(row => {
+            const checked = row.querySelector('input[type="radio"][name^="status_"]:checked');
+            if (!checked || checked.value === 'unknown') unmarked++;
+            else if (checked.value === 'present') present++;
+            else if (checked.value === 'absent') absent++;
+        });
+        document.getElementById('summaryPresent')?.textContent = present;
+        document.getElementById('summaryAbsent')?.textContent = absent;
+        document.getElementById('summaryUnmarked')?.textContent = unmarked;
+    }
+
+    document.getElementById('markAllPresent')?.addEventListener('click', () => {
+        rows.forEach(r => setRowStatus(r, 'present'));
+        recalc();
+    });
+    document.getElementById('markAllAbsent')?.addEventListener('click', () => {
+        rows.forEach(r => setRowStatus(r, 'absent'));
+        recalc();
+    });
+    document.getElementById('clearAll')?.addEventListener('click', () => {
+        rows.forEach(r => setRowStatus(r, 'unknown'));
+        recalc();
+    });
+
+    form.addEventListener('change', e => {
+        if (e.target.matches('input[type="radio"][name^="status_"]')) recalc();
+    });
+
+    recalc();
+})();
+</script>
+{% endblock %}

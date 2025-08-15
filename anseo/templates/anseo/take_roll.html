@@ -1,5 +1,6 @@
 {% extends "base/_base.html" %}
 {% load static %}
+{% load static form_extras %}
 
 {% block title %}Attendance · {{ product.name }} · {{ term.name|default:term.id }}{% endblock %}
 
@@ -59,47 +60,51 @@
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100 bg-white">
-                    {% for e in enrolments %}
-                        {% with existing_entry=existing.e.id %}
-                        <tr data-row data-enrolment="{{ e.id }}">
-                            <td class="px-4 py-3 text-sm text-gray-500">{{ forloop.counter }}</td>
-                            <td class="px-4 py-3">
-                                <div class="font-medium text-gray-900">
-                                    {{ e.swimling.first_name }} {{ e.swimling.last_name }}
-                                </div>
-                                <div class="text-xs text-gray-500">#{{ e.id }}</div>
-                            </td>
-                            <td class="px-4 py-3">
-                                <div class="flex flex-wrap gap-2">
-                                    {% for status in status_choices %}
-                                        <label class="inline-flex items-center mr-3">
-                                            <input type="radio" name="status_{{ e.id }}" value="{{ status.0 }}"
-                                                {% if existing.e.id and existing.e.id.status == status.0 %}
-                                                    checked
-                                                {% elif not existing.e.id and status.0 == "unknown" %}
-                                                    checked
-                                                {% endif %}
-                                                class="form-radio text-indigo-600">
-                                            <span class="ml-1 text-sm">{{ status.1 }}</span>
-                                        </label>
-                                    {% endfor %}
-                                </div>
-                            </td>
-                            <td class="px-4 py-3">
-                                <input type="text" name="note_{{ e.id }}"
-                                       value="{{ existing.e.id.note|default:'' }}"
-                                       class="w-full rounded border px-3 py-2 text-sm">
-                            </td>
-                        </tr>
-                        {% endwith %}
-                    {% empty %}
-                        <tr>
-                            <td colspan="4" class="text-center px-4 py-6 text-gray-500">
-                                No enrolments for this lesson & term.
-                            </td>
-                        </tr>
+    {% for e in enrolments %}
+        {% with existing_entry=existing|get_item:e.id %}
+
+        <tr data-row data-enrolment="{{ e.id }}">
+            <td class="px-4 py-3 text-sm text-gray-500">{{ forloop.counter }}</td>
+            <td class="px-4 py-3">
+                <div class="font-medium text-gray-900">
+                    {{ e.swimling.first_name }} {{ e.swimling.last_name }}
+                </div>
+                <div class="text-xs text-gray-500">#{{ e.id }}</div>
+            </td>
+            <td class="px-4 py-3">
+                <div class="flex flex-wrap gap-2">
+                    {% for status in status_choices %}
+                        <label class="inline-flex items-center mr-3">
+                            <input type="radio"
+                                   class="form-radio text-indigo-600"
+                                   name="status_{{ e.id }}"
+                                   value="{{ status.0 }}"
+                                   {% if existing_entry and existing_entry.status == status.0 %}
+                                       checked
+                                   {% elif not existing_entry and status.0 == "unknown" %}
+                                       checked
+                                   {% endif %}>
+                            <span class="ml-1 text-sm">{{ status.1 }}</span>
+                        </label>
                     {% endfor %}
-                </tbody>
+                </div>
+            </td>
+            <td class="px-4 py-3">
+                <input type="text" name="note_{{ e.id }}"
+                       value="{{ existing_entry.note|default:'' }}"
+                       class="w-full rounded border px-3 py-2 text-sm">
+            </td>
+        </tr>
+        {% endwith %}
+    {% empty %}
+        <tr>
+            <td colspan="4" class="text-center px-4 py-6 text-gray-500">
+                No enrolments for this lesson & term.
+            </td>
+        </tr>
+    {% endfor %}
+</tbody>
+
             </table>
         </div>
 
@@ -112,49 +117,31 @@
 </div>
 
 <script>
-(function () {
-    const form = document.getElementById('attendanceForm');
-    const rows = Array.from(document.querySelectorAll('tr[data-row]'));
-
-    function inputsForRow(row) {
-        return Array.from(row.querySelectorAll('input[type="radio"][name^="status_"]'));
-    }
+document.addEventListener("DOMContentLoaded", function () {
+    const rows = Array.from(document.querySelectorAll("tr[data-row]"));
+    console.log("Found rows:", rows.length);  // ✅ This is the log
 
     function setRowStatus(row, value) {
-        inputsForRow(row).forEach(r => { if (r.value === value) r.checked = true; });
-    }
-
-    function recalc() {
-        let present = 0, absent = 0, unmarked = 0;
-        rows.forEach(row => {
-            const checked = row.querySelector('input[type="radio"][name^="status_"]:checked');
-            if (!checked || checked.value === 'unknown') unmarked++;
-            else if (checked.value === 'present') present++;
-            else if (checked.value === 'absent') absent++;
+        const radios = row.querySelectorAll(`input[type="radio"][name^="status_"]`);
+        radios.forEach(r => {
+            if (r.value === value) {
+                r.checked = true;
+            }
         });
-        document.getElementById('summaryPresent')?.textContent = present;
-        document.getElementById('summaryAbsent')?.textContent = absent;
-        document.getElementById('summaryUnmarked')?.textContent = unmarked;
     }
 
-    document.getElementById('markAllPresent')?.addEventListener('click', () => {
-        rows.forEach(r => setRowStatus(r, 'present'));
-        recalc();
-    });
-    document.getElementById('markAllAbsent')?.addEventListener('click', () => {
-        rows.forEach(r => setRowStatus(r, 'absent'));
-        recalc();
-    });
-    document.getElementById('clearAll')?.addEventListener('click', () => {
-        rows.forEach(r => setRowStatus(r, 'unknown'));
-        recalc();
+    document.getElementById("markAllPresent")?.addEventListener("click", () => {
+        rows.forEach(row => setRowStatus(row, "present"));
     });
 
-    form.addEventListener('change', e => {
-        if (e.target.matches('input[type="radio"][name^="status_"]')) recalc();
+    document.getElementById("markAllAbsent")?.addEventListener("click", () => {
+        rows.forEach(row => setRowStatus(row, "absent"));
     });
 
-    recalc();
-})();
+    document.getElementById("clearAll")?.addEventListener("click", () => {
+        rows.forEach(row => setRowStatus(row, "unknown"));
+    });
+});
 </script>
+
 {% endblock %}

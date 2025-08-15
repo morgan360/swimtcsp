@@ -10,6 +10,7 @@ from custom_admins.schoolsadmin import schools_admin_site
 from custom_admins.generaladmin import general_admin_site
 from custom_admins.instructorsadmin import instructors_admin_site
 from custom_admins.coupons_admin import coupons_admin_site
+from custom_admins.attendance_admin import attendance_admin_site
 from users.views import CustomSignupView
 from waiting_list.views import redirect_to_swimling_waiting_list
 
@@ -68,6 +69,7 @@ urlpatterns += [
     path('generaladmin/', general_admin_site.urls),
     path('instructorsadmin/', instructors_admin_site.urls),
     path("couponsadmin/", coupons_admin_site.urls),
+    path("attendanceadmin/", attendance_admin_site.urls),
     ]
 # add auto reload
 urlpatterns += [path('__reload__/', include('django_browser_reload.urls'))]

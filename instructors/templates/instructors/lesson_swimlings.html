@@ -2,24 +2,26 @@
 {% extends "base/_base.html" %}
 
 {% block content %}
-<div class="p-6">
-  <h1 class="text-2xl font-semibold mb-2">👥 {{ lesson.name }}</h1>
-  <p class="text-gray-600 mb-4">
+<div class="p-6 bg-white/60 rounded-lg shadow-md m-8 max-w-7xl mx-auto"> 
+  <div class="mt-6">
+    <a href="{% url 'instructors:instructor_dashboard' %}" class="bg-blue-300 p-3 text-blue-600 rounded-lg shadow-lg hover:underline">← Back to Dashboard</a>
+  </div>
+  <h2 class="text-2xl text-white font-semibold mb-2 mt-6 mr-1"><i class="fa-solid fa-book"></i> {{ lesson.name }}</h2>
+  <p class="text-gray-800 mb-4">
     Term: {{ lesson.term.label }} · {{ lesson.get_day_of_week_display }} · {{ lesson.start_time }}–{{ lesson.end_time }}
   </p>
 
   {% if enrollments %}
     <div class="space-y-3">
       {% for e in enrollments %}
-        <div class="flex items-center justify-between border rounded p-3 bg-white">
-          <div>
-            <div class="font-medium">
+        <div class="flex flex-col items-center sm:flex-row sm:items-center sm:justify-between rounded-lg p-3 bg-white text-blue-800 hover:bg-blue-100 space-y-2 sm:space-y-0">
+            <div class="font-medium text-center sm:text-left">
               {{ e.swimling.first_name }} {{ e.swimling.last_name }}
             </div>
-          </div>
           <a href="{% url 'instructors:evaluate_progress' e.swimling.id %}"
-             class="text-sm px-3 py-1.5 rounded bg-emerald-600 text-white hover:bg-emerald-700">
-            📝 Evaluate Progress
+            class="text-sm px-3 py-1.5 rounded bg-emerald-600 text-white hover:bg-emerald-700 text-center">
+            <i class="fa-solid fa-file-pen"></i>
+            Evaluate Progress
           </a>
         </div>
       {% endfor %}
@@ -27,9 +29,5 @@
   {% else %}
     <p class="text-gray-600">No swimlings enrolled in this class.</p>
   {% endif %}
-
-  <div class="mt-6">
-    <a href="{% url 'instructors:instructor_dashboard' %}" class="text-blue-600 hover:underline">← Back to Dashboard</a>
-  </div>
 </div>
 {% endblock %}

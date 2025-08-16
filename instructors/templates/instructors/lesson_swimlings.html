@@ -4,11 +4,11 @@
 {% block content %}
 <div class="p-6 bg-white/60 rounded-lg shadow-md m-8 max-w-7xl mx-auto"> 
   <div class="mt-6">
-    <a href="{% url 'instructors:instructor_dashboard' %}" class="bg-blue-300 p-3 text-blue-600 rounded-lg shadow-lg hover:underline">← Back to Dashboard</a>
+    <a href="{% url 'instructors:instructor_dashboard' %}" class="font-medium bg-blue-300 p-3 text-blue-800 rounded-lg shadow-lg hover:underline"> ← Back to Dashboard</a>
   </div>
-  <h2 class="text-2xl text-white font-semibold mb-2 mt-6 mr-1"><i class="fa-solid fa-book"></i> {{ lesson.name }}</h2>
-  <p class="text-gray-800 mb-4">
-    Term: {{ lesson.term.label }} · {{ lesson.get_day_of_week_display }} · {{ lesson.start_time }}–{{ lesson.end_time }}
+  <h2 class="text-2xl text-blue-900 font-semibold mb-4 mt-8 mr-1 text-center"><i class="fa-solid fa-book mr-2"></i> {{ assignment.lesson.name }}</h2>
+  <p class="text-blue-900 mb-4 text-center mb-8">
+    Term: {{ assignment.term.label }}
   </p>
 
   {% if enrollments %}
@@ -19,7 +19,7 @@
               {{ e.swimling.first_name }} {{ e.swimling.last_name }}
             </div>
           <a href="{% url 'instructors:evaluate_progress' e.swimling.id %}"
-            class="text-sm px-3 py-1.5 rounded bg-emerald-600 text-white hover:bg-emerald-700 text-center">
+            class="inline-block bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded transition-colors duration-200">
             <i class="fa-solid fa-file-pen"></i>
             Evaluate Progress
           </a>

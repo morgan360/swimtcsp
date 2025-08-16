@@ -1,6 +1,6 @@
 function timetableApp() {
     return {
-        currentTab: 'lessons',
+        currentTab: 'swims',
         startDate: new Date(),
         today: new Date().toISOString().split('T')[0],
         events: [],

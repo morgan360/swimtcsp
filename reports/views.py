@@ -143,17 +143,17 @@ def class_print(request):
 
 
 def update_lessons(request):
+    print("update_lessons:", request.GET)
     category_id = request.GET.get('category')
     day = request.GET.get('day')
     lessons = Product.objects.filter(category_id=category_id, day_of_week=day) if category_id and day else Product.objects.none()
     return render(request, 'reports/partials/lesson_options.html', {'lessons': lessons})
 
-
 def update_days(request):
     category_id = request.GET.get('category')
     days = Product.objects.filter(category_id=category_id).values_list('day_of_week', flat=True).distinct() if category_id else []
     day_choices = [(d, dict(Product.DAY_CHOICES)[d]) for d in days]
-    return render(request, 'reports/partials/day_options.html', {'days': day_choices, 'is_htmx': True})
+    return render(request, 'reports/partials/day_options.html', {'days': day_choices})
 
 
 def class_list_view(request):
@@ -161,11 +161,41 @@ def class_list_view(request):
     categories = Category.objects.all()
     day_choices = list(Product.DAY_CHOICES)
     lessons = Product.objects.none()
+    swimlings = []
+    selected_lesson = None
+    selected_term_label = None
+
+    # Extract from GET
+    lesson_id = request.GET.get('lesson')
+    term_choice = request.GET.get('term', 'current')
+
+    # If user has selected a lesson and term
+    if lesson_id:
+        # Map term choices
+        term_lookup = {
+            'current': Term.get_current_term,
+            'next': Term.get_next_term,
+            'previous': Term.get_previous_term,
+        }
+        term = term_lookup.get(term_choice, Term.get_current_term)()
+        selected_term_label = term_choice.title()
+
+        # Get swimlings for the lesson+term
+        swimlings = Swimling.objects.filter(
+            enrollments__lesson_id=lesson_id,
+            enrollments__term=term
+        ).select_related('guardian').order_by('first_name')
+
+        selected_lesson = Product.objects.filter(id=lesson_id).first()
+
     return render(request, 'reports/class_list.html', {
         'form': form,
         'categories': categories,
         'day_choices': day_choices,
         'lessons': lessons,
+        'swimlings': swimlings,
+        'selected_lesson': selected_lesson,
+        'selected_term_label': selected_term_label,
     })
 
 

@@ -1476,6 +1476,11 @@ video {
   border-color: rgb(255 255 255 / 0.2);
 }
 
+.divide-blue-700 > :not([hidden]) ~ :not([hidden]) {
+  --tw-divide-opacity: 1;
+  border-color: rgb(29 78 216 / var(--tw-divide-opacity));
+}
+
 .overflow-hidden {
   overflow: hidden;
 }

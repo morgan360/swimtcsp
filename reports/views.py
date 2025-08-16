@@ -119,8 +119,8 @@ def enrollment_report_data(request):
 
 def class_print(request):
     """Print swimlings for selected lesson and term"""
-    lesson_id = request.POST.get('lesson')
-    term_choice = request.POST.get('term', 'current')
+    lesson_id = request.GET.get('lesson')
+    term_choice = request.GET.get('term', 'current')
 
     term_lookup = {
         'current': Term.get_current_term,

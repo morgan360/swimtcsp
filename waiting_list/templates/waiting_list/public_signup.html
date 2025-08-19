@@ -4,14 +4,14 @@
 
 {% block content %}
 <div class="max-w-2xl mx-auto p-6 mt-10 bg-white shadow-lg rounded-lg border border-blue-300">
-  <h1 class="text-2xl font-bold text-center text-blue-900 mb-6">Join the Waiting List</h1>
+  <h2 class="text-2xl font-bold text-center text-blue-900 mb-6">Join the Waiting List</h2>
 
   <form method="post" class="space-y-6">
     {% csrf_token %}
 
     <!-- Guardian Section -->
     <div>
-      <h2 class="text-lg font-semibold text-gray-800 mb-2">Your Details</h2>
+      <h3 class="text-lg font-semibold text-gray-800 mb-2">Your Details</h3>
       <div class="space-y-4">
         {{ form.email.label_tag }}
         {{ form.email|add_class:"w-full border border-gray-300 rounded p-2" }}
@@ -23,7 +23,7 @@
 
     <!-- Swimling Section -->
     <div>
-      <h2 class="text-lg font-semibold text-gray-800 mt-4 mb-2">Swimling Details</h2>
+      <h3 class="text-lg font-semibold text-gray-800 mt-4 mb-2">Swimling Details</h3>
       <div class="space-y-4">
         {{ form.swimling.label_tag }}
         {{ form.swimling|add_class:"w-full border border-gray-300 rounded p-2" }}
@@ -38,7 +38,7 @@
 
     <!-- Preferences Section -->
     <div>
-      <h2 class="text-lg font-semibold text-gray-800 mt-4 mb-2">Lesson Preferences</h2>
+      <h3 class="text-lg font-semibold text-gray-800 mt-4 mb-2">Lesson Preferences</h3>
       <div class="space-y-4">
         {{ form.is_transfer_request.label_tag }}
         {{ form.is_transfer_request }}

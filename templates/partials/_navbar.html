@@ -6,97 +6,24 @@
 <nav class="bg-gradient-to-r from-blue-50 to-blue-100 backdrop-blur-sm border-b border-blue-200/50 shadow-lg px-4 py-3 z-[1000] relative" x-data="{ mobileOpen: false, showLogoutModal: false }">
 
 	<!-- Centered Logo (Desktop Only) -->
-	<div class="hidden lg:flex flex-col items-center justify-center mb-6">
-		<a href="{% url 'home' %}" class="flex flex-col items-center group transition-transform hover:scale-105">
-			<div class="bg-white/70 backdrop-blur-sm rounded-2xl p-4 shadow-md group-hover:shadow-lg transition-all duration-300">
-				<img src="{% static 'img/full-logo-transparent.png' %}" alt="Templeogue College Swim Pool Logo" width="180"
-					height="180" class="m-2">
-			</div>
-		</a>
-		<h1 class="hidden text-blue-800">Templeogue College Swim Pool</h1>
-	</div>
-
-	<!-- Top Row: Mobile Logo & Burger -->
-	<div class="flex items-center justify-between w-full lg:hidden">
-		<a href="{% url 'home' %}" class="flex items-center group transition-transform hover:scale-105">
-			<div class="bg-white/70 backdrop-blur-sm rounded-xl p-2 shadow-md group-hover:shadow-lg transition-all duration-300 mr-3">
-				<img src="{% static 'img/logo.png' %}" alt="Logo" width="40" height="40">
-			</div>
-			<strong class="text-blue-800 text-xl font-bold">TCSP</strong>
-		</a>
-		<!-- Mobile burger -->
-		<button @click="mobileOpen = !mobileOpen" 
-			class="text-blue-900 text-2xl p-3 rounded-xl bg-white/80 backdrop-blur-sm hover:bg-white transition-all duration-200 shadow-md hover:shadow-lg border border-blue-200/50">
-			<i x-show="!mobileOpen" class="fas fa-bars transition-transform duration-200"></i>
-			<i x-show="mobileOpen" class="fas fa-times transition-transform duration-200"></i>
-		</button>
-	</div>
-
-	<!-- Desktop Nav Row -->
-	<div class="hidden lg:flex w-full items-center justify-between mt-4 relative">
-
-		<!-- Center Nav Links -->
-
-		<div class="w-1/3">
-			<!-- Left spacer (used to offset the center) -->
-		</div>
-
-		<div class="absolute left-1/2 transform -translate-x-1/2 z-[1100]">
-			<ul class="flex items-center gap-6 xl:gap-8 text-blue-900 font-semibold text-lg">
-				{% for group, items in drawer_menus.items %}
-				{% if group != "User" and group != "Profile" %}
-				{% if items|length > 1 %}
-				<li x-data="{ open: false }" class="relative" style="z-index: 1200;">
-					<button @click="open = !open; console.log('Dropdown clicked, open:', !open)" :class="{'text-red-700 bg-red-50': open}"
-						class="px-3 xl:px-4 py-3 rounded-xl transition-all duration-200 flex items-center gap-2 focus:outline-none hover:bg-blue-50 hover:text-blue-700 hover:shadow-sm relative z-[1150] whitespace-nowrap xl:whitespace-normal min-w-max">
-						<span class="text-center leading-tight lg:whitespace-nowrap xl:whitespace-normal">{{ group }}</span>
-						<i class="fas fa-caret-down text-sm transition-transform duration-200 flex-shrink-0" :class="{'rotate-180': open}"></i>
-					</button>
-					<ul x-show="open" @click.away="open = false" x-transition
-						class="absolute left-0 top-full mt-3 p-3 bg-white shadow-2xl rounded-2xl w-72 text-left text-blue-900 z-[1200] border-2 border-blue-200"
-						style="position: absolute !important;">
-						{% for item in items %}
-						<li>
-							<a href="{{ item.resolve_url }}"
-								class="block px-4 py-3 hover:bg-blue-50 rounded-xl flex items-center gap-3 transition-all duration-200 hover:translate-x-1">
-								{% if item.icon_class %}<i class="{{ item.icon_class }} w-5 text-blue-600"></i>{% endif %}
-								{{ item.label }}
-							</a>
-						</li>
-						{% endfor %}
-					</ul>
-				</li>
-				{% else %}
-				{% with item=items.0 %}
-				<li>
-					<a href="{{ item.resolve_url }}" class="px-3 xl:px-4 py-3 rounded-xl hover:bg-blue-50 hover:text-blue-700 hover:shadow-sm transition-all duration-200 flex items-center gap-2 whitespace-nowrap xl:whitespace-normal min-w-max">
-						<span class="text-center leading-tight lg:whitespace-nowrap xl:whitespace-normal">{{ item.label }}</span>
-					</a>
-				</li>
-				{% endwith %}
-				{% endif %}
-				{% endif %}
-				{% endfor %}
-			</ul>
-		</div>
-
-		<!-- Right Section: Hello User or Auth Links -->
-		<div class="flex items-center gap-4 text-blue-900 font-semibold pr-4">
+	<div class="hidden lg:flex flex-col items-center justify-center mb-6 relative">
+		<!-- User Section - Top Right -->
+		<div class="absolute top-0 right-0 flex items-center gap-2 text-blue-900 font-semibold">
 			{% if user.is_authenticated %}
 			<div x-data="{ open: false }" class="relative font-bold text-lg text-blue-900 z-[1200]" @click.away="open = false">
 				<button @click="open = !open"
-					class="py-3 px-6 flex items-center gap-3 outline-none transition-all duration-200 focus:outline-none bg-white/80 backdrop-blur-sm rounded-2xl hover:bg-white hover:shadow-lg border border-blue-200/50"
+					class="py-2 px-4 flex items-center gap-2 outline-none transition-all duration-200 focus:outline-none bg-white/80 backdrop-blur-sm rounded-xl hover:bg-white hover:shadow-lg border border-blue-200/50"
 					aria-haspopup="true" :aria-expanded="open.toString()">
 					<div class="flex items-center gap-2">
-						<i class="fas fa-user-circle text-2xl text-blue-600"></i>
-						<span class="hidden xl:inline text-blue-800">{{ user.first_name|default:"Profile" }}</span>
+						<i class="fas fa-user-circle text-xl text-blue-600"></i>
+						<span class=" xl:inline text-blue-800 text-sm">{{ user.first_name|default:"Profile" }}</span>
 					</div>
-					<i class="fas fa-caret-down text-sm transition-transform duration-200" :class="{'rotate-180': open}"></i>
+					<i class="fas fa-caret-down text-xs transition-transform duration-200" :class="{'rotate-180': open}"></i>
 				</button>
 
 				<!-- User Dropdown box -->
 				<ul x-show="open" x-transition
-					class="absolute right-0 top-full mt-3 p-4 bg-white shadow-xl rounded-2xl w-80 text-blue-900 z-[1300] border-2 border-blue-200"
+					class="absolute right-0 top-full mt-2 p-4 bg-white shadow-xl rounded-2xl w-80 text-blue-900 z-[1300] border-2 border-blue-200"
 					style="position: absolute !important;">
 
 					<div class="hidden sm:block font-medium text-blue-900 px-4 py-6 text-center w-full bg-blue-50/50 rounded-xl mb-4">
@@ -160,7 +87,7 @@
 							<i class="fas fa-key mr-3 text-blue-600 w-5"></i>
 							Change Password
 						</a>
-					<li>
+					</li>
 					<li>
 						<button @click="showLogoutModal = true"
 							class="block w-full text-left px-4 py-3 text-red-600 hover:bg-red-50 rounded-xl transition-all duration-200 hover:translate-x-1">
@@ -172,24 +99,92 @@
 				</ul>
 			</div>
 			{% else %}
-			<div class="flex gap-3">
+			<div class="flex gap-2">
 				<a href="{% url 'info' %}"
-					class="px-5 py-3 text-sm font-semibold text-white focus:outline-none bg-gradient-to-r from-red-600 to-red-700 rounded-xl hover:from-red-700 hover:to-red-800 focus:ring-4 focus:ring-red-200 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
-					<i class="fas fa-info-circle mr-2"></i>
-					<span class="hidden sm:inline">About</span>
+					class="px-3 py-2 text-xs font-semibold text-white focus:outline-none bg-gradient-to-r from-red-600 to-red-700 rounded-lg hover:from-red-700 hover:to-red-800 transition-all duration-200 shadow-md hover:shadow-lg">
+					<i class="fas fa-info-circle mr-1"></i>
+					About
 				</a>
 				<a href="{% url 'account_signup' %}"
-					class="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-5 py-3 rounded-xl text-sm font-semibold hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
-					<i class="fas fa-user-plus mr-2"></i> 
+					class="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-3 py-2 rounded-lg text-xs font-semibold hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-md hover:shadow-lg">
+					<i class="fas fa-user-plus mr-1"></i> 
 					Sign up
 				</a>
 				<a href="{% url 'account_login' %}"
-					class="px-5 py-3 text-sm font-semibold text-blue-900 focus:outline-none bg-white/80 backdrop-blur-sm rounded-xl hover:bg-white focus:ring-4 focus:ring-blue-200 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 border border-blue-200/50">
-					<i class="fas fa-sign-in-alt mr-2"></i> 
+					class="px-3 py-2 text-xs font-semibold text-blue-900 focus:outline-none bg-white/80 backdrop-blur-sm rounded-lg hover:bg-white transition-all duration-200 shadow-md hover:shadow-lg border border-blue-200/50">
+					<i class="fas fa-sign-in-alt mr-1"></i> 
 					Login
 				</a>
 			</div>
 			{% endif %}
+		</div>
+
+		<a href="{% url 'home' %}" class="flex flex-col items-center group transition-transform hover:scale-105">
+			<div class="bg-white/70 backdrop-blur-sm rounded-2xl p-4 shadow-md group-hover:shadow-lg transition-all duration-300">
+				<img src="{% static 'img/full-logo-transparent.png' %}" alt="Templeogue College Swim Pool Logo" width="180"
+					height="180" class="m-2">
+			</div>
+		</a>
+		<h1 class="hidden text-blue-800">Templeogue College Swim Pool</h1>
+	</div>
+
+	<!-- Top Row: Mobile Logo & Burger -->
+	<div class="flex items-center justify-between w-full lg:hidden">
+		<a href="{% url 'home' %}" class="flex items-center group transition-transform hover:scale-105">
+			<div class="bg-white/70 backdrop-blur-sm rounded-xl p-2 shadow-md group-hover:shadow-lg transition-all duration-300 mr-3">
+				<img src="{% static 'img/logo.png' %}" alt="Logo" width="40" height="40">
+			</div>
+			<strong class="text-blue-800 text-xl font-bold">TCSP</strong>
+		</a>
+		<!-- Mobile burger -->
+		<button @click="mobileOpen = !mobileOpen" 
+			class="text-blue-900 text-2xl p-3 rounded-xl bg-white/80 backdrop-blur-sm hover:bg-white transition-all duration-200 shadow-md hover:shadow-lg border border-blue-200/50">
+			<i x-show="!mobileOpen" class="fas fa-bars transition-transform duration-200"></i>
+			<i x-show="mobileOpen" class="fas fa-times transition-transform duration-200"></i>
+		</button>
+	</div>
+
+	<!-- Desktop Nav Row -->
+	<div class="hidden lg:flex w-full items-center justify-center mt-10 mb-4 relative">
+
+		<!-- Center Nav Links -->
+		<div class="absolute left-1/2 transform -translate-x-1/2 z-[1100]">
+			<ul class="flex items-center gap-6 xl:gap-8 text-blue-900 font-semibold text-lg">
+				{% for group, items in drawer_menus.items %}
+				{% if group != "User" and group != "Profile" %}
+				{% if items|length > 1 %}
+				<li x-data="{ open: false }" class="relative" style="z-index: 1200;">
+					<button @click="open = !open; console.log('Dropdown clicked, open:', !open)" :class="{'text-red-700 bg-red-50': open}"
+						class="px-3 xl:px-4 py-3 rounded-xl transition-all duration-200 flex items-center gap-2 focus:outline-none hover:bg-blue-50 hover:text-blue-700 hover:shadow-sm relative z-[1150] whitespace-nowrap xl:whitespace-normal min-w-max">
+						<span class="text-center leading-tight lg:whitespace-nowrap xl:whitespace-normal">{{ group }}</span>
+						<i class="fas fa-caret-down text-sm transition-transform duration-200 flex-shrink-0" :class="{'rotate-180': open}"></i>
+					</button>
+					<ul x-show="open" @click.away="open = false" x-transition
+						class="absolute left-0 top-full mt-3 p-3 bg-white shadow-2xl rounded-2xl w-72 text-left text-blue-900 z-[1200] border-2 border-blue-200"
+						style="position: absolute !important;">
+						{% for item in items %}
+						<li>
+							<a href="{{ item.resolve_url }}"
+								class="block px-4 py-3 hover:bg-blue-50 rounded-xl flex items-center gap-3 transition-all duration-200 hover:translate-x-1">
+								{% if item.icon_class %}<i class="{{ item.icon_class }} w-5 text-blue-600"></i>{% endif %}
+								{{ item.label }}
+							</a>
+						</li>
+						{% endfor %}
+					</ul>
+				</li>
+				{% else %}
+				{% with item=items.0 %}
+				<li>
+					<a href="{{ item.resolve_url }}" class="px-3 xl:px-4 py-3 rounded-xl hover:bg-blue-50 hover:text-blue-700 hover:shadow-sm transition-all duration-200 flex items-center gap-2 whitespace-nowrap xl:whitespace-normal min-w-max">
+						<span class="text-center leading-tight lg:whitespace-nowrap xl:whitespace-normal">{{ item.label }}</span>
+					</a>
+				</li>
+				{% endwith %}
+				{% endif %}
+				{% endif %}
+				{% endfor %}
+			</ul>
 		</div>
 	</div>
 

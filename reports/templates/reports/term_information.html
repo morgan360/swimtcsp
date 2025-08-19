@@ -1,79 +1,328 @@
-{% extends "admin/base_site.html" %}
+{% extends "reports/base_report.html" %}
+{% load static %}
 
-{% block title %}Reports - Admin{% endblock %}
-
-{% block branding %}
-    <h1 id="site-name">TCSP Report</h1>
-{% endblock %}
+{% block title %}Term Information Report{% endblock %}
 
 {% block content %}
-    <div class="module">
-        <h2>Term Dates</h2>
-        <table class="table">
-            <thead>
-            <tr>
-                <th scope="col">Date Type</th>
-                <th scope="col">Date</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr>
-                <td>Today</td>
-                <td>{{ today }}</td>
-            </tr>
-            <tr>
-                <td>Current Term</td>
-                <td>{{ current_term }}</td>
-            </tr>
-            <tr>
-                <td>Previous Term</td>
-                <td>{{ previous_term }}</td>
-            </tr>
-            <tr>
-                <td>Next Term</td>
-                <td>{{ next_term }}</td>
-            </tr>
-            <tr>
-                <td>Current Phase</td>
-                <td>{{ current_phase }}</td>
-            </tr>
-            <tr>
-                <td>Next Phase</td>
-                <td>{{ next_phase }}</td>
-            </tr>
-            </tbody>
-        </table>
+<div class="max-w-7xl mx-auto m-10">
+  <section class="space-y-8">
+    <!-- Header Section -->
+    <div class="text-center bg-white rounded-xl p-8 shadow-sm">
+      <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-green-500 to-green-600 rounded-xl shadow-lg mb-4">
+        <i class="fas fa-calendar-check text-2xl text-white"></i>
+      </div>
+      <h2 class="text-3xl font-bold text-green-900 mb-2">Term Information</h2>
+      <p class="text-green-800 max-w-2xl mx-auto">
+        Overview of current term dates, phases, and school enrollment status for administrative tracking and planning.
+      </p>
+    </div>
 
-        <h2>School Dates</h2>
+    <!-- Term Timeline Cards -->
+    <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+      <!-- Card Header -->
+      <div class="bg-gradient-to-r from-green-600 to-green-700 px-8 py-6">
+        <h3 class="text-xl font-semibold text-white flex items-center gap-3">
+          <i class="fas fa-calendar-alt"></i>
+          Term Timeline Overview
+        </h3>
+        <p class="text-green-100 text-sm mt-1">Academic term progression and current status</p>
+      </div>
 
-        <table class="table">
-            <thead>
-            <tr>
-                <th scope="col">School</th>
-                <th scope="col">Term</th>
-                <th scope="col">Status</th>
-                <th scope="col">Starts</th>
-                <th scope="col">Ends</th>
-                <th scope="col">Booking?</th>
-            </tr>
-            </thead>
-            <tbody>
-            {% for school_id, status in school_term_status.items %}
-                <tr>
-                    <td>{{ status.school_name }}</td>
-                    <td>{{ status.term_id }}</td>
-                    <td>{{ status.term_status }}</td>
-                    <td>{{ status.term_start_date }}</td>
-                    <td>{{ status.term_end_date }}</td>
-                    <td>{{ status.is_active}}</td>
-                </tr>
-            {% endfor %}
-            </tbody>
-        </table>
-     </div>
-    <!-- Link to Print Class Lists -->
-        <div class="module">
-            <a href="{% url 'reports:class_list_view' %}" class="button">Print Class Lists</a>
+      <!-- Term Progression Cards -->
+      <div class="p-8">
+        <!-- Main Term Timeline -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          
+          <!-- Previous Term -->
+          <div class="bg-gray-50 rounded-xl p-6 border-2 border-gray-200 relative">
+            <div class="text-center">
+              <div class="inline-flex items-center justify-center w-12 h-12 bg-gray-200 rounded-full mb-4">
+                <i class="fas fa-step-backward text-gray-600 text-xl"></i>
+              </div>
+              <h4 class="text-lg font-semibold text-gray-700 mb-2">Previous Term</h4>
+              <div class="bg-white rounded-lg p-4 shadow-sm">
+                <p class="text-2xl font-bold text-gray-800 mb-1">{{ previous_term }}</p>
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-700">
+                  <i class="fas fa-history mr-2"></i>Completed
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Current Term (Highlighted) -->
+          <div class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-6 border-2 border-green-300 relative transform scale-105 shadow-lg">
+            <!-- Active indicator -->
+            <div class="absolute -top-2 -right-2 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+              <i class="fas fa-check text-white text-xs"></i>
+            </div>
+            <div class="text-center">
+              <div class="inline-flex items-center justify-center w-12 h-12 bg-green-500 rounded-full mb-4">
+                <i class="fas fa-play text-white text-xl"></i>
+              </div>
+              <h4 class="text-lg font-semibold text-green-800 mb-2">Current Term</h4>
+              <div class="bg-white rounded-lg p-4 shadow-sm border border-green-200">
+                <p class="text-2xl font-bold text-green-800 mb-1">{{ current_term }}</p>
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                  <i class="fas fa-circle mr-2 text-xs animate-pulse"></i>Active Now
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Next Term -->
+          <div class="bg-orange-50 rounded-xl p-6 border-2 border-orange-200 relative">
+            <div class="text-center">
+              <div class="inline-flex items-center justify-center w-12 h-12 bg-orange-200 rounded-full mb-4">
+                <i class="fas fa-step-forward text-orange-600 text-xl"></i>
+              </div>
+              <h4 class="text-lg font-semibold text-orange-700 mb-2">Next Term</h4>
+              <div class="bg-white rounded-lg p-4 shadow-sm">
+                <p class="text-2xl font-bold text-orange-800 mb-1">{{ next_term }}</p>
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-orange-100 text-orange-700">
+                  <i class="fas fa-clock mr-2"></i>Upcoming
+                </span>
+              </div>
+            </div>
+          </div>
         </div>
 
+        <!-- Today & Phase Information -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          
+          <!-- Today Card -->
+          <div class="bg-blue-50 rounded-lg p-4 border border-blue-200">
+            <div class="flex items-center gap-3">
+              <div class="flex-shrink-0">
+                <div class="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
+                  <i class="fas fa-calendar-day text-white"></i>
+                </div>
+              </div>
+              <div>
+                <h5 class="font-semibold text-blue-900">Today's Date</h5>
+                <p class="text-blue-700 font-medium">{{ today }}</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Current Phase Card -->
+          <div class="bg-purple-50 rounded-lg p-4 border border-purple-200">
+            <div class="flex items-center gap-3">
+              <div class="flex-shrink-0">
+                <div class="w-10 h-10 bg-purple-500 rounded-lg flex items-center justify-center">
+                  <i class="fas fa-flag text-white"></i>
+                </div>
+              </div>
+              <div>
+                <h5 class="font-semibold text-purple-900">Current Phase</h5>
+                <p class="text-purple-700 font-medium">{{ current_phase }}</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Next Phase Card -->
+          <div class="bg-indigo-50 rounded-lg p-4 border border-indigo-200">
+            <div class="flex items-center gap-3">
+              <div class="flex-shrink-0">
+                <div class="w-10 h-10 bg-indigo-500 rounded-lg flex items-center justify-center">
+                  <i class="fas fa-flag-checkered text-white"></i>
+                </div>
+              </div>
+              <div>
+                <h5 class="font-semibold text-indigo-900">Next Phase</h5>
+                <p class="text-indigo-700 font-medium">{{ next_phase }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Timeline Progress Bar -->
+        <div class="mt-8">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-sm font-medium text-gray-500">Term Progress</span>
+            <span class="text-sm font-medium text-green-600">Currently Active</span>
+          </div>
+          <div class="w-full bg-gray-200 rounded-full h-3">
+            <div class="bg-gradient-to-r from-gray-400 via-green-500 to-orange-400 h-3 rounded-full relative">
+              <!-- Current position indicator -->
+              <div class="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1 w-5 h-5 bg-green-500 rounded-full border-2 border-white shadow-lg"></div>
+            </div>
+          </div>
+          <div class="flex justify-between mt-2 text-xs text-gray-500">
+            <span>Previous</span>
+            <span class="font-semibold text-green-600">Current</span>
+            <span>Next</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- School Dates Card -->
+    <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+      <!-- Card Header -->
+      <div class="bg-gradient-to-r from-blue-600 to-blue-700 px-8 py-6">
+        <h3 class="text-xl font-semibold text-white flex items-center gap-3">
+          <i class="fas fa-school"></i>
+          School Term Status
+        </h3>
+        <p class="text-blue-100 text-sm mt-1">Individual school term dates and booking availability</p>
+      </div>
+
+      <!-- School Dates Table -->
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-blue-50">
+            <tr>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-blue-800 uppercase tracking-wider">
+                School
+              </th>
+              <th scope="col" class="px-6 py-3 text-center text-xs font-semibold text-blue-800 uppercase tracking-wider">
+                Term ID
+              </th>
+              <th scope="col" class="px-6 py-3 text-center text-xs font-semibold text-blue-800 uppercase tracking-wider">
+                Status
+              </th>
+              <th scope="col" class="px-6 py-3 text-center text-xs font-semibold text-blue-800 uppercase tracking-wider">
+                Start Date
+              </th>
+              <th scope="col" class="px-6 py-3 text-center text-xs font-semibold text-blue-800 uppercase tracking-wider">
+                End Date
+              </th>
+              <th scope="col" class="px-6 py-3 text-center text-xs font-semibold text-blue-800 uppercase tracking-wider">
+                Booking Available
+              </th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            {% for school_id, status in school_term_status.items %}
+              <tr class="hover:bg-blue-50 transition-colors duration-150">
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                  <div class="flex items-center">
+                    <i class="fas fa-graduation-cap text-blue-500 mr-2"></i>
+                    {{ status.school_name }}
+                  </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-600">
+                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                    {{ status.term_id }}
+                  </span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-center">
+                  {% if status.term_status == "Active" %}
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                      <i class="fas fa-check-circle mr-1"></i>{{ status.term_status }}
+                    </span>
+                  {% elif status.term_status == "Upcoming" %}
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                      <i class="fas fa-clock mr-1"></i>{{ status.term_status }}
+                    </span>
+                  {% else %}
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                      <i class="fas fa-minus-circle mr-1"></i>{{ status.term_status }}
+                    </span>
+                  {% endif %}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-600">
+                  <div class="flex flex-col">
+                    <span class="font-medium">{{ status.term_start_date|date:"M j, Y" }}</span>
+                    <span class="text-xs text-gray-500">{{ status.term_start_date|date:"l" }}</span>
+                  </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-600">
+                  <div class="flex flex-col">
+                    <span class="font-medium">{{ status.term_end_date|date:"M j, Y" }}</span>
+                    <span class="text-xs text-gray-500">{{ status.term_end_date|date:"l" }}</span>
+                  </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-center">
+                  {% if status.is_active %}
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                      <i class="fas fa-check mr-1"></i>Yes
+                    </span>
+                  {% else %}
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                      <i class="fas fa-times mr-1"></i>No
+                    </span>
+                  {% endif %}
+                </td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="6" class="px-6 py-8 text-center text-gray-500 text-sm">
+                  <div class="flex flex-col items-center gap-2">
+                    <svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                    <span class="font-medium">No school term data available</span>
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Action Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <!-- Class Lists Action -->
+      <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-200 hover:shadow-xl transition-shadow duration-300">
+        <div class="flex items-center gap-4">
+          <div class="flex-shrink-0">
+            <div class="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-lg">
+              <i class="fas fa-clipboard-list text-blue-600 text-xl"></i>
+            </div>
+          </div>
+          <div class="flex-1">
+            <h4 class="text-lg font-semibold text-gray-900 mb-1">Generate Class Lists</h4>
+            <p class="text-gray-600 text-sm">Create printable class attendance sheets and enrollment reports</p>
+          </div>
+        </div>
+        <div class="mt-4">
+          <a href="{% url 'reports:class_list_view' %}" 
+             class="inline-flex items-center justify-center w-full px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors duration-200">
+            <i class="fas fa-print mr-2"></i>
+            Print Class Lists
+          </a>
+        </div>
+      </div>
+
+      <!-- Summary Stats -->
+      <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
+        <div class="flex items-center gap-4 mb-4">
+          <div class="flex-shrink-0">
+            <div class="flex items-center justify-center w-12 h-12 bg-green-100 rounded-lg">
+              <i class="fas fa-chart-bar text-green-600 text-xl"></i>
+            </div>
+          </div>
+          <div class="flex-1">
+            <h4 class="text-lg font-semibold text-gray-900 mb-1">Quick Statistics</h4>
+            <p class="text-gray-600 text-sm">Overview of system status and activity</p>
+          </div>
+        </div>
+        <div class="space-y-3">
+          <div class="flex justify-between items-center py-2 border-b border-gray-100">
+            <span class="text-sm text-gray-600">Total Schools</span>
+            <span class="font-semibold text-gray-900">{{ school_term_status|length }}</span>
+          </div>
+          <div class="flex justify-between items-center py-2 border-b border-gray-100">
+            <span class="text-sm text-gray-600">Active Terms</span>
+            <span class="font-semibold text-green-600">
+              {% for school_id, status in school_term_status.items %}
+                {% if status.term_status == "Active" %}1{% endif %}
+              {% endfor %}
+            </span>
+          </div>
+          <div class="flex justify-between items-center py-2">
+            <span class="text-sm text-gray-600">Booking Available</span>
+            <span class="font-semibold text-blue-600">
+              {% for school_id, status in school_term_status.items %}
+                {% if status.is_active %}1{% endif %}
+              {% endfor %}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
 {% endblock %}

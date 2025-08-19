@@ -18,14 +18,17 @@
 
 	<!-- Top Row: Mobile Logo & Burger -->
 	<div class="flex items-center justify-between w-full lg:hidden">
-		<a href="{% url 'home' %}" class="flex items-center">
-			<img src="{% static 'img/logo.png' %}" alt="Logo" width="40" height="40" class="mr-2">
-			<strong class="text-blue-800">TCSP</strong>
+		<a href="{% url 'home' %}" class="flex items-center group transition-transform hover:scale-105">
+			<div class="bg-white/70 backdrop-blur-sm rounded-xl p-2 shadow-md group-hover:shadow-lg transition-all duration-300 mr-3">
+				<img src="{% static 'img/logo.png' %}" alt="Logo" width="40" height="40">
+			</div>
+			<strong class="text-blue-800 text-xl font-bold">TCSP</strong>
 		</a>
 		<!-- Mobile burger -->
-		<button @click="mobileOpen = !mobileOpen" class="text-blue-900 text-2xl">
-			<i x-show="!mobileOpen" class="fas fa-bars"></i>
-			<i x-show="mobileOpen" class="fas fa-times"></i>
+		<button @click="mobileOpen = !mobileOpen" 
+			class="text-blue-900 text-2xl p-3 rounded-xl bg-white/80 backdrop-blur-sm hover:bg-white transition-all duration-200 shadow-md hover:shadow-lg border border-blue-200/50">
+			<i x-show="!mobileOpen" class="fas fa-bars transition-transform duration-200"></i>
+			<i x-show="mobileOpen" class="fas fa-times transition-transform duration-200"></i>
 		</button>
 	</div>
 
@@ -191,22 +194,78 @@
 	</div>
 
 	<!-- Mobile Menu -->
-	<div class="w-full mt-3 lg:hidden" x-show="mobileOpen" x-transition>
-		<ul class="flex flex-col gap-2 bg-white rounded-md p-4 text-blue-900 font-semibold">
+	<div class="w-full mt-4 lg:hidden" x-show="mobileOpen" x-transition>
+		<div class="bg-white/95 backdrop-blur-sm rounded-2xl p-6 shadow-xl border-2 border-blue-200">
 			{% for group, items in drawer_menus.items %}
 			{% if group != "User" and group != "Profile" %}
-			<li class="font-bold">{{ group }}</li>
-			{% for item in items %}
-			<li>
-				<a href="{{ item.resolve_url }}" @click="mobileOpen = false"
-					class="block px-3 py-2 rounded hover:bg-blue-100 transition">
-					{{ item.label }}
-				</a>
-			</li>
-			{% endfor %}
+			<!-- Group Header -->
+			<div class="mb-6">
+				<div class="relative mb-4">
+					<h3 class="inline-flex items-center gap-2 font-bold text-lg text-white bg-gradient-to-r from-blue-600 to-blue-700 px-4 py-2 rounded-xl shadow-lg">
+						<i class="fas fa-chevron-right text-sm"></i>
+						{{ group }}
+					</h3>
+					<div class="absolute -bottom-1 left-4 w-8 h-1 bg-gradient-to-r from-blue-400 to-blue-500 rounded-full"></div>
+				</div>
+				<ul class="space-y-1">
+					{% for item in items %}
+					<li>
+						<a href="{{ item.resolve_url }}" @click="mobileOpen = false"
+							class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gradient-to-r hover:from-blue-50 hover:to-blue-100 transition-all duration-300 text-blue-900 font-medium hover:translate-x-2 group relative overflow-hidden">
+							<!-- Background animation on hover -->
+							<div class="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-blue-600/10 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+							
+							{% if item.icon_class %}
+								<div class="relative z-10 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center group-hover:bg-blue-200 group-hover:scale-110 transition-all duration-300">
+									<i class="{{ item.icon_class }} text-blue-600 group-hover:text-blue-700 text-sm"></i>
+								</div>
+							{% else %}
+								<div class="relative z-10 w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center group-hover:bg-blue-100 group-hover:scale-110 transition-all duration-300">
+									<i class="fas fa-circle text-blue-400 text-xs"></i>
+								</div>
+							{% endif %}
+							
+							<span class="relative z-10 group-hover:font-semibold transition-all duration-300">{{ item.label }}</span>
+							
+							<!-- Arrow indicator -->
+							<i class="fas fa-chevron-right relative z-10 ml-auto text-blue-400 text-xs opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-300"></i>
+						</a>
+					</li>
+					{% endfor %}
+				</ul>
+			</div>
 			{% endif %}
 			{% endfor %}
-		</ul>
+			
+			<!-- Mobile Auth Section -->
+			{% if not user.is_authenticated %}
+			<div class="pt-6 border-t-2 border-gradient-to-r from-blue-200 to-blue-300">
+				<div class="relative mb-4">
+					<h3 class="inline-flex items-center gap-2 font-bold text-lg text-white bg-gradient-to-r from-purple-600 to-blue-600 px-4 py-2 rounded-xl shadow-lg">
+						<i class="fas fa-user-shield text-sm"></i>
+						Account
+					</h3>
+					<div class="absolute -bottom-1 left-4 w-8 h-1 bg-gradient-to-r from-purple-400 to-blue-400 rounded-full"></div>
+				</div>
+				<div class="space-y-3">
+					<a href="{% url 'account_signup' %}" @click="mobileOpen = false"
+						class="flex items-center justify-center gap-3 w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-4 rounded-xl text-sm font-semibold hover:from-blue-700 hover:to-blue-800 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 group relative overflow-hidden">
+						<div class="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+						<i class="fas fa-user-plus relative z-10 group-hover:scale-110 transition-transform duration-300"></i>
+						<span class="relative z-10">Sign up</span>
+						<i class="fas fa-arrow-right relative z-10 ml-auto opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-300 text-xs"></i>
+					</a>
+					<a href="{% url 'account_login' %}" @click="mobileOpen = false"
+						class="flex items-center justify-center gap-3 w-full px-6 py-4 text-sm font-semibold text-blue-900 bg-white rounded-xl hover:bg-gradient-to-r hover:from-blue-50 hover:to-blue-100 transition-all duration-300 shadow-md hover:shadow-lg border-2 border-blue-200 hover:border-blue-300 transform hover:-translate-y-1 group relative overflow-hidden">
+						<div class="absolute inset-0 bg-gradient-to-r from-blue-500/5 to-blue-600/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+						<i class="fas fa-sign-in-alt relative z-10 group-hover:scale-110 transition-transform duration-300"></i>
+						<span class="relative z-10">Login</span>
+						<i class="fas fa-arrow-right relative z-10 ml-auto opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-300 text-xs"></i>
+					</a>
+				</div>
+			</div>
+			{% endif %}
+		</div>
 	</div>
 
 	<!-- Logout Confirmation Modal -->

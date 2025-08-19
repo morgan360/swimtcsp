@@ -1,16 +1,15 @@
 {% extends "dashboard/base_dashboard.html" %}
+{% load static %}
 {% block content %}
 <div class="max-w-7xl mx-auto">
   <!-- Welcome Hero Section -->
   <div class="bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg shadow-lg overflow-hidden mb-8">
     <div class="px-8 py-12 text-center">
       <div class="max-w-3xl mx-auto">
-        <h1 class="text-4xl font-bold text-white mb-4">
-          🏊‍♂️ Welcome to TCSP Admin Dashboard
-        </h1>
-        <p class="text-xl text-blue-100 mb-6">
-          Manage your swimming pool operations with ease
-        </p>
+        <img src="{% static 'img/logo.png' %}" alt="Templeogue College Swim Pool Logo" class="h-12 mx-auto mb-5" />
+        <h2 class="text-4xl font-bold text-white mb-4">
+          Welcome to TCSP Admin Dashboard
+        </h2>
         <p class="text-blue-200">
           Use the navigation above to access different administrative sections
         </p>
@@ -21,19 +20,53 @@
   <!-- Quick Access Cards -->
   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
     <!-- Public Swims Card -->
-    <a href="{% url 'dashboard:dashboard_public_swims' %}" 
-       class="group bg-white rounded-lg shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+    <div class="bg-white rounded-lg shadow-md hover:shadow-lg transition-all duration-300">
       <div class="p-6">
         <div class="flex items-center justify-between mb-4">
           <div class="bg-blue-100 p-3 rounded-lg">
             <i class="fas fa-swimmer text-2xl text-blue-600"></i>
           </div>
-          <i class="fas fa-arrow-right text-gray-400 group-hover:text-blue-600 transition-colors duration-300"></i>
+          <div class="text-right">
+            <div class="text-2xl font-bold text-blue-600">{{ swim_stats.active_products }}</div>
+            <div class="text-xs text-gray-500">Active</div>
+          </div>
         </div>
         <h3 class="text-lg font-semibold text-gray-900 mb-2">Public Swims</h3>
-        <p class="text-gray-600 text-sm">Manage public swimming sessions and products</p>
+        <p class="text-gray-600 text-sm mb-4">Manage public swimming sessions and products</p>
+        
+        <!-- Quick Stats -->
+        <div class="grid grid-cols-2 gap-2 mb-4 text-center">
+          <div class="bg-blue-50 rounded p-2">
+            <div class="font-bold text-sm text-blue-700">{{ swim_stats.total_products }}</div>
+            <div class="text-xs text-blue-600">Total</div>
+          </div>
+          <div class="bg-green-50 rounded p-2">
+            <div class="font-bold text-sm text-green-700">{{ swim_stats.today_orders_count }}</div>
+            <div class="text-xs text-green-600">Today</div>
+          </div>
+        </div>
+        
+        <!-- Admin Action Buttons -->
+        <div class="flex gap-2">
+          <a href="/admin/swims/publicswimproduct/add/" 
+             class="flex-1 bg-blue-600 text-white text-xs px-3 py-2 rounded-md hover:bg-blue-700 text-center transition-colors duration-200">
+            <i class="fas fa-plus mr-1"></i>Add New
+          </a>
+          <a href="/admin/swims/publicswimproduct/" 
+             class="flex-1 bg-gray-100 text-gray-700 text-xs px-3 py-2 rounded-md hover:bg-gray-200 text-center transition-colors duration-200">
+            <i class="fas fa-list mr-1"></i>View All
+          </a>
+        </div>
+        
+        <!-- Dashboard Link -->
+        <div class="mt-3">
+          <a href="{% url 'dashboard:dashboard_public_swims' %}" 
+             class="block w-full bg-blue-50 text-blue-700 text-xs px-3 py-2 rounded-md hover:bg-blue-100 text-center transition-colors duration-200">
+            <i class="fas fa-tachometer-alt mr-1"></i>Dashboard
+          </a>
+        </div>
       </div>
-    </a>
+    </div>
 
     <!-- Lessons Card -->
     <a href="{% url 'dashboard:dashboard_lessons' %}" 

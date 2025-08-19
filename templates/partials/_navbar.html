@@ -151,8 +151,6 @@
 		<div class="absolute left-1/2 transform -translate-x-1/2 z-[1100]">
 			<ul class="flex items-center gap-6 xl:gap-8 text-blue-900 font-semibold text-lg">
 				{% for group, items in drawer_menus.items %}
-				{% if group != "User" and group != "Profile" %}
-				{% if items|length > 1 %}
 				<li x-data="{ open: false }" class="relative" style="z-index: 1200;">
 					<button @click="open = !open; console.log('Dropdown clicked, open:', !open)" :class="{'text-red-700 bg-red-50': open}"
 						class="px-3 xl:px-4 py-3 rounded-xl transition-all duration-200 flex items-center gap-2 focus:outline-none hover:bg-blue-50 hover:text-blue-700 hover:shadow-sm relative z-[1150] whitespace-nowrap xl:whitespace-normal min-w-max">
@@ -173,16 +171,6 @@
 						{% endfor %}
 					</ul>
 				</li>
-				{% else %}
-				{% with item=items.0 %}
-				<li>
-					<a href="{{ item.resolve_url }}" class="px-3 xl:px-4 py-3 rounded-xl hover:bg-blue-50 hover:text-blue-700 hover:shadow-sm transition-all duration-200 flex items-center gap-2 whitespace-nowrap xl:whitespace-normal min-w-max">
-						<span class="text-center leading-tight lg:whitespace-nowrap xl:whitespace-normal">{{ item.label }}</span>
-					</a>
-				</li>
-				{% endwith %}
-				{% endif %}
-				{% endif %}
 				{% endfor %}
 			</ul>
 		</div>
@@ -192,7 +180,6 @@
 	<div class="w-full mt-4 lg:hidden" x-show="mobileOpen" x-transition>
 		<div class="bg-white/95 backdrop-blur-sm rounded-2xl p-6 shadow-xl border-2 border-blue-200">
 			{% for group, items in drawer_menus.items %}
-			{% if group != "User" and group != "Profile" %}
 			<!-- Group Header -->
 			<div class="mb-6">
 				<div class="relative mb-4">
@@ -229,7 +216,6 @@
 					{% endfor %}
 				</ul>
 			</div>
-			{% endif %}
 			{% endfor %}
 			
 			<!-- Mobile Auth Section -->

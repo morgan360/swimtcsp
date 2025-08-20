@@ -5,7 +5,7 @@
 <p>You have successfully booked the following:</p>
 
 <ul>
-  <li><strong>Swimling:</strong> {{ swimling.full_name }}</li>
+  <li><strong>Swimling:</strong> {{ swimling.first_name }} {{ swimling.last_name }}</li>
   <li><strong>Lesson:</strong> {{ lesson.name }}</li>
   <li><strong>Day:</strong> {{ lesson.get_day_of_week_display }}</li>
   <li><strong>Time:</strong> {{ lesson.start_time }} - {{ lesson.end_time }}</li>

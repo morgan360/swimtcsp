@@ -42,6 +42,8 @@
             </label>
             {% if field.name == "first_name" %}
               {{ field|add_class:"w-full px-4 py-2 border border-gray-300 bg-white/70 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600/50"|attr:"placeholder:First name" }}
+            {% elif field.name == "last_name" %}
+              {{ field|add_class:"w-full px-4 py-2 border border-gray-300 bg-white/70 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600/50"|attr:"placeholder:Last name" }}
             {% else %}
               {{ field|add_class:"w-full px-4 py-2 border border-gray-300 bg-white/70 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600/50" }}
             {% endif %}

@@ -80,7 +80,7 @@ def join_schools_program(request):
         if form.is_valid():
             schools_group, _ = Group.objects.get_or_create(name='schools')
             request.user.groups.add(schools_group)
-            return redirect("swimling_dashboard")  # or wherever you want to redirect
+            return redirect("/dashboard/")  # or wherever you want to redirect
     else:
         form = JoinSchoolsForm()
 

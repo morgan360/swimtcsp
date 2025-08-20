@@ -1,6 +1,7 @@
 {% extends "reports/base_report.html" %}
 {% load static %}
 
+
 {% block title %}Term Information Report{% endblock %}
 
 {% block content %}
@@ -118,6 +119,51 @@
               </div>
             </div>
           </div>
+=======
+{% block title %}Reports - Admin{% endblock %}
+
+{% block branding %}
+    <h2 id="site-name">TCSP Report</h2>
+{% endblock %}
+
+{% block content %}
+    <div class="module">
+        <h3>Term Dates</h3>
+        <table class="table">
+            <thead>
+            <tr>
+                <th scope="col">Date Type</th>
+                <th scope="col">Date</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td>Today</td>
+                <td>{{ today }}</td>
+            </tr>
+            <tr>
+                <td>Current Term</td>
+                <td>{{ current_term }}</td>
+            </tr>
+            <tr>
+                <td>Previous Term</td>
+                <td>{{ previous_term }}</td>
+            </tr>
+            <tr>
+                <td>Next Term</td>
+                <td>{{ next_term }}</td>
+            </tr>
+            <tr>
+                <td>Current Phase</td>
+                <td>{{ current_phase }}</td>
+            </tr>
+            <tr>
+                <td>Next Phase</td>
+                <td>{{ next_phase }}</td>
+            </tr>
+            </tbody>
+        </table>
+
 
           <!-- Next Phase Card -->
           <div class="bg-indigo-50 rounded-lg p-4 border border-indigo-200">

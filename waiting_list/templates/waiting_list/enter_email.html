@@ -1,7 +1,7 @@
 {% extends 'base/_base.html' %}
 {% block content %}
 <div class="max-w-md mx-auto mt-12 p-6 bg-white shadow-md rounded">
-  <h1 class="text-xl font-bold mb-4 text-center">Join the Waiting List</h1>
+  <h2 class="text-xl font-bold mb-4 text-center">Join the Waiting List</h2>
   <form method="post" class="space-y-4">
     {% csrf_token %}
     {{ form.email.label_tag }}

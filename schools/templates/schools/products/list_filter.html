@@ -24,9 +24,9 @@
 
       <!-- 🛍️ Product List -->
       <div class="md:col-span-3">
-        <h1 class="text-2xl font-bold text-blue-700 mb-6">
+        <h2 class="text-2xl font-bold text-blue-700 mb-6">
           {% if filter.q %}Filtered Products{% else %}All Products{% endif %}
-        </h1>
+        </h2>
 
         {% for product in filter.qs %}
           <div class="bg-white border rounded-lg shadow-sm mb-6 overflow-hidden">

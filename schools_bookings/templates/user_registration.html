@@ -10,7 +10,7 @@
 {% block content %}
 <div class="flex justify-center items-center min-h-screen bg-gray-800">
     <div class="w-1/3 mb-20">
-        <h1 class="text-center text-2xl font-bold mb-4 text-white">User Registration</h1>
+        <h2 class="text-center text-2xl font-bold mb-4 text-white">User Registration</h2>
         <p class="text-center text-white">Step {{ wizard.steps.current }} of {{ wizard.steps.count }}</p>
 
         <form action="" method="post" class="space-y-4 bg-gray-700 p-6 rounded-lg">
@@ -20,7 +20,7 @@
                 {{ wizard.form.management_form }}
                 {% for form in wizard.form.forms %}
                     <div>
-                        <h4 class="font-semibold text-white">Swimmer {{ forloop.counter }}</h4>
+                        <h3 class="font-semibold text-white">Swimmer {{ forloop.counter }}</h3>
                         {% for field in form %}
                             <div class="mb-4">
                                 <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-white">{{ field.label }}</label>

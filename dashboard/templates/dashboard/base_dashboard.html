@@ -1,33 +1,144 @@
-<!-- templates/dashboard/base_dashboard.html -->
 {% load static %}
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8">
-  <title>TCSP Admin</title>
-  <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  {% block subhead %}{% endblock %}
+
+  <!-- SEO / Social -->
+  <meta property="og:title" content="TCSP Admin Dashboard">
+  <meta property="og:description" content="Administrative dashboard for Templeogue College Swimming Pool.">
+  <meta property="og:image" content="{% static 'img/og-image.jpg' %}">
+  <meta property="og:type" content="website">
+
+  <!-- Tailwind -->
+  <link href="{% static 'css/styles.css' %}" rel="stylesheet">
+
+  <!-- HTMX & Alpine with Collapse plugin -->
+  <script src="https://unpkg.com/htmx.org@1.9.10" defer></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="/static/favicon/favicon-96x96.png" sizes="96x96" />
+  <link rel="icon" type="image/svg+xml" href="/static/favicon/favicon.svg" />
+  <link rel="shortcut icon" href="/static/favicon/favicon.ico" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/static/favicon/apple-touch-icon.png" />
+  <link rel="manifest" href="/static/favicon/site.webmanifest" />
+
+  <title>{% block title %}TCSP Admin Dashboard{% endblock %}</title>
+
+  <!--Font Awesome-->
+  <script src="https://kit.fontawesome.com/dc45154bc3.js" crossorigin="anonymous"></script>
 </head>
-<body style="background-color: var(--background-color);">
 
-<div class="columns is-gapless" style="min-height: 100vh;">
-  <!-- Sidebar -->
-  <aside class="menu column is-2 has-background-white p-3" style="border-right: 1px solid #ddd;">
-    <p class="menu-label has-text-weight-semibold">Admin Sections</p>
-    <ul class="menu-list">
-      <li><a href="{% url 'dashboard:dashboard_public_swims' %}">🏊 Public Swims</a></li>
-      <li><a href="{% url 'dashboard:dashboard_lessons' %}">📚 Lessons</a></li>
-      <li><a href="{% url 'dashboard:dashboard_schools' %}">🏫 Schools</a></li>
-      <li><a href="{% url 'dashboard:dashboard_orders' %}">💳 Orders</a></li>
-      <li><a href="{% url 'dashboard:dashboard_general' %}">⚙️ General</a></li>
-    </ul>
-  </aside>
+<body class="overflow-x-hidden">
+  <div x-data="{ dark: false, drawerOpen: false }" class="bg-blue-900">
+    {# ✅ Include Navbar inside body #}
+    <!-- Mobile Drawer -->
+    <div class="lg:hidden">
+      {% include "partials/_drawer.html" %}
+    </div>
 
-  <!-- Main content -->
-  <main class="column is-10 p-5">
-    {% block content %}
+    <!-- Desktop Navbar -->
+    <div class="hidden lg:block">
+      {% include "partials/_navbar.html" %}
+    </div>
+
+    <!-- Admin Navigation Mini Bar -->
+    <div class="bg-gradient-to-r from-blue-600 to-blue-900 border-b border-gray-200 shadow-sm">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between h-12">
+          <div class="flex items-center space-x-1">
+            <span class="text-sm font-semibold text-white mr-4">Quick Links:</span>
+            <nav class="flex space-x-1">
+              <a href="{% url 'dashboard:dashboard_home' %}"
+                class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors duration-150">
+                <i class="fa-solid fa-house mr-1.5 text-pink-400"></i>
+                Admin Home
+              </a>
+              <a href="{% url 'dashboard:dashboard_public_swims' %}"
+                class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors duration-150">
+                <i class="fas fa-swimmer mr-1.5 text-blue-500"></i>
+                Public Swims
+              </a>
+              <a href="{% url 'dashboard:dashboard_lessons' %}"
+                class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors duration-150">
+                <i class="fas fa-book mr-1.5 text-green-500"></i>
+                Lessons
+              </a>
+              <a href="{% url 'dashboard:dashboard_schools' %}"
+                class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors duration-150">
+                <i class="fas fa-school mr-1.5 text-yellow-500"></i>
+                Schools
+              </a>
+              <a href="{% url 'dashboard:dashboard_orders' %}"
+                class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors duration-150">
+                <i class="fas fa-credit-card mr-1.5 text-purple-500"></i>
+                Orders
+              </a>
+              <a href="{% url 'dashboard:dashboard_general' %}"
+                class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors duration-150">
+                <i class="fas fa-cog mr-1.5 text-gray-500"></i>
+                General
+              </a>
+            </nav>
+          </div>
+          <div class="text-xs text-white font-medium">
+            Administrator Panel
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {% if messages %}
+    <div id="message-container" class="fixed top-80 left-1/2 -translate-x-1/2 z-50 w-fit max-w-full px-4 shadow-lg text-lg mb-2 p-3 
+            rounded bg-green-100 text-green-800 border-green-300 text-center">
+      {% for message in messages %}
+      <div id="message-{{ forloop.counter }}" class="fade-message" style="opacity: 1; transition: opacity 1s ease;">
+        {{ message }}
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <main class="section">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 m-10">
+        {% block content %}{% endblock %}
+      </div>
+    </main>
+
+    {# ✅ Optional per-page footer override #}
+    {% block footer %}
+    {% include "partials/_footer.html" %}
     {% endblock %}
-  </main>
-</div>
+    {% block extra_js %}{% endblock %}
+  </div>
+  {% block scripts %}
+  {% endblock %}
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      setTimeout(() => {
+        const messages = document.querySelectorAll(".fade-message");
+        messages.forEach(el => {
+          el.style.opacity = "0";  // triggers the transition
+          setTimeout(() => {
+            el.remove();
+            // After all messages are removed, remove the container if it's empty
+            const container = document.getElementById("message-container");
+            if (container && container.children.length === 0) {
+              container.remove();
+            }
+          }, 1000);  // matches transition duration
+        });
+      }, 3000);  // delay before fade starts
+    });
+  </script>
 
 </body>
+
 </html>

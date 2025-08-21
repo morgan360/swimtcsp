@@ -108,12 +108,40 @@ def enrollment_report_data(request):
     elif order_column == 7:
         data.sort(key=lambda x: x['utilization'], reverse=(order_dir == 'desc'))
 
+    def calculate_summary(products):
+        total_programs = len(products)
+        total_enrollments = sum(p.current_enrollments for p in products)
+        total_capacity = sum(p.num_places or 0 for p in products)
+        utilization = (total_enrollments / total_capacity * 100) if total_capacity > 0 else 0
+        return {
+            "total_programs": total_programs,
+            "total_enrollments": total_enrollments,
+            "total_capacity": total_capacity,
+            "utilization": round(utilization, 1)
+        }
+
+    # Calculate all summaries
+    summary = {
+        "previous": calculate_summary(
+            Product.objects.annotate(
+                current_enrollments=Count('enrollments', filter=Q(enrollments__term=Term.get_previous_term()))
+            )
+        ),
+        "current": calculate_summary(
+            Product.objects.annotate(
+                current_enrollments=Count('enrollments', filter=Q(enrollments__term=Term.get_current_term()))
+            )
+        ),
+        "next": calculate_summary(
+            Product.objects.annotate(
+                current_enrollments=Count('enrollments', filter=Q(enrollments__term=Term.get_next_term()))
+            )
+        ),
+    }
+
     return JsonResponse({
-        'draw': draw,
-        'recordsTotal': records_total,
-        'recordsFiltered': records_filtered,
-        'data': data,
-        'summary': summary,
+        "data": data,
+        "summary": summary,
     })
 
 

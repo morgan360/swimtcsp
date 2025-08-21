@@ -135,9 +135,17 @@ class SkillAdmin(ModelAdmin):
     list_filter = ['cas']
 
 class CategorySkillAdmin(ModelAdmin):
-    list_display = ['category', 'skill', 'order']
+    list_display = ['category', 'skill', 'order', 'get_stage']
     search_fields = ['category__name', 'skill__name']
-    list_filter = ['category']
+    list_filter = ['category__stage', 'category']
+
+    def get_stage(self, obj):
+        return obj.category.stage
+    get_stage.short_description = "Stage"
+
+    def get_ordering(self, request):
+        # First by category.stage, then by CategorySkill.order
+        return ['category__stage', 'order']
 
 class SkillAssessmentAdmin(ModelAdmin):
     list_display = ['swimling', 'skill', 'term', 'rating', 'instructor']

@@ -41,7 +41,7 @@ class ProgramAdmin(ImportExportMixin, admin.ModelAdmin):
 
 class CategoryAdmin(ImportExportMixin, admin.ModelAdmin):
     resource_class = CategoryResource
-    list_display = ['name', 'program', 'slug']
+    list_display = ['name', 'program', 'slug', 'stage']
 
 # ✅ Register only to your custom admin site
 lessons_admin_site.register(Product, ProductAdmin)

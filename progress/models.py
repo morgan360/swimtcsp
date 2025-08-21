@@ -26,7 +26,7 @@ class Skill(models.Model):
     cas = models.ForeignKey(CoreAquaticSkill, on_delete=models.CASCADE, related_name="skills")
 
     def __str__(self):
-        return f"{self.code} – {self.name}"
+        return f"{self.name}"
 
 class CategorySkill(models.Model):
     category = models.ForeignKey("lessons.Category", on_delete=models.CASCADE)
@@ -35,7 +35,7 @@ class CategorySkill(models.Model):
 
     class Meta:
         unique_together = ("category", "skill")
-        ordering = ["order"]
+        ordering = ["category__stage", "order"]
 
 class SkillAssessment(models.Model):
     swimling = models.ForeignKey(Swimling, on_delete=models.CASCADE)

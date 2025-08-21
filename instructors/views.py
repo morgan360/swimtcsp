@@ -37,10 +37,17 @@ def instructor_dashboard(request):
         "terms": terms,
     })
 
+def stage_key(label: str):
+    STAGE_ORDER = ["Stage 1", "Stage 2", "Stage 3", "Stage 4", "Stage 5", "Stage 6",
+                   "Stage 7", "Stage 8", "Stage 9", "Stage 10", ""]
+    try:
+        return STAGE_ORDER.index(label or "")
+    except ValueError:
+        return len(STAGE_ORDER)
+
 @transaction.atomic
 @login_required
 def evaluate_progress(request, swimling_id):
-    # Terms this swimling was actually enrolled in
     enrollments = (
         LessonEnrollment.objects
         .filter(swimling_id=swimling_id)
@@ -50,19 +57,17 @@ def evaluate_progress(request, swimling_id):
     if not enrollments.exists():
         return render(request, "instructors/evaluate_progress_empty.html", {"swimling_id": swimling_id})
 
-    # Build terms in order + map header label from the lesson's category short_name
     terms, header_map, seen = [], {}, set()
     for e in enrollments:
         if e.term_id not in seen:
             terms.append(e.term)
             seen.add(e.term_id)
         cat_short = getattr(getattr(e.lesson, "category", None), "short_name", None)
-        header_map[e.term_id] = cat_short  # e.g. "Beg-1", etc. (may be None)
+        header_map[e.term_id] = cat_short
 
     swimling = enrollments.first().swimling
     current_term = terms[-1]
 
-    # Ensure there is one SkillAssessment per skill for the current term
     skills = Skill.objects.select_related("cas").order_by("cas__name", "name")
     existing = SkillAssessment.objects.filter(swimling=swimling, term=current_term)
     existing_by_skill = {a.skill_id: a for a in existing}
@@ -80,7 +85,6 @@ def evaluate_progress(request, swimling_id):
         .order_by("skill__cas__name", "skill__name")
     )
 
-    # Past-term history (read-only)
     past_terms = [t for t in terms if t.id != current_term.id]
     history_map = {}
     if past_terms:
@@ -107,27 +111,6 @@ def evaluate_progress(request, swimling_id):
             return redirect("instructors:evaluate_progress", swimling_id=swimling.id)
     else:
         formset = AssessmentFormSet(queryset=qs, prefix="assess")
-        forms_by_skill = {f.instance.skill_id: f for f in formset.forms}
-
-        cas_groups = []
-        current_cas = None
-        bucket = []
-
-        for a in qs:  # qs already ordered by "skill__cas__name", "skill__name"
-            cas_name = a.skill.cas.name if a.skill and a.skill.cas_id else "Uncategorised"
-            f = forms_by_skill.get(a.skill_id)
-            if f is None:
-                continue  # (defensive) shouldn't happen
-
-            if cas_name != current_cas:
-                if bucket:
-                    cas_groups.append((current_cas, bucket))
-                current_cas = cas_name
-                bucket = []
-            bucket.append(f)
-
-        if bucket:
-            cas_groups.append((current_cas, bucket))
         existing_note = (
             InstructorNote.objects
             .filter(swimling=swimling, term=current_term)
@@ -136,17 +119,47 @@ def evaluate_progress(request, swimling_id):
         )
         note_form = InstructorNoteForm(initial={"note": existing_note})
 
+    from collections import defaultdict
+
+    # ...
+
+    forms_by_skill = {f.instance.skill_id: f for f in formset.forms}
+    cat_skill_map = {
+        cs.skill_id: cs.category for cs in CategorySkill.objects.select_related("category")
+    }
+
+    cas_stage_form_map = defaultdict(lambda: defaultdict(list))
+
+    for a in qs:
+        form = forms_by_skill.get(a.skill_id)
+        if not form:
+            continue
+
+        skill = a.skill
+        cas_name = skill.cas.name if skill.cas else "Uncategorised"
+        stage = cat_skill_map.get(a.skill_id).stage if cat_skill_map.get(a.skill_id) else ""
+        stage = stage or "Uncategorised"
+
+        cas_stage_form_map[cas_name][stage].append(form)
+
+    # Sort stages within each CAS
+    cas_groups_staged = [
+        (cas_name, sorted(stages.items(), key=lambda kv: stage_key(kv[0])))
+        for cas_name, stages in cas_stage_form_map.items()
+    ]
+
     return render(request, "instructors/evaluate_progress.html", {
         "swimling": swimling,
         "terms": terms,
-        "header_map": header_map,      # <- use in template for the sublabel
+        "header_map": header_map,
         "current_term": current_term,
         "past_terms": past_terms,
         "formset": formset,
         "note_form": note_form,
         "history_map": history_map,
-        "cas_groups": cas_groups,
+        "cas_groups_staged": cas_groups_staged,
     })
+
 #### UNSURE ####
 def evaluate_swimling_progress(request, swimling_id):
     swimling = get_object_or_404(Swimling, id=swimling_id)

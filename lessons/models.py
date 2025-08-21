@@ -27,6 +27,26 @@ class Category(models.Model):
     slug = models.SlugField(max_length=200,
                             unique=True, blank=True)
     program = models.ForeignKey(Program, on_delete=models.CASCADE, related_name="categories")
+    STAGE_CHOICES = [
+        ("", "---------"),  # blank choice
+        ("Stage 1", "Stage 1"),
+        ("Stage 2", "Stage 2"),
+        ("Stage 3", "Stage 3"),
+        ("Stage 4", "Stage 4"),
+        ("Stage 5", "Stage 5"),
+        ("Stage 6", "Stage 6"),
+        ("Stage 7", "Stage 7"),
+        ("Stage 8", "Stage 8"),
+        ("Stage 9", "Stage 9"),
+        ("Stage 10", "Stage 10"),
+    ]
+
+    stage = models.CharField(
+        max_length=20,
+        choices=STAGE_CHOICES,
+        blank=True,
+        help_text="Optional stage mapping for this category (Stage 1–8)"
+    )
 
     class Meta:
         ordering = ['name']

@@ -5,68 +5,160 @@
 {% block title %}Join Waiting List{% endblock %}
 
 {% block content %}
-<section class="py-10 px-4">
-    <div class="flex justify-center">
-        <div class="bg-white/40 backdrop-blur-md border border-white/20 rounded-xl shadow-md p-10 w-full max-w-2xl">
+<section class="min-h-screen bg-gradient-to-br from-blue-500 to-blue-900 py-8">
+    <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <!-- Back Link -->
+        <div class="mb-6">
+            <a href="/dashboard/" 
+                class="inline-flex items-center text-white hover:text-blue-200 transition-colors duration-200">
+                <i class="fas fa-arrow-left mr-2"></i>
+                <span class="font-medium">Back to Dashboard</span>
+            </a>
+        </div>
 
-            <h2 class="text-3xl font-bold text-center text-blue-900 mb-8">
-                <i class="fa-solid fa-person-circle-plus mr-2"></i>
-                Join the Waiting List
-            </h2>
+        <!-- Header Section -->
+        <div class="text-center mb-8">
+            <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-orange-500 to-yellow-500 rounded-full mb-6 shadow-lg">
+                <i class="fa-solid fa-clock text-white text-2xl"></i>
+            </div>
+            <h1 class="text-4xl font-bold text-white mb-4">Join the Waiting List</h1>
+            <p class="text-lg text-gray-300">Secure your spot for when space becomes available</p>
+        </div>
 
-            <div class="bg-blue-50 text-blue-900 border border-blue-200 px-4 py-3 rounded mb-6">
-                <p><strong>Swimling:</strong> {{ swimling }}</p>
+        <!-- Swimling Info -->
+        <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden mb-6">
+            <div class="bg-gradient-to-r from-blue-500 to-cyan-500 px-6 py-4">
+                <h2 class="text-xl font-semibold text-white flex items-center">
+                    <i class="fas fa-user mr-2"></i>Selected Swimling
+                </h2>
+            </div>
+            <div class="p-6">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-gradient-to-r from-blue-400 to-cyan-400 rounded-full flex items-center justify-center">
+                        <i class="fas fa-user text-white"></i>
+                    </div>
+                    <span class="text-lg font-medium text-gray-900">{{ swimling }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form -->
+        <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+            <div class="bg-gradient-to-r from-orange-500 to-yellow-500 px-6 py-4">
+                <h2 class="text-xl font-semibold text-white flex items-center">
+                    <i class="fas fa-clipboard-list mr-2"></i>Waiting List Details
+                </h2>
             </div>
 
-            <form method="POST" class="bg-white/50 p-6 rounded-lg shadow">
-                {% csrf_token %}
+            <!-- Help Accordion -->
+            <div class="border-b border-gray-200">
+                <button type="button"
+                    class="w-full flex items-center justify-between px-6 py-4 text-left hover:bg-gray-50 transition-colors duration-200"
+                    onclick="toggleAccordion('helpAccordion')">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-8 h-8 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full flex items-center justify-center">
+                            <i class="fas fa-question-circle text-white text-sm"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900">Need Help?</h3>
+                        </div>
+                    </div>
+                    <i id="helpAccordionIcon" class="fa-solid fa-chevron-down transition-transform duration-300 text-gray-400"></i>
+                </button>
 
-                {% for field in form %}
-                <div class="mb-5">
-                    <label class="block text-blue-900 text-xl font-semibold mb-2">
-                        {{ field.label }}
-                    </label>
+                <div id="helpAccordion" class="max-h-0 overflow-hidden transition-all duration-500 ease-in-out">
+                    <div class="px-6 py-4 bg-blue-50 border-t border-gray-200">
+                        <div class="space-y-3 text-gray-700">
+                            <div class="bg-white rounded-lg p-4 border border-blue-200">
+                                <p class="font-medium text-blue-900 mb-2">
+                                    <i class="fas fa-info-circle mr-2"></i>Instructions:
+                                </p>
+                                <ul class="space-y-2 text-sm">
+                                    <li class="flex items-start">
+                                        <span><strong>New Lesson:</strong> Select this if registering for lessons for the first time.</span>
+                                    </li>
+                                    <li class="flex items-start">
+                                        <span><strong>Transfer Request:</strong> Select this if your swimling is already in our lessons and you are looking to transfer day and/or time.</span>
+                                    </li>
+                                    <li class="flex items-start">
+                                        <span><strong>Preferences:</strong> Input your preferences in order. (Preferred Lesson 1 = most preferred).</span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-                    {% if field.name == "is_transfer_request" %}
-                    <div class="flex items-center gap-6">
-                        {% for subwidget in field %}
-                        <label class="inline-flex items-center space-x-2">
-                            {{ subwidget.tag }}
-                            <span class="text-blue-900 text-lg font-medium">{{ subwidget.choice_label }}</span>
-                        </label>
+            <div class="p-6">
+                <p class="text-gray-500">Please fill out the form below to join the waiting list for {{ swimling }}.</p>
+                <form method="POST" class="p-6">
+                    {% csrf_token %}
+
+                    <div class="space-y-6">
+                        {% for field in form %}
+                        <div>
+                            <label class="block text-lg font-semibold text-gray-900 mb-3">
+                                {{ field.label }}
+                            </label>
+
+                            {% if field.name == "is_transfer_request" %}
+                            <div class="bg-gray-50 rounded-lg p-4">
+                                <div class="space-y-3">
+                                    {% for subwidget in field %}
+                                    <label class="flex items-center space-x-3 cursor-pointer">
+                                        {{ subwidget.tag }}
+                                        <span class="text-gray-900 font-medium">{{ subwidget.choice_label }}</span>
+                                    </label>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% else %}
+                            {% render_field field class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm" %}
+                            {% endif %}
+
+                            {% for error in field.errors %}
+                            <p class="text-sm text-red-600 mt-2 flex items-center">
+                                <i class="fas fa-exclamation-circle mr-1"></i>{{ error }}
+                            </p>
+                            {% endfor %}
+                        </div>
                         {% endfor %}
                     </div>
-                    {% else %}
-                    {% render_field field class="w-full mb-2 px-4 py-2 border border-gray-300 bg-white/70 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600/50 focus:bg-white" %}
-                    {% endif %}
 
-                    {% if field.help_text %}
-                    <p class="text-sm text-zinc-600 mt-1">{{ field.help_text }}</p>
-                    {% endif %}
-
-                    {% for error in field.errors %}
-                    <p class="text-sm text-red-600 mt-1">{{ error }}</p>
-                    {% endfor %}
-                </div>
-                {% endfor %}
-
-
-                <div class="flex flex-col sm:flex-row gap-4 justify-between items-center mt-6 text-center">
-                    <a href="/dashboard/"
-                        class="w-full sm:w-1/2 bg-gray-200 text-gray-800 text-lg py-3 px-4 rounded-lg font-semibold hover:bg-blue-300 transition border border-white/60">
-                        <i class="fa-solid fa-arrow-left mr-2"></i>
-                        Back to Dashboard
-                    </a>
-
-                    <button type="submit"
-                        class="w-full sm:w-1/2 bg-blue-800 text-white text-lg py-3 px-4 rounded-lg font-semibold hover:bg-blue-900 transition border border-white/60">
-                        <i class="fa-solid fa-clock mr-2"></i>
-                        Join Waiting List
-                    </button>
-                </div>
-            </form>
-
+                    <!-- Action Buttons -->
+                    <div class="flex flex-col sm:flex-row gap-4 mt-8 pt-6 border-t border-gray-200">
+                        <a href="/dashboard/"
+                            class="flex-1 sm:flex-none inline-flex items-center justify-center px-6 py-3 border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 font-medium rounded-lg transition-colors duration-200">
+                            <i class="fas fa-arrow-left mr-2"></i>Back to Dashboard
+                        </a>
+                        <button type="submit"
+                            class="flex-1 inline-flex items-center justify-center px-8 py-3 bg-gradient-to-r from-orange-500 to-yellow-500 text-white font-medium rounded-lg hover:from-orange-600 hover:to-yellow-600 transition-all duration-200 shadow-lg hover:shadow-xl">
+                            <i class="fas fa-clock mr-2"></i>Join Waiting List
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 </section>
+
+<script>
+function toggleAccordion(id) {
+    const content = document.getElementById(id);
+    const icon = document.getElementById(id + "Icon");
+
+    if (content.classList.contains("max-h-0")) {
+        content.classList.remove("max-h-0");
+        content.classList.add("max-h-[500px]");
+        icon.classList.add("rotate-180");
+    } else {
+        content.classList.remove("max-h-[500px]");
+        content.classList.add("max-h-0");
+        icon.classList.remove("rotate-180");
+    }
+}
+</script>
+
 {% endblock %}

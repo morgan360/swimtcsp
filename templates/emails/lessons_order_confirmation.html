@@ -1,55 +1,171 @@
-{% load static %}
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Order Confirmation</title>
-    <!-- Add your CSS styles here -->
+    <title>Lesson Booking Confirmation - Templeogue College Swim Pool</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        /* Add your CSS styles here */
-        table {
-            border-collapse: collapse;
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f7f9fc;
+        }
+        .email-container {
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #059669, #10b981);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }
+        .logo {
+            max-width: 120px;
+            height: auto;
+            margin-bottom: 15px;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .content {
+            padding: 30px 20px;
+        }
+        .order-summary {
+            background-color: #f0f9ff;
+            border-left: 4px solid #0ea5e9;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        .detail-row {
+            margin: 15px 0;
+            padding: 10px 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+        .label {
+            font-weight: bold;
+            color: #1f2937;
+            display: inline-block;
+            min-width: 100px;
+        }
+        .items-table {
             width: 100%;
-            margin-bottom: 20px;
+            border-collapse: collapse;
+            margin: 20px 0;
         }
-        th, td {
-            border: 1px solid #dddddd;
+        .items-table th,
+        .items-table td {
+            padding: 12px;
             text-align: left;
-            padding: 8px;
+            border-bottom: 1px solid #e5e7eb;
         }
-        th {
-            background-color: #f2f2f2;
+        .items-table th {
+            background-color: #f8fafc;
+            font-weight: bold;
+            color: #374151;
         }
-        /* Add more styles as needed */
+        .total-section {
+            background-color: #ecfdf5;
+            border: 2px solid #10b981;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .footer {
+            background-color: #1f2937;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            font-size: 14px;
+        }
+        .footer a {
+            color: #60a5fa;
+            text-decoration: none;
+        }
     </style>
 </head>
 <body>
-    <h2>Lessons Order Confirmation</h2>
-    <p>Thank you for your order!</p>
-    <table>
-        <tr>
-            <th>Order ID</th>
-            <td>{{ order.id }}</td>
-        </tr>
-        <tr>
-            <th>Order Date</th>
-            <td>{{ order.created }}</td>
-        </tr>
-        <tr>
-            <th>Lesson</th>
-            <td>{{ order.items.first.product.name }}</td>
-        </tr>
-        <tr>
-            <th>Swimling</th>
-            <td>{{ order.items.first.swimling.first_name }} {{ order.items.first.swimling.last_name }}</td>
-        </tr>
-        <tr>
-            <th>Term</th>
-            <td>Beginning on: {{ order.items.first.term.start }}<br>Ending on: {{ order.items.first.term.end }}</td>
-        </tr>
-        <!-- Add more order details as needed -->
-    </table>
-    <!-- You can include more HTML content here -->
+    <div class="email-container">
+        <!-- Header with Logo -->
+        <div class="header">
+            <div style="width: 120px; height: 80px; border-radius: 8px; margin: 0 auto 15px; display: flex; align-items: center; justify-content: center; font-size: 12px; color: rgba(255,255,255,0.8);">
+                <img src="/static/img/logo.png" alt="Templeogue College Swim Pool Logo" style="max-width: 100%; max-height: 100%;">
+            </div>
+            <h1>Lesson Booking Confirmed!</h1>
+            <p style="margin: 10px 0 0 0; font-size: 16px;">Your swimming lesson has been booked</p>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <p>Dear Sarah,</p>
+            
+            <p>Thank you for booking swimming lessons with Templeogue College Swim Pool! We're excited to help you or your child learn and improve swimming skills.</p>
+
+            <div class="order-summary">
+                <h3 style="color: #1f2937; margin-top: 0;">Booking Summary</h3>
+                
+                <div class="detail-row">
+                    <span class="label">Booking ID:</span> ORD-2024-001
+                </div>
+                
+                <div class="detail-row">
+                    <span class="label">Booking Date:</span> January 15, 2024
+                </div>
+
+                <div class="detail-row">
+                    <span class="label">Swimling:</span> Emma Johnson
+                </div>
+            </div>
+
+            <h3 style="color: #1f2937;">Lesson Details</h3>
+            <table class="items-table">
+                <thead>
+                    <tr>
+                        <th>Lesson</th>
+                        <th>Date</th>
+                        <th>Price</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Beginners Swimming - Level 1</td>
+                        <td>January 22, 2024</td>
+                        <td>€25.00</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="total-section">
+                <h3 style="margin: 0 0 10px 0; color: #065f46;">Total Amount: €25.00</h3>
+                <p style="margin: 0; font-size: 14px; color: #374151;">Payment has been processed successfully</p>
+            </div>
+
+            <p>If you need to make any changes or have questions about your booking, please don't hesitate to contact us.</p>
+
+            <p>We look forward to seeing you at the pool!</p>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p style="margin: 0 0 10px 0;"><strong>Templeogue College Swim Pool</strong></p>
+            <p style="margin: 0 0 10px 0;">For the community</p>
+            <p style="margin: 0; font-size: 12px;">
+                This is an automated confirmation email. Please save this for your records.
+            </p>
+        </div>
+    </div>
 </body>
 </html>
-
-

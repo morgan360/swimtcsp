@@ -4,17 +4,100 @@
 {% block title %}Review Waiting List Booking{% endblock %}
 
 {% block content %}
-    <div class="max-w-lg mx-auto bg-white p-6 rounded-lg shadow-md mt-10">
-        <h2 class="text-orange-400 text-2xl font-semibold mb-4">Review Waiting List Booking</h2>
-        <p class="text-gray-800 mb-2"><span class="font-medium">Swimling:</span> {{ swimling }}</p>
-        <p class="text-gray-800 mb-2"><span class="font-medium">Lesson:</span> {{ lesson.name }}</p>
-        <p class="text-gray-800 mb-4"><span class="font-medium">Price:</span> €{{ lesson.price }}</p>
-
-        <form method="POST" action="{% url 'shopping_cart:confirm_waiting_list_booking' swimling.id lesson.id %}">
-            {% csrf_token %}
-            <button type="submit" class="w-full bg-blue-500 text-white font-bold py-2 px-4 rounded hover:bg-blue-600">
-                Confirm and Pay
-            </button>
-        </form>
+<section class="min-h-screen bg-gradient-to-br from-blue-500 to-blue-900 py-8">
+  <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+    
+    <!-- Back Link -->
+    <div class="mb-6">
+      <a href="{% url 'swimling_dashboard:dashboard' %}" 
+         class="inline-flex items-center text-white hover:text-blue-200 transition-colors duration-200">
+        <i class="fas fa-arrow-left mr-2"></i>
+        <span class="font-medium">Back to Dashboard</span>
+      </a>
     </div>
+
+    <!-- Header Section -->
+    <div class="text-center mb-8">
+      <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-orange-500 to-yellow-500 rounded-full mb-6 shadow-lg">
+        <i class="fas fa-clock text-white text-2xl"></i>
+      </div>
+      <h1 class="text-4xl font-bold text-white mb-4">Review Waiting List Booking</h1>
+      <p class="text-lg text-gray-300">Confirm your waiting list registration details</p>
+    </div>
+
+    <!-- Order Review Card -->
+    <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+      <!-- Header -->
+      <div class="bg-gradient-to-r from-orange-500 to-yellow-500 px-6 py-4">
+        <h2 class="text-xl font-semibold text-white flex items-center">
+          <i class="fas fa-receipt mr-2"></i>Booking Summary
+        </h2>
+      </div>
+
+      <!-- Content -->
+      <div class="p-6">
+        <!-- Order Details -->
+        <div class="bg-gray-50 rounded-lg p-6 mb-6">
+          <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+            <i class="fas fa-info-circle mr-2 text-orange-500"></i>Waiting List Details
+          </h3>
+          <div class="space-y-3">
+            <div class="flex items-center justify-between py-2 border-b border-gray-200">
+              <span class="text-gray-600">Swimling:</span>
+              <div class="flex items-center space-x-2">
+                <div class="w-6 h-6 bg-gradient-to-r from-blue-400 to-cyan-400 rounded-full flex items-center justify-center">
+                  <i class="fas fa-user text-white text-xs"></i>
+                </div>
+                <span class="font-medium text-gray-900">{{ swimling }}</span>
+              </div>
+            </div>
+            <div class="flex items-center justify-between py-2 border-b border-gray-200">
+              <span class="text-gray-600">Lesson:</span>
+              <div class="flex items-center space-x-2">
+                <div class="w-6 h-6 bg-gradient-to-r from-orange-400 to-yellow-400 rounded-full flex items-center justify-center">
+                  <i class="fas fa-swimmer text-white text-xs"></i>
+                </div>
+                <span class="font-medium text-gray-900">{{ lesson.name }}</span>
+              </div>
+            </div>
+            <div class="flex items-center justify-between py-2">
+              <span class="text-gray-600">Price:</span>
+              <span class="text-2xl font-bold text-orange-600">€{{ lesson.price }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Form -->
+        <form method="POST" action="{% url 'shopping_cart:confirm_waiting_list_booking' swimling.id lesson.id %}">
+          {% csrf_token %}
+          
+          <!-- Action Buttons -->
+          <div class="flex flex-col sm:flex-row gap-4">
+            <a href="{% url 'swimling_dashboard:dashboard' %}"
+               class="flex-1 sm:flex-none inline-flex items-center justify-center px-6 py-3 border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 font-medium rounded-lg transition-colors duration-200">
+              <i class="fas fa-arrow-left mr-2"></i>Back to Dashboard
+            </a>
+            <button type="submit"
+                    class="flex-1 inline-flex items-center justify-center px-8 py-3 bg-gradient-to-r from-orange-500 to-yellow-500 text-white font-medium rounded-lg hover:from-orange-600 hover:to-yellow-600 transition-all duration-200 shadow-lg hover:shadow-xl">
+              <i class="fas fa-check mr-2"></i>Confirm and Pay
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Additional Information -->
+    <div class="mt-6 bg-orange-50 border border-orange-200 rounded-lg p-4">
+      <div class="flex items-start space-x-3">
+        <div class="flex-shrink-0">
+          <i class="fas fa-info-circle text-orange-500 mt-1"></i>
+        </div>
+        <div class="text-orange-800 text-sm">
+          <p class="font-medium mb-1">Waiting List Information:</p>
+          <p>By confirming, you'll be added to the waiting list for this lesson. You'll be notified when a space becomes available and payment will be processed at that time.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
 {% endblock %}

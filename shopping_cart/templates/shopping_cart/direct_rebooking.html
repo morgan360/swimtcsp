@@ -1,30 +1,113 @@
 {% extends "base/_base.html" %}
 {% load static %}
 
-{% block title %}Your Shopping Cart{% endblock %}
+{% block title %}Review Rebooking{% endblock %}
 
 {% block content %}
-<section class="py-12 px-4 sm:px-6 lg:px-8 text-white">
-  <div class="max-w-3xl mx-auto px-4">
-    <div class="bg-white/50 rounded-2xl shadow-md p-6 space-y-6">
-      <h2 class="text-2xl font-bold text-white">Review Order</h2>
+<section class="min-h-screen bg-gradient-to-br from-blue-500 to-blue-900 py-8">
+  <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+    
+    <!-- Back Link -->
+    <div class="mb-6">
+      <a href="{% url 'swimling_dashboard:guardian_dashboard' %}" 
+         class="inline-flex items-center text-white hover:text-blue-200 transition-colors duration-200">
+        <i class="fas fa-arrow-left mr-2"></i>
+        <span class="font-medium">Back to Dashboard</span>
+      </a>
+    </div>
 
-      <div class="text-gray-800 text-base space-y-2">
-        <p><strong class="text-blue-900">Swimling:</strong> {{ swimling }}</p>
-        <p><strong class="text-blue-900">Lesson:</strong> {{ lesson.name }}</p>
-        <p><strong class="text-blue-900">Price:</strong> €{{ lesson.price }}</p>
+    <!-- Header Section -->
+    <div class="text-center mb-8">
+      <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full mb-6 shadow-lg">
+        <i class="fas fa-exchange-alt text-white text-2xl"></i>
+      </div>
+      <h1 class="text-4xl font-bold text-white mb-4">Review Rebooking</h1>
+      <p class="text-lg text-gray-300">Confirm your lesson transfer details</p>
+    </div>
+
+    <!-- Order Review Card -->
+    <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+      <!-- Header -->
+      <div class="bg-gradient-to-r from-green-500 to-emerald-500 px-6 py-4">
+        <h2 class="text-xl font-semibold text-white flex items-center">
+          <i class="fas fa-receipt mr-2"></i>Order Summary
+        </h2>
       </div>
 
-      <form method="POST" action="{% url 'shopping_cart:confirm_rebooking' swimling.id lesson.id %}" class="space-y-4">
-        {% csrf_token %}
-        <div>
-          <button type="submit"
-                  class="w-full bg-red-700 hover:bg-red-800 text-white font-semibold py-3 px-4 rounded flex items-center justify-center gap-2 transition">
-            <i class="fas fa-check mr-2"></i>
-            Confirm and Pay
-          </button>
+      <!-- Content -->
+      <div class="p-6">
+        <!-- Order Details -->
+        <div class="bg-gray-50 rounded-lg p-6 mb-6">
+          <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+            <i class="fas fa-info-circle mr-2 text-blue-500"></i>Rebooking Details
+          </h3>
+          <div class="space-y-3">
+            <div class="flex items-center justify-between py-2 border-b border-gray-200">
+              <span class="text-gray-600">Swimling:</span>
+              <div class="flex items-center space-x-2">
+                <div class="w-6 h-6 bg-gradient-to-r from-blue-400 to-cyan-400 rounded-full flex items-center justify-center">
+                  <i class="fas fa-user text-white text-xs"></i>
+                </div>
+                <span class="font-medium text-gray-900">{{ swimling }}</span>
+              </div>
+            </div>
+            <div class="flex items-center justify-between py-2 border-b border-gray-200">
+              <span class="text-gray-600">New Lesson:</span>
+              <div class="flex items-center space-x-2">
+                <div class="w-6 h-6 bg-gradient-to-r from-green-400 to-emerald-400 rounded-full flex items-center justify-center">
+                  <i class="fas fa-swimmer text-white text-xs"></i>
+                </div>
+                <span class="font-medium text-gray-900">{{ lesson.name }}</span>
+              </div>
+            </div>
+            <div class="flex items-center justify-between py-2">
+              <span class="text-gray-600">Price:</span>
+              <span class="text-2xl font-bold text-green-600">€{{ lesson.price }}</span>
+            </div>
+          </div>
         </div>
-      </form>
+
+        <!-- Form -->
+        <form method="POST" action="{% url 'shopping_cart:confirm_rebooking' swimling.id lesson.id %}">
+          {% csrf_token %}
+          
+          <!-- Action Buttons -->
+          <div class="flex flex-col sm:flex-row gap-4">
+            <a href="{% url 'swimling_dashboard:guardian_dashboard' %}"
+               class="flex-1 sm:flex-none inline-flex items-center justify-center px-6 py-3 border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 font-medium rounded-lg transition-colors duration-200">
+              <i class="fas fa-arrow-left mr-2"></i>Back to Dashboard
+            </a>
+            <button type="submit"
+                    class="flex-1 inline-flex items-center justify-center px-8 py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white font-medium rounded-lg hover:from-green-600 hover:to-emerald-600 transition-all duration-200 shadow-lg hover:shadow-xl">
+              <i class="fas fa-check mr-2"></i>Confirm and Pay
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Additional Information -->
+    <div class="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+      <div class="flex items-start space-x-3">
+        <div class="flex-shrink-0">
+          <i class="fas fa-info-circle text-blue-500 mt-1"></i>
+        </div>
+        <div class="text-blue-800 text-sm">
+          <p class="font-medium mb-1">Rebooking Information:</p>
+          <p>This will transfer your swimling to the selected lesson. The payment will be processed immediately upon confirmation.</p>
+        </div>
+      </div>
+    </div>
+    <div class="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+      <div class="flex items-start space-x-3">
+        <div class="flex-shrink-0">
+          <i class="fas fa-info-circle text-blue-500 mt-1"></i>
+        </div>
+        <div class="text-blue-800 text-sm">
+          <p class="font-medium mb-1">How do I move my swimling to the next level?</p>
+          <p>Level moves are handled by our staff, so don't worry! Please get in touch if you have further questions.</p>
+        </div>
+      </div>
     </div>
   </div>
 </section>

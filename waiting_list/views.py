@@ -109,7 +109,7 @@ def join_waiting_list(request, swimling_id):
         if form.is_valid():
             form.save()
 
-            messages.success(request, "You're on the list! We'll holler if a spot opens up.")
+            messages.success(request, "You're on the list! We'll be in touch if a spot opens up!")
             return redirect('swimling_dashboard:guardian_dashboard')
     else:
         form = PublicWaitingListForm(swimling=swimling)

@@ -1,17 +1,128 @@
-<!-- email/contact_email.html -->
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Contact Us</title>
+    <title>Contact Confirmation - Templeogue College Swim Pool</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f7f9fc;
+        }
+        .email-container {
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #3b82f6, #06b6d4);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }
+        .logo {
+            max-width: 120px;
+            height: auto;
+            margin-bottom: 15px;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .content {
+            padding: 30px 20px;
+        }
+        .message-section {
+            background-color: #f8fafc;
+            border-left: 4px solid #3b82f6;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        .detail-row {
+            margin: 15px 0;
+            padding: 10px 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+        .label {
+            font-weight: bold;
+            color: #1f2937;
+            display: inline-block;
+            min-width: 80px;
+        }
+        .footer {
+            background-color: #1f2937;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            font-size: 14px;
+        }
+        .footer a {
+            color: #60a5fa;
+            text-decoration: none;
+        }
+    </style>
 </head>
 <body>
-    <h2>Re Enquiry - {{ subject }}</h2>
-    <p>Thank you for contacting Tempelogue College. We will contact you regarding your enquiry shortly:</p>
-    <p><b>Name</b>: {{ name }}</p>
-    <p><b>Your Email</b>: {{ email }}</p>
-    <p><b>Message</b>:</p>
-    <p>{{ message }}</p>
-Regards,
-Managment Staff at Swim TCSP
+    <div class="email-container">
+        <!-- Header with Logo -->
+        <div class="header">
+            <!-- Using a placeholder for the logo since we can't access Django static files -->
+            <div style="width: 120px; height: 80px; border-radius: 8px; margin: 0 auto 15px; display: flex; align-items: center; justify-content: center; font-size: 12px; color: rgba(255,255,255,0.8);">
+                <img src="/static/img/logo.png" alt="Templeogue College Swim Pool Logo" style="max-width: 100%; max-height: 100%;">
+            </div>
+            <h1>Thank You for Contacting Us</h1>
+            <p style="margin: 10px 0 0 0; font-size: 16px;">We've received your enquiry</p>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <p>Dear John Smith,</p>
+            
+            <p>Thank you for contacting Templeogue College Swim Pool. We have received your enquiry and one of our team members will get back to you shortly.</p>
+
+            <h3 style="color: #1f2937; margin-top: 25px;">Your Enquiry Details:</h3>
+            
+            <div class="detail-row">
+                <span class="label">Subject:</span> Swimming Lesson Inquiry
+            </div>
+            
+            <div class="detail-row">
+                <span class="label">Name:</span> John Smith
+            </div>
+            
+            <div class="detail-row">
+                <span class="label">Email:</span> john.smith@example.com
+            </div>
+
+            <div class="message-section">
+                <h4 style="margin-top: 0; color: #1f2937;">Your Message:</h4>
+                <p style="margin-bottom: 0;">Hello, I'm interested in enrolling my 8-year-old daughter in swimming lessons. Could you please provide information about beginner classes, schedules, and pricing? We're available on weekends and after 4 PM on weekdays. Thank you!</p>
+            </div>
+
+            <p style="margin-top: 25px;">We typically respond to enquiries within 1-2 business days. If your enquiry is urgent, please don't hesitate to call us directly.</p>
+
+            <p>Thank you for your interest in our swimming programs!</p>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p style="margin: 0 0 10px 0;"><strong>Templeogue College Swim Pool</strong></p>
+            <p style="margin: 0 0 10px 0;">For the community</p>
+            <p style="margin: 0; font-size: 12px;">
+                This is an automated confirmation email. Please do not reply directly to this message.
+            </p>
+        </div>
+    </div>
 </body>
 </html>

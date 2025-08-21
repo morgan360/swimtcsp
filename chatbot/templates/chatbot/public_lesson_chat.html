@@ -17,9 +17,10 @@
         <input class="flex-1 rounded-lg border border-gray-300 p-3 focus:outline-none focus:ring-2 focus:ring-red-500"
                type="text" id="chat-input"
                placeholder="e.g. Why hasn't my child moved up a level?">
-        <button class="bg-red-700 text-white px-6 py-3 rounded-lg hover:bg-red-800 transition duration-200"
+        <button class="bg-red-700 text-white px-6 py-3 rounded-lg hover:bg-red-800 transition duration-200 flex items-center justify-center"
                 id="chat-send">
-          Send
+          <span id="send-text">Send</span>
+          <div id="send-spinner" class="hidden animate-spin rounded-full h-5 w-5 border-b-2 border-white ml-2"></div>
         </button>
       </div>
     </div>
@@ -79,6 +80,13 @@
       const userMessage = input.value.trim();
       if (!userMessage) return;
 
+      // Show loading state
+      const sendText = document.getElementById("send-text");
+      const sendSpinner = document.getElementById("send-spinner");
+      sendButton.disabled = true;
+      sendText.textContent = "Thinking...";
+      sendSpinner.classList.remove("hidden");
+
       appendUserMessage(userMessage);
       input.value = "";
 
@@ -101,11 +109,16 @@
             appendBotHTMLMessage(data.reply);
           }
         } else {
-          typeBotMessage("Sorry, I couldn’t understand that.");
+          typeBotMessage("Sorry, I couldn't understand that.");
         }
       } catch (err) {
         console.error(err);
         typeBotMessage("Something went wrong.");
+      } finally {
+        // Reset button state
+        sendButton.disabled = false;
+        sendText.textContent = "Send";
+        sendSpinner.classList.add("hidden");
       }
     }
 

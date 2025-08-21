@@ -43,71 +43,117 @@
         <div class="absolute bottom-20 right-10 w-32 h-32 bg-red-400/20 rounded-full blur-2xl"></div>
     </section>
 
-    <div class="bg-white/80 mb-6 p-5 rounded-b-lg shadow">
-        <h3 class="text-3xl font-semibold text-center text-blue-800 pt-5 mb-12">Why Choose Us?</h3>
-        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 text-center text-gray-800">
-
+    <!-- Enhanced Stats Section with Red-Blue-White Theme -->
+    <div class="bg-white/90 backdrop-blur-md mx-4 mb-8 p-8 rounded-2xl shadow-xl border border-white/30 mt-8">
+        <h3 class="text-4xl font-bold text-center text-blue-800 mb-10">Why Choose Us?</h3>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+    
             <!-- Certified Instructors -->
-            <div>
-                <div class="mb-2 text-red-700">
-                    <i class="fas fa-user-graduate fa-2x"></i>
+            <div class="relative group bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl p-6 text-white shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105 hover:-translate-y-2 overflow-hidden">
+                <!-- Animated background effect -->
+                <div class="absolute inset-0 bg-gradient-to-br from-blue-500 to-blue-800 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                
+                <!-- Content -->
+                <div class="relative z-10">
+                    <div class="bg-white/20 backdrop-blur-sm rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                        <i class="fas fa-user-graduate text-2xl" aria-hidden="true"></i>
+                    </div>
+                    <h4 class="text-sm font-bold mb-2 text-white/90">Certified Instructors</h4>
+                    <p class="text-3xl font-extrabold" aria-label="20 plus certified instructors">20+</p>
                 </div>
-                <p class="text-lg font-medium text-blue-800">Certified Instructors</p>
-                <p class="text-2xl font-semibold">20+</p>
+                
+                <!-- Decorative elements -->
+                <div class="absolute -top-2 -right-2 w-8 h-8 bg-white/10 rounded-full group-hover:scale-150 transition-transform duration-500"></div>
+                <div class="absolute -bottom-3 -left-3 w-12 h-12 bg-white/5 rounded-full group-hover:scale-125 transition-transform duration-700"></div>
             </div>
-
+    
             <!-- Happy Swimmers -->
-            <div>
-                <div class="text-red-700 mb-2">
-                    <i class="fas fa-smile fa-2x"></i>
+            <div class="relative group bg-gradient-to-br from-red-600 to-red-700 rounded-xl p-6 text-white shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105 hover:-translate-y-2 overflow-hidden">
+                <!-- Animated background effect -->
+                <div class="absolute inset-0 bg-gradient-to-br from-red-500 to-red-800 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                
+                <!-- Content -->
+                <div class="relative z-10">
+                    <div class="bg-white/20 backdrop-blur-sm rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                        <i class="fas fa-smile text-2xl" aria-hidden="true"></i>
+                    </div>
+                    <h4 class="text-sm font-bold mb-2 text-white/90">Happy Swimmers</h4>
+                    <p class="text-3xl font-extrabold" aria-label="5000 plus happy swimmers">5,000+</p>
                 </div>
-                <p class="text-lg font-medium text-blue-800">Happy Swimmers</p>
-                <p class="text-2xl font-semibold">5,000+</p>
+                
+                <!-- Decorative elements -->
+                <div class="absolute -top-2 -right-2 w-8 h-8 bg-white/10 rounded-full group-hover:scale-150 transition-transform duration-500"></div>
+                <div class="absolute -bottom-3 -left-3 w-12 h-12 bg-white/5 rounded-full group-hover:scale-125 transition-transform duration-700"></div>
             </div>
-
+    
             <!-- Years of Excellence -->
-            <div>
-                <div class="text-red-700 mb-2">
-                    <i class="fas fa-trophy fa-2x"></i>
+            <div class="relative group bg-gradient-to-br from-white to-gray-100 rounded-xl p-6 text-gray-800 shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105 hover:-translate-y-2 overflow-hidden border-2 border-blue-200">
+                <!-- Animated background effect -->
+                <div class="absolute inset-0 bg-gradient-to-br from-gray-50 to-gray-200 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                
+                <!-- Content -->
+                <div class="relative z-10">
+                    <div class="bg-blue-600 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                        <i class="fas fa-trophy text-white text-2xl" aria-hidden="true"></i>
+                    </div>
+                    <h4 class="text-sm font-bold mb-2 text-gray-700">Years of Excellence</h4>
+                    <p class="text-3xl font-extrabold text-blue-600" aria-label="15 years of excellence">15</p>
                 </div>
-                <p class="text-lg font-medium text-blue-800">Years of Excellence</p>
-                <p class="text-2xl font-semibold">15</p>
+                
+                <!-- Decorative elements -->
+                <div class="absolute -top-2 -right-2 w-8 h-8 bg-blue-600/10 rounded-full group-hover:scale-150 transition-transform duration-500"></div>
+                <div class="absolute -bottom-3 -left-3 w-12 h-12 bg-red-600/5 rounded-full group-hover:scale-125 transition-transform duration-700"></div>
             </div>
-
+    
             <!-- Weekly Classes -->
-            <div>
-                <div class="text-red-700 mb-2">
-                    <i class="fas fa-calendar-check fa-2x"></i>
+            <div class="relative group bg-gradient-to-br from-red-600 to-blue-600 rounded-xl p-6 text-white shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105 hover:-translate-y-2 overflow-hidden">
+                <!-- Animated background effect -->
+                <div class="absolute inset-0 bg-gradient-to-br from-red-500 via-purple-600 to-blue-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                
+                <!-- Content -->
+                <div class="relative z-10">
+                    <div class="bg-white/20 backdrop-blur-sm rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                        <i class="fas fa-calendar-check text-2xl" aria-hidden="true"></i>
+                    </div>
+                    <h4 class="text-sm font-bold mb-2 text-white/90">Weekly Classes</h4>
+                    <p class="text-3xl font-extrabold" aria-label="40 plus weekly classes">40+</p>
                 </div>
-                <p class="text-lg font-medium text-blue-800">Weekly Classes</p>
-                <p class="text-2xl font-semibold">40+</p>
+                
+                <!-- Decorative elements -->
+                <div class="absolute -top-2 -right-2 w-8 h-8 bg-white/10 rounded-full group-hover:scale-150 transition-transform duration-500"></div>
+                <div class="absolute -bottom-3 -left-3 w-12 h-12 bg-white/5 rounded-full group-hover:scale-125 transition-transform duration-700"></div>
             </div>
-
+    
         </div>
     </div>
-
-
     <!-- Feature Cards -->
-    <div
-        class="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 gap-8 pt-8 px-4 sm:px-6 lg:px-8 max-w-screen-lg mx-auto">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto mb-8">
 
         <!-- Public Swims Card -->
-        <div class="bg-blue-200/60 backdrop-blur-md border border-white/20 rounded-xl shadow-md flex flex-col h-full">
-            <img src="{% static 'img/fc-lanes.jpeg' %}" alt="Public swim"
-                class="w-full h-60 rounded-t object-cover object-top p-3">
-            <div class="p-6 flex-grow">
-                <h2 class="text-xl font-semibold mb-4 text-white">Public Swims</h2>
-                <p class="text-sm text-base-content text-white">
+        <div class="bg-white/30 backdrop-blur-md border border-white/30 rounded-2xl shadow-xl flex flex-col h-full overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
+            <div class="relative">
+                <img src="{% static 'img/fc-lanes.jpeg' %}" alt="Public swim"
+                    class="w-full h-64 object-cover object-top">
+                <div class="absolute"></div>
+            </div>
+            <div class="p-8 flex-grow">
+                <div class="flex items-center mb-4">
+                    <div class="bg-gradient-to-r from-blue-500 to-blue-600 p-3 rounded-full mr-4">
+                        <i class="fas fa-swimmer text-white text-xl"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-white">Public Swims</h2>
+                </div>
+                <p class="text-white/90 leading-relaxed">
                     Create an account to book your slot and dive in! Our public swim sessions are perfect for fun, fitness, and relaxation.
                 </p>
             </div>
-            <div class="mt-auto w-full flex divide-x divide-white/20">
+            <div class="mt-auto flex">
                 <a href="/swims/"
-                    class="w-1/2 text-center px-4 py-3 text-md font-medium text-white bg-blue-700 hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 rounded-bl-xl">
+                    class="flex-1 text-center px-6 py-4 font-semibold text-white bg-gradient-to-r from-blue-400 to-blue-500 hover:from-blue-500 hover:to-blue-600 transition-all duration-300 transform hover:scale-105">
                     Book a Swim
                 </a>
                 <a href="{% url 'timetable:timetable_grid' %}"
-                    class="w-1/2 text-center px-4 py-3 text-md font-medium text-white bg-red-700 hover:bg-red-800 focus:outline-none focus:ring-4 focus:ring-red-300 dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-800 rounded-br-xl">
+                    class="flex-1 text-center px-6 py-4 font-semibold text-white bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 transition-all duration-300 transform hover:scale-105">
                     View Timetable
                 </a>
             </div>
@@ -115,91 +161,100 @@
 
 
         <!-- Lessons Card -->
-        <div class="bg-blue-200/60 backdrop-blur-md border border-white/20 rounded-xl shadow-md flex flex-col h-full">
-            <img src="{% static 'img/teacher-1.jpeg' %}" alt="Swimming lessons"
-                class="w-full h-60 rounded-t object-cover object-top p-3 sm:object-center md:object-center">
-            <div class="p-6 flex-grow">
-                <h2 class="text-xl font-semibold mb-4 text-white">Swimming Lessons</h2>
-                <p class="text-sm text-base-content text-white">
+        <div class="bg-white/30 backdrop-blur-md border border-white/30 rounded-2xl shadow-xl flex flex-col h-full overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
+            <div class="relative">
+                <img src="{% static 'img/teacher-1.jpeg' %}" alt="Swimming lessons"
+                    class="w-full h-64 object-cover">
+                <div class="absolute"></div>
+            </div>
+            <div class="p-8 flex-grow">
+                <div class="flex items-center mb-4">
+                    <div class="bg-gradient-to-r from-green-500 to-green-600 p-3 rounded-full mr-4">
+                        <i class="fas fa-graduation-cap text-white text-xl"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-white">Swimming Lessons</h2>
+                </div>
+                <p class="text-white/90 leading-relaxed mb-4">
                     We provide a range of lessons, catering to all ages and abilities.
                     All lessons are coached by Swim Ireland certified staff.
                 </p>
-                <p class="text-sm text-base-content text-white mt-2">
+                <p class="text-white text-sm leading-relaxed">
                     Create an account, (or visit your profile to update to a <strong>Guardian</strong>) to book your lessons! All lessons and swimmers can be managed in the new <strong>swimling dashboard</strong>.
                 </p>
             </div>
-            <div class="mt-auto w-full flex divide-x divide-white/20">
-                <a href="#" onclick="checkGuardianAccess('/lessons/lesson_list/')"
-                    class="w-1/2 text-center px-4 py-3 text-md font-medium text-white bg-blue-700 hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 rounded-bl-xl">
-                    Book Lessons
-                </a>
+            <div class="mt-auto flex">
                 <a href="#" onclick="checkGuardianAccess('/dashboard/')"
-                    class="w-1/2 text-center px-4 py-3 text-md font-medium text-white bg-red-700 hover:bg-red-800 focus:outline-none focus:ring-4 focus:ring-red-300 dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-800 rounded-br-xl">
+                    class="flex-1 text-center px-6 py-4 font-semibold text-white bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 transition-all duration-300 transform hover:scale-105">
                     Swimling Dashboard
                 </a>
             </div>
         </div>
     </div>
 
-    <!-- Bottom Cards Grid -->
-    <div class="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-8 pt-4 px-4 sm:px-6 lg:px-8 max-w-screen-xl mx-auto pb-10 mt-5">
+    <!-- Enhanced Bottom Cards Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto pb-10">
 
         <!-- Our Services Card -->
-        <div class="bg-blue-200/60 backdrop-blur-md border border-white/20 rounded-xl shadow-md flex flex-col ">
-            <div class="p-6 flex-grow">
-                <h2 class="text-xl font-semibold mb-4 text-white">Our Services</h2>
-                <p class="text-sm text-base-content text-white">
+        <div class="bg-white/30 backdrop-blur-md border border-white/30 rounded-2xl shadow-xl flex flex-col overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
+            <div class="p-8 flex-grow">
+                <div class="flex items-center mb-4">
+                    <div class="bg-gradient-to-r from-purple-500 to-purple-600 p-3 rounded-full mr-4">
+                        <i class="fas fa-cogs text-white text-xl"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-white">Our Services</h2>
+                </div>
+                <p class="text-white/90 leading-relaxed">
                     Learn about our range of services designed to accommodate all your swimming needs.
                 </p>
             </div>
-            <div class="mt-auto w-full">
-                <a href="/info/#our-services" class="block w-full text-center px-4 py-3 text-md font-medium 
-                text-white bg-blue-700 border-t border-white/20 hover:bg-blue-800 
-                focus:outline-none focus:ring-4 focus:ring-blue-300 dark:bg-blue-600 
-                dark:hover:bg-blue-700 dark:focus:ring-blue-800 rounded-b-xl">
+            <div class="mt-auto">
+                <a href="/info/#our-services" 
+                   class="block w-full text-center px-6 py-4 font-semibold text-white bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 transition-all duration-300 transform hover:scale-105">
                     Explore
                 </a>
             </div>
         </div>
 
-        <!-- Community Card -->
-        <div class="bg-blue-200/60 backdrop-blur-md border border-white/20 rounded-xl shadow-md flex flex-col ">
-            <!-- <img src="{% static 'img/girls-and-teacher.jpeg' %}" alt="Community events"
-                class="w-full h-60 rounded-t object-cover object-top p-3"> -->
-            <div class="p-6 flex-grow">
-                <h2 class="text-xl font-semibold mb-4 text-white">Keep in touch</h2>
-                <p class="text-sm text-base-content text-white">
+        <!-- Newsletter Card -->
+        <div class="bg-white/30 backdrop-blur-md border border-white/30 rounded-2xl shadow-xl flex flex-col overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
+            <div class="p-8 flex-grow">
+                <div class="flex items-center mb-4">
+                    <div class="bg-gradient-to-r from-orange-500 to-orange-600 p-3 rounded-full mr-4">
+                        <i class="fas fa-envelope text-white text-xl"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-white">Keep in touch</h2>
+                </div>
+                <p class="text-white/90 leading-relaxed">
                     Sign up to our newsletter for the latest updates.
                     Events, galas, charity swims, intensive lessons — be part of something bigger.
                 </p>
             </div>
-            <div class="mt-auto w-full">
+            <div class="mt-auto">
                 <a href="#" id="open-newsletter-popup"
-                    class="block w-full text-center px-4 py-3 text-md font-medium text-white bg-blue-700 border-t border-white/20 hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 rounded-b-xl">
+                   class="block w-full text-center px-6 py-4 font-semibold text-white bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 transition-all duration-300 transform hover:scale-105">
                     Subscribe
                 </a>
             </div>
         </div>
 
-        <!-- About Us (info) Card -->
-        <div class="bg-blue-200/60 backdrop-blur-md border border-white/20 rounded-xl shadow-md flex flex-col">
-            <!-- <img src="{% static 'img/kid-and-teacher.jpeg' %}" alt="About Us"
-                class="w-full h-60 max-h-80 rounded-t object-cover object-top p-3 sm:object-center md:object-center"> -->
-            <div class="p-6 flex-grow">
-                <h2 class="text-xl font-semibold mb-4 text-white">More Information</h2>
-                <p class="text-sm text-base-content text-white">
+        <!-- About Us Card -->
+        <div class="bg-white/30 backdrop-blur-md border border-white/30 rounded-2xl shadow-xl flex flex-col overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
+            <div class="p-8 flex-grow">
+                <div class="flex items-center mb-4">
+                    <div class="bg-gradient-to-r from-teal-500 to-teal-600 p-3 rounded-full mr-4">
+                        <i class="fas fa-info-circle text-white text-xl"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-white">More Information</h2>
+                </div>
+                <p class="text-white/90 leading-relaxed">
                     Do you have a question or just want to get to know us better? Click below!
                 </p>
             </div>
-            <div class="mt-auto w-full flex divide-x divide-white/20">
+            <div class="mt-auto">
                 <a href="/info/"
-                    class="w-full text-center px-4 py-3 text-md font-medium text-white bg-blue-700 hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 rounded-b-xl">
+                   class="block w-full text-center px-6 py-4 font-semibold text-white bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 transition-all duration-300 transform hover:scale-105">
                     Learn More
                 </a>
-                <!-- <a href="/info/#contact-form"
-                    class="w-1/2 text-center px-4 py-3 text-md font-medium text-white bg-red-700 hover:bg-red-800 focus:outline-none focus:ring-4 focus:ring-red-300 dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-800 rounded-br-xl">
-                    Contact
-                </a> -->
             </div>
         </div>
     </div>
@@ -217,19 +272,31 @@
         </p>
     </div>
 </div>
-<div id="newsletter-popup" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
-    <div class="bg-white p-6 rounded-xl shadow-lg max-w-sm w-full relative">
-        <button onclick="closePopup()"
-            class="absolute top-2 right-2 text-gray-500 hover:text-black text-lg">&times;</button>
 
-        <h2 class="text-xl font-bold mb-2 text-blue-900 text-center">Stay in the loop</h2>
-        <p class="text-md mb-4 text-center">Get the latest news and important updates from the pool!</p>
+<!-- Enhanced Newsletter Modal -->
+<div id="newsletter-popup" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[70] hidden">
+    <div class="bg-white/90 backdrop-blur-md p-8 rounded-2xl shadow-2xl max-w-md w-full mx-4 relative border border-white/30">
+        <button onclick="closePopup()"
+            class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-2xl transition-colors duration-200">&times;</button>
+
+        <div class="text-center mb-6">
+            <div class="bg-gradient-to-r from-blue-500 to-blue-600 p-4 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                <i class="fas fa-envelope text-white text-2xl"></i>
+            </div>
+            <h2 class="text-2xl font-bold text-gray-800 mb-2">Stay in the loop</h2>
+            <p class="text-gray-600">Get the latest news and important updates from the pool!</p>
+        </div>
 
         <form method="post" action="{% url 'mailchimp:newsletter-signup' %}">
             {% csrf_token %}
-            <input type="email" name="email" placeholder="Enter your email" required
-                class="w-full border rounded p-2 mb-2 focus:outline-none focus:ring" />
-            <button type="submit" class="w-full bg-blue-600 text-white rounded p-2">Sign up</button>
+            <div class="space-y-4">
+                <input type="email" name="email" placeholder="Enter your email" required
+                    class="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200" />
+                <button type="submit" 
+                        class="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-xl px-4 py-3 font-semibold transition-all duration-200 transform hover:scale-105">
+                    Sign up
+                </button>
+            </div>
         </form>
     </div>
 </div>

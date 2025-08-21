@@ -14,11 +14,7 @@
     <meta property="og:image" content="{% static 'img/og-image.jpg' %}">
     <meta property="og:type" content="website">
 
-    <!-- Bulma CSS -->
-    <!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/1.0.3/css/bulma.min.css">
-    <link rel="stylesheet" href="{% static 'css/styles.css' %}"> -->
-
-    <!-- Tailwind -->
+    <!-- Tailwind CSS -->
     <link href="{% static 'css/styles.css' %}" rel="stylesheet">
 
     <!-- HTMX & Alpine with Collapse plugin -->
@@ -33,73 +29,214 @@
     <link rel="apple-touch-icon" sizes="180x180" href="/static/favicon/apple-touch-icon.png" />
     <link rel="manifest" href="/static/favicon/site.webmanifest" />
 
-
     <title>{% block title %}TCSP Home{% endblock %}</title>
 
-
-    <!--Font Awesome - FIXED-->
-    <!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"> -->
+    <!-- Font Awesome -->
     <script src="https://kit.fontawesome.com/dc45154bc3.js" crossorigin="anonymous"></script>
+
+    {% block head_extra %}{% endblock %}
 </head>
 
-<body class="overflow-x-hidden">
-    <div x-data="{ dark: false, drawerOpen: false }" class="bg-blue-900">
-        {# ✅ Include Navbar inside body #}
-        <!-- Mobile Drawer -->
-        <div class="lg:hidden">
-            {% include "partials/_drawer.html" %}
+<body class="overflow-x-hidden bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-900 min-h-screen">
+    <div x-data="{ dark: false, drawerOpen: false }" class="relative min-h-screen">
+        
+        <!-- Background Pattern Overlay -->
+        <div class="fixed inset-0 opacity-10 pointer-events-none">
+            <div class="absolute inset-0 bg-gradient-to-r from-blue-600/20 to-purple-600/20"></div>
+            <div class="absolute inset-0" style="background-image: radial-gradient(circle at 20% 50%, rgba(120, 119, 198, 0.3) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 50%), radial-gradient(circle at 40% 80%, rgba(120, 119, 198, 0.2) 0%, transparent 50%);"></div>
         </div>
 
-        <!-- Desktop Navbar -->
-        <div class="hidden lg:block">
-            {% include "partials/_navbar.html" %}
-        </div>
+        <!-- Navigation -->
+        <nav class="relative z-50">
+            <!-- Mobile Drawer -->
+            <div class="lg:hidden">
+                {% include "partials/_drawer.html" %}
+            </div>
+
+            <!-- Desktop Navbar -->
+            <div class="hidden lg:block">
+                {% include "partials/_navbar.html" %}
+            </div>
+        </nav>
+
+                <!-- Enhanced Message System -->
         {% if messages %}
-        <div id="message-container" class="fixed top-80 left-1/2 -translate-x-1/2 z-50 w-fit max-w-full px-4 shadow-lg text-lg mb-2 p-3 
-            rounded bg-green-100 text-green-800 border-green-300 text-center">
+        <div id="message-container" class="fixed top-[40%] left-1/2 -translate-x-1/2 -translate-y-1/2 z-[60] w-fit max-w-md px-4">
             {% for message in messages %}
-            <div id="message-{{ forloop.counter }}" class="fade-message"
-                style="opacity: 1; transition: opacity 1s ease;">
-                {{ message }}
+            <div id="message-{{ forloop.counter }}" 
+                 class="fade-message mb-3 p-4 rounded-xl shadow-2xl backdrop-blur-md border transform transition-all duration-300 ease-out text-center
+                 {% if message.tags == 'success' %}
+                     bg-green-100/90 text-green-800 border-green-200
+                 {% elif message.tags == 'error' %}
+                     bg-red-100/90 text-red-800 border-red-200
+                 {% elif message.tags == 'warning' %}
+                     bg-yellow-100/90 text-yellow-800 border-yellow-200
+                 {% elif message.tags == 'info' %}
+                     bg-blue-100/90 text-blue-800 border-blue-200
+                 {% else %}
+                     bg-white/90 text-gray-800 border-gray-200
+                 {% endif %}"
+                 style="opacity: 1;">
+                
+                <div class="flex items-center justify-center space-x-3">
+                    <div class="flex-shrink-0">
+                        {% if message.tags == 'success' %}
+                            <i class="fas fa-check-circle text-green-600"></i>
+                        {% elif message.tags == 'error' %}
+                            <i class="fas fa-exclamation-circle text-red-600"></i>
+                        {% elif message.tags == 'warning' %}
+                            <i class="fas fa-exclamation-triangle text-yellow-600"></i>
+                        {% elif message.tags == 'info' %}
+                            <i class="fas fa-info-circle text-blue-600"></i>
+                        {% else %}
+                            <i class="fas fa-bell text-gray-600"></i>
+                        {% endif %}
+                    </div>
+                    <div class="flex-1 font-medium text-sm leading-relaxed text-center">
+                        {{ message }}
+                    </div>
+                    <button onclick="this.parentElement.parentElement.remove()" 
+                            class="flex-shrink-0 text-gray-400 hover:text-gray-600 transition-colors duration-200">
+                        <i class="fas fa-times text-xs"></i>
+                    </button>
+                </div>
             </div>
             {% endfor %}
         </div>
         {% endif %}
 
-        <main class="section">
-            <div>
-                {% block content %}{% endblock %}
-            </div>
+        <!-- Main Content Area -->
+        <main class="relative z-10 min-h-screen">
+            {% block content %}{% endblock %}
         </main>
 
-        {# ✅ Optional per-page footer override #}
-        {% block footer %}
-        {% include "partials/_footer.html" %}
-        {% endblock %}
+        <!-- Enhanced Footer -->
+        <footer class="relative z-10 mt-auto">
+            {% block footer %}
+            {% include "partials/_footer.html" %}
+            {% endblock %}
+        </footer>
+
         {% block extra_js %}{% endblock %}
     </div>
-    {% block scripts %}
-    {% endblock %}
 
+    {% block scripts %}{% endblock %}
+
+    <!-- Enhanced Message Animation Script -->
     <script>
         document.addEventListener("DOMContentLoaded", function () {
+            // Auto-hide messages after 5 seconds
             setTimeout(() => {
                 const messages = document.querySelectorAll(".fade-message");
-                messages.forEach(el => {
-                    el.style.opacity = "0";  // triggers the transition
+                messages.forEach((el, index) => {
                     setTimeout(() => {
-                        el.remove();
-                        // After all messages are removed, remove the container if it's empty
-                        const container = document.getElementById("message-container");
-                        if (container && container.children.length === 0) {
-                            container.remove();
-                        }
-                    }, 1000);  // matches transition duration
+                        el.style.opacity = "0";
+                        el.style.transform = "translateY(-20px) scale(0.95)";
+                        
+                        setTimeout(() => {
+                            el.remove();
+                            // Clean up container if empty
+                            const container = document.getElementById("message-container");
+                            if (container && container.children.length === 0) {
+                                container.remove();
+                            }
+                        }, 300);
+                    }, index * 100); // Stagger the fade-out animations
                 });
-            }, 3000);  // delay before fade starts
-        });
-    </script>
+            }, 5000);
 
+            // Add entrance animation
+            const messages = document.querySelectorAll(".fade-message");
+            messages.forEach((el, index) => {
+                el.style.transform = "translateY(-20px) scale(0.95)";
+                el.style.opacity = "0";
+                
+                setTimeout(() => {
+                    el.style.transform = "translateY(0) scale(1)";
+                    el.style.opacity = "1";
+                }, index * 100);
+            });
+        });
+
+        // Global utility functions for enhanced interactivity
+        window.tcspUtils = {
+            showNotification: function(message, type = 'info') {
+                // Function to programmatically show notifications
+                const container = document.getElementById('message-container') || this.createMessageContainer();
+                const messageEl = this.createMessageElement(message, type);
+                container.appendChild(messageEl);
+                
+                // Auto-hide after 5 seconds
+                setTimeout(() => {
+                    messageEl.style.opacity = "0";
+                    messageEl.style.transform = "translateY(-20px) scale(0.95)";
+                    setTimeout(() => messageEl.remove(), 300);
+                }, 5000);
+            },
+            
+            createMessageContainer: function() {
+                const container = document.createElement('div');
+                container.id = 'message-container';
+                container.className = 'fixed top-20 left-1/2 -translate-x-1/2 z-50 w-fit max-w-md px-4';
+                document.body.appendChild(container);
+                return container;
+            },
+            
+            createMessageElement: function(message, type) {
+                const el = document.createElement('div');
+                el.className = `fade-message mb-3 p-4 rounded-xl shadow-2xl backdrop-blur-md border transform transition-all duration-300 ease-out bg-${type === 'success' ? 'green' : type === 'error' ? 'red' : type === 'warning' ? 'yellow' : 'blue'}-100/90 text-${type === 'success' ? 'green' : type === 'error' ? 'red' : type === 'warning' ? 'yellow' : 'blue'}-800 border-${type === 'success' ? 'green' : type === 'error' ? 'red' : type === 'warning' ? 'yellow' : 'blue'}-200`;
+                el.innerHTML = `
+                    <div class="flex items-start space-x-3">
+                        <div class="flex-shrink-0 mt-0.5">
+                            <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : type === 'warning' ? 'exclamation-triangle' : 'info-circle'} text-${type === 'success' ? 'green' : type === 'error' ? 'red' : type === 'warning' ? 'yellow' : 'blue'}-600"></i>
+                        </div>
+                        <div class="flex-1 font-medium text-sm leading-relaxed">${message}</div>
+                        <button onclick="this.parentElement.parentElement.remove()" class="flex-shrink-0 ml-2 text-gray-400 hover:text-gray-600 transition-colors duration-200">
+                            <i class="fas fa-times text-xs"></i>
+                        </button>
+                    </div>
+                `;
+                return el;
+            }
+        };
+    </script>
+    <!-- In _base.html, add this right before the closing </body> tag -->
+<div x-data="{ showLogoutModal: false }" 
+     x-on:show-logout-modal.window="showLogoutModal = true">
+    <div x-show="showLogoutModal" x-transition
+        class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]">
+        <div @click.away="showLogoutModal = false" 
+             class="bg-white/90 backdrop-blur-md rounded-xl shadow-2xl border border-gray-200 p-8 w-full max-w-md mx-4 transform transition-all duration-300 ease-out">
+            
+            <!-- Header with Icon -->
+            <div class="text-center mb-6">
+                <div class="bg-gradient-to-r from-red-500 to-red-600 p-4 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center shadow-lg">
+                    <i class="fas fa-sign-out-alt text-2xl text-white"></i>
+                </div>
+                <h2 class="text-2xl font-bold text-gray-800 mb-2">Confirm Logout</h2>
+                <p class="text-gray-600 leading-relaxed">Are you sure you want to log out of your account?</p>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex flex-col sm:flex-row gap-3">
+                <button @click="showLogoutModal = false"
+                        class="flex-1 px-6 py-3 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg flex items-center justify-center">
+                    <i class="fas fa-times mr-2"></i>
+                    Cancel
+                </button>
+                
+                <form method="POST" action="{% url 'account_logout' %}" class="flex-1">
+                    {% csrf_token %}
+                    <button type="submit" 
+                            class="w-full px-6 py-3 rounded-lg bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-semibold transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg flex items-center justify-center">
+                        <i class="fas fa-sign-out-alt mr-2"></i>
+                        Logout
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 </body>
 
 </html>

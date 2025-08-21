@@ -2,130 +2,183 @@
 {% load static %}
 
 {% block content %}
-<section class="py-12 px-8 m-8 bg-blue-900">
-  <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8 bg-white/70 rounded-lg shadow-lg p-6">
+<section class="py-12 min-h-screen">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-blue-200 via-white to-cyan-100 p-6 rounded-xl">
     
-    <!-- Category Selection Panel -->
-    <div class="md:col-span-1 bg-white rounded-lg shadow p-4">
-      
-      <!-- Mobile: Collapsible Filter -->
-      <div class="md:hidden" x-data="{ open: false }">
-        <button @click="open = !open" 
-                class="w-full flex items-center justify-between bg-blue-100 hover:bg-blue-200 rounded px-4 py-2 
-                text-blue-800 font-semibold focus:outline-none focus:ring-2 focus:ring-red-600">
-          <div class="flex items-center gap-2">
-            <i class="fas fa-filter"></i>
-            <span>Filter Categories</span>
-          </div>
-          <i :class="{'fa-chevron-down': !open, 'fa-chevron-up': open}" 
-             class="fas transition-transform duration-300"></i>
-        </button>
-        
-        <aside x-show="open" x-transition class="mt-3">
-          <ul class="space-y-2 text-gray-700">
-            <li>
-              <a href="{% url 'swims:product_list' %}"
-                 class="{% if not category %}font-bold text-blue-600{% else %}hover:text-blue-600{% endif %}">
-                All
-              </a>
-            </li>
-            {% for c in categories %}
-            <li>
-              <a href="{{ c.get_absolute_url }}"
-                 class="{% if category.slug == c.slug %}font-bold text-blue-600{% else %}hover:text-blue-600{% endif %}">
-                {{ c.name }}
-              </a>
-            </li>
-            {% endfor %}
-          </ul>
-        </aside>
+    <!-- Header Section -->
+    <div class="text-center mb-8">
+      <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full mb-4 mt-4">
+        <i class="fas fa-swimming-pool text-white text-2xl"></i>
       </div>
-
-      <!-- Desktop: Always visible -->
-      <div class="hidden md:block">
-        <h3 class="text-lg font-semibold text-blue-900 mb-4">Categories</h3>
-        <aside>
-          <ul class="space-y-2 text-gray-700">
-            <li>
-              <a href="{% url 'swims:product_list' %}"
-                 class="{% if not category %}font-bold text-blue-600{% else %}hover:text-blue-600{% endif %}">
-                All
-              </a>
-            </li>
-            {% for c in categories %}
-            <li>
-              <a href="{{ c.get_absolute_url }}"
-                 class="{% if category.slug == c.slug %}font-bold text-blue-600{% else %}hover:text-blue-600{% endif %}">
-                {{ c.name }}
-              </a>
-            </li>
-            {% endfor %}
-          </ul>
-        </aside>
-      </div>
+      <h1 class="text-3xl font-bold text-blue-900 mb-2">Swimming Sessions</h1>
+      <p class="text-blue-600">Book your perfect swim session from our available categories</p>
     </div>
 
-    <!-- Table View -->
-    <div class="md:col-span-3 bg-white rounded-lg shadow p-6">
-      <h2 class="text-2xl font-semibold mb-6 flex items-center gap-3 text-blue-900 p-4 rounded">
-        <i class="fas fa-swimming-pool"></i>
-        <span>{% if category %}{{ category.name }}{% else %}Swim Sessions{% endif %}</span>
-      </h2>
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+      
+      <!-- Category Selection Panel -->
+      <div class="lg:col-span-1">
+        <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+          
+          <!-- Mobile: Collapsible Filter -->
+          <div class="lg:hidden" x-data="{ open: false }">
+            <button @click="open = !open" 
+                    class="w-full flex items-center justify-between bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 px-6 py-4 text-white font-semibold focus:outline-none focus:ring-2 focus:ring-blue-300">
+              <div class="flex items-center gap-2">
+                <i class="fas fa-filter"></i>
+                <span>Filter Categories</span>
+              </div>
+              <i :class="{'fa-chevron-down': !open, 'fa-chevron-up': open}" 
+                 class="fas transition-transform duration-300"></i>
+            </button>
+            
+            <aside x-show="open" x-transition class="p-6">
+              <ul class="space-y-3">
+                <li>
+                  <a href="{% url 'swims:product_list' %}"
+                     class="block px-4 py-2 rounded-lg transition-colors duration-200 {% if not category %}bg-blue-100 text-blue-700 font-semibold{% else %}text-gray-700 hover:bg-gray-100{% endif %}">
+                    <i class="fas fa-th-large mr-2"></i>All Categories
+                  </a>
+                </li>
+                {% for c in categories %}
+                <li>
+                  <a href="{{ c.get_absolute_url }}"
+                     class="block px-4 py-2 rounded-lg transition-colors duration-200 {% if category.slug == c.slug %}bg-blue-100 text-blue-700 font-semibold{% else %}text-gray-700 hover:bg-gray-100{% endif %}">
+                    <i class="fas fa-tag mr-2"></i>{{ c.name }}
+                  </a>
+                </li>
+                {% endfor %}
+              </ul>
+            </aside>
+          </div>
 
-      {% if products %}
-      <div class="overflow-x-auto">
-        <table class="min-w-full border bg-white border-blue-200 text-left">
-          <thead class="bg-blue-50 text-blue-700 font-bold uppercase text-xs font-semibold">
-            <tr>
-              <th class="px-4 py-3 text-sm bg-blue-300">Swim</th>
-              <th class="px-4 py-3 text-sm bg-blue-300">Date & Time</th>
-              <th class="px-4 py-3 text-sm bg-blue-300 hidden md:table-cell">Actions</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-blue-200 bg-blue-100/70 text-sm">
-            {% for product in products %}
-            <tr>
-              <td class="px-4 py-3">
-                <strong class="block">{{ product.name }}</strong>
-                <!-- Mobile: Inline action button -->
-                <div class="md:hidden mt-2">
+          <!-- Desktop: Always visible -->
+          <div class="hidden lg:block">
+            <div class="bg-gradient-to-r from-blue-500 to-cyan-500 px-6 py-4">
+              <h3 class="text-lg font-semibold text-white flex items-center">
+                <i class="fas fa-filter mr-2"></i>Categories
+              </h3>
+            </div>
+            <div class="p-6">
+              <ul class="space-y-3">
+                <li>
+                  <a href="{% url 'swims:product_list' %}"
+                     class="block px-4 py-2 rounded-lg transition-colors duration-200 {% if not category %}bg-blue-100 text-blue-700 font-semibold{% else %}text-gray-700 hover:bg-gray-100{% endif %}">
+                    <i class="fas fa-th-large mr-2"></i>All Categories
+                  </a>
+                </li>
+                {% for c in categories %}
+                <li>
+                  <a href="{{ c.get_absolute_url }}"
+                     class="block px-4 py-2 rounded-lg transition-colors duration-200 {% if category.slug == c.slug %}bg-blue-100 text-blue-700 font-semibold{% else %}text-gray-700 hover:bg-gray-100{% endif %}">
+                    <i class="fas fa-tag mr-2"></i>{{ c.name }}
+                  </a>
+                </li>
+                {% endfor %}
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sessions Display -->
+      <div class="lg:col-span-3">
+        <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+          
+          <!-- Header -->
+          <div class="bg-gradient-to-r from-blue-500 to-cyan-500 px-6 py-4">
+            <h2 class="text-xl font-semibold text-white flex items-center gap-3">
+              <i class="fas fa-swimming-pool"></i>
+              <span>{% if category %}{{ category.name }}{% else %}All Swim Sessions{% endif %}</span>
+            </h2>
+          </div>
+
+          {% if products %}
+            <!-- Desktop Table View -->
+            <div class="hidden md:block overflow-x-auto">
+              <table class="min-w-full">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Session Details</th>
+                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Schedule</th>
+                    <th class="px-6 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200">
+                  {% for product in products %}
+                  <tr class="hover:bg-gray-50 transition-colors duration-150">
+                    <td class="px-6 py-4">
+                      <div class="flex items-center">
+                        <div class="flex-shrink-0 w-10 h-10 bg-gradient-to-r from-blue-400 to-cyan-400 rounded-full flex items-center justify-center">
+                          <i class="fas fa-swimmer text-white"></i>
+                        </div>
+                        <div class="ml-4">
+                          <div class="text-sm font-medium text-gray-900">{{ product.name }}</div>
+                          <div class="text-sm text-gray-500">{{ product.category.name }}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="px-6 py-4">
+                      <div class="text-sm text-gray-900">{{ product.next_occurrence_date }}</div>
+                      <div class="text-sm text-gray-500">{{ product.start_time|time:"H:i" }} - {{ product.end_time|time:"H:i" }}</div>
+                    </td>
+                    <td class="px-6 py-4 text-center">
+                      <a href="{{ product.get_absolute_url }}" 
+                         class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white text-sm font-medium rounded-lg hover:from-blue-600 hover:to-cyan-600 transition-all duration-200 shadow-md hover:shadow-lg">
+                        <i class="fas fa-calendar-plus mr-2"></i>Book Now
+                      </a>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Mobile Card View -->
+            <div class="md:hidden p-6 space-y-4">
+              {% for product in products %}
+              <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                <div class="flex items-start justify-between">
+                  <div class="flex items-center flex-1">
+                    <div class="flex-shrink-0 w-10 h-10 bg-gradient-to-r from-blue-400 to-cyan-400 rounded-full flex items-center justify-center">
+                      <i class="fas fa-swimmer text-white"></i>
+                    </div>
+                    <div class="ml-3 flex-1">
+                      <h3 class="text-sm font-medium text-gray-900">{{ product.name }}</h3>
+                      <p class="text-xs text-gray-500">{{ product.category.name }}</p>
+                      <div class="mt-1">
+                        <p class="text-sm text-gray-700">{{ product.next_occurrence_date }}</p>
+                        <p class="text-xs text-gray-500">{{ product.start_time|time:"H:i" }} - {{ product.end_time|time:"H:i" }}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="mt-3">
                   <a href="{{ product.get_absolute_url }}" 
-                     class="inline-flex items-center gap-2 text-blue-900 bg-blue-200 hover:bg-blue-700 text-white text-xs font-semibold rounded px-3 py-1 transition">
-                    <i class="fas fa-calendar-plus"></i>
-                    Book
+                     class="w-full inline-flex items-center justify-center px-4 py-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white text-sm font-medium rounded-lg hover:from-blue-600 hover:to-cyan-600 transition-all duration-200">
+                    <i class="fas fa-calendar-plus mr-2"></i>Book Now
                   </a>
                 </div>
-              </td>
-              <td class="px-4 py-3">
-                <span class="hidden md:inline">{{ product.next_occurrence_date }} {{ product.start_time }}</span>
-                <div class="md:hidden">
-                  <div>{{ product.next_occurrence_date }}</div>
-                  <small class="text-gray-500">{{ product.start_time }}</small>
-                </div>
-              </td>
-              <td class="px-4 py-3 hidden md:table-cell">
-                <a href="{{ product.get_absolute_url }}" 
-                   class="inline-flex items-center gap-2 text-blue-100 bg-blue-700 hover:text-white hover:bg-blue-900 text-xs font-semibold rounded px-3 py-1 transition">
-                  <i class="fas fa-calendar-plus"></i>
-                  Book
-                </a>
-              </td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
+              </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class="text-center py-16 px-6">
+              <div class="w-16 h-16 mx-auto bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                <i class="fas fa-swimming-pool text-gray-400 text-2xl"></i>
+              </div>
+              <h3 class="text-lg font-medium text-gray-900 mb-2">No swim sessions found</h3>
+              <p class="text-gray-500 mb-6">Try selecting a different category or check back later for new sessions.</p>
+              <a href="{% url 'swims:product_list' %}" 
+                 class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white text-sm font-medium rounded-lg hover:from-blue-600 hover:to-cyan-600 transition-all duration-200">
+                <i class="fas fa-refresh mr-2"></i>View All Sessions
+              </a>
+            </div>
+          {% endif %}
+        </div>
       </div>
-      {% else %}
-      <div class="text-center text-gray-600 py-12">
-        <p class="text-lg font-semibold">No swim sessions found.</p>
-        <p class="mt-2">Try selecting a different category or check back later.</p>
-      </div>
-      {% endif %}
-    </div>
 
+    </div>
   </div>
 </section>
-
-<!-- Animate.css for transitions -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
 {% endblock %}

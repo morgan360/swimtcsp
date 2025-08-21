@@ -13,6 +13,54 @@
         </h2>
         <p class="text-gray-300">Update your personal information and preferences</p>
     </div>
+    <!-- Quick Actions -->
+    <div class="bg-white shadow-lg rounded-xl overflow-hidden mb-10">
+        <div class="bg-blue-300 px-6 py-4">
+            <h2 class="text-blue-900 text-lg font-semibold flex items-center">
+                <i class="fas fa-tools mr-2"></i>Quick Actions
+            </h2>
+        </div>
+        <div class="p-6 flex flex-wrap gap-4 flex justify-center">
+            <a href="/account/password/change/"
+                class="inline-flex items-center px-5 py-3 bg-orange-700 text-white rounded-lg hover:bg-orange-600 font-semibold">
+                <i class="fas fa-key mr-2"></i>Change Password
+            </a>
+
+            <!-- Guardian Actions -->
+            {% if is_guardian %}
+                <!-- User is already a guardian, show dashboard link -->
+                <a href="{% url 'swimling_dashboard:guardian_dashboard' %}"
+                    class="inline-flex items-center px-5 py-3 bg-green-700 text-white rounded-lg hover:bg-green-600 font-semibold">
+                    <i class="fas fa-swimmer mr-2"></i>Swimling Dashboard
+                </a>
+            
+                <!-- Join Schools Link - Only show if guardian and not already in schools program -->
+                {% if not user_in_school_group %}
+                <a href="/users/join-schools/"
+                    class="inline-flex items-center px-5 py-3 bg-yellow-600 text-white rounded-lg hover:bg-yellow-500 font-semibold">
+                    <i class="fas fa-school mr-2"></i>Join Schools
+                </a>
+                {% else %}
+                <!-- User already has school access - show school dashboard link instead -->
+                <a href="{% url 'swimling_dashboard:guardian_dashboard' %}"
+                    class="inline-flex items-center px-5 py-3 bg-purple-700 text-white rounded-lg hover:bg-purple-600 font-semibold">
+                    <i class="fas fa-graduation-cap mr-2"></i>School Dashboard
+                </a>
+                {% endif %}
+            {% else %}
+                <!-- User is not a guardian, show become guardian button -->
+                <button onclick="showGuardianModal()"
+                    class="inline-flex items-center px-5 py-3 bg-blue-700 text-white rounded-lg hover:bg-blue-600 font-semibold">
+                    <i class="fas fa-shield-alt mr-2"></i>Become Guardian
+                </button>
+            {% endif %}
+
+            <a href="{% url 'account_logout' %}"
+                class="inline-flex items-center px-5 py-3 text-white rounded-lg bg-red-700 hover:bg-red-600 font-semibold">
+                <i class="fas fa-sign-out-alt mr-2"></i>Logout
+            </a>
+        </div>
+    </div>
 
     <!-- Profile Form Card -->
     <div class="bg-white shadow-lg rounded-xl overflow-hidden mb-6">
@@ -26,7 +74,7 @@
                 {% csrf_token %}
 
                 <!-- Username -->
-                <div class="mb-4">
+                <!-- <div class="mb-4">
                     <label for="{{ u_form.username.id_for_label }}" class="block font-semibold mb-1 text-blue-800">
                         <i class="fas fa-at mr-1"></i>Username
                     </label>
@@ -41,7 +89,7 @@
                     {% if u_form.username.errors %}
                         <p class="text-sm text-red-600 mt-1">{{ u_form.username.errors.0 }}</p>
                     {% endif %}
-                </div>
+                </div> -->
 
                 <!-- First Name -->
                 <div class="mb-4">
@@ -54,7 +102,7 @@
                         </div>
                     </div>
                     {% if u_form.first_name.errors %}
-                        <p class="text-sm text-red-600 mt-1">{{ u_form.first_name.errors.0 }}</p>
+                    <p class="text-sm text-red-600 mt-1">{{ u_form.first_name.errors.0 }}</p>
                     {% endif %}
                 </div>
 
@@ -69,7 +117,7 @@
                         </div>
                     </div>
                     {% if u_form.last_name.errors %}
-                        <p class="text-sm text-red-600 mt-1">{{ u_form.last_name.errors.0 }}</p>
+                    <p class="text-sm text-red-600 mt-1">{{ u_form.last_name.errors.0 }}</p>
                     {% endif %}
                 </div>
 
@@ -80,11 +128,12 @@
                     </label>
                     <div class="relative">
                         <input type="email" value="{{ user.email }}" readonly
-                               class="w-full border rounded px-4 py-2 bg-gray-100 cursor-not-allowed text-gray-700">
+                            class="w-full border rounded px-4 py-2 bg-gray-100 cursor-not-allowed text-gray-700">
                         <div class="absolute left-3 top-2.5 text-gray-400">
                         </div>
                     </div>
-                    <p class="text-sm text-gray-500 mt-1">Your email address cannot be changed here. Contact support if needed.</p>
+                    <p class="text-sm text-gray-500 mt-1">Your email address cannot be changed here. Contact support if
+                        needed.</p>
                 </div>
 
                 <!-- Admin Notes -->
@@ -95,7 +144,7 @@
                     {{ u_form.admin_notes|add_class:"textarea w-full border rounded p-3 focus:outline-none focus:ring" }}
                     <p class="text-sm text-gray-500 mt-1">Add any personal notes or preferences</p>
                     {% if u_form.admin_notes.errors %}
-                        <p class="text-sm text-red-600 mt-1">{{ u_form.admin_notes.errors.0 }}</p>
+                    <p class="text-sm text-red-600 mt-1">{{ u_form.admin_notes.errors.0 }}</p>
                     {% endif %}
                 </div>
 
@@ -106,11 +155,13 @@
                     </p>
                     <p class="mb-2"><strong>Account Type:</strong>
                         {% if user.groups.all %}
-                            {% for group in user.groups.all %}
-                                <span class="inline-block bg-blue-700 text-white px-2 py-1 rounded text-sm mr-1 mt-1">{{ group.name }}</span>
-                            {% endfor %}
+                        {% for group in user.groups.all %}
+                        <span class="inline-block bg-blue-700 text-white px-2 py-1 rounded text-sm mr-1 mt-1">
+                            {{ group.name }}</span>
+                        {% endfor %}
                         {% else %}
-                            <span class="inline-block bg-gray-200 text-gray-700 px-2 py-1 rounded text-sm">Standard User</span>
+                        <span class="inline-block bg-gray-200 text-gray-700 px-2 py-1 rounded text-sm">Standard
+                            User</span>
                         {% endif %}
                     </p>
                     <p class="mb-2"><strong>Member Since:</strong> {{ user.date_joined|date:"F d, Y" }}</p>
@@ -120,50 +171,15 @@
                 <!-- Buttons -->
                 <div class="flex justify-center space-x-4">
                     <button type="submit"
-                            class="inline-flex items-center px-6 py-3 text-white bg-blue-700 rounded-lg hover:bg-blue-800 focus:ring-4 focus:ring-blue-300">
+                        class="inline-flex items-center px-6 py-3 text-white bg-blue-700 rounded-lg hover:bg-blue-800 focus:ring-4 focus:ring-blue-300">
                         <i class="fas fa-save mr-2"></i>Save Changes
                     </button>
                     <a href="/"
-                       class="inline-flex items-center px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100">
+                        class="inline-flex items-center px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100">
                         <i class="fas fa-times mr-2"></i>Cancel
                     </a>
                 </div>
             </form>
-        </div>
-    </div>
-
-    <!-- Quick Actions -->
-    <div class="bg-white shadow-lg rounded-xl overflow-hidden">
-        <div class="bg-blue-300 px-6 py-4">
-            <h2 class="text-blue-900 text-lg font-semibold flex items-center">
-                <i class="fas fa-tools mr-2"></i>Quick Actions
-            </h2>
-        </div>
-        <div class="p-6 flex flex-wrap gap-4 flex justify-center">
-            <a href="/account/password/change/"
-               class="inline-flex items-center px-5 py-3 bg-orange-700 text-white rounded-lg hover:bg-orange-600 font-semibold">
-                <i class="fas fa-key mr-2"></i>Change Password
-            </a>
-
-                        <!-- Guardian Actions -->
-            {% if is_guardian %}
-                <!-- User is already a guardian, show dashboard link -->
-                <a href="{% url 'swimling_dashboard:guardian_dashboard' %}"
-                   class="inline-flex items-center px-5 py-3 bg-green-700 text-white rounded-lg hover:bg-green-600 font-semibold">
-                    <i class="fas fa-swimmer mr-2"></i>Swimling Dashboard
-                </a>
-            {% else %}
-                <!-- User is not a guardian, show become guardian button -->
-                <button onclick="showGuardianModal()"
-                        class="inline-flex items-center px-5 py-3 bg-blue-700 text-white rounded-lg hover:bg-blue-600 font-semibold">
-                    <i class="fas fa-shield-alt mr-2"></i>Become Guardian
-                </button>
-            {% endif %}
-
-            <a href="{% url 'account_logout' %}"
-               class="inline-flex items-center px-5 py-3 text-white rounded-lg bg-red-700 hover:bg-red-600 font-semibold">
-                <i class="fas fa-sign-out-alt mr-2"></i>Logout
-            </a>
         </div>
     </div>
 </section>
@@ -172,10 +188,10 @@
 <div class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50" id="messageModal">
     <div class="bg-white p-6 rounded-xl shadow-lg max-w-sm w-full relative">
         <button onclick="document.getElementById('messageModal').remove()"
-                class="absolute top-2 right-2 text-gray-500 hover:text-black text-xl">&times;</button>
+            class="absolute top-2 right-2 text-gray-500 hover:text-black text-xl">&times;</button>
         <div class="text-green-700">
             {% for message in messages %}
-                <p>{{ message }}</p>
+            <p>{{ message }}</p>
             {% endfor %}
         </div>
     </div>
@@ -197,10 +213,10 @@
 <!-- Show Guardian Modal only if Required (from URL redirect) -->
 {% if guardian_required %}
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Show the guardian prompt modal when page loads (only from guardian access redirect)
-    showGuardianModal();
-});
+    document.addEventListener('DOMContentLoaded', function () {
+        // Show the guardian prompt modal when page loads (only from guardian access redirect)
+        showGuardianModal();
+    });
 </script>
 {% endif %}
 

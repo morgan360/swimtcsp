@@ -1,5 +1,6 @@
 <!-- Guardian Prompt Modal -->
-<div id="guardianPromptModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden" role="dialog" aria-labelledby="guardianModalTitle" aria-modal="true">
+<div id="guardianPromptModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden"
+    role="dialog" aria-labelledby="guardianModalTitle" aria-modal="true">
     <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
         <!-- Modal Header -->
         <div class="bg-blue-600 text-white px-6 py-4 rounded-t-lg">
@@ -8,7 +9,7 @@
                 Guardian Access Required
             </h2>
         </div>
-        
+
         <!-- Modal Content -->
         <div class="p-6">
             <div class="flex items-start space-x-3 mb-4">
@@ -17,7 +18,8 @@
                 </div>
                 <div>
                     <p class="text-gray-700 mb-3">
-                        To access swimming lessons and the swimling dashboard, you need to update your account to <strong>Guardian</strong> status.
+                        To access swimming lessons and the swimling dashboard, you need to update your account to
+                        <strong>Guardian</strong> status.
                     </p>
                     <p class="text-gray-600 text-sm">
                         Guardian accounts can book lessons, manage swimmers, and access all family features.
@@ -25,19 +27,17 @@
                 </div>
             </div>
         </div>
-        
+
         <!-- Modal Footer -->
         <div class="bg-gray-50 px-6 py-4 rounded-b-lg flex flex-col sm:flex-row gap-3">
-            <button type="button" 
-                    onclick="redirectToBecomeguardian()"
-                    class="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200 flex items-center justify-center">
-                <i class="fas fa-user-plus mr-2"></i>
+            <button type="button" onclick="redirectToBecomeguardian()"
+                class="flex-1 bg-blue-600 text-white px-3 py-2 rounded-xl hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200 flex items-center justify-center text-sm">
+                <i class="fas fa-user-plus mr-2 text-xs"></i>
                 Become a Guardian
             </button>
-            <button type="button" 
-                    onclick="closeGuardianModal()"
-                    class="flex-1 bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors duration-200">
-                <i class="fas fa-times mr-2"></i>
+            <button type="button" onclick="closeGuardianModal()"
+                class="flex-1 bg-gray-300 text-gray-700 px-3 py-2 rounded-xl hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors duration-200 text-sm">
+                <i class="fas fa-times mr-2 text-xs"></i>
                 Not Now
             </button>
         </div>
@@ -45,49 +45,49 @@
 </div>
 
 <script>
-// Function to show the guardian prompt modal
-function showGuardianModal() {
-    const modal = document.getElementById('guardianPromptModal');
-    if (modal) {
-        modal.classList.remove('hidden');
-        // Focus trap for accessibility
-        modal.focus();
+    // Function to show the guardian prompt modal
+    function showGuardianModal() {
+        const modal = document.getElementById('guardianPromptModal');
+        if (modal) {
+            modal.classList.remove('hidden');
+            // Focus trap for accessibility
+            modal.focus();
+        }
     }
-}
 
-// Function to close the guardian prompt modal
-function closeGuardianModal() {
-    const modal = document.getElementById('guardianPromptModal');
-    if (modal) {
-        modal.classList.add('hidden');
+    // Function to close the guardian prompt modal
+    function closeGuardianModal() {
+        const modal = document.getElementById('guardianPromptModal');
+        if (modal) {
+            modal.classList.add('hidden');
+        }
     }
-}
 
-// Function to redirect to become guardian page with from parameter
-function redirectToBecomeguardian() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const fromUrl = urlParams.get('from');
-    
-    let redirectUrl = '/users/profile/become-guardian/';
-    if (fromUrl) {
-        redirectUrl += '?from=' + encodeURIComponent(fromUrl);
-    }
-    
-    window.location.href = redirectUrl;
-}
+    // Function to redirect to become guardian page with from parameter
+    function redirectToBecomeguardian() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const fromUrl = urlParams.get('from');
 
-// Close modal when clicking outside of it
-document.addEventListener('click', function(event) {
-    const modal = document.getElementById('guardianPromptModal');
-    if (modal && event.target === modal) {
-        closeGuardianModal();
-    }
-});
+        let redirectUrl = '/users/profile/become-guardian/';
+        if (fromUrl) {
+            redirectUrl += '?from=' + encodeURIComponent(fromUrl);
+        }
 
-// Close modal on Escape key
-document.addEventListener('keydown', function(event) {
-    if (event.key === 'Escape') {
-        closeGuardianModal();
+        window.location.href = redirectUrl;
     }
-});
+
+    // Close modal when clicking outside of it
+    document.addEventListener('click', function (event) {
+        const modal = document.getElementById('guardianPromptModal');
+        if (modal && event.target === modal) {
+            closeGuardianModal();
+        }
+    });
+
+    // Close modal on Escape key
+    document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape') {
+            closeGuardianModal();
+        }
+    });
 </script>

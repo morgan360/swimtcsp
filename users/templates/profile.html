@@ -13,6 +13,45 @@
         </h2>
         <p class="text-gray-300">Update your personal information and preferences</p>
     </div>
+    <!-- Quick Actions -->
+    <div class="bg-white shadow-lg rounded-xl overflow-hidden mb-10">
+        <div class="bg-blue-300 px-6 py-4">
+            <h2 class="text-blue-900 text-lg font-semibold flex items-center">
+                <i class="fas fa-tools mr-2"></i>Quick Actions
+            </h2>
+        </div>
+        <div class="p-6 flex flex-wrap gap-4 flex justify-center">
+            <a href="/account/password/change/"
+               class="inline-flex items-center px-5 py-3 bg-orange-700 text-white rounded-lg hover:bg-orange-600 font-semibold">
+                <i class="fas fa-key mr-2"></i>Change Password
+            </a>
+
+            <!-- Guardian Actions -->
+            {% if is_guardian %}
+                <!-- User is already a guardian, show dashboard link -->
+                <a href="{% url 'swimling_dashboard:guardian_dashboard' %}"
+                   class="inline-flex items-center px-5 py-3 bg-green-700 text-white rounded-lg hover:bg-green-600 font-semibold">
+                    <i class="fas fa-swimmer mr-2"></i>Swimling Dashboard
+                </a>
+                <!-- Join Schools Link -->
+                <a href="/users/join-schools/"
+                   class="inline-flex items-center px-5 py-3 bg-yellow-600 text-white rounded-lg hover:bg-yellow-500 font-semibold">
+                    <i class="fas fa-school mr-2"></i>Join Schools
+                </a>
+            {% else %}
+                <!-- User is not a guardian, show become guardian button -->
+                <button onclick="showGuardianModal()"
+                        class="inline-flex items-center px-5 py-3 bg-blue-700 text-white rounded-lg hover:bg-blue-600 font-semibold">
+                    <i class="fas fa-shield-alt mr-2"></i>Become Guardian
+                </button>
+            {% endif %}
+
+            <a href="{% url 'account_logout' %}"
+               class="inline-flex items-center px-5 py-3 text-white rounded-lg bg-red-700 hover:bg-red-600 font-semibold">
+                <i class="fas fa-sign-out-alt mr-2"></i>Logout
+            </a>
+        </div>
+    </div>
 
     <!-- Profile Form Card -->
     <div class="bg-white shadow-lg rounded-xl overflow-hidden mb-6">
@@ -129,41 +168,6 @@
                     </a>
                 </div>
             </form>
-        </div>
-    </div>
-
-    <!-- Quick Actions -->
-    <div class="bg-white shadow-lg rounded-xl overflow-hidden">
-        <div class="bg-blue-300 px-6 py-4">
-            <h2 class="text-blue-900 text-lg font-semibold flex items-center">
-                <i class="fas fa-tools mr-2"></i>Quick Actions
-            </h2>
-        </div>
-        <div class="p-6 flex flex-wrap gap-4 flex justify-center">
-            <a href="/account/password/change/"
-               class="inline-flex items-center px-5 py-3 bg-orange-700 text-white rounded-lg hover:bg-orange-600 font-semibold">
-                <i class="fas fa-key mr-2"></i>Change Password
-            </a>
-
-                        <!-- Guardian Actions -->
-            {% if is_guardian %}
-                <!-- User is already a guardian, show dashboard link -->
-                <a href="{% url 'swimling_dashboard:guardian_dashboard' %}"
-                   class="inline-flex items-center px-5 py-3 bg-green-700 text-white rounded-lg hover:bg-green-600 font-semibold">
-                    <i class="fas fa-swimmer mr-2"></i>Swimling Dashboard
-                </a>
-            {% else %}
-                <!-- User is not a guardian, show become guardian button -->
-                <button onclick="showGuardianModal()"
-                        class="inline-flex items-center px-5 py-3 bg-blue-700 text-white rounded-lg hover:bg-blue-600 font-semibold">
-                    <i class="fas fa-shield-alt mr-2"></i>Become Guardian
-                </button>
-            {% endif %}
-
-            <a href="{% url 'account_logout' %}"
-               class="inline-flex items-center px-5 py-3 text-white rounded-lg bg-red-700 hover:bg-red-600 font-semibold">
-                <i class="fas fa-sign-out-alt mr-2"></i>Logout
-            </a>
         </div>
     </div>
 </section>

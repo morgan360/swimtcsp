@@ -57,13 +57,19 @@ def become_guardian_view(request):
         if form.is_valid() and form.cleaned_data['become_guardian']:
             guardian_group, _ = Group.objects.get_or_create(name='guardian')
             request.user.groups.add(guardian_group)
-            messages.success(request, "Congratulations! You are now a Guardian and can access all lesson booking features.")
+            messages.success(request, "Congratulations! You are now a Guardian and can access the Swimling Dashboard.")
             
-            # Check if user came from a specific URL and redirect there
+            # Check for redirect destination
+            redirect_to = request.POST.get('redirect_to')
             from_url = request.GET.get('from')
-            if from_url:
+            
+            # Priority: redirect_to field > from_url > swimling dashboard default
+            if redirect_to == 'swimling_dashboard':
+                return redirect('swimling_dashboard:guardian_dashboard')
+            elif from_url:
                 return redirect(from_url)
-            return redirect('/')  # Default redirect to home
+            else:
+                return redirect('swimling_dashboard:guardian_dashboard')  # Default to dashboard
     else:
         form = GuardianOptInForm()
 

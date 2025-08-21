@@ -22,7 +22,7 @@
         </div>
       </div>
       {% endif %}
-      
+
       <p class="mb-6 text-gray-700">
         When you upgrade to Guardian status, you will gain access to features such as:
       </p>
@@ -41,12 +41,15 @@
         </li>
         <li class="flex items-center">
           <i class="fas fa-check text-green-500 mr-2"></i>
-          Access the Swimling Dashboard for family management
+          Access the <span class="font-semibold">&nbsp;Swimling Dashboard&nbsp;</span> for family management
         </li>
       </ul>
 
-      <form method="post"{% if from_url %}?from={{ from_url|urlencode }}{% endif %}>
+      <form method="post" {% if from_url %}?from={{ from_url|urlencode }}{% endif %}>
         {% csrf_token %}
+        <!-- Add hidden field to specify redirect destination -->
+        <input type="hidden" name="redirect_to" value="swimling_dashboard">
+
         <div class="mb-6">
           <label for="{{ form.become_guardian.id_for_label }}" class="inline-flex items-center cursor-pointer">
             {{ form.become_guardian }}
@@ -55,12 +58,14 @@
         </div>
 
         <div class="flex space-x-4">
-          <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-md transition flex items-center">
+          <button type="submit"
+            class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-md transition flex items-center">
             <i class="fas fa-user-plus mr-2"></i>
             Upgrade to Guardian
           </button>
-          
-          <a href="{% if from_url %}/{% else %}/users/profile/{% endif %}" class="bg-gray-300 hover:bg-gray-400 text-gray-700 font-semibold py-2 px-6 rounded-md transition">
+
+          <a href="{% if from_url %}/{% else %}/users/profile/{% endif %}"
+            class="bg-gray-300 hover:bg-gray-400 text-gray-700 font-semibold py-2 px-6 rounded-md transition">
             Cancel
           </a>
         </div>

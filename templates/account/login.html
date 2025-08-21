@@ -9,14 +9,6 @@
     <section class="py-12 px-4 sm:px-6 lg:px-8">
         <div class="max-w-7xl mx-auto">
 
-            {% if messages %}
-                <div class="notification is-info">
-                    {% for message in messages %}
-                        {{ message }}
-                    {% endfor %}
-                </div>
-            {% endif %}
-
             <div class="flex justify-center">
                 <div class="bg-white/40 backdrop-blur-md border border-white/20 rounded-xl shadow-md p-10 w-full max-w-xl">
 
@@ -24,6 +16,34 @@
                         <i class="fas fa-solid fa-user text-white mr-2"></i>
                         Login
                     </h2>
+
+                    <!-- General Form Errors -->
+                    {% if form.non_field_errors %}
+                        <div class="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
+                            <div class="flex items-start">
+                                <i class="fas fa-exclamation-circle text-red-500 mr-2 mt-1"></i>
+                                <div class="text-red-700">
+                                    {% for error in form.non_field_errors %}
+                                        <p class="font-medium">{{ error }}</p>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <!-- Messages (for things like account verification, etc.) -->
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="mb-6 bg-{% if message.tags == 'error' %}red{% elif message.tags == 'success' %}green{% else %}blue{% endif %}-50 border border-{% if message.tags == 'error' %}red{% elif message.tags == 'success' %}green{% else %}blue{% endif %}-200 rounded-lg p-4">
+                                <div class="flex items-start">
+                                    <i class="fas fa-{% if message.tags == 'error' %}exclamation-circle{% elif message.tags == 'success' %}check-circle{% else %}info-circle{% endif %} text-{% if message.tags == 'error' %}red{% elif message.tags == 'success' %}green{% else %}blue{% endif %}-500 mr-2 mt-1"></i>
+                                    <div class="text-{% if message.tags == 'error' %}red{% elif message.tags == 'success' %}green{% else %}blue{% endif %}-700">
+                                        <p class="font-medium">{{ message }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
 
                     {% get_providers as socialaccount_providers %}
                     {% if socialaccount_providers %}
@@ -49,7 +69,7 @@
                             first.</p>
                     {% endif %}
 
-                    <form method="POST" action="{% url 'account_login' %}" class="bg-white/50 p-6 rounded-lg shadow">
+                    <form method="POST" action="{% url 'account_login' %}" class="bg-white/50 p-6 rounded-lg shadow" id="loginForm">
                         {% csrf_token %}
                         {% for field in form %}
                             <div class="mb-5">
@@ -65,18 +85,21 @@
                                         {{ field.label }}
                                     </label>
                                     <input
-                                            class="w-full px-4 py-2 border border-gray-300 bg-white/70 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600/50 focus:bg-white"
+                                            class="w-full px-4 py-2 border border-gray-300 bg-white/70 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600/50 focus:bg-white {% if field.errors %}border-red-500 focus:ring-red-500{% endif %}"
                                             type="{{ field.widget.input_type }}" name="{{ field.name }}"
                                             id="{{ field.id_for_label }}"
                                             placeholder="{{ field.label }}"
-                                            value="{{ request.GET.email|default:field.value|default_if_none:'' }}">
+                                            value="{{ request.GET.email|default:field.value|default_if_none:'' }}"
+                                            {% if field.field.required %}required{% endif %}>
                                 {% endif %}
 
                                 {% if field.errors %}
                                     {% for error in field.errors %}
-                                        <div
-                                                class="p-4 mb-4 text-sm text-yellow-900 font-medium rounded-lg bg-yellow-50 dark:bg-gray-800 dark:text-yellow-300 mt-2">
-                                            <i class="fas fa-exclamation-circle mr-2"></i>{{ error }}
+                                        <div class="mt-2 bg-red-50 border border-red-200 rounded-lg p-3">
+                                            <div class="flex items-start">
+                                                <i class="fas fa-exclamation-circle text-red-500 mr-2 mt-0.5"></i>
+                                                <span class="text-red-700 text-sm font-medium">{{ error }}</span>
+                                            </div>
                                         </div>
                                     {% endfor %}
                                 {% endif %}
@@ -86,9 +109,9 @@
                         <input type="hidden" name="next" value="{{ request.GET.next }}">
 
                         <div>
-                            <button type="submit"
-                                    class="w-full bg-red-700 text-white text-lg py-3 px-4 rounded-lg font-semibold hover:bg-red-800 transition border border-white/60">
-                                Sign In
+                            <button type="submit" id="submitBtn"
+                                    class="w-full bg-red-700 text-white text-lg py-3 px-4 rounded-lg font-semibold hover:bg-red-800 transition border border-white/60 disabled:opacity-50 disabled:cursor-not-allowed">
+                                <span id="submitText">Sign In</span>
                             </button>
                         </div>
 
@@ -99,11 +122,40 @@
                         </div>
                     </form>
 
-
                 </div>
             </div>
 
             <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    const form = document.getElementById('loginForm');
+                    const submitBtn = document.getElementById('submitBtn');
+                    const submitText = document.getElementById('submitText');
+                    
+                    // Add loading state on form submission
+                    form.addEventListener('submit', function() {
+                        submitBtn.disabled = true;
+                        submitText.textContent = 'Signing In...';
+                    });
+                    
+                    // Client-side validation
+                    const requiredFields = form.querySelectorAll('input[required]');
+                    requiredFields.forEach(field => {
+                        field.addEventListener('blur', function() {
+                            if (!this.value.trim()) {
+                                this.classList.add('border-red-500');
+                            } else {
+                                this.classList.remove('border-red-500');
+                            }
+                        });
+                        
+                        field.addEventListener('input', function() {
+                            if (this.value.trim()) {
+                                this.classList.remove('border-red-500');
+                            }
+                        });
+                    });
+                });
+
                 function quickLogin(email, password) {
                     const loginField = document.querySelector('input[name="login"]') || document.querySelector('input[type="email"]') || document.querySelector('input[type="text"]');
                     const passwordField = document.querySelector('input[name="password"]') || document.querySelector('input[type="password"]');
@@ -117,22 +169,6 @@
             </script>
 
         </div>
-
-        </div>
     </section>
-
-    <script>
-        function quickLogin(email, password) {
-            // Find the email/username field (it might be named 'login' in django-allauth)
-            const loginField = document.querySelector('input[name="login"]') || document.querySelector('input[type="email"]') || document.querySelector('input[type="text"]');
-            const passwordField = document.querySelector('input[name="password"]') || document.querySelector('input[type="password"]');
-
-            if (loginField && passwordField) {
-                loginField.value = email;
-                passwordField.value = password;
-                document.querySelector('form').submit();
-            }
-        }
-    </script>
 
 {% endblock %}

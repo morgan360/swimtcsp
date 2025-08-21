@@ -81,12 +81,20 @@ def become_guardian_view(request):
 # ✅ Schools Opt-in View
 @login_required
 def join_schools_program(request):
+    # Check if user already has school access
+    user_in_school_group = request.user.groups.filter(name='school').exists()
+    
+    if user_in_school_group:
+        messages.info(request, "You already have access to the School Swimming Program!")
+        return redirect('swimling_dashboard:guardian_dashboard')
+    
     if request.method == 'POST':
         form = JoinSchoolsForm(request.POST)
         if form.is_valid():
-            schools_group, _ = Group.objects.get_or_create(name='schools')
-            request.user.groups.add(schools_group)
-            return redirect("/dashboard/")  # or wherever you want to redirect
+            school_group, _ = Group.objects.get_or_create(name='school')
+            request.user.groups.add(school_group)
+            messages.success(request, "Welcome to the School Swimming Program!")
+            return redirect('swimling_dashboard:guardian_dashboard')
     else:
         form = JoinSchoolsForm()
 

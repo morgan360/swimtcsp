@@ -4,165 +4,188 @@
 {% block title %}Your Shopping Cart{% endblock %}
 
 {% block content %}
-<section class="py-12 px-4 sm:px-6 lg:px-8 text-white">
-    <div class="max-w-6xl mx-auto px-4">
-        <div class="bg-white/50 rounded-2xl shadow-md p-6">
-            <h2 class="text-3xl font-bold text-white text-center mb-8">
-                <i class="fas fa-shopping-cart"></i>
-                Your Shopping Cart
-            </h2>
+<section class="min-h-screen bg-gradient-to-br from-blue-500 to-blue-900 py-8">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <!-- Back Link -->
+        <div class="mb-6">
+            <button onclick="history.back()" 
+                class="inline-flex items-center text-white hover:text-blue-200 transition-colors duration-200">
+                <i class="fas fa-arrow-left mr-2"></i>
+                <span class="font-medium">Continue Shopping</span>
+            </button>
+        </div>
 
-            {% if cart_items %}
-            <form method="post" action="{% url 'shopping_cart:payment_process' %}" class="space-y-6">
+        <!-- Header Section -->
+        <div class="text-center mb-10">
+            <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full mb-6 shadow-lg">
+                <i class="fas fa-shopping-cart text-white text-2xl"></i>
+            </div>
+            <h1 class="text-4xl font-bold text-white mb-4">Your Shopping Cart</h1>
+            <p class="text-lg text-gray-300">Review your items and proceed to checkout</p>
+        </div>
+
+        {% if cart_items %}
+        <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+            <!-- Header -->
+            <div class="bg-gradient-to-r from-green-500 to-emerald-500 px-6 py-4">
+                <h2 class="text-xl font-semibold text-white flex items-center">
+                    <i class="fas fa-list mr-2"></i>Cart Items
+                </h2>
+            </div>
+
+            <form method="post" action="{% url 'shopping_cart:payment_process' %}" class="p-6">
                 {% csrf_token %}
-                <!-- Desktop Table View (lg screens and up) -->
-                <div class="hidden lg:block overflow-x-auto rounded-lg shadow">
-                    <table class="min-w-full text-sm mx-auto">
-                        <thead class="bg-blue-300 text-center text-sm font-semibold uppercase">
+                
+                <!-- Desktop Table View -->
+                <div class="hidden lg:block overflow-x-auto">
+                    <table class="min-w-full">
+                        <thead class="bg-gray-50">
                             <tr>
-                                <th class="px-5 py-2 text-blue-900">Product</th>
-                                <th class="px-5 py-2 text-blue-900">Price</th>
-                                <th class="px-5 py-2 text-blue-900">Swimling</th>
-                                <th class="px-5 py-2 text-blue-900">Lesson Details</th>
-                                <th class="px-5 py-2 text-blue-900">Actions</th>
+                                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Product</th>
+                                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Price</th>
+                                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Swimling</th>
+                                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Details</th>
+                                <th class="px-6 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-blue-300 bg-white text-center text-blue-800 font-medium text-sm">
+                        <tbody class="divide-y divide-gray-200 bg-white">
                             {% for item in cart_items %}
-                            <tr>
-                                <td class="px-4 py-5">{{ item.product.name }}</td>
-                                <td class="px-4 py-5">€{{ item.price }}</td>
-                                <td class="px-4 py-5">{{ item.swimling.first_name }} {{ item.swimling.last_name }}</td>
-                                <td class="px-6 py-5">
+                            <tr class="hover:bg-gray-50 transition-colors">
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center">
+                                        <div class="w-10 h-10 bg-gradient-to-r from-blue-400 to-cyan-400 rounded-full flex items-center justify-center mr-3">
+                                            <i class="fas fa-swimmer text-white"></i>
+                                        </div>
+                                        <span class="font-medium text-gray-900">{{ item.product.name }}</span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 text-sm font-semibold text-gray-900">€{{ item.price }}</td>
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center">
+                                        <div class="w-8 h-8 bg-gradient-to-r from-green-400 to-emerald-400 rounded-full flex items-center justify-center mr-2">
+                                            <i class="fas fa-user text-white text-xs"></i>
+                                        </div>
+                                        <span class="text-sm font-medium text-gray-900">{{ item.swimling.first_name }} {{ item.swimling.last_name }}</span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4">
                                     {% if item.swimling.registered_lessons %}
-                                    <ul class="list-none text-blue-800 space-y-1">
+                                    <div class="space-y-1">
                                         {% for lesson in item.swimling.registered_lessons %}
-                                        <li>{{ lesson.name }} (ID: {{ lesson.id }})</li>
+                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                            {{ lesson.name }}
+                                        </span>
                                         {% endfor %}
-                                    </ul>
+                                    </div>
                                     {% else %}
-                                    <span class="text-blue-800 italic font-medium">No details available</span>
+                                    <span class="text-gray-500 italic text-sm">No details available</span>
                                     {% endif %}
                                 </td>
-                                <td class="px-4 py-5 text-center">
-                                    <form
-                                        action="{% url 'shopping_cart:cart_remove' product_id=item.product_id type=item.type swimling_id=item.swimling.id %}"
-                                        method="post">
+                                <td class="px-6 py-4 text-center">
+                                    <form action="{% url 'shopping_cart:cart_remove' product_id=item.product_id type=item.type swimling_id=item.swimling.id %}" method="post" class="inline">
                                         {% csrf_token %}
-                                        <button type="submit"
-                                            class="inline-flex items-center px-3 py-1 bg-red-100 text-red-700 text-sm font-medium rounded hover:bg-red-200">
-                                            ❌ Remove
+                                        <button type="submit" class="inline-flex items-center px-3 py-2 bg-red-600 text-white text-xs font-medium rounded-lg hover:bg-red-700 transition-colors">
+                                            <i class="fas fa-trash mr-1"></i>Remove
                                         </button>
                                     </form>
                                 </td>
                             </tr>
                             {% endfor %}
                         </tbody>
-                        <tfoot class="bg-white/80 text-blue-900 text-right font-medium text-sm">
-                            <tr class="bg-blue-100">
-                                <td colspan="5" class="px-4 py-2 font-bold">Total Price: €{{ total_price }}</td>
-                            </tr>
-                        </tfoot>
                     </table>
                 </div>
 
-                <!-- Mobile Card View (smaller screens) -->
+                <!-- Mobile Card View -->
                 <div class="lg:hidden space-y-4">
                     {% for item in cart_items %}
-                    <div class="bg-white/80 rounded-lg shadow-sm border border-gray-200 p-4">
-                        <div class="space-y-3">
-                            <!-- Product Name -->
-                            <div class="text-center">
-                                <p class="text-lg font-semibold text-blue-900 mb-5 mt-3">{{ item.product.name }}</p>
+                    <div class="bg-gray-50 rounded-lg border border-gray-200 p-4">
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 bg-gradient-to-r from-blue-400 to-cyan-400 rounded-full flex items-center justify-center">
+                                    <i class="fas fa-swimmer text-white"></i>
+                                </div>
+                                <span class="font-semibold text-gray-900">{{ item.product.name }}</span>
                             </div>
-                            
-                            <!-- Swimling Info -->
-                            <div class="bg-white rounded p-3 text-center">
-                                <div class="text-sm text-blue-900 font-semibold">Swimling</div>
-                                <div class="font-medium text-blue-800 font-bold">{{ item.swimling.first_name }} {{ item.swimling.last_name }}</div>
+                            <span class="text-lg font-bold text-gray-900">€{{ item.price }}</span>
+                        </div>
+                        
+                        <div class="space-y-2 text-sm mb-4">
+                            <div class="flex justify-between">
+                                <span class="text-gray-500">Swimling:</span>
+                                <span class="text-gray-900 font-medium">{{ item.swimling.first_name }} {{ item.swimling.last_name }}</span>
                             </div>
-                            
-                            <!-- Lesson Details -->
-                            <div class="bg-gray-50 rounded p-3 mt-5">
-                                <div class="text-sm text-blue-900 text-center font-semibold mb-2">Lesson Details</div>
-                                <div class="text-center">
-                                    {% if item.swimling.registered_lessons %}
-                                    <ul class="list-none text-blue-800 space-y-1">
-                                        {% for lesson in item.swimling.registered_lessons %}
-                                        <li class="text-sm font-bold">{{ lesson.name }} (ID: {{ lesson.id }})</li>
-                                        {% endfor %}
-                                    </ul>
-                                    {% else %}
-                                    <span class="text-blue-800 italic font-medium text-sm">No details available</span>
-                                    {% endif %}
+                            {% if item.swimling.registered_lessons %}
+                            <div>
+                                <span class="text-gray-500">Lessons:</span>
+                                <div class="mt-1 space-y-1">
+                                    {% for lesson in item.swimling.registered_lessons %}
+                                    <span class="inline-block px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800 mr-1">
+                                        {{ lesson.name }}
+                                    </span>
+                                    {% endfor %}
                                 </div>
                             </div>
-                            
-                            <!-- Remove Button -->
-                            <div class="text-center pt-2">
-                                <form
-                                    action="{% url 'shopping_cart:cart_remove' product_id=item.product_id type=item.type swimling_id=item.swimling.id %}"
-                                    method="post"
-                                    class="inline-block">
-                                    {% csrf_token %}
-                                    <button type="submit"
-                                        class="inline-flex items-center px-4 py-2 bg-red-100 text-red-700 text-sm font-medium rounded-lg hover:bg-red-200 transition-colors">
-                                        ❌ Remove Item
-                                    </button>
-                                </form>
-                            </div>
+                            {% endif %}
                         </div>
+                        
+                        <form action="{% url 'shopping_cart:cart_remove' product_id=item.product_id type=item.type swimling_id=item.swimling.id %}" method="post">
+                            {% csrf_token %}
+                            <button type="submit" class="w-full inline-flex items-center justify-center px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition-colors">
+                                <i class="fas fa-trash mr-2"></i>Remove Item
+                            </button>
+                        </form>
                     </div>
                     {% endfor %}
-                    
-                    <!-- Mobile Total -->
-                    <div class="bg-blue-200 rounded-lg p-4 text-center">
-                        <div class="text-blue-900 font-semibold text-lg">
-                            Total Price: <span class="text-xl">€{{ total_price }}</span>
-                        </div>
+                </div>
+
+                <!-- Total -->
+                <div class="mt-6 bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg p-4">
+                    <div class="flex items-center justify-between">
+                        <span class="text-lg font-semibold text-gray-900">Total Amount:</span>
+                        <div class="text-2xl font-bold text-green-600">€{{ total_price }}</div>
                     </div>
                 </div>
 
-                <!-- Coupon Input -->
-                <div class="bg-white rounded-lg p-4 border-2 border-blue-200">
-                    <label class="block text-sm font-semibold text-blue-900 mb-3">Have a Coupon?</label>
-                    <div class="flex flex-col sm:flex-row gap-3">
-                        <div class="flex-1">
-                            <input 
-                                type="text" 
-                                name="code" 
-                                id="id_code"
-                                placeholder="Enter coupon code (optional)"
-                                class="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none text-sm font-medium"
-                                maxlength="20"
-                            />
-                        </div>
+                <!-- Coupon Section -->
+                <div class="mt-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                        <i class="fas fa-percentage mr-2 text-green-500"></i>Coupon Code
+                    </h3>
+                    <div class="bg-gray-50 rounded-lg p-4">
+                        <input type="text" name="code" id="id_code" placeholder="Enter coupon code (optional)"
+                            class="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            maxlength="20">
+                        <p class="text-xs text-gray-500 mt-2">Have a discount code? Enter it above to save on your order.</p>
                     </div>
                 </div>
 
-                <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-                    <div class="order-2 sm:order-1">
-                        <button type="button" onclick="history.back()"
-                            class="inline-flex items-center justify-center w-full sm:w-auto px-6 py-3 text-blue-900 bg-blue-100 hover:text-blue-600 hover:bg-blue-200 text-sm font-medium rounded-lg transition">
-                            <i class="fas fa-chevron-left mr-2"></i>
-                            Go back
-                        </button>
-                    </div>
-                    <div class="order-1 sm:order-2">
-                        <button type="submit"
-                            class="inline-flex items-center justify-center w-full sm:w-auto px-6 py-3 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition">
-                            <i class="fas fa-solid fa-credit-card mr-2"></i>
-                            Pay Now
-                        </button>
-                    </div>
+                <!-- Action Buttons -->
+                <div class="flex flex-col sm:flex-row gap-4 mt-8">
+                    <button type="button" onclick="history.back()"
+                        class="flex-1 sm:flex-none inline-flex items-center justify-center px-6 py-3 border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 font-medium rounded-lg transition-colors duration-200">
+                        <i class="fas fa-arrow-left mr-2"></i>Continue Shopping
+                    </button>
+                    <button type="submit"
+                        class="flex-1 inline-flex items-center justify-center px-8 py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white font-medium rounded-lg hover:from-green-600 hover:to-emerald-600 transition-all duration-200 shadow-lg hover:shadow-xl">
+                        <i class="fas fa-credit-card mr-2"></i>Proceed to Payment
+                    </button>
                 </div>
             </form>
-            {% else %}
-            <div class="bg-blue-100 text-blue-900 p-4 rounded-md text-center text-sm font-medium">
-                Your shopping cart is empty.
-            </div>
-            {% endif %}
         </div>
+        {% else %}
+        <div class="bg-white rounded-xl shadow-lg border border-gray-100 p-12 text-center">
+            <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-shopping-cart text-gray-400 text-2xl"></i>
+            </div>
+            <h3 class="text-lg font-medium text-gray-900 mb-2">Your cart is empty</h3>
+            <p class="text-gray-500 mb-6">Add some items to your cart to get started</p>
+            <button onclick="history.back()" 
+                class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-medium rounded-lg hover:from-blue-600 hover:to-cyan-600 transition-all duration-200">
+                <i class="fas fa-shopping-bag mr-2"></i>Start Shopping
+            </button>
+        </div>
+        {% endif %}
     </div>
 </section>
 {% endblock %}

@@ -68,8 +68,6 @@
 
 <section class="section">
   <div class="container">
-    <h2 class="title">🏊 Public Swim Products</h2>
-
   <!-- Products Table -->
   <div class="bg-white shadow-lg rounded-lg overflow-hidden">
     <!-- Header -->
@@ -140,12 +138,9 @@
               <td class="px-6 py-4 whitespace-nowrap text-center text-sm">
                 <div class="flex justify-center space-x-2">
                   <a href="/admin/swims/publicswimproduct/{{ product.id }}/change/" 
-                     class="text-blue-600 hover:text-blue-900 transition-colors duration-200">
-                    <i class="fas fa-edit"></i>
-                  </a>
-                  <a href="{{ product.get_absolute_url }}" 
-                     class="text-green-600 hover:text-green-900 transition-colors duration-200">
-                    <i class="fas fa-eye"></i>
+                     class="inline-flex items-center px-3 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors duration-200">
+                    <i class="fas fa-edit mr-2"></i>
+                    Edit
                   </a>
                 </div>
               </td>

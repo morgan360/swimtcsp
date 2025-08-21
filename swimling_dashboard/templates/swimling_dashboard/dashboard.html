@@ -4,29 +4,38 @@
 {% block title %}Swimling Dashboard{% endblock %}
 
 {% block content %}
-<section class="py-10 px-4 md:px-8 bg-white/50 rounded-xl shadow-lg backdrop-blur-md max-w-6xl mx-auto mt-10 mb-10">
-  <h2 class="text-4xl font-bold text-center text-white mt-8 mb-14">
-    <i class="fa-solid fa-children mr-2 text-white/50 sm:hidden"></i>
-    Your Swimling Dashboard
-    <i class="fa-solid fa-children fa-flip-horizontal ml-2 text-white/50"></i>
-  </h2>
-  <div class="max-w-5xl mx-auto">
+<section class="min-h-screen bg-gradient-to-br from-blue-500 to-blue-900 py-8">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    
+    <!-- Header Section -->
+    <div class="text-center mb-10">
+      <div class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full mb-6 shadow-lg">
+        <i class="fa-solid fa-children text-white text-3xl"></i>
+      </div>
+      <h1 class="text-4xl font-bold text-white mb-4">Your Swimling Dashboard</h1>
+      <p class="text-lg text-gray-300 max-w-2xl mx-auto">Manage your children's swimming lessons, track progress, and stay updated with bookings</p>
+    </div>
 
     <!-- 🔔 Booking Phase Banner -->
-    <div class="mb-8 bg-blue-200 rounded-2xl">
-      <div class="border border-blue-300/40 rounded-2xl overflow-hidden shadow-md backdrop-blur-md">
+    <div class="mb-8">
+      <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
         <button type="button"
-          class="w-full flex items-center justify-between px-6 py-4 text-blue-900 font-semibold text-left hover:bg-blue-100 transition"
+          class="w-full flex items-center justify-between px-6 py-5 text-left hover:bg-gray-50 transition-colors duration-200"
           onclick="toggleAccordion('phaseAccordion')">
-          <span class="flex items-center gap-2">
-            <i class="fa-solid fa-calendar-days"></i>
-            Booking & Term Information
-          </span>
-          <i id="phaseAccordionIcon" class="fa-solid fa-chevron-down transition-transform duration-300"></i>
+          <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full flex items-center justify-center">
+              <i class="fa-solid fa-calendar-days text-white"></i>
+            </div>
+            <div>
+              <h3 class="text-lg font-semibold text-gray-900">Booking & Term Information</h3>
+              <p class="text-sm text-gray-500">View current term details and booking status</p>
+            </div>
+          </div>
+          <i id="phaseAccordionIcon" class="fa-solid fa-chevron-down transition-transform duration-300 text-gray-400"></i>
         </button>
 
         <div id="phaseAccordion" class="max-h-0 overflow-hidden transition-all duration-500 ease-in-out">
-          <div class="px-6 py-4 bg-white/50 text-sm text-blue-900 space-y-4">
+          <div class="px-6 py-6 bg-gray-50 border-t border-gray-200">
             {% include "swimling_dashboard/_phase_banner.html" %}
             {% include "swimling_dashboard/_term_summary.html" %}
           </div>
@@ -34,156 +43,161 @@
       </div>
     </div>
 
-    <div>
-      <!-- ✅ HTMX target wrapper (refreshes both panels together) -->
-      <div id="dashboard-panels">
-        {% include "swimling_dashboard/_dashboard_panels.html" %}
-      </div>
+    <!-- Main Dashboard Content -->
+    <div id="dashboard-panels" class="space-y-8">
+      {% include "swimling_dashboard/_dashboard_panels.html" %}
     </div>
 
+    <!-- School Panel -->
     {% if show_school_panel %}
-    <section class="bg-white/40 rounded-2xl shadow-md p-6 mt-8">
-      {% include "swimling_dashboard/_school_panel.html" %}
-    </section>
+    <div class="mt-8">
+      <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+        <div class="bg-gradient-to-r from-purple-500 to-purple-600 px-6 py-4">
+          <h3 class="text-xl font-semibold text-white flex items-center">
+            <i class="fas fa-school mr-2"></i>School Information
+          </h3>
+        </div>
+        <div class="p-6">
+          {% include "swimling_dashboard/_school_panel.html" %}
+        </div>
+      </div>
+    </div>
     {% endif %}
 
-    {# {% if show_waiting_list %}#}
-    <section class="bg-white/40 rounded-2xl shadow-md p-6 mt-8">
-      <div id="waiting-list-panel" hx-get="{% url 'swimling_dashboard:refresh_waiting_list' %}" hx-trigger="load"
-        hx-swap="outerHTML">
-        <p class="text-gray-500 text-sm italic">Loading waiting list...</p>
-      </div>
-    </section>
-
-
-
-    <!-- 🧒 Add Swimling Modal -->
-    <div id="addSwimlingModal"
-      class="fixed inset-0 z-50 hidden bg-black bg-opacity-50 flex items-start justify-center pt-20">
-
-      <!-- Modal Card -->
-      <div class="flex justify-center w-full m-3">
-        <div class="bg-blue-900/80 backdrop-blur-md border border-white/20 rounded-xl shadow-md p-10 w-full max-w-xl">
-
-        <!-- Header -->
-        <div class="flex justify-between items-center px-4 py-3">
-          <h2 class="text-3xl font-bold text-center text-white mb-8">Add New Swimling</h2>
-          <button onclick="closeAddSwimlingModal()" class="text-xl font-bold text-white leading-none mb-8">&times;</button>
+    <!-- Waiting List Panel -->
+    <div class="mt-8">
+      <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+        <div class="bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-4">
+          <h3 class="text-xl font-semibold text-white flex items-center">
+            <i class="fas fa-clock mr-2"></i>Waiting List
+          </h3>
         </div>
-
-        <!-- Body -->
-        <div id="addSwimlingFormTarget" class="px-4 py-4 space-y-4">
-          <div class="text-center text-gray-500 text-sm italic">Loading form...</div>
-        </div>
+        <div class="p-6">
+          <div id="waiting-list-panel" hx-get="{% url 'swimling_dashboard:refresh_waiting_list' %}" hx-trigger="load"
+            hx-swap="outerHTML">
+            <div class="flex items-center justify-center py-8">
+              <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mr-3"></div>
+              <span class="text-gray-500">Loading waiting list...</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
+  </div>
 
-    <!-- 🧒 Edit Swimling Modal -->
-    <div id="editSwimlingModal"
-      class="fixed inset-0 z-50 hidden bg-black bg-opacity-50 flex items-start justify-center">
-
-      <!-- Modal Card -->
-      <div class="flex justify-center w-full m-3">
-        <div class="bg-blue-900/80 backdrop-blur-md border border-white/20 rounded-xl shadow-md p-10 w-full max-w-xl">
-
-        <!-- Header -->
-        <div class="flex justify-between items-center px-4 py-3">
-          <h2 class="text-3xl font-bold text-center text-white mb-8">Edit Swimling</h2>
-          <button onclick="closeEditSwimlingModal()" class="text-xl font-bold text-white leading-none mb-8">&times;</button>
-        </div>
-
-        <!-- Body -->
-        <div id="editSwimlingFormTarget" class="px-4 py-4 space-y-4">
-          <div class="text-center text-gray-500 text-sm italic">Loading form...</div>
-        </div>
+  <!-- 🧒 Add Swimling Modal -->
+  <div id="addSwimlingModal" class="fixed inset-0 z-50 hidden bg-black bg-opacity-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden">
+      <!-- Header -->
+      <div class="bg-gradient-to-r from-blue-500 to-cyan-500 px-6 py-4 flex justify-between items-center">
+        <h2 class="text-xl font-semibold text-white">Add New Swimling</h2>
+        <button onclick="closeAddSwimlingModal()" class="text-white hover:text-gray-200 transition-colors">
+          <i class="fas fa-times text-xl"></i>
+        </button>
+      </div>
+      
+      <!-- Body -->
+      <div id="addSwimlingFormTarget" class="p-6">
+        <div class="flex items-center justify-center py-8">
+          <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mr-3"></div>
+          <span class="text-gray-500">Loading form...</span>
         </div>
       </div>
     </div>
+  </div>
 
+  <!-- 🧒 Edit Swimling Modal -->
+  <div id="editSwimlingModal" class="fixed inset-0 z-50 hidden bg-black bg-opacity-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden">
+      <!-- Header -->
+      <div class="bg-gradient-to-r from-green-500 to-emerald-500 px-6 py-4 flex justify-between items-center">
+        <h2 class="text-xl font-semibold text-white">Edit Swimling</h2>
+        <button onclick="closeEditSwimlingModal()" class="text-white hover:text-gray-200 transition-colors">
+          <i class="fas fa-times text-xl"></i>
+        </button>
+      </div>
+      
+      <!-- Body -->
+      <div id="editSwimlingFormTarget" class="p-6">
+        <div class="flex items-center justify-center py-8">
+          <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500 mr-3"></div>
+          <span class="text-gray-500">Loading form...</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
 
-    {% endblock %}
+{% block scripts %}
+<script>
+  function openAddSwimlingModal() {
+    const modal = document.getElementById("addSwimlingModal");
+    modal.classList.remove("hidden");
+    document.body.style.overflow = 'hidden';
+  }
 
+  function closeAddSwimlingModal() {
+    const modal = document.getElementById("addSwimlingModal");
+    modal.classList.add("hidden");
+    document.body.style.overflow = 'auto';
+  }
 
-
-    {# SCRIPTS #}
-    {% block scripts %}
-    <script>
-      function openAddSwimlingModal() {
-        const modal = document.getElementById("addSwimlingModal");
-        modal.classList.remove("hidden");
-        modal.classList.add("flex");
+  function openEditSwimlingModal(swimlingId) {
+    console.log("Opening edit modal for swimling:", swimlingId);
+    const modal = document.getElementById("editSwimlingModal");
+    
+    if (modal) {
+      modal.classList.remove("hidden");
+      document.body.style.overflow = 'hidden';
+      
+      const editUrl = event.target.closest('button').getAttribute('data-edit-url');
+      
+      if (editUrl) {
+        console.log("Loading form from:", editUrl);
+        htmx.ajax('GET', editUrl, {
+          target: '#editSwimlingFormTarget',
+          swap: 'innerHTML'
+        });
       }
+    }
+  }
 
-      function closeAddSwimlingModal() {
-        const modal = document.getElementById("addSwimlingModal");
-        modal.classList.remove("flex");
-        modal.classList.add("hidden");
-      }
+  function closeEditSwimlingModal() {
+    const modal = document.getElementById("editSwimlingModal");
+    if (modal) {
+      modal.classList.add("hidden");
+      document.body.style.overflow = 'auto';
+    }
+  }
 
-      function openEditSwimlingModal(swimlingId) {
-        console.log("Opening edit modal for swimling:", swimlingId);
-        const modal = document.getElementById("editSwimlingModal");
-        console.log("Modal element:", modal);
-        
-        if (modal) {
-          // Get the clicked button's position
-          const clickedButton = event.target.closest('button');
-          const buttonRect = clickedButton.getBoundingClientRect();
-          const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-          
-          // Calculate position relative to button
-          const modalContainer = modal.querySelector('.flex.justify-center');
-          
-          // Position modal near the clicked button
-          modal.style.paddingTop = Math.max(20, buttonRect.top + scrollTop - 350) + 'px';
-          
-          // First open the modal
-          modal.classList.remove("hidden");
-          modal.classList.add("flex");
-          console.log("Modal classes after opening:", modal.classList.toString());
-          
-          // Then trigger HTMX to load the form
-          const editUrl = clickedButton.getAttribute('data-edit-url');
-          
-          if (editUrl) {
-            console.log("Loading form from:", editUrl);
-            htmx.ajax('GET', editUrl, {
-              target: '#editSwimlingFormTarget',
-              swap: 'innerHTML'
-            });
-          }
-        } else {
-          console.error("Edit modal not found!");
-        }
-      }
+  function toggleAccordion(id) {
+    const content = document.getElementById(id);
+    const icon = document.getElementById(id + "Icon");
 
-      function closeEditSwimlingModal() {
-        console.log("Closing edit modal");
-        const modal = document.getElementById("editSwimlingModal");
-        if (modal) {
-          modal.classList.remove("flex");
-          modal.classList.add("hidden");
-          // Reset dynamic positioning
-          modal.style.paddingTop = '';
-          console.log("Modal classes after closing:", modal.classList.toString());
-        }
-      }
+    if (content.classList.contains("max-h-0")) {
+      content.classList.remove("max-h-0");
+      content.classList.add("max-h-[1000px]");
+      icon.classList.add("rotate-180");
+    } else {
+      content.classList.remove("max-h-[1000px]");
+      content.classList.add("max-h-0");
+      icon.classList.remove("rotate-180");
+    }
+  }
 
-      function toggleAccordion(id) {
-        const content = document.getElementById(id);
-        const icon = document.getElementById(id + "Icon");
-
-        if (content.classList.contains("max-h-0")) {
-          content.classList.remove("max-h-0");
-          content.classList.add("max-h-[1000px]");
-          icon.classList.add("rotate-180");
-        } else {
-          content.classList.remove("max-h-[1000px]");
-          content.classList.add("max-h-0");
-          icon.classList.remove("rotate-180");
-        }
-      }
-
-    </script>
-    {% endblock %}
+  // Close modals when clicking outside
+  document.addEventListener('click', function(event) {
+    const addModal = document.getElementById('addSwimlingModal');
+    const editModal = document.getElementById('editSwimlingModal');
+    
+    if (event.target === addModal) {
+      closeAddSwimlingModal();
+    }
+    
+    if (event.target === editModal) {
+      closeEditSwimlingModal();
+    }
+  });
+</script>
+{% endblock %}

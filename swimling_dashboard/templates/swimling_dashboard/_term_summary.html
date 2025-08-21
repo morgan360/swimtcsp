@@ -1,18 +1,26 @@
-<div class="flex flex-wrap -mx-2 mb-4">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
 
-  <!-- 📘 Current Term -->
-  <div class="w-full md:w-1/2 px-2 mb-4">
-    <div class="bg-blue-900 shadow rounded-lg p-4">
-      <h2 class="text-md text-white font-bold mb-2">📘 Current Term</h2>
-      <p class="text-white font-semibold">{{ current_term }}</p>
+  <!-- Current Term -->
+  <div class="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
+    <div class="bg-gradient-to-r from-blue-500 to-blue-600 px-4 py-3">
+      <h3 class="text-lg font-semibold text-white flex items-center">
+        <i class="fas fa-calendar mr-2"></i>Current Term
+      </h3>
+    </div>
+    <div class="p-4">
+      <p class="text-gray-900 font-medium">{{ current_term }}</p>
     </div>
   </div>
 
-  <!-- 📗 Next Term -->
-  <div class="w-full md:w-1/2 px-2 mb-4">
-    <div class="bg-blue-900/60 shadow rounded-lg p-4">
-      <h2 class="text-md text-white font-semibold mb-2">📗 Next Term</h2>
-      <p class="text-white font-medium">{{ next_term }}</p>
+  <!-- Next Term -->
+  <div class="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
+    <div class="bg-gradient-to-r from-green-500 to-green-600 px-4 py-3">
+      <h3 class="text-lg font-semibold text-white flex items-center">
+        <i class="fas fa-calendar-plus mr-2"></i>Upcoming Term
+      </h3>
+    </div>
+    <div class="p-4">
+      <p class="text-gray-900 font-medium">{{ next_term }}</p>
     </div>
   </div>
 

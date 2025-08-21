@@ -1,39 +1,63 @@
 {% if phase_summary %}
-<div class="bg-white/50 text-blue-800 shadow-lg rounded-lg p-4 mb-5">
-  <h3 class="text-xl font-bold text-center text-blue-900 mt-3 mb-6">Booking Phases</h3>
+<div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden mb-6">
+  <!-- Header -->
+  <div class="bg-gradient-to-r from-blue-500 to-cyan-500 px-6 py-4">
+    <h3 class="text-xl font-semibold text-white flex items-center justify-center">
+      <i class="fa-solid fa-calendar-days mr-2"></i>Booking Phases
+    </h3>
+  </div>
 
-  <div class="flex flex-col md:flex-row items-center justify-evenly gap-8 text-center">
+  <!-- Content -->
+  <div class="p-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-    <!-- 📅 Current Phase -->
-    <div class="flex flex-col items-center">
-      <div class="flex items-center gap-2 mb-1 text-blue-900">
-        <i class="fa-solid fa-calendar-days"></i>
-        <strong>Current Phase</strong>
+      <!-- Current Phase -->
+      <div class="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl p-6 border border-blue-200">
+        <div class="text-center">
+          <div class="w-12 h-12 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full flex items-center justify-center mx-auto mb-3">
+            <i class="fa-solid fa-calendar-check text-white"></i>
+          </div>
+          <h4 class="text-lg font-semibold text-blue-900 mb-2">Current Phase</h4>
+          <div class="text-gray-700">
+            <p class="font-medium">{{ phase_summary.current.label }}</p>
+            {% if phase_summary.current.until %}
+            <p class="text-sm text-gray-600 mt-1">Until {{ phase_summary.current.until }}</p>
+            {% endif %}
+          </div>
+        </div>
       </div>
-      <div>
-        {{ phase_summary.current.label }}
-        {% if phase_summary.current.until %}
-        <br>(until {{ phase_summary.current.until }})
-        {% endif %}
+
+      <!-- Next Phase -->
+      {% if phase_summary.next.label %}
+      <div class="bg-gradient-to-br from-orange-50 to-yellow-50 rounded-xl p-6 border border-orange-200">
+        <div class="text-center">
+          <div class="w-12 h-12 bg-gradient-to-r from-orange-500 to-yellow-500 rounded-full flex items-center justify-center mx-auto mb-3">
+            <i class="fa-solid fa-hourglass-start text-white"></i>
+          </div>
+          <h4 class="text-lg font-semibold text-orange-900 mb-2">Upcoming Phase</h4>
+          <div class="text-gray-700">
+            <p class="font-medium">{{ phase_summary.next.label }}</p>
+            {% if phase_summary.next.starts %}
+            <p class="text-sm text-gray-600 mt-1">Starts {{ phase_summary.next.starts }}</p>
+            {% endif %}
+          </div>
+        </div>
       </div>
+      {% else %}
+      <div class="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-6 border border-gray-200">
+        <div class="text-center">
+          <div class="w-12 h-12 bg-gray-400 rounded-full flex items-center justify-center mx-auto mb-3">
+            <i class="fa-solid fa-check-circle text-white"></i>
+          </div>
+          <h4 class="text-lg font-semibold text-gray-700 mb-2">Final Phase</h4>
+          <div class="text-gray-600">
+            <p class="text-sm">No upcoming phases scheduled</p>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+
     </div>
-
-    <!-- 🕐 Next Phase -->
-    {% if phase_summary.next.label %}
-    <div class="flex flex-col items-center">
-      <div class="flex items-center gap-2 mb-1 text-blue-900">
-        <i class="fa-solid fa-hourglass-start"></i>
-        <strong>Next Phase</strong>
-      </div>
-      <div>
-        {{ phase_summary.next.label }}
-        {% if phase_summary.next.starts %}
-        <br>(starts {{ phase_summary.next.starts }})
-        {% endif %}
-      </div>
-    </div>
-    {% endif %}
-
   </div>
 </div>
 {% endif %}

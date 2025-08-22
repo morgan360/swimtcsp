@@ -1,3 +1,5 @@
+<!-- ADMIN DASHBOARD -->
+
 {% load static %}
 <!doctype html>
 <html lang="en">
@@ -52,43 +54,127 @@
     <div class="bg-gradient-to-r from-blue-600 to-blue-900 border-b border-gray-200 shadow-sm">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex items-center justify-between h-12">
-          <div class="flex items-center space-x-1">
-            <span class="text-sm font-semibold text-white mr-4">Quick Links:</span>
-            <nav class="flex space-x-1">
+          <div class="flex items-center space-x-1 w-full">
+            <!-- Mobile: Dropdown Menu -->
+            <div class="lg:hidden w-full" x-data="{ open: false }">
+              <button @click="open = !open" 
+                      class="inline-flex items-center justify-between w-full px-3 py-1.5 text-sm font-medium text-white hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors duration-150">
+                <span class="flex items-center">
+                  <i class="fa-solid fa-bars mr-1.5 text-pink-400"></i>
+                  Admin Menu
+                </span>
+                <i class="fas fa-chevron-down transition-transform duration-200" :class="{ 'rotate-180': open }"></i>
+              </button>
+              
+              <div x-show="open" 
+                   x-transition:enter="transition ease-out duration-200"
+                   x-transition:enter-start="opacity-0 scale-95"
+                   x-transition:enter-end="opacity-100 scale-100"
+                   x-transition:leave="transition ease-in duration-150"
+                   x-transition:leave-start="opacity-100 scale-100"
+                   x-transition:leave-end="opacity-0 scale-95"
+                   @click.away="open = false"
+                   class="absolute top-12 left-4 right-4 bg-white rounded-lg shadow-lg border border-gray-200 z-50 py-2">
+                <a href="{% url 'dashboard:dashboard_home' %}"
+                  class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600">
+                  <i class="fa-solid fa-house mr-2 text-pink-400"></i>
+                  Admin Home
+                </a>
+                <a href="{% url 'dashboard:dashboard_public_swims' %}"
+                  class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600">
+                  <i class="fas fa-swimmer mr-2 text-blue-500"></i>
+                  Public Swims
+                </a>
+                <a href="{% url 'dashboard:dashboard_lessons' %}"
+                  class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600">
+                  <i class="fas fa-book mr-2 text-green-500"></i>
+                  Lessons
+                </a>
+                <a href="{% url 'dashboard:dashboard_schools' %}"
+                  class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600">
+                  <i class="fas fa-school mr-2 text-yellow-500"></i>
+                  Schools
+                </a>
+                <a href="{% url 'dashboard:dashboard_orders' %}"
+                  class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600">
+                  <i class="fas fa-credit-card mr-2 text-purple-500"></i>
+                  Orders
+                </a>
+                <a href="{% url 'dashboard:user_management' %}"
+                  class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600">
+                  <i class="fas fa-users mr-2 text-red-500"></i>
+                  User Management
+                </a>
+                {% if user.is_superuser %}
+                <a href="{% url 'dashboard:management' %}"
+                  class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600">
+                  <i class="fas fa-tools mr-2 text-orange-500"></i>
+                  Management
+                </a>
+                {% endif %}
+                <a href="coupons"
+                  class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600">
+                  <i class="fas fa-ticket-alt mr-2 text-green-600"></i>
+                  Coupons
+                </a>
+                <a href="{% url 'dashboard:dashboard_general' %}"
+                  class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600">
+                  <i class="fas fa-cog mr-2 text-gray-500"></i>
+                  General
+                </a>
+              </div>
+            </div>
+
+            <!-- Desktop: Horizontal Navigation -->
+            <nav class="hidden lg:flex lg:space-x-1 overflow-x-auto">
               <a href="{% url 'dashboard:dashboard_home' %}"
-                class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors duration-150">
+                class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors duration-150 whitespace-nowrap">
                 <i class="fa-solid fa-house mr-1.5 text-pink-400"></i>
                 Admin Home
               </a>
               <a href="{% url 'dashboard:dashboard_public_swims' %}"
-                class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors duration-150">
+                class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors duration-150 whitespace-nowrap">
                 <i class="fas fa-swimmer mr-1.5 text-blue-500"></i>
                 Public Swims
               </a>
               <a href="{% url 'dashboard:dashboard_lessons' %}"
-                class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors duration-150">
+                class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors duration-150 whitespace-nowrap">
                 <i class="fas fa-book mr-1.5 text-green-500"></i>
                 Lessons
               </a>
               <a href="{% url 'dashboard:dashboard_schools' %}"
-                class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors duration-150">
+                class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors duration-150 whitespace-nowrap">
                 <i class="fas fa-school mr-1.5 text-yellow-500"></i>
                 Schools
               </a>
               <a href="{% url 'dashboard:dashboard_orders' %}"
-                class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors duration-150">
+                class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors duration-150 whitespace-nowrap">
                 <i class="fas fa-credit-card mr-1.5 text-purple-500"></i>
                 Orders
               </a>
+              <a href="{% url 'dashboard:user_management' %}"
+                class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors duration-150 whitespace-nowrap">
+                <i class="fas fa-users mr-1.5 text-red-500"></i>
+                User Management
+              </a>
+              {% if user.is_superuser %}
+              <a href="{% url 'dashboard:management' %}"
+                class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors duration-150 whitespace-nowrap">
+                <i class="fas fa-tools mr-1.5 text-orange-500"></i>
+                Management
+              </a>
+              {% endif %}
+              <a href="coupons"
+                class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors duration-150 whitespace-nowrap">
+                <i class="fas fa-ticket-alt mr-1.5 text-green-600"></i>
+                Coupons
+              </a>
               <a href="{% url 'dashboard:dashboard_general' %}"
-                class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors duration-150">
+                class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors duration-150 whitespace-nowrap">
                 <i class="fas fa-cog mr-1.5 text-gray-500"></i>
                 General
               </a>
             </nav>
-          </div>
-          <div class="text-xs text-white font-medium">
-            Administrator Panel
           </div>
         </div>
       </div>

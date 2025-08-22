@@ -1,0 +1,107 @@
+<div class="space-y-6">
+  <!-- User Info Header -->
+  <div class="bg-blue-50 rounded-lg p-4 border border-blue-200">
+    <div class="flex items-center space-x-3">
+      <div class="w-12 h-12 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full flex items-center justify-center">
+        <i class="fas fa-user text-white"></i>
+      </div>
+      <div>
+        <h4 class="text-lg font-semibold text-gray-900">
+          {% if user_obj.first_name or user_obj.last_name %}
+            {{ user_obj.first_name }} {{ user_obj.last_name }}
+          {% else %}
+            {{ user_obj.email }}
+          {% endif %}
+        </h4>
+        <p class="text-sm text-gray-600">{{ user_obj.email }}</p>
+        {% if is_guardian %}
+        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mt-1">
+          <i class="fas fa-users mr-1"></i>Guardian
+        </span>
+        {% else %}
+        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800 mt-1">
+          <i class="fas fa-user mr-1"></i>Not a Guardian
+        </span>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Swimlings Section -->
+  {% if is_guardian %}
+    {% if swimlings and swimlings|length > 0 %}
+    <div class="space-y-4">
+      <h5 class="text-lg font-semibold text-gray-900 flex items-center">
+        <i class="fas fa-child mr-2 text-blue-500"></i>Associated Swimlings ({{ swimlings|length }})
+      </h5>
+      
+      <div class="space-y-3">
+        {% for swimling in swimlings %}
+        <div class="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+              <div class="w-10 h-10 bg-gradient-to-r from-green-400 to-blue-400 rounded-full flex items-center justify-center">
+                <i class="fas fa-child text-white text-sm"></i>
+              </div>
+              <div>
+                <h6 class="font-medium text-gray-900">{{ swimling.first_name }} {{ swimling.last_name }}</h6>
+                {% if swimling.dob %}
+                <p class="text-sm text-gray-600">
+                  <i class="fas fa-birthday-cake mr-1"></i>
+                  Born: {{ swimling.dob|date:"M d, Y" }}
+                </p>
+                {% endif %}
+                {% if swimling.sco_role_num %}
+                <p class="text-sm text-gray-600">
+                  <i class="fas fa-id-card mr-1"></i>
+                  School Role: {{ swimling.sco_role_num }}
+                </p>
+                {% endif %}
+              </div>
+            </div>
+            <div class="text-right">
+              <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                <i class="fas fa-check mr-1"></i>Active
+              </span>
+            </div>
+          </div>
+          {% if swimling.notes %}
+          <div class="mt-3 pt-3 border-t border-gray-100">
+            <p class="text-sm text-gray-600">
+              <i class="fas fa-sticky-note mr-1"></i>
+              <strong>Notes:</strong> {{ swimling.notes }}
+            </p>
+          </div>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% else %}
+    <div class="text-center py-8">
+      <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+        <i class="fas fa-child text-gray-400 text-2xl"></i>
+      </div>
+      <h5 class="text-lg font-medium text-gray-900 mb-2">No Swimlings Found</h5>
+      <p class="text-gray-500">This guardian doesn't have any swimlings associated with their account yet.</p>
+      <p class="text-xs text-gray-400 mt-2">Swimling count: {{ swimling_count }}</p>
+    </div>
+    {% endif %}
+  {% else %}
+    <div class="text-center py-8">
+      <div class="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+        <i class="fas fa-info-circle text-yellow-500 text-2xl"></i>
+      </div>
+      <h5 class="text-lg font-medium text-gray-900 mb-2">Not a Guardian</h5>
+      <p class="text-gray-500">This user is not in the 'guardian' group and therefore has no associated swimlings to display.</p>
+    </div>
+  {% endif %}
+
+  <!-- Action Buttons -->
+  <div class="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+    <button type="button" onclick="closeSwimlingModal()"
+           class="inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 font-medium rounded-lg transition-colors duration-200">
+      <i class="fas fa-times mr-2"></i>Close
+    </button>
+  </div>
+</div>

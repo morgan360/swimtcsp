@@ -16,6 +16,7 @@ from utils.terms_utils import get_current_term
 # -----------------------
 # 🎯 Main Lesson List View
 # -----------------------
+@login_required
 def lesson_list(request):
     swimling_id = request.GET.get('swimling')
     selected_swimling = None

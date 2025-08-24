@@ -5,53 +5,114 @@
     <meta charset="UTF-8">
     <title>Skill Report – {{ swimling.first_name }} {{ swimling.last_name }}</title>
     <style>
+        /* Print / page setup */
+        @page { size: A4 landscape; margin: 14mm; }
+        @media print {
+            thead { display: table-header-group; }
+            tfoot { display: table-footer-group; }
+            body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            table, tr, th, td { overflow: visible !important; }
+        }
+
+        /* Star ratings */
+        .stars { white-space: nowrap; font-size: 13px; line-height: 1; display: inline-block; }
+        .star-svg { width: 13px; height: 13px; display: inline-block; vertical-align: -1px; margin-right: 2px; }
+        .star-empty { color: #94a3b8; } /* slate-400 */
+        /* colour map */
+        .stars.rating-1 .filled { fill: #0015ff !important; stroke: #0015ff !important; }
+        .stars.rating-2 .filled { fill: #0073ff !important; stroke: #0073ff !important; }
+        .stars.rating-3 .filled { fill: #00f7ff !important; stroke: #00f7ff !important; }
+        .stars.rating-4 .filled { fill: #00ff73 !important; stroke: #00ff73 !important; }
+        .stars.rating-5 .filled { fill: #91ff00 !important; stroke: #91ff00 !important; }
+
         body {
             font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+            background: linear-gradient(135deg, #eff6ff, #f0f9ff, #eef2ff);
+            padding: 16px;
         }
+        @media print {
+            body { background: #fff; padding: 0; }
+        }
+
+        h2 {
+            margin: 0 0 12px 0;
+            font-size: 22px;
+            font-weight: 800;
+            color: #0f172a; /* slate-900 */
+            padding: 10px 14px;
+            background: rgba(255,255,255,0.9);
+            border: 1px solid #bfdbfe; /* blue-200 */
+            border-radius: 14px;
+            box-shadow: 0 6px 20px rgba(30, 58, 138, 0.07); /* blue-800 @ 7% */
+        }
+        @media print { h2 { background: transparent; border: none; box-shadow: none; padding: 0; } }
 
         table {
             border-collapse: collapse;
             width: 100%;
-            margin-top: 20px;
+            border-spacing: 0;
+            margin-top: 12px;
+            border-radius: 14px;           /* round like cards */
+            overflow: hidden;              /* keep corners clipped */
+            background: #fff;
+            box-shadow: 0 10px 30px rgba(2, 6, 23, 0.06); /* slate-950 @ 6% */
+            border: 1px solid #bfdbfe;     /* blue-200 */
+        }
+
+        thead th {
+            background: linear-gradient(90deg, #1d4ed8, #1e40af); /* blue-700 -> indigo-800 */
+            color: #fff;
+            font-weight: 700;
+            border-color: rgba(255,255,255,0.2);
         }
 
         th, td {
-            border: 1px solid #ccc;
-            padding: 8px;
+            border: 1px solid #1e5398; /* slate-200 */
+            padding: 10px 12px;
             text-align: center;
+            vertical-align: middle;
         }
 
-        th {
-            background-color: #f0f0f0;
-        }
+        /* Left align first two columns (CAS / Skill) */
+        th:nth-child(1), td:nth-child(1), th:nth-child(2), td:nth-child(2) { text-align: left; }
 
-        .cas-header td {
-            font-weight: bold;
-            background-color: #ddd;
+        /* Body striping + hover (screen only), excluding CAS header rows */
+        tbody tr:not(.cas-header):nth-child(even) td { background: #f8fafc; }          /* slate-50 */
+        @media screen { tbody tr:not(.cas-header):hover td { background: #f1f5f9; } }  /* slate-100 on hover */
+
+        /* CAS header row inside tbody - apply directly to cells */
+        .cas-header td, .cas-header th {
+            font-weight: 800;
+            background: #e0f2fe; /* sky-100 solid */
+            color: #0f172a;
             text-align: left;
+            padding: 12px 14px;
+            border-top: 2px solid #bfdbfe; /* blue-200 */
+            border-bottom: 1px solid #bfdbfe;
         }
 
         .notes {
-            background-color: #ffe;
-            padding: 10px;
-            margin-bottom: 20px;
+            background: linear-gradient(90deg, #ecfdf5, #f0fdf4); /* emerald-50 -> green-50 */
+            border: 1px solid #a7f3d0; /* emerald-200 */
+            padding: 12px 14px;
+            margin: 12px 0 16px;
+            border-radius: 12px;
+            box-shadow: 0 4px 14px rgba(20, 83, 45, 0.06); /* emerald-900 @ 6% */
         }
-
-        .muted {
-            color: #666;
-            font-size: 12px;
-        }
+        .muted { color: #475569; font-size: 12px; } /* slate-600 */
+        @media print { .notes { box-shadow: none; } }
     </style>
 </head>
 <body>
 
-<h2>{{ swimling.first_name }} {{ swimling.last_name }}</h2>
+<h2>Skills report for: {{ swimling.first_name }} {{ swimling.last_name }}</h2>
 
 {% for note in notes %}
     <div class="notes">
-        <strong>Term ({{ note.term.id }})</strong>
+        <strong>Term ({{ note.term.id }})
         {% if note.term.short_name %}<span class="muted">· {{ note.term.short_name }}</span>{% endif %}
-        : {{ note.note }}
+        Teachers Notes:</strong> 
+        <p style="padding-top: 4px;">{{ note.note }}</p>
     </div>
 {% endfor %}
 
@@ -79,7 +140,83 @@
                 <td style="text-align: left;">{{ skill }}</td>
                 {% for term in terms %}
                     {% with r=ratings_by_term|get_item:term.id %}
-                        <td>{% if r %}{{ r }}{% else %}–{% endif %}</td>
+                        <td>
+                            {% if r %}
+                                {% if r == 1 %}
+                                    <span class="stars" aria-label="{{ r }} out of 5">
+                                        {% for _ in "12345"|make_list %}
+                                            {% if forloop.counter <= r %}
+                                                <svg class="star-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                    <path style="fill:#0015ff; stroke:#0015ff;" d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+                                                </svg>
+                                            {% else %}
+                                                <svg class="star-svg star-empty" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                    <path fill="none" stroke="currentColor" stroke-width="1" d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+                                                </svg>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </span>
+                                {% elif r == 2 %}
+                                    <span class="stars" aria-label="{{ r }} out of 5">
+                                        {% for _ in "12345"|make_list %}
+                                            {% if forloop.counter <= r %}
+                                                <svg class="star-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                    <path style="fill:#0073ff; stroke:#0073ff;" d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+                                                </svg>
+                                            {% else %}
+                                                <svg class="star-svg star-empty" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                    <path fill="none" stroke="currentColor" stroke-width="1" d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+                                                </svg>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </span>
+                                {% elif r == 3 %}
+                                    <span class="stars" aria-label="{{ r }} out of 5">
+                                        {% for _ in "12345"|make_list %}
+                                            {% if forloop.counter <= r %}
+                                                <svg class="star-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                    <path style="fill:#00f7ff; stroke:#00f7ff;" d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+                                                </svg>
+                                            {% else %}
+                                                <svg class="star-svg star-empty" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                    <path fill="none" stroke="currentColor" stroke-width="1" d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+                                                </svg>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </span>
+                                {% elif r == 4 %}
+                                    <span class="stars" aria-label="{{ r }} out of 5">
+                                        {% for _ in "12345"|make_list %}
+                                            {% if forloop.counter <= r %}
+                                                <svg class="star-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                    <path style="fill:#00ff73; stroke:#00ff73;" d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+                                                </svg>
+                                            {% else %}
+                                                <svg class="star-svg star-empty" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                    <path fill="none" stroke="currentColor" stroke-width="1" d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+                                                </svg>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </span>
+                                {% else %}
+                                    <span class="stars" aria-label="{{ r }} out of 5">
+                                        {% for _ in "12345"|make_list %}
+                                            {% if forloop.counter <= r %}
+                                                <svg class="star-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                    <path style="fill:#91ff00; stroke:#91ff00;" d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+                                                </svg>
+                                            {% else %}
+                                                <svg class="star-svg star-empty" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                    <path fill="none" stroke="currentColor" stroke-width="1" d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+                                                </svg>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </span>
+                                {% endif %}
+                            {% else %}
+                                <span class="stars star-empty" aria-label="No rating">—</span>
+                            {% endif %}
+                        </td>
                     {% endwith %}
                 {% endfor %}
             </tr>

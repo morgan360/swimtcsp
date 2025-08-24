@@ -1,0 +1,176 @@
+{% extends "dashboard/base_dashboard.html" %}
+{% load static %}
+
+{% block title %}User Management - TCSP Admin{% endblock %}
+
+{% block content %}
+<div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+  <!-- Header -->
+  <div class="bg-gradient-to-r from-red-500 to-red-600 px-6 py-6">
+    <div class="flex items-center justify-between">
+      <div>
+        <h2 class="text-3xl font-bold text-white flex items-center">
+          <i class="fas fa-users mr-3"></i>User Management
+        </h2>
+        <p class="text-red-100 mt-2">Manage user accounts, permissions, and access controls</p>
+      </div>
+      <div class="text-red-100">
+        <i class="fas fa-shield-alt text-4xl"></i>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Stats -->
+  <div class="p-6 border-b border-gray-200">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div class="bg-blue-50 rounded-lg p-4">
+        <div class="flex items-center">
+          <div class="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center mr-3">
+            <i class="fas fa-users text-white"></i>
+          </div>
+          <div>
+            <p class="text-sm text-gray-600">Total Users</p>
+            <p class="text-2xl font-bold text-blue-600">{{ total_users|default:"--" }}</p>
+          </div>
+        </div>
+      </div>
+      <div class="bg-green-50 rounded-lg p-4">
+        <div class="flex items-center">
+          <div class="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center mr-3">
+            <i class="fas fa-user-check text-white"></i>
+          </div>
+          <div>
+            <p class="text-sm text-gray-600">Active Users</p>
+            <p class="text-2xl font-bold text-green-600">{{ active_users|default:"--" }}</p>
+          </div>
+        </div>
+      </div>
+      <div class="bg-yellow-50 rounded-lg p-4">
+        <div class="flex items-center">
+          <div class="w-12 h-12 bg-yellow-500 rounded-full flex items-center justify-center mr-3">
+            <i class="fas fa-user-plus text-white"></i>
+          </div>
+          <div>
+            <p class="text-sm text-gray-600">New This Month</p>
+            <p class="text-2xl font-bold text-yellow-600">{{ new_users_month|default:"--" }}</p>
+          </div>
+        </div>
+      </div>
+      <div class="bg-purple-50 rounded-lg p-4">
+        <div class="flex items-center">
+          <div class="w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center mr-3">
+            <i class="fas fa-user-shield text-white"></i>
+          </div>
+          <div>
+            <p class="text-sm text-gray-600">Admin Users</p>
+            <p class="text-2xl font-bold text-purple-600">{{ admin_users|default:"--" }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Management Actions -->
+  <div class="p-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      
+      <!-- User List -->
+      <div class="bg-gray-50 rounded-lg p-6 hover:shadow-md transition-shadow">
+        <div class="text-center">
+          <div class="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
+            <i class="fas fa-list-ul text-white text-xl"></i>
+          </div>
+          <h3 class="text-lg font-semibold text-gray-900 mb-2">View All Users</h3>
+          <p class="text-gray-600 text-sm mb-4">Browse, search and edit all user accounts. Update user details as needed.</p>
+          <a href="{% url 'dashboard:user_list' %}" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+            <i class="fas fa-eye mr-2"></i>View Users
+          </a>
+        </div>
+      </div>
+
+      <!-- Add User -->
+      <div class="bg-gray-50 rounded-lg p-6 hover:shadow-md transition-shadow">
+        <div class="text-center">
+          <div class="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
+            <i class="fas fa-user-plus text-white text-xl"></i>
+          </div>
+          <h3 class="text-lg font-semibold text-gray-900 mb-2">Add New User</h3>
+          <p class="text-gray-600 text-sm mb-4">Create a new user account</p>
+          <a href="{% url 'dashboard:add_user' %}" class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+            <i class="fas fa-plus mr-2"></i>Add User
+          </a>
+        </div>
+      </div>
+
+      <!-- User Groups -->
+      <div class="bg-gray-50 rounded-lg p-6 hover:shadow-md transition-shadow {% if not user.is_superuser %}opacity-50 cursor-not-allowed{% endif %}">
+        <div class="text-center">
+          <div class="w-16 h-16 {% if user.is_superuser %}bg-purple-500{% else %}bg-gray-400{% endif %} rounded-full flex items-center justify-center mx-auto mb-4">
+            <i class="fas fa-users-cog text-white text-xl"></i>
+          </div>
+          <h3 class="text-lg font-semibold text-gray-900 mb-2">User Groups</h3>
+          <p class="text-gray-600 text-sm mb-4">Manage user groups and permissions</p>
+          {% if user.is_superuser %}
+          <a href="/admin/auth/group/" class="inline-flex items-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors">
+            <i class="fas fa-users mr-2"></i>Groups
+          </a>
+          {% else %}
+          <span class="inline-flex items-center px-4 py-2 bg-gray-400 text-gray-600 rounded-lg cursor-not-allowed">
+            <i class="fas fa-lock mr-2"></i>Superuser Only
+          </span>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Permissions -->
+      <div class="bg-gray-50 rounded-lg p-6 hover:shadow-md transition-shadow {% if not user.is_superuser %}opacity-50 cursor-not-allowed{% endif %}">
+        <div class="text-center">
+          <div class="w-16 h-16 {% if user.is_superuser %}bg-indigo-500{% else %}bg-gray-400{% endif %} rounded-full flex items-center justify-center mx-auto mb-4">
+            <i class="fas fa-key text-white text-xl"></i>
+          </div>
+          <h3 class="text-lg font-semibold text-gray-900 mb-2">Permissions</h3>
+          <p class="text-gray-600 text-sm mb-4">Set individual user permissions</p>
+          {% if user.is_superuser %}
+          <a href="/admin/auth/permission/" class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
+            <i class="fas fa-shield-alt mr-2"></i>Permissions
+          </a>
+          {% else %}
+          <span class="inline-flex items-center px-4 py-2 bg-gray-400 text-gray-600 rounded-lg cursor-not-allowed">
+            <i class="fas fa-lock mr-2"></i>Superuser Only
+          </span>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Swimlings -->
+      <!-- <div class="bg-gray-50 rounded-lg p-6 hover:shadow-md transition-shadow">
+        <div class="text-center">
+          <div class="w-16 h-16 bg-cyan-500 rounded-full flex items-center justify-center mx-auto mb-4">
+            <i class="fas fa-child text-white text-xl"></i>
+          </div>
+          <h3 class="text-lg font-semibold text-gray-900 mb-2">Swimlings</h3>
+          <p class="text-gray-600 text-sm mb-4">Manage user's swimling profiles</p>
+          <a href="/admin/swimlings/swimling/" class="inline-flex items-center px-4 py-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 transition-colors">
+            <i class="fas fa-swimmer mr-2"></i>Swimlings
+          </a>
+        </div>
+      </div> -->
+
+      <!-- User Sessions -->
+      <!-- <div class="bg-gray-50 rounded-lg p-6 hover:shadow-md transition-shadow">
+        <div class="text-center">
+          <div class="w-16 h-16 bg-orange-500 rounded-full flex items-center justify-center mx-auto mb-4">
+            <i class="fas fa-clock text-white text-xl"></i>
+          </div>
+          <h3 class="text-lg font-semibold text-gray-900 mb-2">User Sessions</h3>
+          <p class="text-gray-600 text-sm mb-4">View active user sessions</p>
+          <a href="/admin/sessions/session/" class="inline-flex items-center px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors">
+            <i class="fas fa-users-slash mr-2"></i>Sessions
+          </a>
+        </div>
+      </div> -->
+
+    </div>
+  </div>
+</div>
+{% endblock %}

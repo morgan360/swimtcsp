@@ -2,241 +2,346 @@
 {% load progress_tags %}
 
 {% block content %}
-  <div class="m-10 max-w-7xl mx-auto bg-gradient-to-br from-blue-50 via-sky-50 to-indigo-50 backdrop-blur-sm border border-blue-200/50 rounded-2xl shadow-xl">
-    <div class="p-4 sm:p-6">
+<div
+  class="m-10 max-w-7xl mx-auto bg-gradient-to-br from-blue-50 via-sky-50 to-indigo-50 backdrop-blur-sm border border-blue-200/50 rounded-2xl shadow-xl">
+  <div class="p-4 sm:p-6">
 
-      <!-- Sticky header with Save / Preview -->
-      <div class="sticky top-0 z-40 mb-4 bg-white/80 backdrop-blur-sm border border-blue-200/60 rounded-xl p-3 sm:p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between shadow-md text-center sm:text-left">
-        <div class="text-sm sm:text-base text-blue-900 flex flex-col sm:flex-row items-center justify-center sm:justify-start gap-2 text-center sm:text-left">
-          <i class="fa-solid fa-file-pen"></i>
-          <span>Evaluation for:</span>
-          <span class="font-bold">{{ swimling.first_name }} {{ swimling.last_name }}</span>
+    <!-- Sticky header with Save / Preview -->
+    <div
+      class="sticky top-0 z-40 mb-4 bg-white/80 backdrop-blur-sm border border-blue-200/60 rounded-xl p-3 sm:p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between shadow-md text-center sm:text-left">
+      <div
+        class="text-sm sm:text-base text-blue-900 flex flex-col sm:flex-row items-center justify-center sm:justify-start gap-2 text-center sm:text-left">
+        <i class="fa-solid fa-file-pen"></i>
+        <span>Evaluation for:</span>
+        <span class="font-bold">{{ swimling.first_name }} {{ swimling.last_name }}</span>
+      </div>
+      <div class="mt-2 sm:mt-0 flex flex-col sm:flex-row items-center justify-center sm:justify-end gap-2 flex-wrap">
+        <a href="{% url 'instructors:generate_skill_report' swimling.id %}" target="_blank"
+          class="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white font-semibold text-xs sm:text-sm shadow-md hover:shadow-lg transition-all duration-200">
+          <i class="fa-solid fa-file-pdf w-4 h-4"></i>
+          Preview Report
+        </a>
+        <button form="progress-form" type="submit"
+          class="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold text-xs sm:text-sm shadow-md hover:shadow-lg transition-all duration-200">
+          <i class="fa-solid fa-floppy-disk w-4 h-4"></i>
+          Save Report
+        </button>
+      </div>
+    </div>
+
+    <form id="progress-form" method="post" action="{% url 'instructors:evaluate_progress' swimling.id %}"
+      class="space-y-6">
+      {% csrf_token %}
+
+      <!-- Notes (current term only) -->
+      <div
+        class="mx-auto max-w-2xl bg-gradient-to-r from-emerald-50 to-green-50 border border-emerald-200/70 rounded-xl shadow-sm">
+        <div class="px-4 pt-4">
+          <label class="block text-sm font-semibold text-emerald-800">Instructor notes <em>(for this term)</em></label>
+          <p class="text-xs text-emerald-700 mt-1 flex items-center gap-1">
+            <i class="fa-solid fa-circle-info"></i>
+            Notes are optional and will appear on the report.
+          </p>
         </div>
-        <div class="mt-2 sm:mt-0 flex flex-col sm:flex-row items-center justify-center sm:justify-end gap-2 flex-wrap">
-          <a href="{% url 'instructors:generate_skill_report' swimling.id %}" target="_blank"
-             class="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white font-semibold text-xs sm:text-sm shadow-md hover:shadow-lg transition-all duration-200">
-            <i class="fa-solid fa-file-pdf w-4 h-4"></i>
-            Preview Report
-          </a>
-          <button form="progress-form" type="submit"
-                  class="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold text-xs sm:text-sm shadow-md hover:shadow-lg transition-all duration-200">
-            <i class="fa-solid fa-floppy-disk w-4 h-4"></i>
-            Save Report
-          </button>
+        <div class="p-4">
+          {{ note_form.note }}
         </div>
       </div>
 
-      <form id="progress-form" method="post" action="{% url 'instructors:evaluate_progress' swimling.id %}"
-            class="space-y-6">
-        {% csrf_token %}
-
-        <!-- Notes (current term only) -->
-        <div class="mx-auto max-w-2xl bg-gradient-to-r from-emerald-50 to-green-50 border border-emerald-200/70 rounded-xl shadow-sm">
-          <div class="px-4 pt-4">
-            <label class="block text-sm font-semibold text-emerald-800">Instructor notes <em>(for this term)</em></label>
-            <p class="text-xs text-emerald-700 mt-1 flex items-center gap-1">
-              <i class="fa-solid fa-circle-info"></i>
-              Notes are optional and will appear on the report.
-            </p>
-          </div>
-          <div class="p-4">
-            {{ note_form.note }}
+      <!-- Ratings table / cards -->
+      <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+        <!-- Table/Card Header -->
+        <div class="bg-gradient-to-r from-blue-700 to-indigo-700 px-4 sm:px-6 py-4 text-center">
+          <div class="flex items-center justify-between">
+            <div class="flex-1 text-center">
+              <h3 class="text-white text-lg font-semibold flex items-center justify-center">
+                <i class="fas fa-chart-line mr-2"></i>
+                Skill Assessment Matrix
+              </h3>
+              <p class="text-slate-300 text-sm mt-1">Track swimling progress across terms</p>
+            </div>
+            <div class="flex flex-col sm:col-1 sm:flex-row gap-2 sm:space-x-2 ml-0 sm:ml-4 mt-2 sm:mt-0">
+              <button type="button" onclick="toggleAllStages(true)"
+                class="px-3 py-1 text-xs bg-white/15 hover:bg-white/25 text-white rounded-lg transition-colors border border-white/20">
+                <i class="fas fa-expand-alt mr-1"></i>Expand All
+              </button>
+              <button type="button" onclick="toggleAllStages(false)"
+                class="px-3 py-1 text-xs bg-white/15 hover:bg-white/25 text-white rounded-lg transition-colors border border-white/20">
+                <i class="fas fa-compress-alt mr-1"></i>Collapse All
+              </button>
+            </div>
           </div>
         </div>
 
-        <!-- Ratings table -->
-        <div class="bg-white rounded-xl shadow-lg overflow-hidden">
-          <!-- Table Header -->
-          <div class="bg-gradient-to-r from-blue-700 to-indigo-700 px-4 sm:px-6 py-4 text-center">
-            <div class="flex items-center justify-between">
-              <div class="flex-1 text-center">
-                <h3 class="text-white text-lg font-semibold flex items-center justify-center">
-                  <i class="fas fa-chart-line mr-2"></i>
-                  Skill Assessment Matrix
-                </h3>
-                <p class="text-slate-300 text-sm mt-1">Track swimling progress across terms</p>
-              </div>
-              <div class="flex flex-col sm:col-1 sm:flex-row gap-2 sm:space-x-2 ml-0 sm:ml-4 mt-2 sm:mt-0">
-                <button type="button" onclick="toggleAllCategories(true)"
-                        class="px-3 py-1 text-xs bg-white/15 hover:bg-white/25 text-white rounded-lg transition-colors border border-white/20">
-                  <i class="fas fa-expand-alt mr-1"></i>Expand All
-                </button>
-                <button type="button" onclick="toggleAllCategories(false)"
-                        class="px-3 py-1 text-xs bg-white/15 hover:bg-white/25 text-white rounded-lg transition-colors border border-white/20">
-                  <i class="fas fa-compress-alt mr-1"></i>Collapse All
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Responsive table wrapper -->
-          <div class="overflow-x-auto w-full">
-            <table class="min-w-full text-xs sm:text-sm">
-              <thead class="bg-slate-100 border-b-2 border-slate-200">
+        <!-- Desktop / Tablet (md+) TABLE -->
+        <div class="hidden md:block w-full">
+          <table class="w-full text-sm border-collapse">
+            <thead class="bg-slate-100 border-b-2 border-slate-200">
               <tr>
                 <th
-                  class="px-3 sm:px-4 py-3 text-left text-xs sm:text-sm font-semibold text-slate-700 bg-slate-50 sticky left-0 z-10 min-w-[220px] border-r border-blue-700/30 border-b border-slate-200">
-                  <div class="flex flex-col items-start">
-                    <p class="font-semibold text-lg">Rating criteria:</p>
-                    <p class=" mb-2 italic">Ratings will appear as stars on reports.</p>
-                    <p class="font-medium mb-2">1: Not attempted</p>
-                    <p class="font-medium mb-2">2: Attempted</p>
-                    <p class="font-medium mb-2">3: Attempted but needs practice</p>
-                    <p class="font-medium mb-2">4: Very Good</p>
-                    <p class="font-medium mb-2">5: Consistent</p>
-                  </div>
+                  class="px-4 py-3 text-left font-semibold text-slate-700 bg-slate-50 sticky left-0 z-10 min-w-[240px] border-r border-blue-700/30 border-b border-slate-200">
+                  <div class="flex flex-col items-center m-2 bg-gradient-to-b from-blue-200 to-blue-100 border border-blue-200/70 rounded-lg p-3">
+                  <p class="font-semibold text-lg text-blue-900">Rating criteria:</p>
+                  <p class="mb-2 italic text-blue-900">Ratings will appear as stars on reports.</p>
+                  <p class="font-sm mb-1 text-blue-700">1: Not attempted</p>
+                  <p class="font-sm mb-1 text-blue-700">2: Attempted</p>
+                  <p class="font-sm mb-1 text-blue-700">3: Attempted but needs practice</p>
+                  <p class="font-sm mb-1 text-blue-700">4: Very Good</p>
+                  <p class="font-sm text-blue-700">5: Consistent</p>
+                </div>
                 </th>
                 {% for term in terms %}
-                  <th class="px-2 sm:px-3 py-3 text-center text-xs sm:text-sm font-medium text-slate-700 min-w-[110px] border-r border-slate-200 border-b border-slate-200 {% if forloop.last %}bg-green-50{% else %}bg-blue-50{% endif %}">
-                    <div class="flex flex-col items-center">
-                      <span class="font-semibold {% if forloop.last %}text-green-800{% else %}text-slate-800{% endif %}">Term {{ term.id }}</span>
-                      {% with label=header_map|get_item:term.id %}
-                        {% if label %}
-                          <span class="text-xs {% if forloop.last %}text-green-700{% else %}text-blue-600{% endif %} font-medium">{{ label }}</span>
-                        {% else %}
-                          <span class="text-xs text-slate-400">–</span>
-                        {% endif %}
-                      {% endwith %}
-                    </div>
-                  </th>
+                <th
+                  class="px-3 py-3 text-center font-medium text-slate-700 min-w-[120px] border-r border-slate-200 border-b border-slate-200 {% if forloop.last %}bg-green-50{% else %}bg-blue-50{% endif %}">
+                  <div class="flex flex-col items-center">
+                    <span
+                      class="font-semibold {% if forloop.last %}text-green-800{% else %}text-slate-800{% endif %}">Term
+                      {{ term.id }}</span>
+                    {% with label=header_map|get_item:term.id %}
+                    {% if label %}
+                    <span
+                      class="text-xs {% if forloop.last %}text-green-700{% else %}text-blue-600{% endif %} font-medium">{{
+                      label }}</span>
+                    {% else %}
+                    <span class="text-xs text-slate-400">–</span>
+                    {% endif %}
+                    {% endwith %}
+                  </div>
+                </th>
                 {% endfor %}
               </tr>
-              </thead>
+            </thead>
 
-              <tbody class="divide-y divide-slate-200">
-  {# === ALL CAS HEADINGS, EACH WITH ITS OWN STAGES === #}
-  {% for cas_name, stages in cas_groups_staged %}
-    {# CAS section heading row #}
-    <tr class="bg-blue-50/70 border-b border-blue-200/70">
-      <td colspan="{{ terms|length|add:1 }}"
-          class="px-3 sm:px-4 py-3 bg-gradient-to-r from-blue-400 to-blue-500 border-r border-slate-200">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center text-white">
-            <i class="fas fa-water mr-2"></i>
-            <span class="font-bold text-sm uppercase tracking-wide">
-              {{ cas_name|default:"Core Aquatic Skills" }}
-            </span>
-          </div>
+            <tbody class="divide-y divide-slate-200">
+              {# === ALL CAS HEADINGS, EACH WITH ITS OWN STAGES === #}
+              {% for cas_name, stages in cas_groups_staged %}
+              <!-- CAS heading row -->
+              <tr class="bg-blue-50/70 border-b border-blue-200/70">
+                <td colspan="{{ terms|length|add:1 }}"
+                  class="px-4 py-3 bg-gradient-to-r from-blue-400 to-blue-500 border-r border-slate-200">
+                  <div class="flex items-center justify-between">
+                    <div class="flex items-center text-white">
+                      <i class="fas fa-water mr-2"></i>
+                      <span class="font-bold text-sm uppercase tracking-wide">
+                        {{ cas_name|default:"Core Aquatic Skills" }}
+                      </span>
+                    </div>
+                    <div class="hidden sm:flex items-center gap-2 text-white">
+                      <button type="button"
+                        class="px-2.5 py-1 text-xs bg-white/40 hover:bg-white/60 rounded-md border border-white/70 transition"
+                        onclick="toggleCas('{{ forloop.counter }}', true)">
+                        <i class="fas fa-expand-alt mr-1"></i>Expand
+                      </button>
+                      <button type="button"
+                        class="px-2.5 py-1 text-xs bg-white/40 hover:bg-white/60 rounded-md border border-white/70 transition"
+                        onclick="toggleCas('{{ forloop.counter }}', false)">
+                        <i class="fas fa-compress-alt mr-1"></i>Collapse
+                      </button>
+                    </div>
+                  </div>
+                </td>
+              </tr>
 
-          {# Optional per-CAS expand/collapse #}
-          <div class="hidden sm:flex items-center gap-2 text-white">
-            <button type="button"
-                    class="px-2.5 py-1 text-xs bg-white/40 hover:bg-white/60 rounded-md border border-white/70 transition"
-                    onclick="toggleCas('{{ forloop.counter }}', true)">
-              <i class="fas fa-expand-alt mr-1"></i>Expand
-            </button>
-            <button type="button"
-                    class="px-2.5 py-1 text-xs bg-white/40 hover:bg-white/60 rounded-md border border-white/70 transition"
-                    onclick="toggleCas('{{ forloop.counter }}', false)">
-              <i class="fas fa-compress-alt mr-1"></i>Collapse
-            </button>
-          </div>
-        </div>
-      </td>
-    </tr>
+              {% for stage_name, forms_in_stage in stages %}
+              <!-- Stage header (md+) -->
+              <tr class="bg-blue-50/70 cursor-pointer stage-header hover:bg-blue-100/70"
+                onclick="toggleStage('{{ forloop.parentloop.counter }}','{{ forloop.counter }}')">
+                <td colspan="{{ terms|length|add:1 }}"
+                  class="px-4 py-3 bg-gradient-to-r from-blue-100 to-blue-50 border-r border-slate-200">
+                  <div class="flex items-center justify-between">
+                    <div class="flex items-center text-blue-800">
+                      <i class="fas fa-layer-group mr-2"></i>
+                      <span class="font-bold text-sm uppercase tracking-wide">
+                        {{ stage_name|default:"Uncategorised" }}
+                      </span>
+                    </div>
+                    <div class="flex items-center text-blue-800">
+                      <span class="text-xs mr-2">
+                        ({{ forms_in_stage|length }} skill{{ forms_in_stage|length|pluralize }})
+                      </span>
+                      <i id="toggle-icon-stage-{{ forloop.parentloop.counter }}-{{ forloop.counter }}"
+                        class="fas fa-chevron-down transition-transform duration-200"></i>
+                    </div>
+                  </div>
+                </td>
+              </tr>
 
-    {# Each STAGE under this CAS is a collapsible section #}
-    {% for stage_name, forms_in_stage in stages %}
-      {# Stage header (click to toggle) #}
-      <tr class="bg-blue-50/70 cursor-pointer stage-header hover:bg-blue-100/70"
-          onclick="toggleStage('{{ forloop.parentloop.counter }}','{{ forloop.counter }}')">
-        <td colspan="{{ terms|length|add:1 }}"
-            class="px-3 sm:px-4 py-3 bg-gradient-to-r from-blue-100 to-blue-50 border-r border-slate-200">
-          <div class="flex items-center justify-between">
-            <div class="flex items-center text-blue-800">
-              <i class="fas fa-layer-group mr-2"></i>
-              <span class="font-bold text-sm uppercase tracking-wide">
-                {{ stage_name|default:"Uncategorised" }}
-              </span>
-            </div>
-            <div class="flex items-center text-blue-800">
-              <span class="text-xs mr-2">
-                ({{ forms_in_stage|length }} skill{{ forms_in_stage|length|pluralize }})
-              </span>
-              <i id="toggle-icon-stage-{{ forloop.parentloop.counter }}-{{ forloop.counter }}"
-                 class="fas fa-chevron-down transition-transform duration-200"></i>
-            </div>
-          </div>
-        </td>
-      </tr>
+              <!-- Skills rows container (md+) -->
+            <tbody id="stage-{{ forloop.parentloop.counter }}-{{ forloop.counter }}" class="stage-rows">
+              {% for form in forms_in_stage %}
+              {% with s=form.instance.skill %}
+              <tr class="hover:bg-slate-50 transition-colors duration-150 border-b border-slate-200">
+                <td
+                  class="px-4 py-3 text-sm text-slate-700 bg-blue-50 sticky left-0 z-10 border-r border-slate-200 border-b border-slate-200">
+                  <div class="font-medium">{{ s.name }}</div>
+                </td>
 
-      {# Skills rows container for this stage #}
-      <tbody id="stage-{{ forloop.parentloop.counter }}-{{ forloop.counter }}" class="stage-rows">
-      {% for form in forms_in_stage %}
-        {% with s=form.instance.skill %}
-          <tr class="hover:bg-slate-50 transition-colors duration-150 border-b border-slate-200">
-            <td class="px-3 sm:px-4 py-3 text-xs sm:text-sm text-slate-700 bg-blue-50 sticky left-0 z-10 border-r border-slate-200 border-b border-slate-200">
-              <div class="font-medium">{{ s.name }}</div>
-            </td>
-
-            {# Term cells: last term = current (green); previous = blue/neutral #}
-            {% for term in terms %}
-              {% if forloop.last %}
-                <td class="px-2 sm:px-3 py-3 text-center bg-green-50 border-l-2 border-green-300 border-r border-green-200 border-b border-green-700/20">
+                {# Term cells: last term = current (green); previous = blue #}
+                {% for term in terms %}
+                {% if forloop.last %}
+                <td
+                  class="px-3 py-3 text-center bg-green-50 border-l-2 border-green-300 border-r border-green-200 border-b border-green-700/20">
                   <div class="flex justify-center">
                     {{ form.rating }}
                   </div>
                 </td>
-              {% else %}
+                {% else %}
                 {% with skill_history=history_map|get_item:s.id %}
-                  {% with r=skill_history|get_item:term.id %}
-                    <td class="px-2 sm:px-3 py-3 text-center bg-blue-50 border-r border-slate-200 border-b border-slate-200">
-                      {% if r %}
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-semibold bg-green-100 text-green-800 border border-green-200">
-                          {{ r }}
-                        </span>
-                      {% else %}
-                        <span class="text-slate-400 text-sm">—</span>
-                      {% endif %}
-                    </td>
-                  {% endwith %}
+                {% with r=skill_history|get_item:term.id %}
+                <td class="px-3 py-3 text-center bg-blue-50 border-r border-slate-200 border-b border-slate-200">
+                  {% if r %}
+                  <span
+                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-800 border border-green-200">
+                    {{ r }}
+                  </span>
+                  {% else %}
+                  <span class="text-slate-400 text-sm">—</span>
+                  {% endif %}
+                </td>
                 {% endwith %}
-              {% endif %}
+                {% endwith %}
+                {% endif %}
+                {% endfor %}
+              </tr>
+              {% endwith %}
+              {% endfor %}
+            </tbody>
             {% endfor %}
-          </tr>
-        {% endwith %}
-      {% endfor %}
-      </tbody>
-    {% endfor %}
-  {% endfor %}
-</tbody>
-            </table>
-          </div>
+            {% endfor %}
+            </tbody>
+          </table>
+        </div>
 
-          <!-- Table Footer -->
-          <div class="bg-slate-50/80 px-4 sm:px-6 py-3 border-t border-slate-200">
-            <div class="flex items-center justify-between text-sm text-slate-600">
-              <div class="flex items-center">
-                <div class="w-3 h-3 bg-blue-200 rounded-full mr-2"></div>
-                <span>Previous Terms (Read-only)</span>
+        <!-- Mobile (md-) CARDS -->
+        <div class="md:hidden w-full">
+          <div class="flex flex-col items-center m-2 bg-gradient-to-b from-blue-200 to-blue-100 border border-blue-200/70 rounded-lg p-3">
+            <p class="font-semibold text-lg text-blue-900">Rating criteria:</p>
+            <p class="mb-2 italic text-blue-900">Ratings will appear as stars on reports.</p>
+            <p class="font-sm mb-1 text-blue-700">1: Not attempted</p>
+            <p class="font-sm mb-1 text-blue-700">2: Attempted</p>
+            <p class="font-sm mb-1 text-blue-700">3: Attempted but needs practice</p>
+            <p class="font-sm mb-1 text-blue-700">4: Very Good</p>
+            <p class="font-sm text-blue-700">5: Consistent</p>
+          </div>
+          <div class="divide-y divide-slate-200">
+            {% for cas_name, stages in cas_groups_staged %}
+            <!-- CAS heading -->
+            <div class="bg-gradient-to-r from-blue-400 to-blue-500 text-white px-4 py-3">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                  <i class="fas fa-water mr-2"></i>
+                  <span class="font-bold text-sm uppercase tracking-wide">
+                    {{ cas_name|default:"Core Aquatic Skills" }}
+                  </span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <button type="button"
+                    class="px-2 py-1 text-[11px] bg-white/30 hover:bg-white/50 rounded-md border border-white/60 transition"
+                    onclick="toggleCas('{{ forloop.counter }}', true)">
+                    Expand
+                  </button>
+                  <button type="button"
+                    class="px-2 py-1 text-[11px] bg-white/30 hover:bg-white/50 rounded-md border border-white/60 transition"
+                    onclick="toggleCas('{{ forloop.counter }}', false)">
+                    Collapse
+                  </button>
+                </div>
               </div>
-              <div class="flex items-center">
-                <div class="w-3 h-3 bg-green-200 rounded-full mr-2"></div>
-                <span>Current Term (Editable)</span>
+            </div>
+
+            {% for stage_name, forms_in_stage in stages %}
+            <!-- Stage header (mobile) -->
+            <button type="button"
+              class="w-full text-left bg-blue-50 hover:bg-blue-100 px-4 py-3 flex items-center justify-between"
+              onclick="toggleStage('{{ forloop.parentloop.counter }}','{{ forloop.counter }}')">
+              <span class="font-semibold text-blue-800 uppercase tracking-wide text-sm">
+                {{ stage_name|default:"Uncategorised" }}
+              </span>
+              <span class="flex items-center text-blue-800 text-xs">
+                ({{ forms_in_stage|length }} skill{{ forms_in_stage|length|pluralize }})
+                <i id="toggle-icon-stage-{{ forloop.parentloop.counter }}-{{ forloop.counter }}"
+                  class="fas fa-chevron-down ml-2 transition-transform duration-200"></i>
+              </span>
+            </button>
+
+            <!-- Skills in this Stage (mobile cards) -->
+            <div id="stage-{{ forloop.parentloop.counter }}-{{ forloop.counter }}"
+              class="stage-rows px-3 pb-3 space-y-3">
+              {% for form in forms_in_stage %}
+              {% with s=form.instance.skill %}
+              <div class="border border-slate-200 rounded-lg bg-white p-3 shadow-sm m-2">
+                <p class="font-semibold text-blue-900 mb-2">{{ s.name }}</p>
+
+                <div class="grid grid-cols-2 gap-y-2 gap-x-3 text-sm">
+                  {% for term in terms %}
+                  <span class="font-medium {% if forloop.last %}text-green-700{% else %}text-blue-700{% endif %}">
+                    {% with label=header_map|get_item:term.id %}
+                    Term {{ term.id }}{% if label %}: {{ label }}{% endif %}
+                    {% endwith %}
+                  </span>
+                  <span>
+                    {% if forloop.last %}
+                    {{ form.rating }}
+                    {% else %}
+                    {% with skill_history=history_map|get_item:s.id %}
+                    {% with r=skill_history|get_item:term.id %}
+                    {% if r %}
+                    <span
+                      class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-green-100 text-green-800 border border-green-200">
+                      {{ r }}
+                    </span>
+                    {% else %}
+                    <span class="text-slate-400">—</span>
+                    {% endif %}
+                    {% endwith %}
+                    {% endwith %}
+                    {% endif %}
+                  </span>
+                  {% endfor %}
+                </div>
               </div>
+              {% endwith %}
+              {% endfor %}
+            </div>
+            {% endfor %}
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- Footer Legend -->
+        <div class="bg-slate-50/80 px-4 sm:px-6 py-3 border-t border-slate-200">
+          <div class="flex items-center justify-between text-sm text-slate-600">
+            <div class="flex items-center">
+              <div class="w-3 h-3 bg-blue-200 rounded-full mr-2"></div>
+              <span>Previous Terms (Read-only)</span>
+            </div>
+            <div class="flex items-center">
+              <div class="w-3 h-3 bg-green-200 rounded-full mr-2"></div>
+              <span>Current Term (Editable)</span>
             </div>
           </div>
         </div>
+      </div>
 
-        {{ formset.management_form }}
-        {# Include hidden ids for each form in the formset #}
-        {% for f in formset.forms %}
-          {{ f.id }}
-        {% endfor %}
+      {{ formset.management_form }}
+      {# Include hidden ids for each form in the formset #}
+      {% for f in formset.forms %}
+      {{ f.id }}
+      {% endfor %}
 
-        <!-- Bottom Save -->
-        <div class="pt-3">
-          <button form="progress-form" type="submit"
-                  class="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold text-xs sm:text-sm shadow-md hover:shadow-lg transition-all duration-200">
-            <i class="fa-solid fa-floppy-disk mr-1 w-4 h-4 flex-shrink-0"></i>
-            Save Report
-          </button>
-        </div>
-      </form>
-    </div>
+      <!-- Bottom Save -->
+      <div class="pt-3">
+        <button form="progress-form" type="submit"
+          class="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold text-xs sm:text-sm shadow-md hover:shadow-lg transition-all duration-200">
+          <i class="fa-solid fa-floppy-disk mr-1 w-4 h-4 flex-shrink-0"></i>
+          Save Report
+        </button>
+      </div>
+    </form>
   </div>
+</div>
 
-  <script>
+<script>
   function toggleStage(casIndex, stageIndex) {
     const id = `stage-${casIndex}-${stageIndex}`;
     const rows = document.getElementById(id);
@@ -249,7 +354,7 @@
     icon.classList.toggle('fa-chevron-down', isHidden);
   }
 
-  // Expand/Collapse all stages across all CAS
+  // Expand/Collapse all stages across all CAS (works for table & cards)
   function toggleAllStages(expand = null) {
     const stages = document.querySelectorAll('.stage-rows');
     stages.forEach(rows => {

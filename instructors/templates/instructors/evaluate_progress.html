@@ -104,72 +104,102 @@
               </thead>
 
               <tbody class="divide-y divide-slate-200">
-              {% for cas_name, stages in cas_groups_staged %}
-                {% for stage_name, forms_in_stage in stages %}
-                  <!-- Category + Stage row (collapsible) -->
-                  <tr class="bg-blue-50/70 cursor-pointer category-header border-b border-blue-200/70 hover:bg-blue-100/70"
-                      onclick="toggleCategory('{{ forloop.parentloop.counter }}-{{ forloop.counter }}')">
-                    <td colspan="{{ terms|length|add:1 }}"
-                        class="px-3 sm:px-4 py-3 bg-gradient-to-r from-blue-100 to-blue-50 border-r border-slate-200">
-                      <div class="flex items-center justify-between">
-                        <div class="flex items-center">
-                          <i class="fas fa-layer-group mr-2 text-slate-600"></i>
-                          <span class="font-bold text-slate-800 text-sm uppercase tracking-wide">
-              {{ cas_name|default:"Uncategorised Skills" }} — {{ stage_name|default:"Uncategorised" }}
+  {# === ALL CAS HEADINGS, EACH WITH ITS OWN STAGES === #}
+  {% for cas_name, stages in cas_groups_staged %}
+    {# CAS section heading row #}
+    <tr class="bg-blue-50/70 border-b border-blue-200/70">
+      <td colspan="{{ terms|length|add:1 }}"
+          class="px-3 sm:px-4 py-3 bg-gradient-to-r from-blue-400 to-blue-500 border-r border-slate-200">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center text-white">
+            <i class="fas fa-water mr-2"></i>
+            <span class="font-bold text-sm uppercase tracking-wide">
+              {{ cas_name|default:"Core Aquatic Skills" }}
             </span>
-                        </div>
-                        <div class="flex items-center">
-            <span class="text-xs text-slate-600 mr-2">
-              ({{ forms_in_stage|length }} skill{{ forms_in_stage|length|pluralize }})
-            </span>
-                          <i id="toggle-icon-{{ forloop.parentloop.counter }}-{{ forloop.counter }}"
-                             class="fas fa-chevron-down text-slate-600 transition-transform duration-200"></i>
-                        </div>
-                      </div>
+          </div>
+
+          {# Optional per-CAS expand/collapse #}
+          <div class="hidden sm:flex items-center gap-2 text-white">
+            <button type="button"
+                    class="px-2.5 py-1 text-xs bg-white/40 hover:bg-white/60 rounded-md border border-white/70 transition"
+                    onclick="toggleCas('{{ forloop.counter }}', true)">
+              <i class="fas fa-expand-alt mr-1"></i>Expand
+            </button>
+            <button type="button"
+                    class="px-2.5 py-1 text-xs bg-white/40 hover:bg-white/60 rounded-md border border-white/70 transition"
+                    onclick="toggleCas('{{ forloop.counter }}', false)">
+              <i class="fas fa-compress-alt mr-1"></i>Collapse
+            </button>
+          </div>
+        </div>
+      </td>
+    </tr>
+
+    {# Each STAGE under this CAS is a collapsible section #}
+    {% for stage_name, forms_in_stage in stages %}
+      {# Stage header (click to toggle) #}
+      <tr class="bg-blue-50/70 cursor-pointer stage-header hover:bg-blue-100/70"
+          onclick="toggleStage('{{ forloop.parentloop.counter }}','{{ forloop.counter }}')">
+        <td colspan="{{ terms|length|add:1 }}"
+            class="px-3 sm:px-4 py-3 bg-gradient-to-r from-blue-100 to-blue-50 border-r border-slate-200">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center text-blue-800">
+              <i class="fas fa-layer-group mr-2"></i>
+              <span class="font-bold text-sm uppercase tracking-wide">
+                {{ stage_name|default:"Uncategorised" }}
+              </span>
+            </div>
+            <div class="flex items-center text-blue-800">
+              <span class="text-xs mr-2">
+                ({{ forms_in_stage|length }} skill{{ forms_in_stage|length|pluralize }})
+              </span>
+              <i id="toggle-icon-stage-{{ forloop.parentloop.counter }}-{{ forloop.counter }}"
+                 class="fas fa-chevron-down transition-transform duration-200"></i>
+            </div>
+          </div>
+        </td>
+      </tr>
+
+      {# Skills rows container for this stage #}
+      <tbody id="stage-{{ forloop.parentloop.counter }}-{{ forloop.counter }}" class="stage-rows">
+      {% for form in forms_in_stage %}
+        {% with s=form.instance.skill %}
+          <tr class="hover:bg-slate-50 transition-colors duration-150 border-b border-slate-200">
+            <td class="px-3 sm:px-4 py-3 text-xs sm:text-sm text-slate-700 bg-blue-50 sticky left-0 z-10 border-r border-slate-200 border-b border-slate-200">
+              <div class="font-medium">{{ s.name }}</div>
+            </td>
+
+            {# Term cells: last term = current (green); previous = blue/neutral #}
+            {% for term in terms %}
+              {% if forloop.last %}
+                <td class="px-2 sm:px-3 py-3 text-center bg-green-50 border-l-2 border-green-300 border-r border-green-200 border-b border-green-700/20">
+                  <div class="flex justify-center">
+                    {{ form.rating }}
+                  </div>
+                </td>
+              {% else %}
+                {% with skill_history=history_map|get_item:s.id %}
+                  {% with r=skill_history|get_item:term.id %}
+                    <td class="px-2 sm:px-3 py-3 text-center bg-blue-50 border-r border-slate-200 border-b border-slate-200">
+                      {% if r %}
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-semibold bg-green-100 text-green-800 border border-green-200">
+                          {{ r }}
+                        </span>
+                      {% else %}
+                        <span class="text-slate-400 text-sm">—</span>
+                      {% endif %}
                     </td>
-                  </tr>
-
-                  <!-- Skills in this CAS + Stage -->
-                  <tbody id="category-{{ forloop.parentloop.counter }}-{{ forloop.counter }}"
-                         class="category-rows">
-                  {% for form in forms_in_stage %}
-                    {% with s=form.instance.skill %}
-                      <tr class="hover:bg-slate-50 transition-colors duration-150 border-b border-slate-200">
-                        <td class="px-3 sm:px-4 py-3 text-xs sm:text-sm text-slate-700 bg-blue-50 sticky left-0 z-10 border-r border-slate-200 border-b border-slate-200">
-                          <div class="font-medium">{{ s.name }}</div>
-                        </td>
-
-                        {% for term in terms %}
-                          {% if term.id == current_term.id %}
-                            <td class="px-2 sm:px-3 py-3 text-center bg-green-50 border-l-2 border-green-300 border-r border-green-200 border-b border-green-700/20">
-                              <div class="flex justify-center">
-                                {{ form.rating }}
-                              </div>
-                            </td>
-                          {% else %}
-                            {% with skill_history=history_map|get_item:s.id %}
-                              {% with r=skill_history|get_item:term.id %}
-                                <td class="px-2 sm:px-3 py-3 text-center border-r border-slate-200 border-b border-slate-200">
-                                  {% if r %}
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-semibold bg-green-100 text-green-800 border border-green-200">
-                                      {{ r }}
-                                    </span>
-                                  {% else %}
-                                    <span class="text-slate-400 text-sm">—</span>
-                                  {% endif %}
-                                </td>
-                              {% endwith %}
-                            {% endwith %}
-                          {% endif %}
-                        {% endfor %}
-                      </tr>
-                    {% endwith %}
-                  {% endfor %}
-                  </tbody>
-                {% endfor %}
-              {% endfor %}
-
-              </tbody>
+                  {% endwith %}
+                {% endwith %}
+              {% endif %}
+            {% endfor %}
+          </tr>
+        {% endwith %}
+      {% endfor %}
+      </tbody>
+    {% endfor %}
+  {% endfor %}
+</tbody>
             </table>
           </div>
 
@@ -207,50 +237,59 @@
   </div>
 
   <script>
-    function toggleCategory(categoryId) {
-      const categoryRows = document.getElementById('category-' + categoryId);
-      const toggleIcon = document.getElementById('toggle-icon-' + categoryId);
-      if (!categoryRows || !toggleIcon) return;
+  function toggleStage(casIndex, stageIndex) {
+    const id = `stage-${casIndex}-${stageIndex}`;
+    const rows = document.getElementById(id);
+    const icon = document.getElementById(`toggle-icon-stage-${casIndex}-${stageIndex}`);
+    if (!rows || !icon) return;
 
-      if (categoryRows.style.display === 'none') {
-        categoryRows.style.display = '';
-        toggleIcon.classList.remove('fa-chevron-right');
-        toggleIcon.classList.add('fa-chevron-down');
-      } else {
-        categoryRows.style.display = 'none';
-        toggleIcon.classList.remove('fa-chevron-down');
-        toggleIcon.classList.add('fa-chevron-right');
-      }
-    }
+    const isHidden = rows.style.display === 'none';
+    rows.style.display = isHidden ? '' : 'none';
+    icon.classList.toggle('fa-chevron-right', !isHidden);
+    icon.classList.toggle('fa-chevron-down', isHidden);
+  }
 
-    function toggleAllCategories(expand = null) {
-      const categoryRows = document.querySelectorAll('.category-rows');
-      const toggleIcons = document.querySelectorAll('[id^="toggle-icon-"]');
-
-      categoryRows.forEach((category, index) => {
-        const icon = toggleIcons[index];
-        if (!icon) return;
-
-        if (expand === null) {
-          if (category.style.display === 'none') {
-            category.style.display = '';
-            icon.classList.remove('fa-chevron-right');
-            icon.classList.add('fa-chevron-down');
-          } else {
-            category.style.display = 'none';
-            icon.classList.remove('fa-chevron-down');
-            icon.classList.add('fa-chevron-right');
-          }
-        } else if (expand) {
-          category.style.display = '';
+  // Expand/Collapse all stages across all CAS
+  function toggleAllStages(expand = null) {
+    const stages = document.querySelectorAll('.stage-rows');
+    stages.forEach(rows => {
+      const icon = document.getElementById(`toggle-icon-${rows.id}`);
+      if (expand === null) {
+        const willShow = rows.style.display === 'none';
+        rows.style.display = willShow ? '' : 'none';
+        if (icon) {
+          icon.classList.toggle('fa-chevron-right', !willShow);
+          icon.classList.toggle('fa-chevron-down', willShow);
+        }
+      } else if (expand) {
+        rows.style.display = '';
+        if (icon) {
           icon.classList.remove('fa-chevron-right');
           icon.classList.add('fa-chevron-down');
-        } else {
-          category.style.display = 'none';
+        }
+      } else {
+        rows.style.display = 'none';
+        if (icon) {
           icon.classList.remove('fa-chevron-down');
           icon.classList.add('fa-chevron-right');
         }
-      });
-    }
-  </script>
+      }
+    });
+  }
+
+  // Expand/Collapse all stages within a specific CAS heading
+  function toggleCas(casIndex, expand) {
+    const rows = document.querySelectorAll(`[id^="stage-${casIndex}-"]`);
+    rows.forEach(r => {
+      const icon = document.getElementById(`toggle-icon-${r.id}`);
+      if (expand) {
+        r.style.display = '';
+        if (icon) { icon.classList.remove('fa-chevron-right'); icon.classList.add('fa-chevron-down'); }
+      } else {
+        r.style.display = 'none';
+        if (icon) { icon.classList.remove('fa-chevron-down'); icon.classList.add('fa-chevron-right'); }
+      }
+    });
+  }
+</script>
 {% endblock %}

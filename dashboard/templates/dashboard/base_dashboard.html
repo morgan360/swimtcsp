@@ -37,8 +37,13 @@
   <script src="https://kit.fontawesome.com/dc45154bc3.js" crossorigin="anonymous"></script>
 </head>
 
+
+<body class="overflow-x-hidden min-h-screen bg-pink-100">
+  <div x-data="{ dark: false, drawerOpen: false }" class="bg-blue-900">
+
 <body class="overflow-x-hidden">
   <div x-data="{ dark: false, drawerOpen: false }" class="bg-gradient-to-br from-blue-400 to-blue-900">
+
     {# ✅ Include Navbar inside body #}
     <!-- Mobile Drawer -->
     <div class="lg:hidden">
@@ -51,8 +56,12 @@
     </div>
 
     <!-- Admin Navigation Mini Bar -->
+
+    <div class="bg-gradient-to-r from-blue-600 to-blue-900 border-b border-gray-200 shadow-sm">
+      <div class="max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
     <div class="bg-gradient-to-r from-blue-700 to-blue-900 border-b border-gray-200 shadow-sm">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
         <div class="flex items-center justify-between h-12">
           <div class="flex items-center space-x-1 w-full">
             <!-- Mobile: Dropdown Menu -->
@@ -181,8 +190,7 @@
     </div>
 
     {% if messages %}
-    <div id="message-container" class="fixed top-80 left-1/2 -translate-x-1/2 z-50 w-fit max-w-full px-4 shadow-lg text-lg mb-2 p-3 
-            rounded bg-green-100 text-green-800 border-green-300 text-center">
+    <div id="message-container" class="fixed top-80 left-1/2 -translate-x-1/2 z-50 w-fit max-w-full px-4 shadow-lg text-lg mb-2 p-3 rounded bg-green-100 text-green-800 border-green-300 text-center">
       {% for message in messages %}
       <div id="message-{{ forloop.counter }}" class="fade-message" style="opacity: 1; transition: opacity 1s ease;">
         {{ message }}
@@ -191,8 +199,8 @@
     </div>
     {% endif %}
 
-    <main class="section">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 m-10">
+    <main class="section bg-gradient-to-b from-sky-400 to-sky-100">
+      <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 p-10">
         {% block content %}{% endblock %}
       </div>
     </main>

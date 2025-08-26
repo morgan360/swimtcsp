@@ -58,9 +58,6 @@
                                     </a>
                                 {% endfor %}
                             </div>
-                            <p class="text-sm mt-4">Or <a class="underline text-blue-800 hover:text-blue-900"
-                                                          href="{{ signup_url }}">sign
-                                up</a> to create an account.</p>
                         </div>
                         <div class="text-center text-white text-xl font-semibold mb-4">or</div>
                     {% else %}
@@ -109,10 +106,17 @@
                         <input type="hidden" name="next" value="{{ request.GET.next }}">
 
                         <div>
-                            <button type="submit" id="submitBtn"
-                                    class="w-full bg-red-700 text-white text-lg py-3 px-4 rounded-lg font-semibold hover:bg-red-800 transition border border-white/60 disabled:opacity-50 disabled:cursor-not-allowed">
+                            <button
+                                class="w-full bg-gradient-to-r from-red-700 to-red-500 hover:from-red-800 hover:to-red-600 text-white text-lg py-3 px-4 rounded-lg font-semibold transition border border-white/60 disabled:opacity-50 disabled:cursor-not-allowed">
                                 <span id="submitText">Sign In</span>
                             </button>
+                        </div>
+
+                        <div>
+                            <p class="flex justify-center mt-4 text-gray-600">
+                                Or&nbsp;<a class="underline text-blue-800 hover:text-blue-900" href="{{ signup_url }}">
+                                    sign up</a>&nbsp;to create an account.
+                                </p>
                         </div>
 
                         <div class="text-center mt-4">

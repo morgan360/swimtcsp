@@ -1,0 +1,11 @@
+{% extends "account/email/_base_email.html" %}
+{% load i18n %}
+
+{% block subject %}{% trans "No account found for this email" %}{% endblock %}
+{% block header_title %}{% trans "No account found" %}{% endblock %}
+{% block header_subtitle %}{% trans "We couldn't find an account with this email address" %}{% endblock %}
+
+{% block body %}
+  <p>{% trans "A password reset was requested for this e-mail address, but we couldn’t find an account associated with it." %}</p>
+  <p>{% trans "If you think this is a mistake, please double-check the email or contact support." %}</p>
+{% endblock %}

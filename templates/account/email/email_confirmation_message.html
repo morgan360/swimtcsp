@@ -1,0 +1,17 @@
+{% extends "account/email/_base_email.html" %}
+{% load i18n %}
+
+{% block subject %}{% trans "Confirm your email" %}{% endblock %}
+{% block header_title %}{% trans "Confirm your email" %}{% endblock %}
+{% block header_subtitle %}{% trans "Finish setting up your account" %}{% endblock %}
+
+{% block body %}
+  <p>{% blocktrans with name=user.first_name|default:user.get_username %}Hi {{ name }},{% endblocktrans %}</p>
+  <p>{% trans "Please confirm your email address by clicking the button below." %}</p>
+{% endblock %}
+
+{% block cta %}
+  <div style="text-align:center; margin: 30px 0;">
+    <a href="{{ activate_url }}" class="cta-button">{% trans "Confirm email" %}</a>
+  </div>
+{% endblock %}

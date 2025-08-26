@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>{% block subject %}{% endblock %}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #f7f9fc;
+    }
+    .email-container {
+      background-color: #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+    .header {
+      background: linear-gradient(135deg, #3b82f6, #06b6d4);
+      color: white;
+      padding: 30px 20px;
+      text-align: center;
+    }
+    .logo-letters {
+      font-size: 24px;
+      color: white;
+      font-weight: bold;
+    }
+    .header h1 { margin: 0; font-size: 28px; font-weight: bold; }
+    .content { padding: 30px 20px; }
+    .cta-button {
+      display: inline-block;
+      padding: 12px 24px;
+      background: linear-gradient(135deg, #3b82f6, #06b6d4);
+      color: white !important;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: bold;
+      margin: 20px 0;
+      text-align: center;
+    }
+    .footer {
+      background-color: #1f2937;
+      color: white;
+      padding: 20px;
+      text-align: center;
+      font-size: 14px;
+    }
+    .footer a { color: #60a5fa; text-decoration: none; }
+  </style>
+</head>
+<body>
+  <div class="email-container">
+    <div class="header">
+      <span class="logo-letters">TCSP</span>
+      <h1>{% block header_title %}{% endblock %}</h1>
+      <p>{% block header_subtitle %}{% endblock %}</p>
+    </div>
+    <div class="content">
+      {% block body %}{% endblock %}
+      {% block cta %}{% endblock %}
+    </div>
+    <div class="footer">
+      {% block footer %}
+      <p><strong>{{ current_site.name }}</strong></p>
+      <p style="font-size:12px;">You received this email because you have an account with us.</p>
+      {% endblock %}
+    </div>
+  </div>
+</body>
+</html>

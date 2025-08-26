@@ -115,7 +115,7 @@
                   Management
                 </a>
                 {% endif %}
-                <a href="coupons"
+                <a href="{% url 'coupons:coupon_list' %}"
                   class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600">
                   <i class="fas fa-ticket-alt mr-2 text-green-600"></i>
                   Coupons
@@ -167,7 +167,7 @@
                 Management
               </a>
               {% endif %}
-              <a href="coupons"
+              <a href="{% url 'coupons:coupon_list' %}"
                 class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors duration-150 whitespace-nowrap">
                 <i class="fas fa-ticket-alt mr-1.5 text-green-600"></i>
                 Coupons

@@ -8,6 +8,9 @@ from django.template.loader import render_to_string
 from django.contrib.auth.decorators import login_required
 from utils.terms_utils import get_current_term
 
+def getting_started(request):
+    return render(request, "getting_started.html")
+
 
 def info_view(request, section=None):
     section = section.lower() if section else 'both'

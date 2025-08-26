@@ -1,7 +1,187 @@
 {% extends "base/_base.html" %}
 
+{% load static %}
+
 {% block content %}
-  <h2> <i class="fa-solid fa-circle-play"></i> Getting Started</h2>
-  <p>Welcome to the Getting Started page!</p>
-  <p>Current Term: {{ current_term }}</p>
+<section class="min-h-screen bg-gradient-to-br from-blue-500 to-blue-900 py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+
+        <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden mb-12" id="booking-options">
+            <!-- Header -->
+            <div class="bg-gradient-to-r from-blue-500 to-cyan-500 px-8 py-8 text-center">
+                <img src="{% static 'img/logo.png' %}" alt="Templeogue College Swim Pool Logo"
+                            class="h-16 mx-auto mb-4" />
+                <h2 class="text-4xl font-bold text-white mb-4">
+                    <i class="fa-solid fa-circle-play mr-1"></i>
+                    Getting Started
+                </h2>
+                <p class="text-xl text-blue-100">Two quick ways to get in the water</p>
+            </div>
+            <!-- Content -->
+            <div class="p-8 md:p-12">
+                <div class="max-w-4xl mx-auto space-y-6">
+                    <p class="text-lg leading-relaxed text-gray-700">
+                        Welcome! Start your swimming journey with us – whether you're looking for lessons or just want
+                        to enjoy public swims, we have something for everyone. Simply create a free account to get started!
+                        Keep reading for a quick guide on how to get started.
+                    </p>
+
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-6">
+                        <p class="text-lg font-semibold text-blue-900 mb-4">
+                            To use our services all you need to do is sign up. It's simple and free – all you need is
+                            your email address.
+                        </p>
+                        <div class="flex flex-col sm:flex-row justify-center items-center">
+                            <a href="{% url 'account_signup' %}"
+                                class="inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-semibold rounded-lg hover:from-blue-600 hover:to-cyan-600 transition-all duration-200 shadow-lg hover:shadow-xl">
+                                <i class="fas fa-user-plus mr-2"></i>Sign Up
+                            </a>
+                            <p class="text-gray-600 flex items-center ml-2 p-4">
+                                Already have an account?
+                                <a href="{% url 'account_login' %}"
+                                    class="text-blue-600 hover:underline font-semibold ml-1">Log in</a>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+
+            <!-- Grid -->
+            <div class="p-8">
+                <div class="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8 text-gray-700">
+
+                    <!-- Book in for Lessons -->
+                    <div
+                        class="bg-gray-50 rounded-xl border border-gray-200 p-6 hover:shadow-lg transition-shadow duration-200">
+                        <div class="text-center mb-6">
+                            <div class="text-4xl text-blue-600 mb-4">
+                                <i class="fas fa-chalkboard-teacher"></i>
+                            </div>
+                            <h3 class="text-2xl font-semibold text-gray-900">Book in for Lessons</h3>
+                        </div>
+                        <p class="leading-relaxed mb-4">
+                            Adult or child, beginner or advanced, all term-based lessons are managed through the <span
+                                class="font-semibold text-blue-600">swimling dashboard</span>. Follow these steps to get
+                            started:
+                            <br />
+                        <ol class="list-decimal list-inside mt-2 space-y-1">
+
+                            <li class="mt-4">Create an account and check the <span
+                                    class="font-semibold text-blue-600">'I wish to sign up for swimming
+                                    lessons.'</span>. This makes you a <span
+                                    class="font-semibold text-blue-600">Guardian</span>, meaning you can register
+                                yourself or others for lessons in the <a
+                                    href="{% url 'swimling_dashboard:guardian_dashboard' %}"
+                                    class="text-blue-600 hover:underline" target="_blank"
+                                    tooltip="Open swimling dashboard in a new tab.">swimling dashboard</a>.
+                                <br />
+                                <div class="mt-4 mb-4 bg-blue-50 border border-blue-200 rounded-lg text-blue-900 p-4">
+                                    <ul class="list-disc list-inside">
+                                        <li class="">If you already have an account but do not have Guardian
+                                            permissions, please visit your profile to <a
+                                                href="{% url 'users:profile' %}" class="text-blue-600 hover:underline"
+                                                target="_blank" tooltip="Open profile page in a new tab.">become a
+                                                guardian</a>.</li>
+
+                                        <li class="mt-2">If you already have Guardian permissions, please visit <a
+                                                href="{% url 'swimling_dashboard:guardian_dashboard' %}"
+                                                class="text-blue-600 hover:underline" target="_blank"
+                                                tooltip="Open swimling dashboard in a new tab.">the swimling
+                                                dashboard</a> to register a swimling and book classes.</li>
+                                    </ul>
+                                </div>
+                            </li>
+
+                            <br />
+
+                            <li class="mt-8"> Visit the <a href="{% url 'swimling_dashboard:guardian_dashboard' %}"
+                                    class="text-blue-600 hover:underline" target="_blank"
+                                    tooltip="Open swimling dashboard in a new tab.">swimling dashboard</a> and register
+                                a swimling by clicking the <span class="font-semibold text-blue-600">'Add New
+                                    Swimling'</span> button and filling out their details.</li>
+
+                            <br />
+
+                            <li class="mt-10"> You can now book lessons, rebook for the next term, join the waiting
+                                list, and edit your swimling's details all in one place!</li>
+
+                        </ol>
+                        </p>
+
+                        <div class="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg text-blue-900">
+                            <p>
+                                <i class="fas fa-info-circle mr-1"></i>
+                                You can access your swimling dashboard through 'Main Menu' in the navigation, or
+                                through your profile dropdown in the top-right corner of the page.
+                            </p>
+                        </div>
+
+                        <div class="flex flex-wrap items-center gap-3 mt-6 justify-center">
+                            <a href="{% url 'swimling_dashboard:guardian_dashboard' %}"
+                                class="inline-flex items-center px-5 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition">
+                                <i class="fas fa-clipboard-list mr-2"></i>Swimling Dashboard
+                            </a>
+                            <a href="#contact-form"
+                                class="inline-flex items-center px-5 py-3 border border-blue-300 text-blue-700 bg-gradient-to-r from-blue-100 to-blue-200 rounded-lg hover:from-blue-200 hover:to-blue-300">
+                                <i class="fas fa-question-circle mr-2"></i>Need more help?
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Book in for Public Swims -->
+                    <div
+                        class="bg-gray-50 rounded-xl border border-gray-200 p-6 hover:shadow-lg transition-shadow duration-200">
+                        <div class="text-center mb-6">
+                            <div class="text-4xl text-green-700 mb-4">
+                                <i class="fa-solid fa-water-ladder"></i>
+                            </div>
+                            <h3 class="text-2xl font-semibold text-gray-900">Book in for Public Swims</h3>
+                        </div>
+                        <p class="text-gray-700 leading-relaxed mb-4">
+                            Join our open swim sessions for fitness or fun. All our public swims are pay-as-you-go. Booking is easy:
+                        <div class="">
+                            <ol class="list-decimal list-inside mt-2 space-y-1">
+                                <br />
+                                <li class="mt-4">
+                                    Create an account. Only check <span class="font-semibold text-green-600">'I wish to
+                                        sign up for swimming lessons.'</span> if you wish to register for lessons. If
+                                    you're unsure, you can always <a href="/info/#contact-form"
+                                        class="text-green-600 hover:underline" target="_blank">contact us</a> or add
+                                    this feature in your profile later.
+                                </li>
+
+                                <br />
+                                <li class="mt-4">
+                                    Browse our selection of public swims <a href="{% url 'swims:product_list' %}"
+                                        class="text-green-600 hover:underline" target="_blank">here</a> to find a swim
+                                    session that fits your schedule.
+                                </li>
+
+                                <br />
+                                <li class="mt-4">
+                                    Follow the prompts to book your session.
+                                </li>
+
+                            </ol>
+                        </div>
+                        </p>
+                        <div class="flex flex-wrap items-center gap-3 mt-6 justify-center">
+                            <a href="{% url 'swims:product_list' %}"
+                                class="inline-flex items-center px-5 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
+                                <i class="fas fa-calendar-check mr-2"></i>View Swim Times
+                            </a>
+                            <a href="{% url 'account_signup' %}"
+                                class="inline-flex items-center px-5 py-3 border border-green-600 text-green-700 rounded-lg hover:bg-green-50 transition">
+                                <i class="fas fa-user-plus mr-2"></i>Sign Up to Book
+                            </a>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+</section>
 {% endblock %}

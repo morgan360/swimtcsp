@@ -2,6 +2,7 @@
 from django.urls import path
 from . import views
 app_name = 'dashboard'
+
 urlpatterns = [
     path('', views.dashboard_home, name='dashboard_home'),
     path('public-swims/', views.public_swims, name='dashboard_public_swims'),

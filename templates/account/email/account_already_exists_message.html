@@ -1,0 +1,18 @@
+{% extends "account/email/_base_email.html" %}
+{% load i18n %}
+
+{% block subject %}{% trans "Account already exists" %}{% endblock %}
+{% block header_title %}{% trans "Account already exists" %}{% endblock %}
+{% block header_subtitle %}{% trans "We found an account with this email" %}{% endblock %}
+
+{% block body %}
+  <p>{% trans "You (or someone else) tried to sign up using this e-mail address:" %}</p>
+  <p><strong>{{ email }}</strong></p>
+  <p>{% trans "An account with this address already exists. If you forgot your password, you can reset it using the link below:" %}</p>
+{% endblock %}
+
+{% block cta %}
+  <div style="text-align:center; margin: 30px 0;">
+    <a href="{{ password_reset_url }}" class="cta-button">{% trans "Reset password" %}</a>
+  </div>
+{% endblock %}

@@ -1,0 +1,103 @@
+{% extends "dashboard/base_dashboard.html" %}
+{% load static %}
+
+{% block content %}
+<div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+  <!-- Header -->
+  <div class="bg-gradient-to-r from-green-500 to-green-600 px-4 sm:px-6 py-4 sm:py-6">
+    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-3 lg:space-y-0">
+      <div>
+        <h1 class="text-2xl sm:text-3xl font-bold text-white flex items-center">
+          <i class="fas fa-user-tie mr-2 sm:mr-3"></i> Instructor Assignments
+        </h1>
+        <p class="text-green-100 mt-2 text-sm sm:text-base">Assign instructors to lessons for a selected term</p>
+      </div>
+      <div class="flex gap-2">
+        <a href="{% url 'dashboard:dashboard_lessons' %}" class="inline-flex items-center justify-center px-4 py-2 bg-white/20 text-white rounded-lg hover:bg-white/30 transition-colors text-sm sm:text-base">
+          <i class="fas fa-arrow-left mr-2"></i>Back to Lessons
+        </a>
+        <a href="/lessonsadmin/lessons_bookings/lessonassignment/" target="_blank" class="inline-flex items-center justify-center px-4 py-2 bg-white/20 text-white rounded-lg hover:bg-white/30 transition-colors text-sm sm:text-base">
+          <i class="fas fa-external-link-alt mr-2"></i>Open in Admin
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Form -->
+  <div class="p-6">
+    <form method="post" class="space-y-6">
+      {% csrf_token %}
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Term</label>
+          {{ form.term }}
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Instructor</label>
+          {{ form.instructor }}
+        </div>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Lessons</label>
+        <p class="text-xs text-gray-500 mb-2">Tip: hold Cmd/Ctrl to select multiple lessons.</p>
+        {{ form.lessons }}
+      </div>
+      <div class="flex items-center justify-end gap-3">
+        <a href="#" class="px-4 py-2 rounded-lg bg-gray-200 text-gray-800 hover:bg-gray-300">Cancel</a>
+        <button type="submit" class="px-4 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700">Save Assignments</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Existing assignments -->
+  <div class="px-6 pb-6">
+    <h2 class="text-xl font-semibold text-gray-900 mb-4">Current Assignments</h2>
+    {% if assignments %}
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Term</th>
+              <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Instructor</th>
+              <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lessons</th>
+              <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Admin</th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            {% for a in assignments %}
+            <tr class="hover:bg-gray-50">
+              <td class="px-4 py-2 text-sm text-gray-900">
+                {% if a.term.start_date and a.term.end_date %}
+                  Term {{ a.term.id }} ({{ a.term.start_date }} → {{ a.term.end_date }})
+                {% else %}
+                  Term {{ a.term.id }}
+                {% endif %}
+              </td>
+              <td class="px-4 py-2 text-sm text-gray-900">{{ a.instructor.get_full_name|default:a.instructor.email }}</td>
+              <td class="px-4 py-2 text-sm text-gray-700">
+                {% if a.lessons.all %}
+                  <div class="flex flex-wrap gap-1">
+                    {% for l in a.lessons.all %}
+                      <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-800">{{ l.name }}</span>
+                    {% endfor %}
+                  </div>
+                {% else %}
+                  <span class="text-gray-400 text-xs">No lessons</span>
+                {% endif %}
+              </td>
+              <td class="px-4 py-2 text-sm">
+                <a href="/admin/lessons_bookings/lessonassignment/{{ a.id }}/change/" target="_blank" class="inline-flex items-center px-3 py-1.5 bg-green-100 text-green-700 text-xs font-medium rounded-lg hover:bg-green-200 transition-colors">
+                  <i class="fas fa-external-link-alt mr-1"></i>Open
+                </a>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p class="text-gray-600">No assignments yet.</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

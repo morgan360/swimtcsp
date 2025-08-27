@@ -44,10 +44,9 @@
                 {% for assignment in assignments %}
                     <div class="bg-white/90 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 overflow-hidden">
                         <!-- Card Header -->
-                        <div class="bg-gradient-to-r from-blue-500 to-blue-600 p-6 text-white">
+                        <div class="bg-gradient-to-r from-blue-600 to-blue-500 p-6 text-white">
                             <h3 class="text-xl font-bold mb-2">{{ assignment.lesson.name }}</h3>
                             <div class="flex items-center justify-between text-blue-100">
-                                <span class="text-sm font-medium">{{ assignment.term.label }}</span>
                                 <span class="bg-white/20 px-2 py-1 rounded-full text-xs font-semibold">
                                     {{ assignment.lesson.get_day_of_week_display }}
                                 </span>

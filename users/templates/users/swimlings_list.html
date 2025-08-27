@@ -101,8 +101,7 @@
                         </div>
                         <div>
                             <div class="font-semibold text-gray-900">{{ s.first_name }} {{ s.last_name }}</div>
-                            <div class="text-xs text-gray-500">Guardian Name: {{ s.guardian.first_name }} {{
-                                s.guardian.last_name }}</div>
+                            <div class="text-xs text-gray-500">Guardian Name: {{ s.guardian.first_name }} {{ s.guardian.last_name }}</div>
                         </div>
                     </div>
                 </div>
@@ -111,20 +110,20 @@
                         <p class="text-xs font-medium uppercase text-gray-500 mb-1">Guardian Email</p>
                         <p class="text-gray-700 break-words">{{ s.guardian.email }}</p>
                     </div>
-                    <div class="flex flex-col col-2">
+                    <div class="mb-4">
                         <p class="text-xs font-medium uppercase text-gray-500 mb-1">Current Class</p>
                         {% if s.current_classes %}
-                        <div class="flex flex-wrap gap-1 ">
-                            {% for c in s.current_classes %}
-                            <span
-                                class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">{{c.name }}</span>
-                            {% for enrollment in s.public_enrollments %}
-                            <a href="{% url 'lessonsadmin:lessons_bookings_lessonenrollment_change' enrollment.id %}">Move</a>
-                            {% endfor %}
-                            {% for se in s.school_enrollments %}
-                                <a href="{% url 'schoolsadmin:schools_bookings_scoenrollment_change' se.id %}">Move</a>
-                            {% endfor %}
-                            {% endfor %}
+                        <div class="space-y-2">
+                          {% for c in s.current_classes %}
+                          <div class="flex items-center justify-between bg-green-100 rounded-md border border-gray-200 px-3 py-2">
+                            <span class="text-gray-700 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium  text-green-800">{{ c.name }}</span>
+                            <a href="{{ c.admin_url|default:'' }}{% if not c.admin_url and c.enrollment_id %}/lessonsadmin/lessons_bookings/lessonenrollment/{{ c.enrollment_id }}/change/{% endif %}"
+                               class="inline-flex items-center px-2.5 py-1 bg-purple-600 text-white text-xs font-medium rounded-md hover:bg-purple-700 transition-colors"
+                               title="Move Swimling">
+                              <i class="fa-solid fa-right-left mr-1"></i>Move
+                            </a>
+                          </div>
+                          {% endfor %}
                         </div>
                         {% else %}
                         <p class="text-gray-400 italic">Not booked in yet</p>

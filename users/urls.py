@@ -13,4 +13,5 @@ urlpatterns = [
     path('profile/become-guardian/', views.become_guardian_view, name='become_guardian'),
     path('<int:user_id>/', views.hijack_redirect, name='hijack_redirect'),
     path("join-schools/", join_schools_program, name="join_schools_program"),
+    path("swimlings/", views.swimlings_list, name="swimlings_list"),
 ]

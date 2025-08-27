@@ -16,6 +16,28 @@
             </div>
         </div>
 
+        <!-- Summary Stats -->
+            <div class="bg-white/50 rounded-2xl shadow-lg p-6 mt-8 mb-8 backdrop-blur-sm">
+                <h3 class="text-xl font-bold text-white mb-4 flex items-center">
+                    <i class="fas fa-chart-bar mr-2"></i>
+                    Quick Stats
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="bg-white/80 rounded-lg p-4 text-center">
+                        <div class="text-2xl font-bold text-blue-600">{{ assignments|length }}</div>
+                        <div class="text-sm text-gray-600">Active Assignments</div>
+                    </div>
+                    <div class="bg-white/80 rounded-lg p-4 text-center">
+                        <div class="text-2xl font-bold text-green-600">{{ total_students|default:"0" }}</div>
+                        <div class="text-sm text-gray-600">Total Students</div>
+                    </div>
+                    <div class="bg-white/80 rounded-lg p-4 text-center">
+                        <div class="text-2xl font-bold text-purple-600">{{ lessons_this_week|default:"0" }}</div>
+                        <div class="text-sm text-gray-600">Lessons This Week</div>
+                    </div>
+                </div>
+            </div>
+
         <!-- Assignments Grid -->
         {% if assignments %}
             <div class="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
@@ -110,28 +132,6 @@
                         </div>
                     </div>
                 {% endfor %}
-            </div>
-
-            <!-- Summary Stats -->
-            <div class="bg-white/50 rounded-2xl shadow-lg p-6 mt-8 backdrop-blur-sm">
-                <h3 class="text-xl font-bold text-white mb-4 flex items-center">
-                    <i class="fas fa-chart-bar mr-2"></i>
-                    Quick Stats
-                </h3>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div class="bg-white/80 rounded-lg p-4 text-center">
-                        <div class="text-2xl font-bold text-blue-600">{{ assignments|length }}</div>
-                        <div class="text-sm text-gray-600">Active Assignments</div>
-                    </div>
-                    <div class="bg-white/80 rounded-lg p-4 text-center">
-                        <div class="text-2xl font-bold text-green-600">{{ total_students|default:"0" }}</div>
-                        <div class="text-sm text-gray-600">Total Students</div>
-                    </div>
-                    <div class="bg-white/80 rounded-lg p-4 text-center">
-                        <div class="text-2xl font-bold text-purple-600">{{ lessons_this_week|default:"0" }}</div>
-                        <div class="text-sm text-gray-600">Lessons This Week</div>
-                    </div>
-                </div>
             </div>
 
         {% else %}

@@ -86,39 +86,39 @@
                 <a href="{% url 'dashboard:dashboard_public_swims' %}"
                   class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600">
                   <i class="fas fa-swimmer mr-2 text-blue-500"></i>
-                  Public Swims
+                  Public Swims Panel
                 </a>
                 <a href="{% url 'dashboard:dashboard_lessons' %}"
                   class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600">
                   <i class="fas fa-book mr-2 text-green-500"></i>
-                  Lessons
+                  Lessons Panel
                 </a>
                 <a href="{% url 'dashboard:dashboard_schools' %}"
                   class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600">
                   <i class="fas fa-school mr-2 text-yellow-500"></i>
-                  Schools
+                  Schools Panel
                 </a>
                 <a href="{% url 'dashboard:dashboard_orders' %}"
                   class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600">
                   <i class="fas fa-credit-card mr-2 text-purple-500"></i>
-                  Orders
+                  Orders Panel
                 </a>
                 <a href="{% url 'dashboard:user_management' %}"
                   class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600">
                   <i class="fas fa-users mr-2 text-red-500"></i>
-                  User Management
+                  User Management Panel
                 </a>
                 {% if user.is_superuser %}
                 <a href="{% url 'dashboard:management' %}"
                   class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600">
-                  <i class="fas fa-tools mr-2 text-orange-500"></i>
-                  Management
+                  <i class="fa-solid fa-house-lock mr-3 text-orange-500"></i>
+                  Management Panel
                 </a>
                 {% endif %}
                 <a href="{% url 'coupons:coupon_list' %}"
                   class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600">
                   <i class="fas fa-ticket-alt mr-2 text-green-600"></i>
-                  Coupons
+                  Coupons Panel
                 </a>
                 <!-- <a href="{% url 'dashboard:dashboard_general' %}"
                   class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600">
@@ -163,7 +163,7 @@
               {% if user.is_superuser %}
               <a href="{% url 'dashboard:management' %}"
                 class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors duration-150 whitespace-nowrap">
-                <i class="fas fa-tools mr-1.5 text-orange-500"></i>
+                <i class="fa-solid fa-house-lock mr-3 text-orange-500"></i>
                 Management Panel
               </a>
               {% endif %}

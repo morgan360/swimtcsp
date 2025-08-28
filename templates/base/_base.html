@@ -239,21 +239,35 @@
         </div>
     </div>
 
-    <!-- Chatbot Button/Bubble -->
-    <div x-data="{ showBubble: true }" x-show="showBubble"
-        class="fixed bottom-6 right-6 flex flex-col items-end space-y-2 z-[1000] max-w-max" x-transition>
+    <!-- Chatbot Button/Bubble (session-dismissable) -->
+    <div x-data="{
+        showBubble: true,
+        init() {
+        // restore state for this tab's session
+        this.showBubble = sessionStorage.getItem('tcspChatHidden') !== '1';
+        // keep sessionStorage in sync with UI state
+        this.$watch('showBubble', (v) => {
+            if (v) {
+            sessionStorage.removeItem('tcspChatHidden');
+            } else {
+            sessionStorage.setItem('tcspChatHidden', '1');
+            }
+        });
+        }
+    }" x-show="showBubble" x-transition
+            class="fixed bottom-6 right-6 flex flex-col items-end space-y-2 z-[1000] max-w-max">
 
         <!-- Close "X" button -->
         <button @click="showBubble = false"
-            class="absolute -top-2 -right-2 bg-white text-gray-600 hover:text-gray-800 rounded-full shadow-md w-6 h-6 flex items-center justify-center text-sm font-bold">
-            &times;
-        </button>
+            class="absolute -top-2 -right-2 bg-white text-gray-600 hover:text-gray-800 rounded-full shadow-md w-6 h-6 flex items-center justify-center text-sm font-bold"
+            aria-label="Hide chat bubble" title="Hide">&times;</button>
 
         <a href="{% url 'chatbot:public-swim-ui' %}" target="_blank" rel="noopener noreferrer"
             class="bg-red-600 hover:bg-red-700 text-white rounded-full p-4 shadow-lg flex items-center justify-center w-20 h-20"
             aria-label="Open Chatbot" title="Chat with us (opens in new tab)">
             <i class="fas fa-solid fa-comments text-4xl"></i>
         </a>
+
         <p class="hidden md:block bg-red-600 text-white rounded-full px-4 py-3 shadow-lg whitespace-nowrap text-right">
             Have a question? Ask SplashBot!
         </p>

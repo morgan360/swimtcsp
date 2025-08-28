@@ -240,7 +240,15 @@
     </div>
 
     <!-- Chatbot Button/Bubble -->
-    <div class="fixed bottom-6 right-6 flex flex-col items-end space-y-2 z-[1000] max-w-max">
+    <div x-data="{ showBubble: true }" x-show="showBubble"
+        class="fixed bottom-6 right-6 flex flex-col items-end space-y-2 z-[1000] max-w-max" x-transition>
+
+        <!-- Close "X" button -->
+        <button @click="showBubble = false"
+            class="absolute -top-2 -right-2 bg-white text-gray-600 hover:text-gray-800 rounded-full shadow-md w-6 h-6 flex items-center justify-center text-sm font-bold">
+            &times;
+        </button>
+
         <a href="{% url 'chatbot:public-swim-ui' %}" target="_blank" rel="noopener noreferrer"
             class="bg-red-600 hover:bg-red-700 text-white rounded-full p-4 shadow-lg flex items-center justify-center w-20 h-20"
             aria-label="Open Chatbot" title="Chat with us (opens in new tab)">

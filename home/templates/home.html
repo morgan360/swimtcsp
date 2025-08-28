@@ -149,11 +149,11 @@
             </div>
             <div class="mt-auto flex">
                 <a href="/swims/"
-                    class="flex-1 text-center px-6 py-4 font-semibold text-white bg-gradient-to-r from-blue-400 to-blue-500 hover:from-blue-500 hover:to-blue-600 transition-all duration-300 transform hover:scale-105">
+                    class="flex-1 text-center px-6 py-4 font-semibold text-white bg-gradient-to-r from-blue-400 to-blue-500 hover:from-blue-500 hover:to-blue-600 transition-all duration-300">
                     Book a Swim
                 </a>
                 <a href="{% url 'timetable:timetable_grid' %}"
-                    class="flex-1 text-center px-6 py-4 font-semibold text-white bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 transition-all duration-300 transform hover:scale-105">
+                    class="flex-1 text-center px-6 py-4 font-semibold text-white bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 transition-all duration-300">
                     View Timetable
                 </a>
             </div>
@@ -184,7 +184,7 @@
             </div>
             <div class="mt-auto flex">
                 <a href="#" onclick="checkGuardianAccess('/dashboard/')"
-                    class="flex-1 text-center px-6 py-4 font-semibold text-white bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 transition-all duration-300 transform hover:scale-105">
+                    class="flex-1 text-center px-6 py-4 font-semibold text-white bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 transition-all duration-300">
                     Swimling Dashboard
                 </a>
             </div>
@@ -211,7 +211,7 @@
             </div>
             <div class="mt-auto">
                 <a href="/info/#our-services" 
-                   class="block w-full text-center px-6 py-4 font-semibold text-white bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 transition-all duration-300 transform hover:scale-105">
+                   class="block w-full text-center px-6 py-4 font-semibold text-white bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 transition-all duration-300">
                     Explore
                 </a>
             </div>
@@ -233,7 +233,7 @@
             </div>
             <div class="mt-auto">
                 <a href="#" id="open-newsletter-popup"
-                   class="block w-full text-center px-6 py-4 font-semibold text-white bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 transition-all duration-300 transform hover:scale-105">
+                   class="block w-full text-center px-6 py-4 font-semibold text-white bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 transition-all duration-300">
                     Subscribe
                 </a>
             </div>
@@ -254,52 +254,11 @@
             </div>
             <div class="mt-auto">
                 <a href="/info/"
-                   class="block w-full text-center px-6 py-4 font-semibold text-white bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 transition-all duration-300 transform hover:scale-105">
+                   class="block w-full text-center px-6 py-4 font-semibold text-white bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 transition-all duration-300">
                     Learn More
                 </a>
             </div>
         </div>
-    </div>
-
-
-    <!-- Chatbot Button/Bubble -->
-    <div class="fixed bottom-6 right-6 flex flex-col items-end space-y-2 z-50 max-w-max">
-        <a href="{% url 'chatbot:public-swim-ui' %}" target="_blank" rel="noopener noreferrer"
-            class="bg-red-600 hover:bg-red-700 text-white rounded-full p-4 shadow-lg flex items-center justify-center w-20 h-20"
-            aria-label="Open Chatbot" title="Chat with us (opens in new tab)">
-            <i class="fas fa-solid fa-comments text-4xl"></i>
-        </a>
-        <p class="hidden md:block bg-red-600 text-white rounded-full px-4 py-3 shadow-lg whitespace-nowrap text-right">
-            Have a question? Ask SplashBot!
-        </p>
-    </div>
-</div>
-
-<!-- Enhanced Newsletter Modal -->
-<div id="newsletter-popup" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[70] hidden">
-    <div class="bg-white/90 backdrop-blur-md p-8 rounded-2xl shadow-2xl max-w-md w-full mx-4 relative border border-white/30">
-        <button onclick="closePopup()"
-            class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-2xl transition-colors duration-200">&times;</button>
-
-        <div class="text-center mb-6">
-            <div class="bg-gradient-to-r from-blue-500 to-blue-600 p-4 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-                <i class="fas fa-envelope text-white text-2xl"></i>
-            </div>
-            <h2 class="text-2xl font-bold text-gray-800 mb-2">Stay in the loop</h2>
-            <p class="text-gray-600">Get the latest news and important updates from the pool!</p>
-        </div>
-
-        <form method="post" action="{% url 'mailchimp:newsletter-signup' %}">
-            {% csrf_token %}
-            <div class="space-y-4">
-                <input type="email" name="email" placeholder="Enter your email" required
-                    class="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200" />
-                <button type="submit" 
-                        class="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-xl px-4 py-3 font-semibold transition-all duration-200 transform hover:scale-105">
-                    Sign up
-                </button>
-            </div>
-        </form>
     </div>
 </div>
 {% endblock %}

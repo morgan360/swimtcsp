@@ -13,7 +13,6 @@
   </div>
   <!-- Welcome Hero Section -->
   <div class="bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-500 via-cyan-400 to-blue-900 rounded-lg shadow-lg overflow-hidden mb-8">
-  <div class="bg-gradient-to-r from-blue-900 via-white/50 to-blue-700 rounded-lg shadow-lg overflow-hidden mb-8">
 
     <div class="px-8 py-12 text-center">
       <div class="max-w-3xl mx-auto">
@@ -106,7 +105,7 @@
     </a>
 
     <!-- General Card -->
-    <a href="{% url 'dashboard:dashboard_general' %}"
+    <!-- <a href="{% url 'dashboard:dashboard_general' %}"
       class="group bg-white rounded-lg shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
       <div class="p-6">
         <div class="flex items-center justify-between mb-4">
@@ -118,7 +117,7 @@
         <h3 class="text-lg font-semibold text-gray-900 mb-2">General</h3>
         <p class="text-gray-600 text-sm">System settings and general administration</p>
       </div>
-    </a>
+    </a> -->
 
     <!-- Management Card - Superuser Only -->
     {% if user.is_superuser %}
@@ -138,7 +137,7 @@
     {% endif %}
 
     <!-- Coupons Card -->
-    <a href="#"
+    <a href="{% url 'coupons:coupon_list' %}"
       class="group bg-white rounded-lg shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
       <div class="p-6">
         <div class="flex items-center justify-between mb-4">

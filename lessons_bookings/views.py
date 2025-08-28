@@ -5,6 +5,12 @@ from django.http import HttpResponse
 from django.contrib.auth import get_user_model
 from users.models import Swimling
 from django.contrib import messages
+from django import forms
+from django.contrib.admin.views.decorators import staff_member_required
+from django.db.models import Prefetch
+from django.contrib.auth.models import Group
+from .models import Term, LessonAssignment
+from lessons.models import Product
 
 
 User = get_user_model()
@@ -80,3 +86,66 @@ class RegistrationWizardView(SessionWizardView):
 
         messages.success(self.request, "Registration complete. Please log in.")
         return redirect('/accounts/login/')
+
+
+class LessonAssignmentForm(forms.Form):
+    term = forms.ModelChoiceField(
+        queryset=Term.objects.all().order_by('-start_date'),
+        label="Term",
+        widget=forms.Select(attrs={
+            "class": "w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+        })
+    )
+    instructor = forms.ModelChoiceField(
+        queryset=User.objects.filter(groups__name="instructors").distinct().order_by('first_name','last_name','email'),
+        label="Instructor",
+        widget=forms.Select(attrs={
+            "class": "w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+        })
+    )
+    lessons = forms.ModelMultipleChoiceField(
+        queryset=Product.objects.all().order_by('name'),
+        required=False,
+        label="Lessons",
+        widget=forms.SelectMultiple(attrs={
+            "class": "w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 min-h-[240px]"
+        })
+    )
+
+
+@staff_member_required
+def instructor_assignments(request):
+    """Front-end tool to assign an instructor to many lessons for a selected term."""
+    form = LessonAssignmentForm(request.POST or None)
+
+    if request.method == "POST" and form.is_valid():
+        term = form.cleaned_data['term']
+        instructor = form.cleaned_data['instructor']
+        lessons = form.cleaned_data['lessons']
+        assignment, _ = LessonAssignment.objects.get_or_create(term=term, instructor=instructor)
+        assignment.lessons.set(lessons)
+        messages.success(request, "Instructor assignments updated.")
+
+    # Pre-fill lessons if both term & instructor are selected
+    if form.is_valid():
+        term = form.cleaned_data.get('term')
+        instructor = form.cleaned_data.get('instructor')
+        if term and instructor:
+            try:
+                existing = LessonAssignment.objects.get(term=term, instructor=instructor)
+                form.fields['lessons'].initial = list(existing.lessons.values_list('id', flat=True))
+            except LessonAssignment.DoesNotExist:
+                pass
+
+    # Load existing assignments for display
+    assignments = (
+        LessonAssignment.objects
+        .select_related('term', 'instructor')
+        .prefetch_related('lessons')
+        .order_by('-term__start_date', 'instructor__first_name', 'instructor__last_name')
+    )
+
+    return render(request, "instructor_assignments.html", {
+        "form": form,
+        "assignments": assignments,
+    })

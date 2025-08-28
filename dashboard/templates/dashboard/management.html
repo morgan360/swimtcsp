@@ -1,7 +1,7 @@
 {% extends "dashboard/base_dashboard.html" %}
 {% load static %}
 
-{% block title %}System Management - TCSP Admin{% endblock %}
+{% block title %}Management - TCSP Admin{% endblock %}
 
 {% block content %}
 <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
@@ -10,75 +10,27 @@
     <div class="flex items-center justify-between">
       <div>
         <h1 class="text-3xl font-bold text-white flex items-center">
-          <i class="fas fa-tools mr-3"></i>System Management
+          <i class="fa-solid fa-house-lock mr-3"></i>Management Panel
         </h1>
-        <p class="text-orange-100 mt-2">Manage system settings, maintenance, and configuration</p>
-      </div>
-      <div class="text-orange-100">
-        <i class="fas fa-server text-4xl"></i>
+        <p class="text-orange-100 mt-2">Manage operations</p>
       </div>
     </div>
   </div>
 
-  <!-- System Status -->
-  <div class="p-6 border-b border-gray-200">
-    <h2 class="text-xl font-semibold text-gray-900 mb-4">System Status</h2>
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-      <div class="bg-green-50 border border-green-200 rounded-lg p-4">
-        <div class="flex items-center">
-          <div class="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
-          <span class="text-sm font-medium text-green-800">Database: Online</span>
-        </div>
-      </div>
-      <div class="bg-green-50 border border-green-200 rounded-lg p-4">
-        <div class="flex items-center">
-          <div class="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
-          <span class="text-sm font-medium text-green-800">Email: Active</span>
-        </div>
-      </div>
-      <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-        <div class="flex items-center">
-          <div class="w-3 h-3 bg-yellow-500 rounded-full mr-2"></div>
-          <span class="text-sm font-medium text-yellow-800">Cache: Warning</span>
-        </div>
-      </div>
-      <div class="bg-green-50 border border-green-200 rounded-lg p-4">
-        <div class="flex items-center">
-          <div class="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
-          <span class="text-sm font-medium text-green-800">Storage: OK</span>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Management Tools -->
+  <!-- Management Options -->
   <div class="p-6">
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       
-      <!-- Site Settings -->
+      <!-- Refunds -->
       <div class="bg-gray-50 rounded-lg p-6 hover:shadow-md transition-shadow">
         <div class="text-center">
           <div class="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
-            <i class="fas fa-cog text-white text-xl"></i>
+            <i class="fa-solid fa-money-bill-transfer text-xl text-white"></i>
           </div>
-          <h3 class="text-lg font-semibold text-gray-900 mb-2">Site Settings</h3>
-          <p class="text-gray-600 text-sm mb-4">Configure general site settings and preferences</p>
+          <h3 class="text-lg font-semibold text-gray-900 mb-2">Refunds</h3>
+          <p class="text-gray-600 text-sm mb-4">Issue a refund</p>
           <a href="#" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-            <i class="fas fa-sliders-h mr-2"></i>Settings
-          </a>
-        </div>
-      </div>
-
-      <!-- Database Management -->
-      <div class="bg-gray-50 rounded-lg p-6 hover:shadow-md transition-shadow">
-        <div class="text-center">
-          <div class="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
-            <i class="fas fa-database text-white text-xl"></i>
-          </div>
-          <h3 class="text-lg font-semibold text-gray-900 mb-2">Database</h3>
-          <p class="text-gray-600 text-sm mb-4">Backup, restore, and maintain database</p>
-          <a href="#" class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
-            <i class="fas fa-database mr-2"></i>Manage DB
+            <i class="fas fa-tools mr-2"></i> Under construction
           </a>
         </div>
       </div>
@@ -87,12 +39,12 @@
       <div class="bg-gray-50 rounded-lg p-6 hover:shadow-md transition-shadow">
         <div class="text-center">
           <div class="w-16 h-16 bg-purple-500 rounded-full flex items-center justify-center mx-auto mb-4">
-            <i class="fas fa-envelope text-white text-xl"></i>
+            <i class="fa-brands fa-mailchimp text-white text-3xl"></i>
           </div>
-          <h3 class="text-lg font-semibold text-gray-900 mb-2">Email Templates</h3>
-          <p class="text-gray-600 text-sm mb-4">Manage email templates and settings</p>
+          <h3 class="text-lg font-semibold text-gray-900 mb-2">MailChimp</h3>
+          <p class="text-gray-600 text-sm mb-4"> Control MailChimp settings and templates</p>
           <a href="#" class="inline-flex items-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors">
-            <i class="fas fa-edit mr-2"></i>Templates
+            <i class="fas fa-tools mr-2"></i> Under construction
           </a>
         </div>
       </div>
@@ -106,35 +58,21 @@
           <h3 class="text-lg font-semibold text-gray-900 mb-2">Booking Phases</h3>
           <p class="text-gray-600 text-sm mb-4">Configure booking periods and terms</p>
           <a href="#" class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
-            <i class="fas fa-calendar mr-2"></i>Phases
+            <i class="fas fa-tools mr-2"></i> Under construction
           </a>
         </div>
       </div>
 
-      <!-- System Logs -->
-      <div class="bg-gray-50 rounded-lg p-6 hover:shadow-md transition-shadow">
-        <div class="text-center">
-          <div class="w-16 h-16 bg-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
-            <i class="fas fa-file-alt text-white text-xl"></i>
-          </div>
-          <h3 class="text-lg font-semibold text-gray-900 mb-2">System Logs</h3>
-          <p class="text-gray-600 text-sm mb-4">View error logs and system diagnostics</p>
-          <a href="#" class="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
-            <i class="fas fa-clipboard-list mr-2"></i>View Logs
-          </a>
-        </div>
-      </div>
-
-      <!-- Maintenance Mode -->
+      <!-- Reports -->
       <div class="bg-gray-50 rounded-lg p-6 hover:shadow-md transition-shadow">
         <div class="text-center">
           <div class="w-16 h-16 bg-yellow-500 rounded-full flex items-center justify-center mx-auto mb-4">
-            <i class="fas fa-wrench text-white text-xl"></i>
+            <i class="fas fa-chart-line text-white text-xl"></i>
           </div>
-          <h3 class="text-lg font-semibold text-gray-900 mb-2">Maintenance</h3>
-          <p class="text-gray-600 text-sm mb-4">Enable maintenance mode and system updates</p>
+          <h3 class="text-lg font-semibold text-gray-900 mb-2">Reports</h3>
+          <p class="text-gray-600 text-sm mb-4">View performance and usage reports</p>
           <a href="#" class="inline-flex items-center px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors">
-            <i class="fas fa-tools mr-2"></i>Maintenance
+            <i class="fas fa-tools mr-2"></i> Under construction
           </a>
         </div>
       </div>

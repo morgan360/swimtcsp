@@ -1,0 +1,46 @@
+{% extends "dashboard/base_dashboard.html" %}
+
+{% block content %}
+<div class="mb-6 flex justify-end max-w-4xl mx-auto">
+    <a href="/admin/coupons/coupon/add/"
+        class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-900 to-blue-600 hover:from-blue-600 hover:to-blue-600 text-white rounded-lg transition-colors text-sm sm:text-base">
+        <i class="fas fa-plus mr-2"></i>Create New Coupon
+    </a>
+</div>
+<div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden max-w-4xl mx-auto my-10">
+    <div class="bg-gradient-to-r from-green-500 to-green-600 px-4 sm:px-6 py-4 sm:py-6">
+        <h2 class="text-2xl sm:text-3xl font-bold text-white flex items-center">
+            <i class="fas fa-tags mr-2 sm:mr-3"></i>Available Coupons
+        </h2>
+        <p class="text-green-100 mt-2 text-sm sm:text-base">Browse all currently active coupons</p>
+    </div>
+    <div class="p-6">
+        {% if coupons %}
+        <ul class="space-y-4">
+            {% for coupon in coupons %}
+            <li class="bg-white shadow rounded-lg p-6 hover:shadow-md transition">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <p class="text-xl font-semibold text-green-700">Code: {{ coupon.code }}</p>
+                        <p class="text-gray-600">
+                            <span class="font-semibold">Discount:</span> 
+                            {{ coupon.discount_value }}
+                            {% if coupon.discount_type == "fixed" %}€ Off{% else %}% Off{% endif %}
+                        </p>
+                        <p class="text-sm text-gray-500">
+                            <span class="font-semibold">Valid:</span> {{ coupon.valid_from|date:"M d, Y" }} – {{ coupon.valid_to|date:"M d, Y" }}
+                        </p>
+                    </div>
+                        <a href="/couponsadmin/coupons/coupon/{{ coupon.id }}/change/" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+                        View Details
+                    </a>
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p class="text-gray-600">No coupons available at the moment.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -227,19 +227,32 @@ class CustomUserCreationForm(UserCreationForm):
     is_active = forms.BooleanField(required=False, initial=True)
     is_staff = forms.BooleanField(required=False)
     is_superuser = forms.BooleanField(required=False)
+    # Allow staff to tag basic roles
+    is_guardian = forms.BooleanField(required=False)
+    is_school = forms.BooleanField(required=False)
 
     class Meta:
         model = User
-        fields = ('username', 'first_name', 'last_name', 'email', 'password1', 'password2', 'is_active', 'is_staff', 'is_superuser')
+        fields = (
+            'username', 'first_name', 'last_name', 'email',
+            'password1', 'password2',
+            'is_active', 'is_staff', 'is_superuser',
+        )
 
 
 @login_required
 @user_passes_test(is_staff)
 def add_user(request):
     """Add new user page"""
+    # Managers can assign groups (but not staff/superuser flags)
+    can_assign_groups = request.user.is_superuser or request.user.groups.filter(name__iexact='Manager').exists()
+
     if request.method == 'POST':
         form = CustomUserCreationForm(request.POST)
         groups = request.POST.getlist('groups')
+        # Basic role flags any staff can set
+        wants_guardian = bool(request.POST.get('is_guardian'))
+        wants_school = bool(request.POST.get('is_school'))
         
         if form.is_valid():
             user = form.save()
@@ -250,32 +263,40 @@ def add_user(request):
                 user.is_superuser = False
                 user.save()
             
-            # Assign groups
-            if request.user.is_superuser and groups:
-                # Superuser can assign specific groups
+            # Assign groups selected from list (Managers/Superusers)
+            if can_assign_groups and groups:
+                # Superuser/Manager can assign specific groups
                 for group_id in groups:
                     try:
                         group = Group.objects.get(id=group_id)
                         user.groups.add(group)
                     except Group.DoesNotExist:
                         pass
-            else:
-                # All new users get 'customer' group by default
-                try:
-                    customer_group = Group.objects.get(name='customer')
-                    user.groups.add(customer_group)
-                except Group.DoesNotExist:
-                    # Create customer group if it doesn't exist
-                    customer_group = Group.objects.create(name='customer')
-                    user.groups.add(customer_group)
+
+            # All new users get 'customer' group by default
+            try:
+                customer_group = Group.objects.get(name='customer')
+                user.groups.add(customer_group)
+            except Group.DoesNotExist:
+                # Create customer group if it doesn't exist
+                customer_group = Group.objects.create(name='customer')
+                user.groups.add(customer_group)
+
+            # Apply basic role flags set by any staff
+            if wants_guardian:
+                guardian_group, _ = Group.objects.get_or_create(name='Guardian')
+                user.groups.add(guardian_group)
+            if wants_school:
+                schools_group, _ = Group.objects.get_or_create(name='Schools')
+                user.groups.add(schools_group)
             
             messages.success(request, f'User "{user.username}" has been created successfully and assigned to customer group.')
             return redirect('dashboard:user_list')
     else:
         form = CustomUserCreationForm()
     
-    # Get all groups for selection (only for superusers)
-    all_groups = Group.objects.all().order_by('name') if request.user.is_superuser else None
+    # Get all groups for selection (for superusers and Managers)
+    all_groups = Group.objects.all().order_by('name') if can_assign_groups else None
     
     context = {
         'form': form,

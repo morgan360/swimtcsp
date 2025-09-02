@@ -8,7 +8,7 @@ from lessons.models import Program, Product
 from lessons_bookings.models import LessonEnrollment
 from instructors.models import InstructorAssignment
 from django.contrib.auth import get_user_model
-from datetime import timedelta
+from datetime import timedelta, time as dt_time
 from django.contrib.auth.models import Group, Permission
 from django.contrib.auth.forms import UserCreationForm
 from django import forms
@@ -88,6 +88,30 @@ def admin_lessons_list(request):
     programs = Program.objects.all()
     active_lessons = Product.objects.filter(active=True)
 
+    # Filters from query params
+    selected_level = request.GET.get('level') or ''
+    selected_day = request.GET.get('day') or ''
+    selected_time = request.GET.get('time') or ''
+    selected_availability = request.GET.get('availability') or ''  # '', 'available', 'full'
+
+    if selected_level:
+        try:
+            active_lessons = active_lessons.filter(category_id=int(selected_level))
+        except (TypeError, ValueError):
+            pass
+    if selected_day != '':
+        try:
+            active_lessons = active_lessons.filter(day_of_week=int(selected_day))
+        except (TypeError, ValueError):
+            pass
+    if selected_time:
+        try:
+            # Expecting HH:MM
+            h, m = selected_time.split(':')
+            active_lessons = active_lessons.filter(start_time=dt_time(hour=int(h), minute=int(m)))
+        except Exception:
+            pass
+
     lessons_info = [
         {
             'lesson': lesson,
@@ -98,17 +122,42 @@ def admin_lessons_list(request):
         for lesson in active_lessons
     ]
 
+    # Availability filter applied after computing remaining spaces
+    if selected_availability == 'available':
+        lessons_info = [li for li in lessons_info if not li['is_full']]
+    elif selected_availability == 'full':
+        lessons_info = [li for li in lessons_info if li['is_full']]
+
     paginator = Paginator(lessons_info, 8)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
-    return render(request, 'dashboard/admin_lessons_list.html', {
+    # Distinct times from current filtered queryset (format HH:MM)
+    times = sorted({lesson.start_time.strftime('%H:%M') for lesson in active_lessons if lesson.start_time})
+
+    # Distinct categories for level selector
+    from lessons.models import Category
+    categories = Category.objects.all().order_by('name')
+
+    context = {
         'page_obj': page_obj,
         'programs': programs,
         'days': day_choices,
+        'categories': categories,
+        'times': times,
+        'selected_level': selected_level,
+        'selected_day': selected_day,
+        'selected_time': selected_time,
+        'selected_availability': selected_availability,
         'current_term': term,
         **get_term_info(request),
-    })
+    }
+
+    # If HTMX request, return only the list content partial
+    if request.headers.get('HX-Request'):
+        return render(request, 'dashboard/_admin_lessons_list_content.html', context)
+
+    return render(request, 'dashboard/admin_lessons_list.html', context)
 
 
 @login_required
@@ -558,39 +607,7 @@ def public_swims(request):
 def lessons(request):
     return render(request, 'dashboard/lessons.html')
 
-@login_required
-@user_passes_test(is_staff)
-def admin_lessons_list(request):
-
-    term_data = get_term_context_data()
-    phase = term_data['current_phase_id']
-    term = term_data['next_term'] if phase == 'RB' else term_data['current_term']
-    print(f"🗓️ Showing lessons for term {term.id} ({'next' if phase == 'RB' else 'current'})")
-    day_choices = Product.DAY_CHOICES
-    programs = Program.objects.all()
-    active_lessons = Product.objects.filter(active=True)
-
-    lessons_info = [
-        {
-            'lesson': lesson,
-            'num_places': lesson.num_places,
-            'remaining_spaces': lesson.remaining_spaces(term),
-            'is_full': lesson.is_full(term)
-        }
-        for lesson in active_lessons
-    ]
-
-    paginator = Paginator(lessons_info, 8)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
-
-    return render(request, 'dashboard/admin_lessons_list.html', {
-        'page_obj': page_obj,
-        'programs': programs,
-        'days': day_choices,
-        'current_term': term,
-        **get_term_info(request),
-    })
+# (duplicate admin_lessons_list removed)
 
 
 @login_required

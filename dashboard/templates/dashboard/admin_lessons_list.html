@@ -26,88 +26,60 @@
                 </p>
             </div>
 
-            <!-- Placeholder for Lessons Table or List -->
-            <div class="mt-8">
-                <table class="min-w-full">
-                    <thead class="bg-green-100 rounded-xl">
-                        <tr>
-                            <th
-                                class="px-6 py-3 text-left text-xs font-semibold text-green-700 uppercase tracking-wider">
-                                Lesson Details</th>
-                            <th
-                                class="px-6 py-3 text-center text-xs font-semibold text-green-700 uppercase tracking-wider">
-                                Capacity</th>
-                            <th
-                                class="px-6 py-3 text-center text-xs font-semibold text-green-700 uppercase tracking-wider">
-                                Availability</th>
-                            <th
-                                class="px-6 py-3 text-center text-xs font-semibold text-green-700 uppercase tracking-wider">
-                                Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-200 bg-white">
-                        {% for lesson_info in page_obj %}
-                        <tr class="hover:bg-gray-50 transition-colors">
-                            <td class="px-6 py-4">
-                                <div class="flex items-center">
-                                    <div
-                                        class="w-10 h-10 bg-gradient-to-r from-green-400 to-cyan-400 rounded-full flex items-center justify-center mr-3">
-                                        <i class="fas fa-swimmer text-white"></i>
-                                    </div>
-                                    <span class="font-medium text-gray-900">{{ lesson_info.lesson.name }}</span>
-                                </div>
-                            </td>
-                            <td class="px-6 py-4 text-center">
-                                <span
-                                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                    {{ lesson_info.num_places }} places
-                                </span>
-                            </td>
-                            <td class="px-6 py-4 text-center">
-                                {% if lesson_info.is_full %}
-                                <span
-                                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                    <i class="fas fa-times-circle mr-1"></i>Full
-                                </span>
-                                {% elif lesson_info.remaining_spaces <= 3 %} <span
-                                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                                    <i class="fas fa-exclamation-triangle mr-1"></i>{{ lesson_info.remaining_spaces }}
-                                    left
-                                    </span>
-                                    {% else %}
-                                    <span
-                                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                        <i class="fas fa-check-circle mr-1"></i>{{ lesson_info.remaining_spaces }}
-                                        available
-                                    </span>
-                                    {% endif %}
-                            </td>
-                            <!-- ACTIONS -->
-                            <td class="px-6 py-4 text-center flex-col">
-                                <a href="#"
-                                    class="mt-1 flex w-fit items-center px-4 py-2 bg-gradient from-cyan-600 to-cyan-400 text-sm font-medium rounded-lg hover:bg-cyan-700 transition-colors">
-                                    <i class="fas fa-plus mr-2"></i>Add Swimling
-                                </a>
-                               <a href="{% url 'dashboard:lessons_history' lesson_info.lesson.id %}"
-                                  class="mt-1 flex w-fit items-center px-4 py-2 bg-orange-600 text-white text-sm font-medium rounded-lg hover:bg-orange-700 transition-colors">
-                                    <i class="fa-solid fa-clock-rotate-left mr-2"></i>View Class History
-                                </a>
-                            </td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="5" class="px-6 py-12 text-center">
-                                <div
-                                    class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                    <i class="fas fa-swimming-pool text-gray-400 text-2xl"></i>
-                                </div>
-                                <h3 class="text-lg font-medium text-gray-900 mb-2">No Lessons Available</h3>
-                                <p class="text-gray-500">Check back later for new lesson schedules</p>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+            <!-- Filters (HTMX-enabled to reload list only) -->
+            <form method="GET"
+                  hx-get="{% url 'dashboard:admin_lessons_list' %}"
+                  hx-trigger="submit"
+                  hx-target="#lessons-list"
+                  hx-swap="innerHTML"
+                  hx-push-url="true"
+                  class="mb-6 text-left">
+              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+                <!-- Level (Category) -->
+                <select name="level" class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm">
+                  <option value="">All Levels</option>
+                  {% for c in categories %}
+                  <option value="{{ c.id }}" {% if selected_level|default:'' == c.id|stringformat:'s' %}selected{% endif %}>{{ c.name }}</option>
+                  {% endfor %}
+                </select>
+
+                <!-- Day -->
+                <select name="day" class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm">
+                  <option value="">All Days</option>
+                  {% for v,label in days %}
+                  <option value="{{ v }}" {% if selected_day|default:'' == v|stringformat:'s' %}selected{% endif %}>{{ label }}</option>
+                  {% endfor %}
+                </select>
+
+                <!-- Time -->
+                <select name="time" class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm">
+                  <option value="">All Times</option>
+                  {% for t in times %}
+                  <option value="{{ t }}" {% if selected_time|default:'' == t %}selected{% endif %}>{{ t }}</option>
+                  {% endfor %}
+                </select>
+
+                <!-- Availability -->
+                <select name="availability" class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm">
+                  <option value="" {% if not selected_availability %}selected{% endif %}>All Availability</option>
+                  <option value="available" {% if selected_availability == 'available' %}selected{% endif %}>Available</option>
+                  <option value="full" {% if selected_availability == 'full' %}selected{% endif %}>Full</option>
+                </select>
+
+                <div class="flex space-x-2">
+                  <button type="submit" class="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm">
+                    <i class="fas fa-filter mr-1"></i>Filter
+                  </button>
+                  <a href="{% url 'dashboard:admin_lessons_list' %}" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 text-sm">
+                    <i class="fas fa-times"></i>
+                  </a>
+                </div>
+              </div>
+            </form>
+
+            <!-- Responsive Lessons List -->
+            <div id="lessons-list" hx-boost="true" hx-target="#lessons-list" class="mt-8">
+                {% include "dashboard/_admin_lessons_list_content.html" %}
             </div>
         </div>
     </div>

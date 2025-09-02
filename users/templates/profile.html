@@ -40,12 +40,6 @@
                     class="inline-flex items-center px-5 py-3 bg-yellow-600 text-white rounded-lg hover:bg-yellow-500 font-semibold">
                     <i class="fas fa-school mr-2"></i>Join Schools
                 </a>
-                {% else %}
-                <!-- User already has school access - show school dashboard link instead -->
-                <a href="{% url 'swimling_dashboard:guardian_dashboard' %}"
-                    class="inline-flex items-center px-5 py-3 bg-purple-700 text-white rounded-lg hover:bg-purple-600 font-semibold">
-                    <i class="fas fa-graduation-cap mr-2"></i>School Dashboard
-                </a>
                 {% endif %}
             {% else %}
                 <!-- User is not a guardian, show become guardian button -->

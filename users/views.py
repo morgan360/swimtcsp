@@ -25,13 +25,11 @@ user = get_user_model()
 @login_required
 @transaction.atomic
 def update_profile(request):
-    # Check if user was redirected here for guardian access
     guardian_required = request.GET.get('guardian_required') == 'true'
     from_url = request.GET.get('from', '')
-    
-    # Check if user is already a guardian
     is_guardian = request.user.groups.filter(name__in=['guardian', 'Guardian']).exists()
-    
+    user_in_school_group = request.user.groups.filter(name__in=['school', 'Schools']).exists()
+
     if request.method == "POST":
         user_form = UserForm(request.POST, instance=request.user)
         if user_form.is_valid():
@@ -46,6 +44,7 @@ def update_profile(request):
         "guardian_required": guardian_required,
         "from_url": from_url,
         "is_guardian": is_guardian,
+        "user_in_school_group": user_in_school_group,
     })
 
 
@@ -81,7 +80,7 @@ def become_guardian_view(request):
             elif from_url:
                 return redirect(from_url)
             else:
-                return redirect('swimling_dashboard:guardian_dashboard')  # Default to dashboard
+                return redirect('swimling_dashboard:guardian_dashboard')
     else:
         form = GuardianOptInForm()
 
@@ -95,8 +94,8 @@ def become_guardian_view(request):
 @login_required
 def join_schools_program(request):
     # Check if user already has school access
-    user_in_school_group = request.user.groups.filter(name='school').exists()
-    
+    user_in_school_group = request.user.groups.filter(name__in=['school', 'Schools']).exists()
+
     if user_in_school_group:
         messages.info(request, "You already have access to the School Swimming Program!")
         return redirect('swimling_dashboard:guardian_dashboard')
@@ -104,7 +103,7 @@ def join_schools_program(request):
     if request.method == 'POST':
         form = JoinSchoolsForm(request.POST)
         if form.is_valid():
-            school_group, _ = Group.objects.get_or_create(name='school')
+            school_group, _ = Group.objects.get_or_create(name='Schools')
             request.user.groups.add(school_group)
             messages.success(request, "Welcome to the School Swimming Program!")
             return redirect('swimling_dashboard:guardian_dashboard')

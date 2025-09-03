@@ -222,10 +222,12 @@
                         d.term_filter = $('#termFilter').val();
                     },
                     dataSrc: function (json) {
-                        $('#totalPrograms').text(json.summary.total_programs || 0);
-                        $('#totalEnrollments').text(json.summary.total_enrollments || 0);
-                        $('#totalCapacity').text(json.summary.total_capacity || 0);
-                        $('#overallUtilization').text((json.summary.overall_utilization || 0) + '%');
+                        const sel = $('#termFilter').val() || 'current';
+                        const sum = (json.summary && json.summary[sel]) ? json.summary[sel] : {};
+                        $('#totalPrograms').text(sum.total_programs ?? 0);
+                        $('#totalEnrollments').text(sum.total_enrollments ?? 0);
+                        $('#totalCapacity').text(sum.total_capacity ?? 0);
+                        $('#overallUtilization').text(((sum.utilization ?? 0)) + '%');
                         
                         // Store data for mobile/tablet views
                         enrollmentData = json.data;

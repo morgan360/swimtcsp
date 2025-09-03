@@ -1,8 +1,12 @@
 {% extends "dashboard/base_dashboard.html" %}
+{% load group_filters %}
 
 {% load static %}
 
 {% block content %}
+
+{% if user|in_group:'Desk' or user.is_staff %}
+
 <div class="max-w-7xl mx-auto">
   <div class="bg-yellow-300 rounded-xl shadow-lg overflow-hidden mb-8 flex justify-center">
     <p class="text-gray-600 text-lg m-6">
@@ -119,8 +123,8 @@
       </div>
     </a> -->
 
-    <!-- Management Card - Superuser Only -->
-    {% if user.is_superuser %}
+    <!-- Management Card - Manager Only -->
+    {% if user|in_group:'Manager' %}
     <a href="{% url 'dashboard:management' %}"
       class="group bg-white rounded-lg shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
       <div class="p-6">
@@ -137,19 +141,24 @@
     {% endif %}
 
     <!-- Coupons Card -->
-    <a href="{% url 'coupons:coupon_list' %}"
-      class="group bg-white rounded-lg shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
-      <div class="p-6">
-        <div class="flex items-center justify-between mb-4">
-          <div class="bg-green-700 p-3 rounded-lg">
-            <i class="fa-solid fa-receipt text-2xl text-green-200 px-1.5"></i>
+    {% if user|in_group:'Coupons' %}
+      <a href="{% url 'coupons:coupon_list' %}"
+        class="group bg-white rounded-lg shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+        <div class="p-6">
+          <div class="flex items-center justify-between mb-4">
+            <div class="bg-green-700 p-3 rounded-lg">
+              <i class="fa-solid fa-receipt text-2xl text-green-200 px-1.5"></i>
+            </div>
+            <i class="fas fa-arrow-right text-green-700 group-hover:text-green-400 transition-colors duration-300"></i>
           </div>
-          <i class="fas fa-arrow-right text-green-700 group-hover:text-green-400 transition-colors duration-300"></i>
+          <h3 class="text-lg font-semibold text-gray-900 mb-2">Coupons</h3>
+          <p class="text-gray-600 text-sm">Create Coupons</p>
         </div>
-        <h3 class="text-lg font-semibold text-gray-900 mb-2">Coupons</h3>
-        <p class="text-gray-600 text-sm">Create Coupons</p>
-      </div>
-    </a>
+      </a>
+    {% endif %}
   </div>
 </div>
+
+{% endif %}
 {% endblock %}
+

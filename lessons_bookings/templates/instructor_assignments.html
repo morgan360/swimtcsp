@@ -1,4 +1,7 @@
+<!-- Visible to all staff, but only Managers and Full Timers can adjust -->
+
 {% extends "dashboard/base_dashboard.html" %}
+{% load group_filters %}
 {% load static %}
 
 {% block content %}
@@ -11,18 +14,24 @@
           <i class="fas fa-user-tie mr-2 sm:mr-3"></i> Instructor Assignments
         </h1>
         <p class="text-green-100 mt-2 text-sm sm:text-base">Assign instructors to lessons for a selected term</p>
+        <p class="text-green-100 mt-2 text-sm sm:text-base italic">
+          <i class="fas fa-info-circle mr-1"></i>
+          Only Managers and Full Timers can assign classes to instructors.</p>
       </div>
       <div class="flex gap-2">
         <a href="{% url 'dashboard:dashboard_lessons' %}" class="inline-flex items-center justify-center px-4 py-2 bg-white/20 text-white rounded-lg hover:bg-white/30 transition-colors text-sm sm:text-base">
           <i class="fas fa-arrow-left mr-2"></i>Back to Lessons
         </a>
+        {% if user|is_manager_user or user|is_fulltimer_user or user.is_superuser %}
         <a href="/lessonsadmin/lessons_bookings/lessonassignment/" target="_blank" class="inline-flex items-center justify-center px-4 py-2 bg-white/20 text-white rounded-lg hover:bg-white/30 transition-colors text-sm sm:text-base">
           <i class="fas fa-external-link-alt mr-2"></i>Open in Admin
         </a>
+        {% endif %}
       </div>
     </div>
   </div>
 
+  {% if user|is_manager_user or user|is_fulltimer_user or user.is_superuser %}
   <!-- Form -->
   <div class="p-6">
     <form method="post" class="space-y-6">
@@ -46,12 +55,14 @@
         <a href="#" class="px-4 py-2 rounded-lg bg-gray-200 text-gray-800 hover:bg-gray-300">Cancel</a>
         <button type="submit" class="px-4 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700">Save Assignments</button>
       </div>
+
     </form>
   </div>
+  {% endif %}
 
   <!-- Existing assignments -->
-  <div class="px-6 pb-6">
-    <h2 class="text-xl font-semibold text-gray-900 mb-4">Current Assignments</h2>
+  <div class="px-6 pb-6 mt-10">
+    <h2 class="text-xl font-semibold text-green-800 mb-4">Current Assignments</h2>
     {% if assignments %}
       <div class="overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200">

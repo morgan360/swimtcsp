@@ -1,4 +1,5 @@
 {% extends "dashboard/base_dashboard.html" %}
+{% load group_filters %}
 {% load static %}
 
 {% block title %}Add New User - TCSP Admin{% endblock %}
@@ -154,11 +155,30 @@
                      {% if form.is_active.value %}checked{% endif %}
                      class="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded">
               <label for="{{ form.is_active.id_for_label }}" class="ml-2 block text-sm text-gray-700">
-                Account Active
+                Account Active (always check)
               </label>
             </div>
 
-            {% if user.is_superuser %}
+            <!-- Basic roles any staff can set -->
+            <div class="flex items-center">
+              <input type="checkbox" name="is_guardian" id="id_is_guardian"
+                     {% if form.is_bound and form.is_guardian.value %}checked{% endif %}
+                     class="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded">
+              <label for="id_is_guardian" class="ml-2 block text-sm text-gray-700">
+                Guardian (can sign up for lessons)
+              </label>
+            </div>
+
+            <div class="flex items-center">
+              <input type="checkbox" name="is_school" id="id_is_school"
+                     {% if form.is_bound and form.is_school.value %}checked{% endif %}
+                     class="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded">
+              <label for="id_is_school" class="ml-2 block text-sm text-gray-700">
+                Schools (registered for school classes, must also be a guardian)
+              </label>
+            </div>
+
+            {% if user.is_superuser or user|is_manager_user %}
             <div class="flex items-center">
               <input type="checkbox" name="{{ form.is_staff.name }}" id="{{ form.is_staff.id_for_label }}"
                      {% if form.is_staff.value %}checked{% endif %}
@@ -180,7 +200,7 @@
             <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
               <p class="text-sm text-yellow-800">
                 <i class="fas fa-info-circle mr-1"></i>
-                Only superusers can assign staff and superuser privileges
+                To assign additional roles, please contact a manager.
               </p>
             </div>
             {% endif %}
@@ -188,8 +208,8 @@
         </div>
       </div>
 
-      <!-- Groups Selection (Only for superusers and staff) -->
-        {% if user.is_superuser or user.is_staff %}
+      <!-- Groups Selection (Only for superusers and Managers) -->
+        {% if user.is_superuser or user|is_manager_user %}
         <div class="border-t border-gray-200 pt-6">
         <h3 class="text-lg font-semibold text-gray-900 mb-4">
             <i class="fas fa-users mr-2 text-green-500"></i>User Groups

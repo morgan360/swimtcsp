@@ -8,3 +8,15 @@ class SwimlingForm(forms.ModelForm):
         widgets = {
             'dob': forms.DateInput(attrs={'type': 'date'}),
         }
+
+class SwimlingForm(forms.ModelForm):
+    class Meta:
+        model = Swimling
+        fields = ['first_name', 'last_name', 'dob', 'sco_role_num', 'notes']
+        widgets = {
+            'dob': forms.DateInput(attrs={'type': 'date'}),
+            'notes': forms.Textarea(attrs={
+                'rows': 3,
+                'placeholder': 'Add any relevant swimling information here...',
+            }),
+        }

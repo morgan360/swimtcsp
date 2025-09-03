@@ -8,42 +8,58 @@ def in_group(user, group_name):
     return user.groups.filter(name__iexact=group_name).exists()
 
 # High-level role filters
-@register.filter(name='is_school_user')
-def is_school_user(user):
-    return user.groups.filter(name__in=['zion', 'bishopgalvin', 'bishop_galvin']).exists()
+@register.filter(name='is_customer_user')  # NEW: 'Customer'
+def is_customer_user(user):
+    return user.groups.filter(name__in=['customer', 'Customer']).exists()
 
-@register.filter(name='is_guardian_user')
+@register.filter(name='is_guardian_user') # NEW: 'Guardian'
 def is_guardian_user(user):
-    return user.groups.filter(name__iexact='guardian').exists()
+    return user.groups.filter(name__in=['guardian', 'Guardian']).exists()
 
-@register.filter(name='is_admin_user')
+@register.filter(name='is_school_user') # NEW: 'Schools'
+def is_school_user(user):
+    return user.groups.filter(name__in=['zion', 'bishopgalvin', 'bishop_galvin', 'Schools']).exists()
+
+@register.filter(name='is_fulltimer_user') # NEW
+def is_fulltimer_user(user):
+    return user.groups.filter(name__iexact='Full-timer').exists()
+
+@register.filter(name='is_desk_user') # NEW
+def is_desk_user(user):
+    return user.groups.filter(name__iexact='Desk').exists()
+
+@register.filter(name='is_coupons_user')
+def is_coupons_user(user):
+    return user.groups.filter(name__iexact='Coupons').exists()
+
+@register.filter(name='is_manager_user') # NEW
+def is_manager_user(user):
+    return user.groups.filter(name__iexact='Manager').exists()
+
+@register.filter(name='is_admin_user') # OLD: can be moved to 'Manager' - TBC
 def is_admin_user(user):
     return user.groups.filter(name__in=[
         'administrator', 'manager', 'pool_manager', 'pool_administrator',
-        'desk_duties', 'sh4_admin', 'shop_manager', 'editor'
+        'desk_duties', 'sh4_admin', 'shop_manager', 'editor',
     ]).exists()
 
-@register.filter(name='is_instructor_user')
+@register.filter(name='is_instructor_user') # NEW: 'Instructor'
 def is_instructor_user(user):
-    return user.groups.filter(name__in=['instructor', 'instructors']).exists()
+    return user.groups.filter(name__in=['instructor', 'instructors', 'Instructor']).exists()
 
 @register.simple_tag
 def user_role(user):
     if not user.is_authenticated:
         return 'public'
-    elif user.groups.filter(name__iexact='guardian').exists():
+    elif user.groups.filter(name__in=['guardian', 'Guardian']).exists():
         return 'guardian'
-    elif user.groups.filter(name__in=['zion', 'bishopgalvin', 'bishop_galvin']).exists():
+    elif user.groups.filter(name__in=['zion', 'bishopgalvin', 'bishop_galvin', 'Schools']).exists():
         return 'school'
-    elif user.groups.filter(name__in=['instructor', 'instructors']).exists():
+    elif user.groups.filter(name__in=['instructor', 'instructors', 'Instructor']).exists():
         return 'instructor'
     elif user.groups.filter(name__in=[
         'administrator', 'manager', 'pool_manager', 'pool_administrator',
-        'desk_duties', 'sh4_admin', 'shop_manager', 'editor'
+        'desk_duties', 'sh4_admin', 'shop_manager', 'editor', 'Manager'
     ]).exists():
         return 'admin'
     return 'public'
-# Add this new filter function
-@register.filter(name='is_customer_user')
-def is_customer_user(user):
-    return user.groups.filter(name__iexact='customer').exists()

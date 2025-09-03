@@ -1,4 +1,5 @@
 {% extends "dashboard/base_dashboard.html" %}
+{% load group_filters %}
 {% load static %}
 
 {% block title %}User List - TCSP Admin{% endblock %}
@@ -13,13 +14,15 @@
           <i class="fas fa-users mr-2 sm:mr-3"></i>User List
         </h1>
         <p class="text-blue-100 mt-2 text-sm sm:text-base">Browse, search and manage all user accounts</p>
-        <p class="text-blue-100 mt-2 italic text-sm"><i class="fas fa-info-circle text-blue-100 mr-1"></i>This search is for guardians and customers only. Swimlings will not appear here.</p>
+      
+        <p class="text-blue-100 mt-2 italic text-sm"><i class="fas fa-info-circle text-blue-100 mr-1"></i> Important: Please refresh this page after saving changes to any users.</p>
+
       </div>
       <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
         <a href="{% url 'dashboard:user_management' %}" class="inline-flex items-center justify-center px-4 py-2 bg-white/20 text-white rounded-lg hover:bg-white/30 transition-colors text-sm sm:text-base">
           <i class="fas fa-arrow-left mr-2"></i><span class="hidden sm:inline">Back to User Management</span><span class="sm:hidden">Back</span>
         </a>
-        <a href="/admin/users/user/add/" class="inline-flex items-center justify-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm sm:text-base">
+        <a href="/admin-dashboard/users/add/" class="inline-flex items-center justify-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm sm:text-base">
           <i class="fas fa-plus mr-2"></i>Add User
         </a>
       </div>
@@ -30,6 +33,7 @@
   <div class="p-4 sm:p-6 border-b border-gray-200">
     <form method="GET" class="space-y-4">
       <!-- Search Bar -->
+       <p class="text-blue-700 mt-2 text-sm"><i class="fas fa-info-circle mr-2"></i>This search is for guardians and customers only. Swimlings will not appear here.</p>
       <div>
         <input type="text" name="search" value="{{ request.GET.search }}" 
                placeholder="Search by name or email..."
@@ -160,10 +164,10 @@
           </td>
           <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
             <div class="flex flex-col gap-2 max-w-[120px] overflow-x-hidden">
-              {% if user.is_superuser %}
+              {% if user.is_superuser or user|is_manager_user %}
               <a href="/admin/users/user/{{ user_obj.id }}/" 
                 class="flex items-center px-3 py-1.5 bg-blue-100 text-blue-700 text-xs font-medium rounded-lg hover:bg-blue-200 transition-colors">
-                <i class="fas fa-eye mr-1"></i>View
+                <i class="fas fa-eye mr-1"></i>View & Edit
               </a>
 
               {% if 'guardian' in user_obj.groups.all|join:", " %}
@@ -173,15 +177,6 @@
               </button>
               {% endif %}
 
-              <button onclick="manageGroups({{ user_obj.id }}, '{{ user_obj.first_name }} {{ user_obj.last_name }}', {{ user_obj.groups.all|length }})"
-                      class="flex items-center px-3 py-1.5 bg-purple-100 text-purple-700 text-xs font-medium rounded-lg hover:bg-purple-200 transition-colors">
-                <i class="fas fa-users mr-1"></i>Groups
-              </button>
-
-              <button onclick="managePermissions({{ user_obj.id }}, '{{ user_obj.first_name }} {{ user_obj.last_name }}', {{ user_obj.user_permissions.all|length }})"
-                      class="flex items-center px-3 py-1.5 bg-indigo-100 text-indigo-700 text-xs font-medium rounded-lg hover:bg-indigo-200 transition-colors">
-                <i class="fas fa-key mr-1"></i>Permissions
-              </button>
               {% elif user.is_staff %}
               <button onclick="editUser({{ user_obj.id }})"
                       class="flex items-center px-3 py-1.5 bg-green-100 text-green-700 text-xs font-medium rounded-lg hover:bg-green-200 transition-colors">
@@ -190,15 +185,15 @@
               {% if 'guardian' in user_obj.groups.all|join:", " %}
               <button onclick="viewSwimlings({{ user_obj.id }})"
                       class="flex items-center px-3 py-1.5 bg-cyan-100 text-cyan-700 text-xs font-medium rounded-lg hover:bg-cyan-200 transition-colors">
-                <i class="fas fa-child mr-1"></i>Swimlings
+                <i class="fas fa-child mr-1"></i> View Swimlings
               </button>
               {% endif %}
               <button class="flex items-center px-3 py-1.5 bg-gray-100 text-gray-400 text-xs font-medium rounded-lg cursor-not-allowed"
-                      title="Superuser access required" disabled>
+                      title="Manager or superuser access required" disabled>
                 <i class="fas fa-users mr-1"></i>Groups
               </button>
               <button class="flex items-center px-3 py-1.5 bg-gray-100 text-gray-400 text-xs font-medium rounded-lg cursor-not-allowed"
-                      title="Superuser access required" disabled>
+                      title="Manager or superuser access required" disabled>
                 <i class="fas fa-key mr-1"></i>Permissions
               </button>
               {% else %}
@@ -213,11 +208,11 @@
               </button>
               {% endif %}
               <button class="flex items-center px-3 py-1.5 bg-gray-100 text-gray-400 text-xs font-medium rounded-lg cursor-not-allowed"
-                      title="Superuser access required" disabled>
+                      title="Manager or superuser access required" disabled>
                 <i class="fas fa-users mr-1"></i>Groups
               </button>
               <button class="flex items-center px-3 py-1.5 bg-gray-100 text-gray-400 text-xs font-medium rounded-lg cursor-not-allowed"
-                      title="Superuser access required" disabled>
+                      title="Manager or superuser access required" disabled>
                 <i class="fas fa-key mr-1"></i>Permissions
               </button>
               {% endif %}
@@ -316,10 +311,10 @@
 
       <!-- Actions -->
       <div class="flex flex-col gap-2">
-        {% if user.is_superuser %}
+        {% if user.is_superuser or user|is_manager_user %}
         <a href="/admin/users/user/{{ user_obj.id }}/" 
           class="flex w-fit items-center px-3 py-1.5 bg-blue-100 text-blue-700 text-xs font-medium rounded-lg hover:bg-blue-200 transition-colors">
-          <i class="fas fa-eye mr-1"></i>View
+          <i class="fas fa-eye mr-1"></i>View & Edit
         </a>
 
         {% if 'guardian' in user_obj.groups.all|join:", " %}

@@ -248,7 +248,7 @@ def add_swimling(request):
 @login_required
 def guardian_dashboard(request):
     # 🚫 Block non-guardians
-    if not request.user.groups.filter(name="guardian").exists():
+    if not request.user.groups.filter(name__in=["guardian", "Guardian"]).exists():
         messages.error(request, "You do not have permission to view this page.")
         return redirect("users/profile")
 

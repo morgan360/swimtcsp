@@ -1,6 +1,8 @@
 <!-- ADMIN DASHBOARD -->
 
 {% load static %}
+{% load group_filters %}
+
 <!doctype html>
 <html lang="en">
 
@@ -115,11 +117,13 @@
                   Management Panel
                 </a>
                 {% endif %}
+                {% if user|in_group:'Coupons' %}
                 <a href="{% url 'coupons:coupon_list' %}"
                   class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600">
                   <i class="fas fa-ticket-alt mr-2 text-green-600"></i>
                   Coupons Panel
                 </a>
+                {% endif %}
                 <!-- <a href="{% url 'dashboard:dashboard_general' %}"
                   class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600">
                   <i class="fas fa-cog mr-2 text-gray-500"></i>
@@ -167,11 +171,13 @@
                 Management Panel
               </a>
               {% endif %}
+              {% if user|in_group:'Coupons' %}
               <a href="{% url 'coupons:coupon_list' %}"
                 class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors duration-150 whitespace-nowrap">
                 <i class="fas fa-ticket-alt mr-1.5 text-green-600"></i>
                 Coupons Panel
               </a>
+              {% endif %}
               <!-- <a href="{% url 'dashboard:dashboard_general' %}"
                 class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors duration-150 whitespace-nowrap">
                 <i class="fas fa-cog mr-1.5 text-gray-500"></i>

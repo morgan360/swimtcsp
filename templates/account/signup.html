@@ -11,13 +11,20 @@
   <div class="max-w-7xl mx-auto flex justify-center">
     <div class="bg-white/40 backdrop-blur-md border border-white/20 rounded-xl shadow-md p-10 w-full max-w-xl">
 
-      <h2 class="text-3xl font-bold text-center text-white mb-6">{% trans "Sign Up" %}</h2>
+      <h2 class="text-3xl font-bold text-center text-white mb-6">
+        <i class="fa-solid fa-user-plus mr-2"></i>
+        {% trans "Sign Up" %}</h2>
 
       <div class="bg-white/50 p-6 rounded-lg shadow mb-4">
-        <p class="text-blue-900 text-lg mb-4">
+        <p class="text-blue-900 text-sm">
+          <i class="fa-solid fa-circle-info mr-1"></i>
             Use this form to book <strong>public swims</strong> and other pay-as-you-go sessions online.  
         </p>
-        <p class="text-blue-900 text-lg mb-4">
+      </div>
+
+      <div class="bg-white/50 p-6 rounded-lg shadow mb-4">
+        <p class="text-blue-900 text-sm">
+          <i class="fa-solid fa-circle-info mr-1"></i>
             Want to book swimming lessons too? Just tick <em>"I wish to sign up for swimming lessons."</em>
         </p>
       </div>
@@ -31,12 +38,55 @@
         {% for field in form %}
         <div class="mb-5">
           {% if field.field.widget.input_type == "checkbox" %}
-            <label for="{{ field.id_for_label }}"
-                   class="flex items-center gap-3 p-3 rounded-md border border-gray-300 bg-white/70 text-blue-900 font-medium cursor-pointer hover:ring-2 hover:ring-red-600/50 transition">
-              {{ field|add_class:"h-5 w-5 focus:ring-red-500 rounded border-gray-300" }}
-              <span>{{ field.label }}</span>
-            </label>
+            {% if field.name == "lessons" %}
+              <!-- Lessons opt-in checkbox -->
+              <label for="{{ field.id_for_label }}"
+                    class="flex items-center gap-3 p-3 rounded-md border border-gray-300 bg-white/70 text-blue-900 font-medium cursor-pointer hover:ring-2 hover:ring-red-600/50 transition">
+                {{ field|add_class:"h-5 w-5 focus:ring-red-500 rounded border-gray-300" }}
+                <span>{{ field.label }}</span>
+              </label>
+
+              <!-- Explainer accordion (dropdown) -->
+              <details class="mt-2 group">
+                <summary
+                  class="flex items-center justify-between gap-2 bg-white/70 hover:bg-white rounded-md px-3 py-2 text-blue-900 cursor-pointer border border-gray-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-600/50">
+                  <span class="italic">What happens if I tick this?</span>
+                  <span class="ml-auto inline-flex items-center text-blue-700 text-xs">
+                    <span class="mr-2">Show details</span>
+                    <i class="fa-solid fa-chevron-down transition-transform duration-200 group-open:rotate-180"></i>
+                  </span>
+                </summary>
+                <div class="px-3 pt-3 pb-2 text-sm text-blue-900 bg-white/60 rounded-b-md border border-t-0 border-gray-300">
+                  <div class="grid gap-3">
+                    <div>
+                      <p class="font-semibold mb-1">If you <em>tick</em> the box:</p>
+                      <ul class="list-disc ml-5 space-y-1">
+                        <li>You become a <strong>Guardian</strong> so you can view &amp; book lessons. This is needed to register for any <strong> term-based lessons</strong>.</li>
+                        <li>You’ll still be able to book <strong>public swims</strong> and pay-as-you-go sessions.</li>
+                        <li>Once you register, you can add <strong>swimlings</strong> to your account via the Swimling dashboard.</li>
+                      </ul>
+                    </div>
+                    <div>
+                      <p class="font-semibold mb-1">If you <em>don’t tick</em> the box:</p>
+                      <ul class="list-disc ml-5 space-y-1">
+                        <li>Your account is for <strong>public swims only</strong> to start with.</li>
+                        <li>You can opt into lessons later from your profile</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </details>
+            {% else %}
+              <!-- Any other checkbox field -->
+              <label for="{{ field.id_for_label }}"
+                    class="flex items-center gap-3 p-3 rounded-md border border-gray-300 bg-white/70 text-blue-900 font-medium cursor-pointer hover:ring-2 hover:ring-red-600/50 transition">
+                {{ field|add_class:"h-5 w-5 focus:ring-red-500 rounded border-gray-300" }}
+                <span>{{ field.label }}</span>
+              </label>
+            {% endif %}
+
           {% else %}
+            <!-- Standard inputs -->
             <label class="block text-blue-900 text-xl font-semibold mb-2" for="{{ field.id_for_label }}">
               {{ field.label }}
             </label>
@@ -59,18 +109,7 @@
             </div>
           {% endfor %}
         </div>
-        {% endfor %}
-
-        {% if redirect_field_value %}
-          <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}">
-        {% endif %}
-
-        <div class="mt-6">
-          <button type="submit"
-            class="w-full bg-gradient-to-r from-red-700 to-red-500 hover:from-red-800 hover:to-red-600 text-white text-lg py-3 px-4 rounded-lg font-semibold transition border border-white/60 disabled:opacity-50 disabled:cursor-not-allowed">
-            {% trans "Sign Up" %}
-          </button>
-        </div>
+      {% endfor %}
       </form>
 
       <div class="text-center text-white text-xl font-semibold my-6">or</div>

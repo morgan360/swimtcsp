@@ -9,12 +9,34 @@
                 <div class="bg-gradient-to-r from-blue-600 to-blue-700 p-4 rounded-full w-20 h-20 mx-auto mb-4 flex items-center justify-center">
                     <i class="fa-solid fa-person-chalkboard text-3xl text-white"></i>
                 </div>
-                <h1 class="text-4xl font-bold text-white mb-2">
+                <h2 class="text-4xl font-bold text-white mb-2">
                     My Instructor Dashboard
-                </h1>
+                </h2>
                 <p class="text-white/80">View your lesson assignments, take attendance, and complete student evaluations.</p>
             </div>
         </div>
+
+        <!-- Summary Stats -->
+            <div class="bg-white/50 rounded-2xl shadow-lg p-6 mt-8 mb-8 backdrop-blur-sm">
+                <h3 class="text-xl font-bold text-white mb-4 flex items-center">
+                    <i class="fas fa-chart-bar mr-2"></i>
+                    Quick Stats
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="bg-white/80 rounded-lg p-4 text-center">
+                        <div class="text-2xl font-bold text-blue-600">{{ assignments|length }}</div>
+                        <div class="text-sm text-gray-600">Active Assignments</div>
+                    </div>
+                    <div class="bg-white/80 rounded-lg p-4 text-center">
+                        <div class="text-2xl font-bold text-green-600">{{ total_students|default:"0" }}</div>
+                        <div class="text-sm text-gray-600">Total Students</div>
+                    </div>
+                    <div class="bg-white/80 rounded-lg p-4 text-center">
+                        <div class="text-2xl font-bold text-purple-600">{{ lessons_this_week|default:"0" }}</div>
+                        <div class="text-sm text-gray-600">Lessons This Week</div>
+                    </div>
+                </div>
+            </div>
 
         <!-- Assignments Grid -->
         {% if assignments %}
@@ -22,10 +44,9 @@
                 {% for assignment in assignments %}
                     <div class="bg-white/90 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 overflow-hidden">
                         <!-- Card Header -->
-                        <div class="bg-gradient-to-r from-blue-500 to-blue-600 p-6 text-white">
+                        <div class="bg-gradient-to-r from-blue-600 to-blue-500 p-6 text-white">
                             <h3 class="text-xl font-bold mb-2">{{ assignment.lesson.name }}</h3>
                             <div class="flex items-center justify-between text-blue-100">
-                                <span class="text-sm font-medium">{{ assignment.term.label }}</span>
                                 <span class="bg-white/20 px-2 py-1 rounded-full text-xs font-semibold">
                                     {{ assignment.lesson.get_day_of_week_display }}
                                 </span>
@@ -110,28 +131,6 @@
                         </div>
                     </div>
                 {% endfor %}
-            </div>
-
-            <!-- Summary Stats -->
-            <div class="bg-white/50 rounded-2xl shadow-lg p-6 mt-8 backdrop-blur-sm">
-                <h3 class="text-xl font-bold text-white mb-4 flex items-center">
-                    <i class="fas fa-chart-bar mr-2"></i>
-                    Quick Stats
-                </h3>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div class="bg-white/80 rounded-lg p-4 text-center">
-                        <div class="text-2xl font-bold text-blue-600">{{ assignments|length }}</div>
-                        <div class="text-sm text-gray-600">Active Assignments</div>
-                    </div>
-                    <div class="bg-white/80 rounded-lg p-4 text-center">
-                        <div class="text-2xl font-bold text-green-600">{{ total_students|default:"0" }}</div>
-                        <div class="text-sm text-gray-600">Total Students</div>
-                    </div>
-                    <div class="bg-white/80 rounded-lg p-4 text-center">
-                        <div class="text-2xl font-bold text-purple-600">{{ lessons_this_week|default:"0" }}</div>
-                        <div class="text-sm text-gray-600">Lessons This Week</div>
-                    </div>
-                </div>
             </div>
 
         {% else %}

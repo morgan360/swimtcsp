@@ -9,7 +9,7 @@
         {{ form.non_field_errors }}
 
         <div>
-            <label class="block text-blue-900 text-lg font-semibold mt-4 mb-2">First Name</label>
+            <label class="block text-blue-900 text-lg font-semibold mb-2">First Name</label>
             {{ form.first_name|add_class:"w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500" }}
             {{ form.first_name.errors }}
         </div>
@@ -33,11 +33,9 @@
         </div>
 
         <div>
-            <label class="block text-blue-900 text-lg font-semibold mt-4 mb-2">Notes</label>
-            <textarea name="notes" rows="3"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500">
-                {{ form.notes.value }}
-        </textarea>
+            <label class="block text-blue-900 text-lg font-semibold mt-4 mb-2">
+                Notes <i class="fa-solid fa-circle-info mr-2 title" title="Add any relevant swimling information that might help us better accommodate their needs. This will only be visible to the class teacher and upper management."></i></label>
+                {{ form.notes|add_class:"w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500" }}
                 {{ form.notes.errors }}
         </div>
 

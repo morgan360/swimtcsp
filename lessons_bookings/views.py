@@ -97,7 +97,9 @@ class LessonAssignmentForm(forms.Form):
         })
     )
     instructor = forms.ModelChoiceField(
-        queryset=User.objects.filter(groups__name="instructors").distinct().order_by('first_name','last_name','email'),
+        queryset=User.objects.filter(
+            groups__name__in=["instructor", "Instructor", "instructors", "Instructors"]
+        ).distinct().order_by('first_name','last_name','email'),
         label="Instructor",
         widget=forms.Select(attrs={
             "class": "w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"

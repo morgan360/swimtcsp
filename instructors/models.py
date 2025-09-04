@@ -27,4 +27,7 @@ class InstructorProfile(models.Model):
     bio = models.TextField(blank=True, null=True)
 
     def __str__(self):
-        return self.user.get_full_name()
+        first = getattr(self.user, 'first_name', '') or ''
+        last = getattr(self.user, 'last_name', '') or ''
+        name = f"{first} {last}".strip()
+        return name or getattr(self.user, 'email', str(self.user))

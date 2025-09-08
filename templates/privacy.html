@@ -1,0 +1,85 @@
+{% extends "base/_base.html" %}
+{% load static %}
+
+{% block title %}Privacy Policy{% endblock %}
+
+{% block content %}
+<header class="bg-gradient-to-r from-blue-600 to-blue-700 text-white">
+  <div class="max-w-5xl mx-auto px-6 py-10">
+    <h1 class="text-3xl font-bold">Privacy Policy</h1>
+    <p class="mt-2 text-blue-100">Please read this Privacy Policy and provide consent to use our services. By creating an account, you agree to the collection and use of information in accordance with this policy.</p>
+  </div>
+</header>
+
+<section class="bg-gray-50">
+  <div class="max-w-5xl mx-auto px-6 py-10 grid grid-cols-1 lg:grid-cols-4 gap-8">
+    <!-- TOC -->
+    <aside class="lg:col-span-1">
+      <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sticky top-4">
+        <h2 class="text-sm font-semibold text-gray-700 uppercase tracking-wider">On this page</h2>
+        <nav class="mt-3 space-y-2 text-sm">
+          <a href="#data-why" class="block text-gray-700 hover:text-blue-700">What data we collect</a>
+          <a href="#comments" class="block text-gray-700 hover:text-blue-700">1. Comments</a>
+          <a href="#media" class="block text-gray-700 hover:text-blue-700">2. Media</a>
+          <a href="#cookies" class="block text-gray-700 hover:text-blue-700">3. Contact forms & cookies</a>
+          <a href="#embedded" class="block text-gray-700 hover:text-blue-700">4. Embedded content</a>
+          <a href="#retention" class="block text-gray-700 hover:text-blue-700">5. Data retention</a>
+          <a href="#rights" class="block text-gray-700 hover:text-blue-700">6. Your rights</a>
+          <a href="#transfer" class="block text-gray-700 hover:text-blue-700">7. Where data is sent</a>
+        </nav>
+      </div>
+    </aside>
+
+    <!-- Content -->
+    <article class="lg:col-span-3 space-y-8">
+      <section id="data-why" class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <h2 class="text-xl font-semibold text-gray-900">What personal data we collect and why we collect it</h2>
+      </section>
+
+      <section id="comments" class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <h3 class="text-lg font-semibold text-gray-900">1. Comments</h3>
+        <p class="text-gray-700 mt-3">When visitors leave comments on the site we collect the data shown in the comments form, and also the visitor’s IP address and browser user agent string to help spam detection.</p>
+        <p class="text-gray-700 mt-3">An anonymized string created from your email address (also called a hash) may be provided to the Gravatar service to see if you are using it. The Gravatar service privacy policy is available here: <a class="text-blue-600 underline" href="https://automattic.com/privacy/" target="_blank" rel="noopener">https://automattic.com/privacy/</a>. After approval of your comment, your profile picture is visible to the public in the context of your comment.</p>
+      </section>
+
+      <section id="media" class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <h3 class="text-lg font-semibold text-gray-900">2. Media</h3>
+        <p class="text-gray-700 mt-3">If you upload images to the website, you should avoid uploading images with embedded location data (EXIF GPS) included. Visitors to the website can download and extract any location data from images on the website.</p>
+      </section>
+
+      <section id="cookies" class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <h3 class="text-lg font-semibold text-gray-900">3. Contact forms</h3>
+        <div class="space-y-3 text-gray-700 mt-3">
+          <p>If you leave a comment on our site you may opt-in to saving your name, email address and website in cookies. These are for your convenience so that you do not have to fill in your details again when you leave another comment. These cookies will last for one year.</p>
+          <p>If you have an account and you log in to this site, we will set a temporary cookie to determine if your browser accepts cookies. This cookie contains no personal data and is discarded when you close your browser.</p>
+          <p>When you log in, we will also set up several cookies to save your login information and your screen display choices. Login cookies last for two days, and screen options cookies last for a year. If you select “Remember Me”, your login will persist for two weeks. If you log out of your account, the login cookies will be removed.</p>
+          <p>If you edit or publish an article, an additional cookie will be saved in your browser. This cookie includes no personal data and simply indicates the post ID of the article you just edited. It expires after 1 day.</p>
+        </div>
+      </section>
+
+      <section id="embedded" class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <h3 class="text-lg font-semibold text-gray-900">4. Embedded content from other websites</h3>
+        <p class="text-gray-700 mt-3">Articles on this site may include embedded content (e.g. videos, images, articles, etc.). Embedded content from other websites behaves in the exact same way as if the visitor has visited the other website.</p>
+        <p class="text-gray-700 mt-3">These websites may collect data about you, use cookies, embed additional third-party tracking, and monitor your interaction with that embedded content, including tracing your interaction with the embedded content if you have an account and are logged in to that website.</p>
+      </section>
+
+      <section id="retention" class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <h3 class="text-lg font-semibold text-gray-900">5. How long we retain your data</h3>
+        <p class="text-gray-700 mt-3">If you leave a comment, the comment and its metadata are retained indefinitely. This is so we can recognize and approve any follow-up comments automatically instead of holding them in a moderation queue.</p>
+        <p class="text-gray-700 mt-3">For users that register on our website (if any), we also store the personal information they provide in their user profile. All users can see, edit, or delete their personal information at any time (except they cannot change their username). Website administrators can also see and edit that information.</p>
+      </section>
+
+      <section id="rights" class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <h3 class="text-lg font-semibold text-gray-900">6. What rights you have over your data</h3>
+        <p class="text-gray-700 mt-3">If you have an account on this site, or have left comments, you can request to receive an exported file of the personal data we hold about you, including any data you have provided to us. You can also request that we erase any personal data we hold about you. This does not include any data we are obliged to keep for administrative, legal, or security purposes.</p>
+      </section>
+
+      <section id="transfer" class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <h3 class="text-lg font-semibold text-gray-900">7. Where we send your data</h3>
+        <p class="text-gray-700 mt-3">Your data remains secure with us. We do not pass on your data to anyone. However, visitor comments may be checked through an automated spam detection service.</p>
+      </section>
+
+    </article>
+  </div>
+</section>
+{% endblock %}

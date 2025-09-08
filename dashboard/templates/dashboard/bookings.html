@@ -210,6 +210,7 @@
               <tr>
                 <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
                 <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
+                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
                 <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Term</th>
                 <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lesson</th>
                 <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Day/Time</th>
@@ -221,6 +222,7 @@
               <tr class="hover:bg-gray-50">
                 <td class="px-4 py-2 text-sm text-gray-800">#{{ enr.id }}</td>
                 <td class="px-4 py-2 text-sm text-gray-600">{{ enr.created|date:"Y-m-d H:i" }}</td>
+                <td class="px-4 py-2 text-sm text-gray-800"><span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700">Public</span></td>
                 <td class="px-4 py-2 text-sm text-gray-800">{{ enr.term.start_date }} → {{ enr.term.end_date }}</td>
                 <td class="px-4 py-2 text-sm text-gray-800">{{ enr.lesson.name|default:enr.lesson }}</td>
                 <td class="px-4 py-2 text-sm text-gray-800">
@@ -230,7 +232,7 @@
               </tr>
               {% empty %}
               <tr>
-                <td colspan="6" class="px-4 py-8 text-center text-gray-500">No lesson enrollments found.</td>
+                <td colspan="7" class="px-4 py-8 text-center text-gray-500">No lesson enrollments found.</td>
               </tr>
               {% endfor %}
             </tbody>
@@ -244,6 +246,7 @@
             <div class="p-4 grid grid-cols-1 gap-2 text-sm">
               <div class="flex justify-between"><span class="text-gray-500">ID</span><span class="font-medium text-gray-900">#{{ enr.id }}</span></div>
               <div class="flex justify-between"><span class="text-gray-500">Created</span><span class="text-gray-700">{{ enr.created|date:"Y-m-d H:i" }}</span></div>
+              <div class="flex justify-between"><span class="text-gray-500">Source</span><span class="text-gray-900">Public</span></div>
               <div class="flex justify-between"><span class="text-gray-500">Term</span><span class="text-gray-900">{{ enr.term.start_date }} → {{ enr.term.end_date }}</span></div>
               <div class="flex justify-between"><span class="text-gray-500">Lesson</span><span class="text-gray-900">{{ enr.lesson.name|default:enr.lesson }}</span></div>
               <div class="flex justify-between"><span class="text-gray-500">Day/Time</span><span class="text-gray-900">{{ enr.lesson.get_day_of_week_display|default:"-" }} {{ enr.lesson.start_time|default:"" }}</span></div>
@@ -269,6 +272,78 @@
         </div>
         {% endif %}
       </section>
+      {% if sco_page_obj %}
+      <!-- School Lesson Enrollments -->
+      <section class="mt-8">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="text-lg font-semibold text-gray-900">School Lesson Enrollments</h3>
+        </div>
+
+        <!-- Desktop Table -->
+        <div class="overflow-x-auto hidden md:block">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
+                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Source</th>
+                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Term</th>
+                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lesson</th>
+                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Swimling</th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-100">
+              {% for enr in sco_page_obj %}
+              <tr class="hover:bg-gray-50">
+                <td class="px-4 py-2 text-sm text-gray-800">#{{ enr.id }}</td>
+                <td class="px-4 py-2 text-sm text-gray-600">{{ enr.created|date:"Y-m-d H:i" }}</td>
+                <td class="px-4 py-2 text-sm text-gray-800"><span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-700">School</span></td>
+                <td class="px-4 py-2 text-sm text-gray-800">{{ enr.term.start_date }} → {{ enr.term.end_date }}</td>
+                <td class="px-4 py-2 text-sm text-gray-800">{{ enr.lesson.name|default:enr.lesson }}</td>
+                <td class="px-4 py-2 text-sm text-gray-800">{{ enr.swimling.first_name }} {{ enr.swimling.last_name }}</td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="6" class="px-4 py-8 text-center text-gray-500">No school enrollments found.</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Mobile Stacked List -->
+        <div class="md:hidden space-y-4">
+          {% for enr in sco_page_obj %}
+          <div class="border rounded-lg bg-white shadow-sm">
+            <div class="p-4 grid grid-cols-1 gap-2 text-sm">
+              <div class="flex justify-between"><span class="text-gray-500">ID</span><span class="font-medium text-gray-900">#{{ enr.id }}</span></div>
+              <div class="flex justify-between"><span class="text-gray-500">Created</span><span class="text-gray-700">{{ enr.created|date:"Y-m-d H:i" }}</span></div>
+              <div class="flex justify-between"><span class="text-gray-500">Source</span><span class="text-gray-900">School</span></div>
+              <div class="flex justify-between"><span class="text-gray-500">Term</span><span class="text-gray-900">{{ enr.term.start_date }} → {{ enr.term.end_date }}</span></div>
+              <div class="flex justify-between"><span class="text-gray-500">Lesson</span><span class="text-gray-900">{{ enr.lesson.name|default:enr.lesson }}</span></div>
+              <div class="flex justify-between"><span class="text-gray-500">Swimling</span><span class="text-gray-900">{{ enr.swimling.first_name }} {{ enr.swimling.last_name }}</span></div>
+            </div>
+          </div>
+          {% empty %}
+            <div class="text-center text-gray-500 py-8">No school enrollments found.</div>
+          {% endfor %}
+        </div>
+
+        {% if sco_page_obj.paginator.num_pages > 1 %}
+        <div class="flex justify-between items-center mt-4">
+          <div class="text-sm text-gray-600">Page {{ sco_page_obj.number }} of {{ sco_page_obj.paginator.num_pages }}</div>
+          <div class="flex gap-2">
+            {% if sco_page_obj.has_previous %}
+              <a href="?category=lessons&sco_page={{ sco_page_obj.previous_page_number }}&le_page={{ le_page_obj.number }}&sw_page={{ sw_page_obj.number }}" class="px-3 py-1.5 text-sm bg-gray-100 rounded hover:bg-gray-200">Previous</a>
+            {% endif %}
+            {% if sco_page_obj.has_next %}
+              <a href="?category=lessons&sco_page={{ sco_page_obj.next_page_number }}&le_page={{ le_page_obj.number }}&sw_page={{ sw_page_obj.number }}" class="px-3 py-1.5 text-sm bg-gray-100 rounded hover:bg-gray-200">Next</a>
+            {% endif %}
+          </div>
+        </div>
+        {% endif %}
+      </section>
+      {% endif %}
       {% endif %}
     </div>
   </div>

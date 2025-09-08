@@ -5,6 +5,7 @@ from .models import Program, Category, Product
 from .resources import CategoryResource, ProductResource, ProgramResource
 from import_export.admin import ImportExportMixin
 from django_admin_listfilter_dropdown.filters import DropdownFilter, RelatedDropdownFilter, ChoiceDropdownFilter
+from boipa.models import Refund  # 👈 Import the model
 
 
 class ProductAdmin(ImportExportMixin, admin.ModelAdmin):
@@ -43,7 +44,14 @@ class CategoryAdmin(ImportExportMixin, admin.ModelAdmin):
     resource_class = CategoryResource
     list_display = ['name', 'program', 'slug', 'stage']
 
+class RefundAdmin(admin.ModelAdmin):
+    list_display = ['id', 'order', 'tx_id', 'amount', 'created']
+    search_fields = ['tx_id', 'order__id']
+    list_filter = ['created']
+
+
 # ✅ Register only to your custom admin site
+lessons_admin_site.register(Refund, RefundAdmin)
 lessons_admin_site.register(Product, ProductAdmin)
 lessons_admin_site.register(Program, ProgramAdmin)
 lessons_admin_site.register(Category, CategoryAdmin)

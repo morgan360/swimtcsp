@@ -16,6 +16,7 @@ from schools_bookings.utils.enrollment import handle_schools_enrollment
 from .payment_functions import get_boipa_session_token  # External function
 from swims_orders.tasks import send_order_email
 from lessons_orders.tasks import send_lesson_order_email
+from django.contrib.admin.views.decorators import staff_member_required
 
 
 
@@ -153,3 +154,27 @@ def payment_notification(request):
 
     print(f"❌ Source prefix '{source_prefix}' not recognized")
     return HttpResponse("Source prefix not recognized", status=400)
+
+
+#### REFUND LOGIC ####
+@staff_member_required
+def refund_order_view(request, order_id):
+    try:
+        order = Order.objects.get(id=order_id)
+    except Order.DoesNotExist:
+        raise Http404("Order not found")
+
+    if not order.paid:
+        return JsonResponse({"error": "Cannot refund an unpaid order"}, status=400)
+
+    result = refund_boipa_transaction(order.txId, order.amount)
+
+    if result["success"]:
+        order.payment_status = "refunded"
+        order.save()
+        return JsonResponse({"message": "Refund successful", "txId": order.txId})
+    else:
+        return JsonResponse({
+            "error": "Refund failed",
+            "boipa_response": result["data"]
+        }, status=400)

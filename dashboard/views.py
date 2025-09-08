@@ -3,6 +3,8 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 from swims.models import PublicSwimProduct, PublicSwimCategory
 from swims_orders.models import Order as SwimOrder
+from lessons_orders.models import Order as LessonOrder
+from schools_orders.models import Order as SchoolOrder
 from lessons.models import Program, Product
 from lessons_bookings.models import LessonEnrollment
 from instructors.models import InstructorAssignment
@@ -14,7 +16,7 @@ from django import forms
 from django.contrib import messages
 from django.http import HttpResponseNotFound
 from django.core.paginator import Paginator
-from django.db.models import Q
+from django.db.models import Q, Sum
 from utils.context_processors import get_term_info
 from utils.terms_utils import get_term_context_data
 
@@ -155,39 +157,199 @@ def orders(request):
 @login_required
 @user_passes_test(is_staff)
 def orders_history(request):
-    """List swim orders with simple filters and pagination."""
-    orders_qs = SwimOrder.objects.select_related('user', 'product').all()
+    """List ALL orders (swims, lessons, schools) with filters + pagination.
+    Includes monthly stats cards for management users.
+    """
+    # Monthly stats (visible only to superusers or Manager group)
+    order_stats = None
+    try:
+        if request.user.is_superuser or is_Manager(request.user):
+            now = timezone.now()
+            month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+            # first day of next month
+            if month_start.month == 12:
+                next_month_start = month_start.replace(year=month_start.year + 1, month=1)
+            else:
+                next_month_start = month_start.replace(month=month_start.month + 1)
 
+            swims_m = SwimOrder.objects.filter(created__gte=month_start, created__lt=next_month_start)
+            lessons_m = LessonOrder.objects.filter(created__gte=month_start, created__lt=next_month_start)
+            schools_m = SchoolOrder.objects.filter(created__gte=month_start, created__lt=next_month_start)
+
+            def qs_count(qs):
+                return qs.count()
+
+            def qs_sum_amount(qs):
+                total = qs.aggregate(total=Sum('amount'))['total']
+                return total or 0
+
+            def qs_paid_count(qs):
+                return qs.filter(paid=True).count()
+
+            order_stats = {
+                'month_label': now.strftime('%B %Y'),
+                'total_orders': qs_count(swims_m) + qs_count(lessons_m) + qs_count(schools_m),
+                'paid_orders': qs_paid_count(swims_m) + qs_paid_count(lessons_m) + qs_paid_count(schools_m),
+                'unpaid_orders': (
+                    (qs_count(swims_m) - qs_paid_count(swims_m)) +
+                    (qs_count(lessons_m) - qs_paid_count(lessons_m)) +
+                    (qs_count(schools_m) - qs_paid_count(schools_m))
+                ),
+                'revenue_total': qs_sum_amount(swims_m) + qs_sum_amount(lessons_m) + qs_sum_amount(schools_m),
+                'revenue_swims': qs_sum_amount(swims_m),
+                'revenue_lessons': qs_sum_amount(lessons_m),
+                'revenue_schools': qs_sum_amount(schools_m),
+            }
+
+            paid_total = (
+                qs_sum_amount(swims_m.filter(paid=True)) +
+                qs_sum_amount(lessons_m.filter(paid=True)) +
+                qs_sum_amount(schools_m.filter(paid=True))
+            )
+            paid_count = qs_paid_count(swims_m) + qs_paid_count(lessons_m) + qs_paid_count(schools_m)
+            all_count = order_stats['total_orders'] or 1
+            order_stats['avg_order_value_paid'] = (paid_total / paid_count) if paid_count else 0
+            order_stats['avg_order_value_overall'] = (order_stats['revenue_total'] / all_count) if all_count else 0
+    except Exception:
+        order_stats = None
     q = request.GET.get('q', '').strip()
     status = request.GET.get('status', '').strip()  # "paid" | "unpaid" | ""
+    category = request.GET.get('category', '').strip()  # "swims" | "lessons" | "schools" | ""
     date_from = request.GET.get('from', '').strip()
     date_to = request.GET.get('to', '').strip()
 
-    if q:
-        orders_qs = orders_qs.filter(
-            Q(txId__icontains=q)
-            | Q(payment_status__icontains=q)
-            | Q(user__email__icontains=q)
-            | Q(user__first_name__icontains=q)
-            | Q(user__last_name__icontains=q)
-            | Q(product__name__icontains=q)
-        )
+    # Fetch per source
+    swims = (
+        SwimOrder.objects.select_related('user', 'product')
+        .all()
+    )
+    lessons = (
+        LessonOrder.objects.select_related('user')
+        .prefetch_related('items__product', 'items__term')
+        .all()
+    )
+    schools = (
+        SchoolOrder.objects.select_related('user', 'school')
+        .prefetch_related('items__product', 'items__term')
+        .all()
+    )
 
-    if status == 'paid':
-        orders_qs = orders_qs.filter(paid=True)
-    elif status == 'unpaid':
-        orders_qs = orders_qs.filter(paid=False)
+    def normalize_swim(o):
+        product_name = getattr(getattr(o, 'product', None), 'name', None)
+        booking = getattr(o, 'booking', None)
+        context = f"{product_name or ''} {booking or ''}".strip()
+        return {
+            'id': o.id,
+            'created': o.created,
+            'user_full': o.user.get_full_name() or o.user.email,
+            'user_email': o.user.email,
+            'amount': o.amount,
+            'paid': o.paid,
+            'txId': o.txId,
+            'payment_status': o.payment_status,
+            'type': 'Public Swim',
+            'category': 'swims',
+            'context': context or '-',
+            'for_when': booking,
+        }
 
-    # Date filtering (created date). Accepts YYYY-MM-DD
-    try:
-        if date_from:
-            orders_qs = orders_qs.filter(created__date__gte=date_from)
-        if date_to:
-            orders_qs = orders_qs.filter(created__date__lte=date_to)
-    except Exception:
-        pass
+    def normalize_lesson(o):
+        # Build a short context: first item product name (+count if multiple)
+        items = list(getattr(o, 'items', []).all()) if hasattr(o, 'items') else []
+        if items:
+            first_name = getattr(getattr(items[0], 'product', None), 'name', None) or 'Lesson'
+            ctx = first_name if len(items) == 1 else f"{first_name} (+{len(items)-1})"
+        else:
+            ctx = 'Lesson Order'
+        # Determine booking window from term on first item
+        term = getattr(items[0], 'term', None) if items else None
+        start = getattr(term, 'start_date', None)
+        end = getattr(term, 'end_date', None)
+        return {
+            'id': o.id,
+            'created': o.created,
+            'user_full': o.user.get_full_name() or o.user.email,
+            'user_email': o.user.email,
+            'amount': o.amount,
+            'paid': o.paid,
+            'txId': o.txId,
+            'payment_status': o.payment_status,
+            'type': 'Public Lesson',
+            'category': 'lessons',
+            'context': ctx,
+            'for_when': (f"{start} → {end}" if start and end else None),
+        }
 
-    paginator = Paginator(orders_qs, 25)
+    def normalize_school(o):
+        school_name = getattr(getattr(o, 'school', None), 'name', None)
+        items = list(getattr(o, 'items', []).all()) if hasattr(o, 'items') else []
+        term = getattr(items[0], 'term', None) if items else None
+        start = getattr(term, 'start_date', None)
+        end = getattr(term, 'end_date', None)
+        return {
+            'id': o.id,
+            'created': o.created,
+            'user_full': o.user.get_full_name() or o.user.email,
+            'user_email': o.user.email,
+            'amount': o.amount,
+            'paid': o.paid,
+            'txId': o.txId,
+            'payment_status': o.payment_status,
+            'type': 'School Lesson',
+            'category': 'schools',
+            'context': school_name or 'School Order',
+            'for_when': (f"{start} → {end}" if start and end else None),
+        }
+
+    combined = [
+        *(normalize_swim(o) for o in swims),
+        *(normalize_lesson(o) for o in lessons),
+        *(normalize_school(o) for o in schools),
+    ]
+
+    # Filters in Python across sources
+    def match_status(item):
+        if status == 'paid':
+            return item['paid'] is True
+        if status == 'unpaid':
+            return item['paid'] is False
+        return True
+
+    def match_dates(item):
+        try:
+            ok = True
+            if date_from:
+                ok = ok and (item['created'].date().isoformat() >= date_from)
+            if date_to:
+                ok = ok and (item['created'].date().isoformat() <= date_to)
+            return ok
+        except Exception:
+            return True
+
+    def match_query(item):
+        if not q:
+            return True
+        s = ' '.join([
+            str(item.get('txId') or ''),
+            str(item.get('payment_status') or ''),
+            str(item.get('user_full') or ''),
+            str(item.get('user_email') or ''),
+            str(item.get('context') or ''),
+            str(item.get('type') or ''),
+        ]).lower()
+        return q.lower() in s
+
+    def match_category(item):
+        if not category:
+            return True
+        if category == 'lessons':
+            return item.get('category') in ('lessons', 'schools')
+        return item.get('category') == category
+
+    filtered = [i for i in combined if match_status(i) and match_dates(i) and match_query(i) and match_category(i)]
+    filtered.sort(key=lambda x: x['created'], reverse=True)
+
+    paginator = Paginator(filtered, 25)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
@@ -195,10 +357,63 @@ def orders_history(request):
         'page_obj': page_obj,
         'q': q,
         'status': status,
+        'category': category,
         'date_from': date_from,
         'date_to': date_to,
+        'order_stats': order_stats,
     }
     return render(request, 'dashboard/orders_history.html', context)
+
+
+@login_required
+@user_passes_test(is_staff)
+def bookings_overview(request):
+    """Show bookings for Public Swims and Lesson Enrollments, with responsive tables and tabs."""
+    category = request.GET.get('category', '').strip()  # "swims" | "lessons" | ""
+    try:
+        if not category and not (request.user.is_superuser or is_Manager(request.user)):
+            category = 'swims'
+    except Exception:
+        pass
+    # Public Swim bookings (have a concrete booking date)
+    swim_bookings = (
+        SwimOrder.objects.select_related('user', 'product')
+        .filter(booking__isnull=False)
+        .order_by('-booking', '-created')
+    )
+    sw_page_num = request.GET.get('sw_page')
+    sw_paginator = Paginator(swim_bookings, 25)
+    sw_page_obj = sw_paginator.get_page(sw_page_num)
+
+    # Lesson enrollments (public)
+    lesson_enrollments = (
+        LessonEnrollment.objects.select_related('lesson', 'swimling', 'term')
+        .order_by('-created')
+    )
+    le_page_num = request.GET.get('le_page')
+    le_paginator = Paginator(lesson_enrollments, 25)
+    le_page_obj = le_paginator.get_page(le_page_num)
+
+    # School enrollments
+    try:
+        from schools_bookings.models import ScoEnrollment
+        school_enrollments = (
+            ScoEnrollment.objects.select_related('lesson', 'swimling', 'term', 'order')
+            .order_by('-created')
+        )
+        sco_page_num = request.GET.get('sco_page')
+        sco_paginator = Paginator(school_enrollments, 25)
+        sco_page_obj = sco_paginator.get_page(sco_page_num)
+    except Exception:
+        sco_page_obj = None
+
+    context = {
+        'sw_page_obj': sw_page_obj,
+        'le_page_obj': le_page_obj,
+        'sco_page_obj': sco_page_obj,
+        'category': category,
+    }
+    return render(request, 'dashboard/bookings.html', context)
 
 
 @login_required

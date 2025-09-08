@@ -154,6 +154,55 @@ def orders(request):
 
 @login_required
 @user_passes_test(is_staff)
+def orders_history(request):
+    """List swim orders with simple filters and pagination."""
+    orders_qs = SwimOrder.objects.select_related('user', 'product').all()
+
+    q = request.GET.get('q', '').strip()
+    status = request.GET.get('status', '').strip()  # "paid" | "unpaid" | ""
+    date_from = request.GET.get('from', '').strip()
+    date_to = request.GET.get('to', '').strip()
+
+    if q:
+        orders_qs = orders_qs.filter(
+            Q(txId__icontains=q)
+            | Q(payment_status__icontains=q)
+            | Q(user__email__icontains=q)
+            | Q(user__first_name__icontains=q)
+            | Q(user__last_name__icontains=q)
+            | Q(product__name__icontains=q)
+        )
+
+    if status == 'paid':
+        orders_qs = orders_qs.filter(paid=True)
+    elif status == 'unpaid':
+        orders_qs = orders_qs.filter(paid=False)
+
+    # Date filtering (created date). Accepts YYYY-MM-DD
+    try:
+        if date_from:
+            orders_qs = orders_qs.filter(created__date__gte=date_from)
+        if date_to:
+            orders_qs = orders_qs.filter(created__date__lte=date_to)
+    except Exception:
+        pass
+
+    paginator = Paginator(orders_qs, 25)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    context = {
+        'page_obj': page_obj,
+        'q': q,
+        'status': status,
+        'date_from': date_from,
+        'date_to': date_to,
+    }
+    return render(request, 'dashboard/orders_history.html', context)
+
+
+@login_required
+@user_passes_test(is_staff)
 def general_admin(request):
     return render(request, 'dashboard/general.html', {})
 
@@ -453,4 +502,3 @@ def lessons_history(request, lesson_id):
         "previous_data": previous_data,
     }
     return render(request, "dashboard/lessons_history.html", context)
-

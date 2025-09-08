@@ -11,6 +11,7 @@ urlpatterns = [
     path('lessons/<int:lesson_id>/history/', views.lessons_history, name='lessons_history'),
     path('schools/', views.schools, name='dashboard_schools'),
     path('orders/', views.orders, name='dashboard_orders'),
+    path('orders/history/', views.orders_history, name='orders_history'),
     path('general/', views.general_admin, name='dashboard_general'),
     path('users/', views.user_management, name='user_management'),
     path('users/list/', views.user_list, name='user_list'),

@@ -56,6 +56,10 @@ def management(request):
     return render(request, 'management.html')
 
 
+def privacy(request):
+    return render(request, 'privacy.html')
+
+
 @require_http_methods(["GET"])
 def check_guardian_access(request):
     """

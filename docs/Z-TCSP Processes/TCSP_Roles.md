@@ -4,62 +4,61 @@ This document outlines the current system roles, plans for consolidation, and fu
 
 ---
 
-## ✅ Roles to Keep
+## ✅ NEW ROLES (aka Groups)
+
+**Note: All *new* roles for the new website are captialsied**
 
 | Role Name       | Purpose                                                                 |
 |-----------------|-------------------------------------------------------------------------|
-| `administrator` | Full access excluding superuser actions. Can manage all entities, assign managers, but not other administrators. |
-| `bbp_blocked`   | Used to block users from accessing the system.                         |
-| `Customer`      | Default role for anyone who signs up. Can book public swims.           |
-| `ex-staff`      | Former staff whose accounts should be blocked while data is preserved. |
-| `guardian`      | Can book lessons and public swims. Can also participate in schools.    |
-| `guest`         | Temporary elevated access to simulate manager capabilities.            |
-| `instructor`    | Can view staff schedules, record attendance, and update swim assessments. |
-| `pool_manager`  | Operational control: move students, manage waiting lists, view orders, hijack sessions. Can assign any role below `manager`. |
-| `schools`       | Represents users participating in school programs. May book or manage school swim groups. |
+| `Customer` | Default for every user. Can view and book public swims. |
+| `Guardian` | Can add swimlings to their account and book into term-based lessons. Must be a customer first. |
+| `Schools` | Can book into schools lessons. Must be a Guardian first. |
+| `Desk` | Can access existing user information. Can edit existing user information. Can view public swims management panel (cannot edit swims or add new swims). Can access lessons list and view class history. Can view isntructor assignments but not assign. Have full control over the swimlings panel and can move swimlings to/from classes. Can view enrollment stats. Can print class lists. Can view term information. Cannot access schools management panel. Can access orders dashboard. Cannot see the Management or Coupons panels. |
+| `Instructor` | Can view the instructor dashboard in the main menu. Can view their assigned lessons. Can evaluate the students' skills. Can take attendance. Can view their class list. |
+| `Full-Timer` | Have all the capabilities of desk staff. Cannot change user groups/permissions. Cannot do refunds. Cannot view financial reports. Can add/remove/alter public swim and lesson details. |
+| `Manager` | Full access to all admin panels and can add/remove/view/change all products. Can assign user roles/groups. |
 
----
 
-## 🗑️ Roles to Remove / Consolidate
+## Old Roles and Proposed Actions
 
-| Old Role Name       | Action                                 | Reason |
-|---------------------|----------------------------------------|--------|
-| `admin`             | ❌ Delete                               | Redundant. Use `administrator`. |
-| `bishop_galvin`     | ❌ Delete, merge into `schools`         | School-specific role now unified. |
-| `bishopgalvin`      | ❌ Delete, merge into `schools`         | Typo/redundant. |
+
+| Role Name           |Action|Reason|
+|---------------------|-----------------------------------------|------------------------------------------------|
+| `administrator`     | ❌ Delete, merge into `Manager`         | Redundant. Use `Manager`.|
+| `bbp_blocked`       | ⚠️ TBD                                  | Unsure if needed. |
+| `Customer`          | ✅ Keep and reuse                       | NA |
+| `ex-staff`          | ⚠️ TBD                                  | Can this be capitalised? |
+| `guardian`          | ❌ Delete, merge into `Guardian`        | Update for clarity. |
+| `guest`             | ⚠️ TBD                                  | Unsure if needed. |
+| `instructor`        | ❌ Delete, merge into `Instructor`      | Redundant lower case version. |
+| `pool_manager`      | ❌ Delete, merge into `Manager`         | Redundant. |
+| `schools`           | ❌ Delete, merge into `Schools`         | Redundant |
+| `admin`             | ❌ Delete, merge into `Manager`         | Redundant. |
+| `bishop_galvin`     | ❌ Delete, merge into `Schools`         | School-specific role now unified. |
+| `bishopgalvin`      | ❌ Delete, merge into `Schools`         | Typo/redundant. |
 | `coupon_manager`    | ❌ Delete                               | Functionality will be given to `administrator`. |
-| `desk_duties`       | ❌ Delete                               | No longer required. |
+| `desk_duties`       | ❌ Delete, merge into `Desk`            | Redundant |
 | `editor`            | ❌ Delete                               | Not applicable. |
 | `guardian_temporary`| ❌ Delete                               | Handled via `guest`. |
-| `instructors`       | ❌ Delete, merge into `instructor`      | Redundant plural. |
-| `manager`           | ❌ Delete                               | Overlapping with `pool_manager`. |
-| `pool_administrator`| ❌ Delete                               | Merge responsibility under `pool_manager`. |
+| `instructors`       | ❌ Delete, merge into `Instructor`      | Redundant plural. |
+| `manager`           | ❌ Delete, merge into `Manager`         | Overlapping with `pool_manager`. |
+| `pool_administrator`| ❌ Delete, merge into `Manager`         | Redundant |
 | `sh4_admin`         | ❌ Delete                               | Not relevant. |
 | `shop_manager`      | ❌ Delete                               | Shop module likely deprecated. |
-| `zion`              | ❌ Delete  and incorporate into schools | 
+| `zion`              | ❌ Delete, merge into `Schools`         | Redundant |
 
----
 
-## 🆕 Proposed Role
-
-| Role Name | Purpose |
-|-----------|---------|
-| `owner`   | Executive read-only access to key reports and dashboards. No CRUD access. Intended for pool ownership or stakeholders interested in operational overviews without editing capabilities. |
-
-### `owner` Role Access:
-- 📈 View reports (bookings, revenue, utilization).
-- 📊 See dashboards (attendance, waiting lists, trends).
-- 👁️ Read-only access only. No modifications allowed.
-
----
-
-## 🔐 Role Hierarchy Overview
+## Updated Hierarchy Overview
 
 ```text
 Superuser
-  └── administrator
-        └── pool_manager
-              ├── instructor
-              ├── guardian
-              ├── guest
-              └── schools
+  └── Manager
+        └── Full Timer
+                  ├── Desk
+                  ├── Instructor
+                  ├── Coupons
+                        └── Customer
+                        └── Guardian
+                        └── Schools
+            
+

@@ -1,47 +1,51 @@
 {% load static %}
-<footer class="footer footer-center flex flex-col p-10 bg-blue-100 text-base-content text-center">
- <div class="flex justify-center mb-4">
-   <a href="/" class="flex justify-center">
-     <img src="{% static 'img/logo.png' %}" alt="Logo" width="60" height="60" class="mx-auto" />
-   </a>
- </div>
+<footer class="bg-gradient-to-b from-blue-300 to-blue-800 text-blue-100">
+  <!-- Top -->
+  <div class="max-w-7xl mx-auto px-6 py-10">
+    <div class="w-full flex justify-center mb-8">
+      <!-- Logo -->
+        <a href="/" class=" items-center flex gap-3">
+          <img src="{% static 'img/logo.png' %}" alt="TCSP Logo" class="h-10 w-13" />
+          <span class="text-xl font-semibold">Templeogue College Swim Pool</span>
+        </a>
+      </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-8 max-w-4xl mx-auto place-items-center">
+      <!-- Hours -->
+      <div class="text-center">
+        <h3 class="text-sm font-semibold tracking-wider text-blue-200 uppercase">Hours</h3>
+        <ul class="mt-4 space-y-1 text-sm">
+          <li>Mon–Fri: 06:30 – 22:00</li>
+          <li>Sat: 09:00 – 21:00</li>
+          <li>Sun: 11:00 – 17:00</li>
+          <li class="text-blue-300">Hours may vary on holidays</li>
+        </ul>
+      </div>
 
+      <!-- Contact -->
+      <div class="text-center">
+        <h3 class="text-sm font-semibold tracking-wider text-blue-200 uppercase">Contact</h3>
+        <ul class="mt-4 space-y-2 text-sm">
+          <li class="flex items-start gap-2 justify-center"><i class="fas fa-map-marker-alt mt-0.5"></i> Templeville Road, Dublin, D6W
+            E622</li>
+          <li class="flex items-start gap-2 justify-center"><i class="fas fa-phone mt-0.5"></i>
+            <a href="tel:+35314901711" class="hover:text-white transition-colors">(01) 490 1711</a>
+          </li>
+          <li class="flex items-start gap-2 justify-center"><i class="fas fa-envelope mt-0.5"></i>
+            <a href="mailto:swimming@tcsp.ie" class="hover:text-white transition-colors">swimming@tcsp.ie</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
 
- <div class="flex flex-col gap-4 m-4">
-   <p class="text-lg text-blue-800">
-     <h2 class="font-bold text-blue-700">TCSP – Templeogue College Swimming Pool </h2>
-   </p>
-   <p>{{ FOOTER_MESSAGE }}</p>
-   <p class="italic">
-     Bringing fitness, fun, and confidence to the water since time began.
-   </p>
- </div>
-
-
- <div class="flex flex-col gap-4 text-sm">
-   <div>
-     <p>
-       <strong class="text-blue-800">Email:</strong>
-       <a href="mailto:swimming@tcsp.ie" class="link link-hover">swimming@tcsp.ie</a>
-     </p>
-   </div>
-   <div>
-     <p>
-       <strong class="text-blue-800">Phone:</strong>
-       <a href="tel:+35312345678" class="link link-hover">(01) 490 1711</a>
-     </p>
-   </div>
-   <div>
-     <p>
-       <strong class="text-blue-800">Location:</strong> Templeville Road, Dublin, Ireland, D6W E622.
-     </p>
-   </div>
- </div>
-
-
- <div>
-   <p class="text-sm italic mt-4">
-     &copy; {{ now|date:"Y" }} TCSP. All rights reserved.
-   </p>
- </div>
+  <!-- Bottom -->
+  <div class="border-t border-blue-700/50">
+    <div
+      class="max-w-7xl mx-auto px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-blue-200">
+      <p>&copy; {{ now|date:"Y" }} TCSP. All rights reserved.</p>
+      <div class="flex items-center gap-4">
+        <a href="/privacy/" class="hover:text-white transition-colors">Privacy & Terms</a>
+      </div>
+    </div>
+  </div>
 </footer>

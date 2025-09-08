@@ -4,6 +4,7 @@ from django.template.loader import render_to_string
 from django.http import JsonResponse, HttpResponse
 from django.contrib import messages
 from django.core.paginator import Paginator
+from django.db.models import Q
 from lessons_bookings.models import Term
 from shopping_cart.forms import CartAddProductForm
 from users.models import Swimling
@@ -12,6 +13,116 @@ from .filters import ProductFilter
 from utils.context_processors import get_term_info
 from utils.terms_utils import get_term_context_data
 from utils.terms_utils import get_current_term
+
+# HELPERS
+import re
+
+LEVEL_ORDER = [
+    "Beginners 1", 
+    "Beginners 2",
+    "Improvers 1", 
+    "Improvers 2",
+    "Advanced",
+    "Lengths L1", 
+    "Lengths L2", 
+    "Lengths L3",
+]
+
+def _split_multi(value_list):
+    """
+    Accepts a list of values that may contain comma-separated items and
+    returns a flat, stripped list.
+    """
+    out = []
+    for v in value_list:
+        if v is None:
+            continue
+        parts = [p.strip() for p in str(v).split(",") if p.strip()]
+        out.extend(parts)
+    return out
+
+def _normalize_level(label: str) -> str | None:
+    """Map common variants to canonical LEVEL_ORDER names."""
+    if not label:
+        return None
+    s = re.sub(r"\s+", " ", label).strip().lower()
+
+    # exact buckets
+    if re.search(r"^beg(inner)?s?\s*1\b|^b1\b", s): return "Beginners 1"
+    if re.search(r"^beg(inner)?s?\s*2\b|^b2\b", s): return "Beginners 2"
+    if re.search(r"^imp(rover)?s?\s*1\b|^i1\b", s): return "Improvers 1"
+    if re.search(r"^imp(rover)?s?\s*2\b|^i2\b", s): return "Improvers 2"
+    if re.search(r"^adv", s):                       return "Advanced"
+    if re.search(r"(lengths?|l)\s*(l?\s*1|\b1\b)", s): return "Lengths L1"
+    if re.search(r"(lengths?|l)\s*(l?\s*2|\b2\b)", s): return "Lengths L2"
+    if re.search(r"(lengths?|l)\s*(l?\s*3|\b3\b)", s): return "Lengths L3"
+    return None
+
+def _level_keywords(level: str) -> dict:
+    """
+    Return keywords for fuzzy matching across name/short_name/product name.
+    """
+    level = (level or "").lower()
+    if level.startswith("advanced"):
+        return {"tokens_any": [["adv", "advanced"]], "numbers": []}
+
+    if level.startswith("beginners 1"):
+        return {"tokens_any": [["beg", "beginner", "beginners"]], "numbers": ["1"]}
+    if level.startswith("beginners 2"):
+        return {"tokens_any": [["beg", "beginner", "beginners"]], "numbers": ["2"]}
+
+    if level.startswith("improvers 1"):
+        return {"tokens_any": [["imp", "improver", "improvers"]], "numbers": ["1"]}
+    if level.startswith("improvers 2"):
+        return {"tokens_any": [["imp", "improver", "improvers"]], "numbers": ["2"]}
+
+    if level.startswith("lengths l1"):
+        return {"tokens_any": [["len", "length", "lengths"]], "numbers": ["1", "l1"]}
+    if level.startswith("lengths l2"):
+        return {"tokens_any": [["len", "length", "lengths"]], "numbers": ["2", "l2"]}
+    if level.startswith("lengths l3"):
+        return {"tokens_any": [["len", "length", "lengths"]], "numbers": ["3", "l3"]}
+
+    # Fallback – try to split "word number"
+    parts = level.split()
+    nums = [p for p in parts if p.replace("l", "").isdigit() or p in ("l1","l2","l3")]
+    toks = [[p] for p in parts if not p.replace("l", "").isdigit()]
+    return {"tokens_any": toks or [[level]], "numbers": nums}
+
+def _level_q(norm_level: str) -> Q:
+    """
+    Build a Q that matches:
+      - category.name icontains tokens AND numbers
+      - OR category.short_name icontains tokens AND numbers
+      - OR product.name icontains tokens AND numbers
+    'Advanced' has no numbers.
+    """
+    kw = _level_keywords(norm_level)
+
+    # fields we want to search
+    fields = ["category__name", "category__short_name", "name"]
+
+    # For each field, require all pieces for that field (tokens + numbers)
+    per_field_qs = []
+    for f in fields:
+        qf = Q()
+        # at least one of the token variants (e.g., beg|beginner|beginners)
+        for token_group in kw["tokens_any"]:
+            # each token_group is alternatives; match any of them for this field
+            alt_q = Q()
+            for t in token_group:
+                alt_q |= Q(**{f + "__icontains": t})
+            qf &= alt_q
+        # and include all numeric markers (e.g., "1" and/or "l1")
+        for n in kw["numbers"]:
+            qf &= Q(**{f + "__icontains": n})
+        per_field_qs.append(qf)
+
+    # Match if any field matches
+    combined = Q()
+    for q in per_field_qs:
+        combined |= q
+    return combined
 
 # -----------------------
 # 🎯 Main Lesson List View
@@ -31,18 +142,56 @@ def lesson_list(request):
     phase = term_data['current_phase_id']
     term = term_data['next_term'] if phase == 'RB' else term_data['current_term']
     print(f"🗓️ Showing lessons for term {term.id} ({'next' if phase == 'RB' else 'current'})")
+
     day_choices = Product.DAY_CHOICES
     programs = Program.objects.all()
-    active_lessons = Product.objects.filter(active=True)
 
+    # ----------------------------
+    # 🔎 Read & normalize filters
+    # ----------------------------
+    raw_days = _split_multi(request.GET.getlist('day'))       # e.g. ['1','3']
+    raw_levels = _split_multi(request.GET.getlist('level'))   # e.g. ['Beginners 1','Improvers 2']
+
+    # Cast days to ints where possible
+    selected_days: list[int] = []
+    for d in raw_days:
+        try:
+            selected_days.append(int(d))
+        except (TypeError, ValueError):
+            pass
+
+    # Normalize levels to canonical names
+    selected_levels = []
+    for lv in raw_levels:
+        norm = _normalize_level(lv)
+        if norm:
+            selected_levels.append(norm)
+
+    # ----------------------------
+    # 📦 Build queryset with filters
+    # ----------------------------
+    query = Product.objects.filter(active=True)
+
+    if selected_days:
+        query = query.filter(day_of_week__in=selected_days)
+
+    if selected_levels:
+        lvl_q = Q()
+        for lvl in selected_levels:
+            lvl_q |= _level_q(lvl)
+        query = query.filter(lvl_q)
+
+    # ----------------------------
+    # 🧮 Build lesson info + paginate
+    # ----------------------------
     lessons_info = [
         {
             'lesson': lesson,
             'num_places': lesson.num_places,
             'remaining_spaces': lesson.remaining_spaces(term),
-            'is_full': lesson.is_full(term)
+            'is_full': lesson.is_full(term),
         }
-        for lesson in active_lessons
+        for lesson in query
     ]
 
     paginator = Paginator(lessons_info, 8)
@@ -53,6 +202,9 @@ def lesson_list(request):
         'page_obj': page_obj,
         'programs': programs,
         'days': day_choices,
+        'levels': LEVEL_ORDER,                  # 👈 expose levels to the template
+        'selected_days': selected_days,         # for keeping filter UI state
+        'selected_levels': selected_levels,     # for keeping filter UI state
         'current_term': term,
         'selected_swimling': selected_swimling,
         **get_term_info(request),
@@ -67,8 +219,25 @@ def update_lesson_list(request):
     term = term_data['next_term'] if phase == 'RB' else term_data['current_term']
 
     program_id = request.GET.get('program')
-    day = request.GET.get('day')
 
+    # 🔎 Read filters
+    raw_days = _split_multi(request.GET.getlist('day'))
+    raw_levels = _split_multi(request.GET.getlist('level'))
+
+    selected_days: list[int] = []
+    for d in raw_days:
+        try:
+            selected_days.append(int(d))
+        except (TypeError, ValueError):
+            pass
+
+    selected_levels = []
+    for lv in raw_levels:
+        norm = _normalize_level(lv)
+        if norm:
+            selected_levels.append(norm)
+
+    # Build queryset
     query = Product.objects.filter(active=True)
 
     if program_id not in [None, '', 'null', 'undefined']:
@@ -77,18 +246,22 @@ def update_lesson_list(request):
         except ValueError:
             print("Invalid program_id")
 
-    if day not in [None, '', 'null', 'undefined']:
-        try:
-            query = query.filter(day_of_week=int(day))
-        except ValueError:
-            print("Invalid day")
+    if selected_days:
+        query = query.filter(day_of_week__in=selected_days)
 
+    if selected_levels:
+        lvl_q = Q()
+        for lvl in selected_levels:
+            lvl_q |= _level_q(lvl)
+        query = query.filter(lvl_q)
+
+    # Build lesson info + paginate
     lessons_info = [
         {
             'lesson': lesson,
             'num_places': lesson.num_places,
             'remaining_spaces': lesson.remaining_spaces(term),
-            'is_full': lesson.is_full(term)
+            'is_full': lesson.is_full(term),
         }
         for lesson in query
     ]
@@ -100,6 +273,8 @@ def update_lesson_list(request):
     return render(request, 'partials/lesson_list.html', {
         'page_obj': page_obj,
         'current_term': term,
+        'selected_days': selected_days,       # useful if the partial shows active filters
+        'selected_levels': selected_levels,   # idem
     })
 
 

@@ -55,6 +55,18 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     objects = UserManager()
 
+    def __str__(self):
+        name = f"{self.first_name or ''} {self.last_name or ''}".strip()
+        # Prefer human name; fall back to email, then id
+        return name or self.email or f"User {self.pk}"
+
+    # Compatibility helpers often expected by Django/admin
+    def get_full_name(self):
+        return f"{self.first_name or ''} {self.last_name or ''}".strip()
+
+    def get_short_name(self):
+        return (self.first_name or '').strip() or self.email or str(self.pk)
+
     def get_absolute_url(self):
         return "/users/%i/" % (self.pk)
 

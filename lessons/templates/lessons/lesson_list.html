@@ -4,26 +4,72 @@
 {% block content %}
 <section class="min-h-screen bg-gradient-to-br from-blue-500 to-blue-900 py-8">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    
+
     <!-- Back Link -->
     <div class="mb-6">
-      <a href="{% url 'swimling_dashboard:guardian_dashboard' %}" 
-         class="inline-flex items-center text-white hover:text-blue-200 transition-colors duration-200">
+      <a href="{% url 'swimling_dashboard:guardian_dashboard' %}"
+        class="inline-flex items-center text-white hover:text-blue-200 transition-colors duration-200 bg-blue-800 w-fit px-4 py-2 rounded-lg shadow-lg">
         <i class="fas fa-arrow-left mr-2"></i>
         <span class="font-medium">Back to Dashboard</span>
       </a>
     </div>
-    
+
     <!-- Header Section -->
     <div class="text-center mb-10">
-      <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full mb-6 shadow-lg">
+      <div
+        class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full mb-6 shadow-lg">
         <i class="fas fa-swimmer text-white text-2xl"></i>
       </div>
-      <h1 class="text-4xl font-bold text-white mb-4">Public Swim Lessons</h1>
+      <h1 class="text-4xl font-bold text-white mb-4">Swim Lessons</h1>
       {% if current_phase %}
       <p class="text-lg text-gray-600 max-w-2xl mx-auto">{{ current_phase }}</p>
       {% endif %}
     </div>
+
+    <!-- Filters -->
+    <form method="get" class="mb-6 flex flex-wrap gap-4 items-end bg-blue-100 p-6 rounded-xl shadow-lg max-w-md mx-auto flex items-center justify-center">
+      <div class="w-full flex items-center justify-center mb-2">
+        <p class="font-bold text-xl text-blue-800">Filter Lessons</p>
+      </div>
+      <!-- Day filter -->
+      <div class="bg-gradient-to-r from-blue-500 to-cyan-500 p-4 rounded-lg">
+        <label for="day" class="block text-sm font-bold text-white mb-1">Day:</label>
+        <select name="day" id="day" class="rounded-lg border-blue-500 focus:ring-blue-500 focus:border-blue-500 p-2">
+          <option value="">All days</option>
+          {% for day_num, day_label in days %}
+          <option value="{{ day_num }}" {% if day_num in selected_days %}selected{% endif %}>
+            {{ day_label }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- Level filter -->
+      <div class="bg-gradient-to-r from-blue-500 to-cyan-500 p-4 rounded-lg">
+        <label for="level" class="block text-sm font-bold text-white mb-1">Level:</label>
+        <select name="level" id="level"
+          class="rounded-lg border-blue-500 focus:ring-blue-500 focus:border-blue-500 p-2">
+          <option value="">All levels</option>
+          {% for lvl in levels %}
+          <option value="{{ lvl }}" {% if lvl in selected_levels %}selected{% endif %}>
+            {{ lvl }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="w-full flex items-center justify-center space-x-4 mt-2">
+        <button type="submit" class="px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+          Search
+        </button>
+
+        <a href="{% url 'lessons:lesson_list' %}"
+          class="px-4 py-2.5 bg-gray-50 text-gray-800 rounded-lg hover:bg-gray-300 transition">
+          Reset
+        </a>
+      </div>
+
+    </form>
 
     <!-- Lessons Table -->
     <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
@@ -39,11 +85,13 @@
         <table class="min-w-full">
           <thead class="bg-gray-50">
             <tr>
-              <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Lesson Details</th>
+              <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Lesson
+                Details</th>
               <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Price</th>
-              <th class="px-6 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Capacity</th>
-              <th class="px-6 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Availability</th>
-              <th class="px-6 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
+              <th class="px-6 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                Availability</th>
+              <th class="px-6 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions
+              </th>
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-200 bg-white">
@@ -51,7 +99,8 @@
             <tr class="hover:bg-gray-50 transition-colors">
               <td class="px-6 py-4">
                 <div class="flex items-center">
-                  <div class="w-10 h-10 bg-gradient-to-r from-blue-400 to-cyan-400 rounded-full flex items-center justify-center mr-3">
+                  <div
+                    class="w-10 h-10 bg-gradient-to-r from-blue-400 to-cyan-400 rounded-full flex items-center justify-center mr-3">
                     <i class="fas fa-swimmer text-white"></i>
                   </div>
                   <span class="font-medium text-gray-900">{{ lesson_info.lesson.name }}</span>
@@ -59,34 +108,31 @@
               </td>
               <td class="px-6 py-4 text-sm font-semibold text-gray-900">€{{ lesson_info.lesson.price }}</td>
               <td class="px-6 py-4 text-center">
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                  {{ lesson_info.num_places }} places
-                </span>
-              </td>
-              <td class="px-6 py-4 text-center">
                 {% if lesson_info.is_full %}
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                <span
+                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
                   <i class="fas fa-times-circle mr-1"></i>Full
                 </span>
-                {% elif lesson_info.remaining_spaces <= 3 %}
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                {% elif lesson_info.remaining_spaces <= 3 %} <span
+                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
                   <i class="fas fa-exclamation-triangle mr-1"></i>{{ lesson_info.remaining_spaces }} left
-                </span>
-                {% else %}
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                  <i class="fas fa-check-circle mr-1"></i>{{ lesson_info.remaining_spaces }} available
-                </span>
-                {% endif %}
+                  </span>
+                  {% else %}
+                  <span
+                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                    <i class="fas fa-check-circle mr-1"></i>{{ lesson_info.remaining_spaces }} available
+                  </span>
+                  {% endif %}
               </td>
               <td class="px-6 py-4 text-center">
                 {% if lesson_info.remaining_spaces > 0 %}
                 <a href="{% url 'lessons:product_detail' id=lesson_info.lesson.id %}?swimling={{ selected_swimling.id }}"
-                   class="inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors">
+                  class="inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors">
                   <i class="fas fa-ticket-alt mr-2"></i>Book Now
                 </a>
                 {% else %}
                 <a href="{% url 'waiting_list:join_waiting_list' swimling_id=selected_swimling.id %}?product={{ lesson_info.lesson.id }}"
-                   class="inline-flex items-center px-4 py-2 bg-yellow-400 text-yellow-900 text-sm font-medium rounded-lg hover:bg-yellow-500 transition-colors">
+                  class="inline-flex items-center px-4 py-2 bg-yellow-400 text-yellow-900 text-sm font-medium rounded-lg hover:bg-yellow-500 transition-colors">
                   <i class="fas fa-clock mr-2"></i>Join Waiting List
                 </a>
                 {% endif %}
@@ -113,7 +159,8 @@
         <div class="bg-gray-50 rounded-lg border border-gray-200 p-4">
           <div class="flex items-center justify-between mb-3">
             <div class="flex items-center space-x-3">
-              <div class="w-10 h-10 bg-gradient-to-r from-blue-400 to-cyan-400 rounded-full flex items-center justify-center">
+              <div
+                class="w-10 h-10 bg-gradient-to-r from-blue-400 to-cyan-400 rounded-full flex items-center justify-center">
                 <i class="fas fa-swimmer text-white"></i>
               </div>
               <span class="font-semibold text-gray-900">{{ lesson_info.lesson.name }}</span>
@@ -122,28 +169,24 @@
           </div>
           <div class="space-y-2 text-sm mb-4">
             <div class="flex justify-between">
-              <span class="text-gray-500">Capacity:</span>
-              <span class="text-gray-900">{{ lesson_info.num_places }} places</span>
-            </div>
-            <div class="flex justify-between">
               <span class="text-gray-500">Status:</span>
               {% if lesson_info.is_full %}
               <span class="text-red-600 font-medium">Full</span>
-              {% elif lesson_info.remaining_spaces <= 3 %}
-              <span class="text-yellow-600 font-medium">{{ lesson_info.remaining_spaces }} left</span>
-              {% else %}
-              <span class="text-green-600 font-medium">{{ lesson_info.remaining_spaces }} available</span>
-              {% endif %}
+              {% elif lesson_info.remaining_spaces <= 3 %} <span class="text-yellow-600 font-medium">{{
+                lesson_info.remaining_spaces }} left</span>
+                {% else %}
+                <span class="text-green-600 font-medium">{{ lesson_info.remaining_spaces }} available</span>
+                {% endif %}
             </div>
           </div>
           {% if lesson_info.remaining_spaces > 0 %}
           <a href="{% url 'lessons:product_detail' id=lesson_info.lesson.id %}?swimling={{ selected_swimling.id }}"
-             class="w-full inline-flex items-center justify-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors">
+            class="w-full inline-flex items-center justify-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors">
             <i class="fas fa-ticket-alt mr-2"></i>Book Now
           </a>
           {% else %}
           <a href="{% url 'waiting_list:join_waiting_list' swimling_id=selected_swimling.id %}?product={{ lesson_info.lesson.id }}"
-             class="w-full inline-flex items-center justify-center px-4 py-2 bg-yellow-400 text-yellow-900 text-sm font-medium rounded-lg hover:bg-yellow-500 transition-colors">
+            class="w-full inline-flex items-center justify-center px-4 py-2 bg-yellow-400 text-yellow-900 text-sm font-medium rounded-lg hover:bg-yellow-500 transition-colors">
             <i class="fas fa-clock mr-2"></i>Join Waiting List
           </a>
           {% endif %}
@@ -166,16 +209,20 @@
       <div class="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
         <nav class="flex flex-wrap justify-center gap-2" role="navigation" aria-label="pagination">
           {% if page_obj.has_previous %}
-          <a href="?page=1" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">First</a>
-          <a href="?page={{ page_obj.previous_page_number }}" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">Previous</a>
+          <a href="?page=1"
+            class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">First</a>
+          <a href="?page={{ page_obj.previous_page_number }}"
+            class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">Previous</a>
           {% else %}
           <span class="px-4 py-2 bg-gray-50 text-gray-400 rounded-lg cursor-not-allowed">First</span>
           <span class="px-4 py-2 bg-gray-50 text-gray-400 rounded-lg cursor-not-allowed">Previous</span>
           {% endif %}
 
           {% if page_obj.has_next %}
-          <a href="?page={{ page_obj.next_page_number }}" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">Next</a>
-          <a href="?page={{ page_obj.paginator.num_pages }}" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">Last</a>
+          <a href="?page={{ page_obj.next_page_number }}"
+            class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">Next</a>
+          <a href="?page={{ page_obj.paginator.num_pages }}"
+            class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">Last</a>
           {% else %}
           <span class="px-4 py-2 bg-gray-50 text-gray-400 rounded-lg cursor-not-allowed">Next</span>
           <span class="px-4 py-2 bg-gray-50 text-gray-400 rounded-lg cursor-not-allowed">Last</span>
@@ -186,12 +233,12 @@
           {% for num in page_obj.paginator.page_range %}
           {% if page_obj.number == num %}
           <span class="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium">{{ num }}</span>
-          {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
-          <a href="?page={{ num }}" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">{{ num }}</a>
-          {% elif num == page_obj.number|add:'-3' or num == page_obj.number|add:'3' %}
-          <span class="px-2 py-2 text-gray-400">…</span>
-          {% endif %}
-          {% endfor %}
+          {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %} <a href="?page={{ num }}"
+            class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">{{ num }}</a>
+            {% elif num == page_obj.number|add:'-3' or num == page_obj.number|add:'3' %}
+            <span class="px-2 py-2 text-gray-400">…</span>
+            {% endif %}
+            {% endfor %}
         </div>
 
         <div class="text-center text-gray-500 text-sm mt-4">

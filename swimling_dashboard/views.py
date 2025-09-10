@@ -250,7 +250,8 @@ def guardian_dashboard(request):
     # 🚫 Block non-guardians
     if not request.user.groups.filter(name__in=["guardian", "Guardian"]).exists():
         messages.error(request, "You do not have permission to view this page.")
-        return redirect("users/profile")
+        # Use named URL to avoid relative redirect like /dashboard/users/profile
+        return redirect('users:profile')
 
     swimlings = Swimling.objects.filter(guardian=request.user)
     term_info = get_term_info(request)

@@ -37,7 +37,7 @@
         </button>
 
         <!-- User Dropdown box -->
-        <ul x-show="open" x-transition
+        <ul x-show="open" x-cloak x-transition
           class="absolute right-0 top-full mt-2 p-4 bg-white shadow-xl rounded-2xl w-80 text-blue-900 z-[1300] border-2 border-blue-200"
           style="position: absolute !important;">
 
@@ -50,14 +50,14 @@
           </div>
 
           <li>
-            <a href="{% url 'info' %}" class="block px-4 py-3 hover:bg-blue-50 rounded-xl transition-all duration-200 hover:translate-x-1">
+            <a href="{% url 'info' %}" class="block px-4 py-3 hover:bg-blue-50 rounded-xl transition-colors">
               <i class="fas fa-info-circle mr-3 text-blue-600 w-5"></i>
               About
             </a>
           </li>
 
           <li>
-            <a href="{% url 'users:profile' %}" class="block px-4 py-3 hover:bg-blue-50 rounded-xl transition-all duration-200 hover:translate-x-1">
+            <a href="{% url 'users:profile' %}" class="block px-4 py-3 hover:bg-blue-50 rounded-xl transition-colors">
               <i class="fas fa-user-circle mr-3 text-blue-600 w-5"></i>
               My Profile
             </a>
@@ -66,13 +66,13 @@
           {% if user|is_guardian_user %}
           <li>
             <a href="{% url 'swimling_dashboard:guardian_dashboard' %}"
-              class="block px-4 py-3 hover:bg-blue-50 rounded-xl transition-all duration-200 hover:translate-x-1">
+              class="block px-4 py-3 hover:bg-blue-50 rounded-xl transition-colors">
               <i class="fas fa-swimmer mr-3 text-blue-600 w-5"></i>
               Swimling Dashboard
             </a>
           </li>
           <li>
-            <a href="#" class="block px-4 py-3 hover:bg-blue-50 rounded-xl transition-all duration-200 hover:translate-x-1">
+            <a href="#" class="block px-4 py-3 hover:bg-blue-50 rounded-xl transition-colors">
               <i class="fas fa-history mr-3 text-blue-600 w-5"></i> 
               My Bookings
             </a>
@@ -98,7 +98,7 @@
           {% endif %}
 
           <li>
-            <a href="/account/password/change/" class="block px-4 py-3 hover:bg-blue-50 rounded-xl transition-all duration-200 hover:translate-x-1">
+            <a href="/account/password/change/" class="block px-4 py-3 hover:bg-blue-50 rounded-xl transition-colors">
               <i class="fas fa-key mr-3 text-blue-600 w-5"></i>
               Change Password
             </a>
@@ -140,7 +140,7 @@
 
 
   <!-- Drawer Sidebar -->
-  <div x-init="drawerOpen = false" x-show="drawerOpen" x-transition:enter="transition transform ease-out duration-300"
+  <div x-init="drawerOpen = false" x-show="drawerOpen" x-cloak x-transition:enter="transition transform ease-out duration-300"
     x-transition:enter-start="-translate-x-full opacity-0" x-transition:enter-end="translate-x-0 opacity-100"
     x-transition:leave="transition transform ease-in duration-500" x-transition:leave-start="translate-x-0 opacity-100"
     x-transition:leave-end="-translate-x-full opacity-0"

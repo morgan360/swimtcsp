@@ -3,6 +3,7 @@ from django.core.mail import send_mail
 from django.shortcuts import render
 from django.http import Http404, JsonResponse
 from django.views.decorators.http import require_http_methods
+from users.utils.roles import is_guardian
 from home.forms import ContactForm
 from django.template.loader import render_to_string
 from django.contrib.auth.decorators import login_required
@@ -62,14 +63,8 @@ def check_guardian_access(request):
     API endpoint to check if user is authenticated and in the Guardian group.
     The Guardian role is the single source of truth for dashboard access.
     """
-    is_authenticated = request.user.is_authenticated
-    is_guardian = False
-
-    if is_authenticated:
-        # Standardize on group membership check
-        is_guardian = request.user.groups.filter(name__in=["guardian", "Guardian"]).exists()
-
+    authenticated = request.user.is_authenticated
     return JsonResponse({
-        'is_authenticated': is_authenticated,
-        'is_guardian': is_guardian
+        'is_authenticated': authenticated,
+        'is_guardian': is_guardian(request.user, include_superuser=False) if authenticated else False,
     })

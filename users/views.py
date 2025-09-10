@@ -123,6 +123,16 @@ class CustomSignupView(SignupView):
         return super().dispatch(request, *args, **kwargs)
 
 
+# Post-login router used by Get Started button
+@login_required
+def after_login(request):
+    """Redirect guardians to dashboard; others to profile."""
+    is_guardian = request.user.groups.filter(name__in=["guardian", "Guardian"]).exists()
+    if is_guardian:
+        return redirect('swimling_dashboard:guardian_dashboard')
+    return redirect('users:profile')
+
+
 @staff_member_required
 def swimlings_list(request):
     """Dashboard-facing view to browse and manage swimlings (search, paginate) and show current classes (public + school) with per-enrollment Move links."""

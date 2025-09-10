@@ -129,9 +129,11 @@
     </div>
   </div>
 </section>
+{% endif %}
 {% endblock %}
 
 {% block scripts %}
+{% if user|is_guardian_user %}
 <script>
   function openAddSwimlingModal() {
     const modal = document.getElementById("addSwimlingModal");

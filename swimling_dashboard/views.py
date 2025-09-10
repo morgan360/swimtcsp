@@ -249,9 +249,10 @@ def add_swimling(request):
 def guardian_dashboard(request):
     # 🚫 Block non-guardians
     if not request.user.groups.filter(name__in=["guardian", "Guardian"]).exists():
-        messages.error(request, "You do not have permission to view this page.")
-        # Use named URL to avoid relative redirect like /dashboard/users/profile
-        return redirect('users:profile')
+        messages.error(request, "Please become a guardian to access the swimling dashboard.")
+        # Redirect to profile with context so user can upgrade easily
+        profile_url = f"{reverse('users:profile')}?guardian_required=true&from=/dashboard/"
+        return redirect(profile_url)
 
     swimlings = Swimling.objects.filter(guardian=request.user)
     term_info = get_term_info(request)

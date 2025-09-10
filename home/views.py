@@ -59,26 +59,16 @@ def management(request):
 @require_http_methods(["GET"])
 def check_guardian_access(request):
     """
-    API endpoint to check if user is authenticated and has guardian role
-    Returns JSON with authentication and guardian status
+    API endpoint to check if user is authenticated and in the Guardian group.
+    The Guardian role is the single source of truth for dashboard access.
     """
     is_authenticated = request.user.is_authenticated
     is_guardian = False
-    
+
     if is_authenticated:
-        # Check if user has guardian role
-        # Assuming you have a user profile or role system
-        # Adjust this based on your actual user model structure
-        if hasattr(request.user, 'profile'):
-            is_guardian = request.user.profile.user_type == 'guardian'
-        elif hasattr(request.user, 'user_type'):
-            is_guardian = request.user.user_type == 'guardian'
-        elif hasattr(request.user, 'role'):
-            is_guardian = request.user.role == 'guardian'
-        else:
-            # Fallback: check if user has guardian-related permissions or groups
-            is_guardian = request.user.groups.filter(name='guardians').exists()
-    
+        # Standardize on group membership check
+        is_guardian = request.user.groups.filter(name__in=["guardian", "Guardian"]).exists()
+
     return JsonResponse({
         'is_authenticated': is_authenticated,
         'is_guardian': is_guardian

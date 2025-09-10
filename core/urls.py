@@ -20,7 +20,8 @@ urlpatterns = [
     # Allauth
     path('accounts/signup/', CustomSignupView.as_view(), name='account_signup'),
     path('accounts/', include('allauth.urls')),
-    path('users/', include('users.urls', namespace='user')),
+    # Use namespace 'users' to match templates and redirects
+    path('users/', include('users.urls', namespace='users')),
     # Lessons
     path('lessons/',
          include('lessons.urls', namespace='lessons')),

@@ -120,7 +120,10 @@ class CustomSignupView(SignupView):
         if request.user.is_authenticated:
             list(messages.get_messages(request))  # reads + clears the queue
             messages.info(request, "You are already logged in.")
-            return redirect("swimling_dashboard:guardian_dashboard")
+            # Role-aware redirect: Guardians → dashboard; others → profile
+            if is_guardian(request.user):
+                return redirect("swimling_dashboard:guardian_dashboard")
+            return redirect('')
         return super().dispatch(request, *args, **kwargs)
 
 

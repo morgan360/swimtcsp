@@ -16,6 +16,8 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.db.models import Q
 from django.core.paginator import Paginator
 from .models import Swimling
+from lessons_orders.models import Order as LessonOrder
+from swims_orders.models import Order as SwimOrder
 
 
 # Get the custom user model
@@ -220,3 +222,32 @@ def swimlings_list(request):
         "total": paginator.count,
     }
     return render(request, "users/swimlings_list.html", context)
+
+
+# =============================
+# My Bookings (Lessons + Swims)
+# =============================
+@login_required
+def my_bookings(request):
+    # Lessons: group by order to show coupon/discount breakdown
+    lesson_orders = (
+        LessonOrder.objects
+        .filter(user=request.user)
+        .prefetch_related('items__product', 'items__term', 'items__swimling')
+        .select_related('coupon')
+        .order_by('-created')
+    )
+
+    # Public Swims: orders with items and product/variants
+    swim_orders = (
+        SwimOrder.objects
+        .filter(user=request.user)
+        .select_related('product', 'coupon')
+        .prefetch_related('items__variant')
+        .order_by('-created')
+    )
+
+    return render(request, 'users/my_bookings.html', {
+        'lesson_orders': lesson_orders,
+        'swim_orders': swim_orders,
+    })

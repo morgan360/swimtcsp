@@ -85,23 +85,23 @@ class CategoryFilter(admin.SimpleListFilter):
 
 
 #  register
-@admin.register(LessonEnrollment)
-class LessonEnrollmentAdmin(ImportExportMixin, admin.ModelAdmin):
-    resource_class = EnrollmentResource
-    list_display = ['swimling', 'term', 'lesson', 'order_link']
-    list_display_links = ('swimling',)
-    search_fields = ('swimling__first_name', 'swimling__last_name',)  # Adjust the fields based on your Swimling model
-    list_filter = [TermFilter, DayOfWeekFilter, ('lesson', RelatedDropdownFilter)]
-    list_per_page = 20
+# @admin.register(LessonEnrollment)
+# class LessonEnrollmentAdmin(ImportExportMixin, admin.ModelAdmin):
+#     resource_class = EnrollmentResource
+#     list_display = ['swimling', 'term', 'lesson', 'order_link']
+#     list_display_links = ('swimling',)
+#     search_fields = ('swimling__first_name', 'swimling__last_name',)  # Adjust the fields based on your Swimling model
+#     list_filter = [TermFilter, DayOfWeekFilter, ('lesson', RelatedDropdownFilter)]
+#     list_per_page = 20
 
-    def order_link(self, obj):
-        if obj.order:
-            # Corrected URL pattern for the Order model's change page
-            link = reverse("admin:lessons_orders_order_change", args=[obj.order.id])
-            return format_html('<a href="{}">{}</a>', link, obj.order)
-        return '-'
-
-    order_link.short_description = 'Order'
+    # def order_link(self, obj):
+    #     if obj.order:
+    #         # Corrected URL pattern for the Order model's change page
+    #         link = reverse("admin:lessons_orders_order_change", args=[obj.order.id])
+    #         return format_html('<a href="{}">{}</a>', link, obj.order)
+    #     return '-'
+    #
+    # order_link.short_description = 'Order'
 
 
 # LESSON ASSIGNMENT
@@ -142,6 +142,6 @@ class TermAdmin(ImportExportMixin, admin.ModelAdmin):
 admin.site.register(Term, TermAdmin)
 
 # Register to Custom Admin
-lessons_admin_site.register(LessonEnrollment, LessonEnrollmentAdmin)
+# lessons_admin_site.register(LessonEnrollment, LessonEnrollmentAdmin)
 lessons_admin_site.register(Term, TermAdmin)
 lessons_admin_site.register(LessonAssignment, LessonAssignmentAdmin)

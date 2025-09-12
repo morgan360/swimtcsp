@@ -37,8 +37,8 @@ DATABASES = {
     }
 }
 
-ALLOWED_HOSTS = ['dev-morganmck.pythonanywhere.com']
-CSRF_TRUSTED_ORIGINS = ['https://dev-morganmck.pythonanywhere.com']
+ALLOWED_HOSTS = [' "dev-morganmck.eu.pythonanywhere.com",']
+CSRF_TRUSTED_ORIGINS = ["https://dev-morganmck.eu.pythonanywhere.com"]
 
 # --- Email (M365) ---
 EMAIL_BACKEND       = 'django.core.mail.backends.smtp.EmailBackend'

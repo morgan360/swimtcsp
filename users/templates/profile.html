@@ -178,28 +178,6 @@
     </div>
 </section>
 
-{% if messages %}
-<div class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50" id="messageModal">
-    <div class="bg-white p-6 rounded-xl shadow-lg max-w-sm w-full relative">
-        <button onclick="document.getElementById('messageModal').remove()"
-            class="absolute top-2 right-2 text-gray-500 hover:text-black text-xl">&times;</button>
-        <div class="text-green-700">
-            {% for message in messages %}
-            <p>{{ message }}</p>
-            {% endfor %}
-        </div>
-    </div>
-</div>
-
-<script>
-    setTimeout(() => {
-        const modal = document.getElementById('messageModal');
-        if (modal) {
-            modal.remove();
-        }
-    }, 3000);
-</script>
-{% endif %}
 
 <!-- Include Guardian Prompt Modal -->
 {% include "modals/guardian_prompt_modal.html" %}

@@ -9,6 +9,7 @@ from schools_bookings.utils.swimling_utils import (
 )
 from django.http import HttpResponse
 from django.template.loader import render_to_string
+from users.utils.roles import is_guardian
 from users.forms import NewSwimlingForm
 from django.contrib import messages
 from django.http import HttpResponse
@@ -248,9 +249,11 @@ def add_swimling(request):
 @login_required
 def guardian_dashboard(request):
     # 🚫 Block non-guardians
-    if not request.user.groups.filter(name__in=["guardian", "Guardian"]).exists():
-        messages.error(request, "You do not have permission to view this page.")
-        return redirect("users/profile")
+    if not is_guardian(request.user):
+        messages.error(request, "Please become a guardian to access the swimling dashboard.")
+        # Redirect to profile with context so user can upgrade easily
+        profile_url = f"{reverse('users:profile')}?guardian_required=true&from=/dashboard/"
+        return redirect(profile_url)
 
     swimlings = Swimling.objects.filter(guardian=request.user)
     term_info = get_term_info(request)

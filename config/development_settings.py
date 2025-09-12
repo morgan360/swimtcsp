@@ -32,7 +32,7 @@ DATABASES = {
         'NAME': 'morganmck$dev_swimtcsp',   # ✅ dev DB
         'USER': 'morganmck',
         'PASSWORD': config("DB_PASSWORD"),
-        'HOST': 'morganmck.mysql.pythonanywhere-services.com',
+        'HOST': 'morganmck.mysql.eu.pythonanywhere-services.com',
         'OPTIONS': {'init_command': "SET sql_mode='STRICT_TRANS_TABLES'"},
     }
 }

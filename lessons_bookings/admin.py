@@ -145,3 +145,4 @@ admin.site.register(Term, TermAdmin)
 # lessons_admin_site.register(LessonEnrollment, LessonEnrollmentAdmin)
 lessons_admin_site.register(Term, TermAdmin)
 lessons_admin_site.register(LessonAssignment, LessonAssignmentAdmin)
+

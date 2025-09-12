@@ -156,7 +156,7 @@ rfc3986-validator==0.1.1
 rich==13.7.0
 rpds-py==0.15.2
 scikit-learn==1.7.1
-scipy==1.16.0
+scipy==1.15.1
 Send2Trash==1.8.2
 setuptools==80.9.0
 six==1.16.0

@@ -1,0 +1,57 @@
+{% load static %}
+
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>500 - Internal Server Error</title>
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    <style>
+        /* Fallback if CSS fails to load */
+        body {
+            background: #0f172a;
+            color: #fff;
+            font-family: system-ui, sans-serif;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, .1);
+            border: 1px solid rgba(255, 255, 255, .2);
+            border-radius: 12px;
+            padding: 2rem;
+            max-width: 36rem;
+            margin: 10vh auto;
+            text-align: center;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: .6rem 1rem;
+            background: #2563eb;
+            color: #fff;
+            border-radius: .5rem;
+            text-decoration: none;
+        }
+    </style>
+</head>
+
+<body class="overflow-x-hidden bg-gradient-to-br from-blue-400 to-blue-900 min-h-screen">
+    <section class="py-12 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-7xl mx-auto">
+            <div class="flex justify-center items-center text-center mt-10">
+                <div
+                    class="card bg-white/40 backdrop-blur-md border border-white/20 rounded-xl shadow-md p-10 w-full max-w-xl">
+                    <h1 class="text-white text-3xl mb-4">500 - Internal Server Error</h1>
+                    <p class="text-white mb-8">Something went wrong on our side. Please try again in a moment.</p> <a
+                        href="/"
+                        class="btn text-white bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 rounded-lg p-3">Go
+                        home</a>
+                </div>
+            </div>
+        </div>
+    </section>
+</body>
+
+</html>

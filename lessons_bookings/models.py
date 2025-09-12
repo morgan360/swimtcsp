@@ -144,11 +144,12 @@ class LessonEnrollment(models.Model):
 # Assign Instructors to Lessons for a term
 class LessonAssignment(models.Model):
     term = models.ForeignKey(Term, on_delete=models.CASCADE)
-    instructor = models.ForeignKey(settings.AUTH_USER_MODEL,
-                                   on_delete=models.CASCADE,
-                                   limit_choices_to={
-                                       'groups__name': 'instructors'},
-                                   related_name='assignments')  # Use a related_name
+    instructor = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        limit_choices_to={'groups__name__in': ['instructor', 'Instructor', 'instructors', 'Instructors']},
+        related_name='assignments'
+    )  # Use a related_name
     lessons = models.ManyToManyField(Product)  # Many-to-many relationship with Lesson model
 
     class Meta:

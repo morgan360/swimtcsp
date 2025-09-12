@@ -19,12 +19,7 @@
     </div>
 
 
-    <div class="flex items-center space-x-2">
-
-      <a href="{% url 'info' %}" class="py-2.5 px-5 w-fit h-auto text-sm mb-2 font-bold text-white focus:outline-none bg-red-700 rounded-lg hover:bg-red-600 focus:z-10 focus:ring-4 focus:ring-gray-100 inline-flex items-center gap-1">
-        <i class="fas fa-info-circle"></i>
-        <span class="hidden sm:inline">About</span>
-      </a>
+    <div class="flex items-center">
 
       {% if user.is_authenticated %}
       <div x-data="{ open: false }" class="relative" @click.away="open = false">
@@ -67,7 +62,7 @@
           <li>
             <a href="{% url 'swimling_dashboard:guardian_dashboard' %}"
               class="block px-4 py-3 hover:bg-blue-50 rounded-xl transition-all duration-200 hover:translate-x-1">
-              <i class="fas fa-swimmer mr-3 text-blue-600 w-5"></i>
+              <i class="fas fa-children mr-3 text-blue-600 w-5"></i>
               Swimling Dashboard
             </a>
           </li>
@@ -105,7 +100,7 @@
           </li>
           <li>
             <button @click="showLogoutModal = true"
-              class="block w-full text-left px-4 py-3 text-red-600 hover:bg-red-50 rounded-xl transition-all duration-200 hover:translate-x-1">
+              class="block w-full text-left px-3 py-2.5 me-2 mb-2 text-red-600 hover:bg-red-50 rounded-xl transition-all duration-200 hover:translate-x-1">
               <i class="fas fa-sign-out-alt mr-3 w-5"></i> 
               Logout
             </button>
@@ -114,14 +109,13 @@
         </ul>
       </div>
       {% else %}
-      <a href="{% url 'account_signup' %}" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 
-        font-bold rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 
-        focus:outline-none dark:focus:ring-blue-800">
+      <a href="{% url 'account_signup' %}" class="text-white bg-gradient-to-r from-blue-600 to-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 hover:from-blue-700 hover:to-blue-800
+        font-bold rounded-lg text-sm px-3 py-2.5 me-2 mb-2">
         <i class="fas fa-user-plus"></i>
         <span class="hidden sm:inline">&nbsp;Sign up</span>
       </a>
       <a href="{% url 'account_login' %}"
-        class="px-4 text-sm font-bold text-blue-900 focus:outline-none bg-blue-300 font-bold rounded-lg text-sm px-5 py-2.5 me-2 mb-2 hover:bg-blue-200 focus:z-10 focus:ring-4 focus:ring-gray-100">
+        class="text-sm font-bold text-blue-900 focus:outline-none bg-white/80 font-bold rounded-lg text-sm px-3 py-2.5 me-2 mb-2 hover:bg-white focus:z-10 focus:ring-4 focus:ring-gray-100">
         <i class="fas fa-sign-in-alt"></i>
         <span class="hidden sm:inline">&nbsp;Login</span>
       </a>

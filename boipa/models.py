@@ -1,8 +1,9 @@
+
 from django.db import models
 from swims_orders.models import Order as SwimOrder
 from lessons_orders.models import Order as LessonOrder
 from schools_orders.models import Order as SchoolOrder
-
+from lessons_orders.models import Order
 
 class SwimOrderPaymentNotification(models.Model):
     order = models.ForeignKey(SwimOrder, on_delete=models.CASCADE, related_name='notifications')
@@ -81,3 +82,14 @@ class SchoolOrderPaymentNotification(models.Model):
 
     def __str__(self):
         return f"Notification {self.txId} for SchoolOrder {self.order.id}"
+
+### Refunds ###
+class Refund(models.Model):
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='refunds')
+    tx_id = models.CharField(max_length=255)  # BOIPA refund txId
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    created = models.DateTimeField(auto_now_add=True)
+    raw_response = models.JSONField(blank=True, null=True)
+
+    def __str__(self):
+        return f"Refund {self.tx_id} for Order {self.order.id}"

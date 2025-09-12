@@ -1,5 +1,4 @@
-<!-- Visible to all staff, but only Managers and Full Timers can adjust -->
-
+<!-- Instructor Assignments Admin Panel -->
 {% extends "dashboard/base_dashboard.html" %}
 {% load group_filters %}
 {% load static %}
@@ -43,7 +42,21 @@
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-2">Instructor</label>
-          {{ form.instructor }}
+          {% with current=form.instructor.value|stringformat:"s" %}
+          <select name="{{ form.instructor.name }}" id="{{ form.instructor.id_for_label }}"
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+            {% if form.instructor.field.empty_label %}
+              <option value="">{{ form.instructor.field.empty_label }}</option>
+            {% endif %}
+            {% for u in form.instructor.field.queryset %}
+              {% with pk=u.pk|stringformat:"s" %}
+                <option value="{{ pk }}" {% if pk == current %}selected{% endif %}>
+                  {{ u.first_name }} {{ u.last_name }}
+                </option>
+              {% endwith %}
+            {% endfor %}
+          </select>
+          {% endwith %}
         </div>
       </div>
       <div>

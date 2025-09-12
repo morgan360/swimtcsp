@@ -29,7 +29,7 @@ CART_SESSION_ID = 'cart'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'morganmck$dev_swimtcsp',   # ✅ dev DB
+        'NAME': 'morganmck$dev-swimtcsp',   # ✅ dev DB
         'USER': 'morganmck',
         'PASSWORD': config("DB_PASSWORD"),
         'HOST': 'morganmck.mysql.eu.pythonanywhere-services.com',

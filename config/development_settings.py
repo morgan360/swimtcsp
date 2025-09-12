@@ -37,7 +37,7 @@ DATABASES = {
     }
 }
 
-ALLOWED_HOSTS = [' "dev-morganmck.eu.pythonanywhere.com",']
+ALLOWED_HOSTS = ["dev-morganmck.eu.pythonanywhere.com"]
 CSRF_TRUSTED_ORIGINS = ["https://dev-morganmck.eu.pythonanywhere.com"]
 
 # --- Email (M365) ---

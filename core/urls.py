@@ -13,6 +13,8 @@ from custom_admins.coupons_admin import coupons_admin_site
 from custom_admins.attendance_admin import attendance_admin_site
 from users.views import CustomSignupView
 from waiting_list.views import redirect_to_swimling_waiting_list
+from django.views.generic import TemplateView
+from django.http import HttpResponse
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -20,7 +22,8 @@ urlpatterns = [
     # Allauth
     path('accounts/signup/', CustomSignupView.as_view(), name='account_signup'),
     path('accounts/', include('allauth.urls')),
-    path('users/', include('users.urls', namespace='user')),
+    # Use namespace 'users' to match templates and redirects
+    path('users/', include('users.urls', namespace='users')),
     # Lessons
     path('lessons/',
          include('lessons.urls', namespace='lessons')),
@@ -60,6 +63,15 @@ if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     urlpatterns += [
         path("__debug__/", include("debug_toolbar.urls")),
+        # Dev-only preview routes for error templates (status will be 200)
+        path("dev/404/", TemplateView.as_view(template_name="404.html"), name="dev-404"),
+        path("dev/500/", TemplateView.as_view(template_name="500.html"), name="dev-500"),
+        path("dev/403/", TemplateView.as_view(template_name="403.html"), name="dev-403"),
+        path("dev/401/", TemplateView.as_view(template_name="401.html"), name="dev-401"),
+        path("dev/503/", TemplateView.as_view(template_name="503.html"), name="dev-503"),
+        # Dev-only endpoints that emit specific statuses to exercise middleware/handlers
+        path("dev/status/401/", lambda r: HttpResponse("Unauthorized", status=401), name="dev-status-401"),
+        path("dev/status/503/", lambda r: HttpResponse("Service Unavailable", status=503), name="dev-status-503"),
     ]
 
 # Add Admin Sites
@@ -73,8 +85,9 @@ urlpatterns += [
     path("couponsadmin/", coupons_admin_site.urls),
     path("attendanceadmin/", attendance_admin_site.urls),
     ]
-# add auto reload
-urlpatterns += [path('__reload__/', include('django_browser_reload.urls'))]
+if settings.DEBUG:
+    # add auto reload (only in development)
+    urlpatterns += [path('__reload__/', include('django_browser_reload.urls'))]
 
 
 # Change Site Labels
@@ -96,3 +109,10 @@ path("anseo/", include("anseo.urls")),
 urlpatterns += [
 path('join-waitlist/', redirect_to_swimling_waiting_list, name='join_waitlist')
 ]
+
+
+# Custom error handlers (used when DEBUG=False)
+handler404 = 'core.error_handlers.custom_handler404'
+handler500 = 'core.error_handlers.custom_handler500'
+handler403 = 'core.error_handlers.custom_handler403'
+

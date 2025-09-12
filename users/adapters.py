@@ -2,7 +2,7 @@
 # social accounts to existing accounts in our user model.
 from allauth.socialaccount.adapter import DefaultSocialAccountAdapter
 from allauth.account.utils import perform_login
-from allauth.exceptions import ImmediateHttpResponse
+from allauth.core.exceptions import ImmediateHttpResponse
 from django.http import HttpResponseRedirect
 from django.contrib.auth import get_user_model
 

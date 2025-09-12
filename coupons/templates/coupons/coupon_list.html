@@ -2,7 +2,7 @@
 
 {% block content %}
 <div class="mb-6 flex justify-end max-w-4xl mx-auto">
-    <a href="/admin/coupons/coupon/add/"
+    <a href="/couponsadmin/coupons/coupon/add/"
         class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-900 to-blue-600 hover:from-blue-600 hover:to-blue-600 text-white rounded-lg transition-colors text-sm sm:text-base">
         <i class="fas fa-plus mr-2"></i>Create New Coupon
     </a>
@@ -29,6 +29,9 @@
                         </p>
                         <p class="text-sm text-gray-500">
                             <span class="font-semibold">Valid:</span> {{ coupon.valid_from|date:"M d, Y" }} – {{ coupon.valid_to|date:"M d, Y" }}
+                        </p>
+                        <p class="text-sm text-gray-500">
+                            <span class="font-semibold">Assigned to:</span> {{ coupon.assigned_to }}
                         </p>
                     </div>
                         <a href="/couponsadmin/coupons/coupon/{{ coupon.id }}/change/" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">

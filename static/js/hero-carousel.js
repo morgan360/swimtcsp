@@ -8,7 +8,11 @@ class HeroCarousel {
             },
             {
                 title: 'All-new <span class="text-red-400">swimling dashboard!</span>',
-                subtitle: 'Register as a <span class="text-red-400">Guardian</span> and manage all our swimmers in one place with the new swimling dashboard.'
+                subtitle: 'Register as a <span class="text-red-400">Guardian</span> and manage all your swimmers in one place with the new swimling dashboard.'
+            },
+            {
+                title: 'swimling <span class="text-red-400">/ˈswɪm·lɪŋ/</span> <span class="text-white/80 text-base align-middle">noun</span>',
+                subtitle: '<span class="block">1. A student in a <strong>swimming class</strong>; a young swimmer in training.</span><span class="block">2. A swimmer managed by a <strong>Guardian</strong> via the <em>Swimling Dashboard</em>.</span>'
             },
             {
                 title: 'Learn to swim with <span class="text-red-400">confidence!</span>',

@@ -136,6 +136,7 @@ MIDDLEWARE = [
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django_browser_reload.middleware.BrowserReloadMiddleware',
     'utils.middleware.SetSessionExpiryMiddleware',  # ✅ Your custom one
+    'utils.middleware.CustomErrorPageMiddleware',   # Render 401/503 templates
 ]
 
 
@@ -176,6 +177,9 @@ TEMPLATES = [
 
 
 WSGI_APPLICATION = 'core.wsgi.application'
+
+# Use our CSRF failure view so 403s show our template
+CSRF_FAILURE_VIEW = 'core.error_handlers.csrf_failure_view'
 
 
 AUTHENTICATION_BACKENDS = [
@@ -340,5 +344,3 @@ SESSION_COOKIE_AGE = 86400  # 1 day
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 SESSION_SAVE_EVERY_REQUEST = True
 CSRF_COOKIE_AGE = 86400
-
-

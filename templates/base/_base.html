@@ -16,11 +16,23 @@
 
     <!-- Tailwind CSS -->
     <link href="{% static 'css/styles.css' %}" rel="stylesheet">
+    <!-- Alpine x-cloak helper to prevent initial flicker -->
+    <style>[x-cloak] { display: none !important; }</style>
 
     <!-- HTMX & Alpine with Collapse plugin -->
     <script src="https://unpkg.com/htmx.org@1.9.10" defer></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
+    <script>
+      // Disable transitions during page unload/navigation to prevent flicker
+      window.addEventListener('beforeunload', function() {
+        document.documentElement.classList.add('unloading');
+      });
+    </script>
+    <style>
+      html.unloading *, html.unloading *::before, html.unloading *::after { transition: none !important; }
+      [x-cloak] { display: none !important; }
+    </style>
 
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="/static/favicon/favicon-96x96.png" sizes="96x96" />
@@ -117,6 +129,27 @@
             {% endblock %}
         </footer>
 
+        <!-- Chatbot Button/Bubble (global) -->
+        <div id="chatbot-widget" class="fixed bottom-6 right-6 flex flex-col items-end space-y-2 z-50 max-w-max">
+            <div class="flex items-center space-x-2">
+                <!-- Dismiss button -->
+                <button id="chatbot-dismiss" type="button"
+                        class="bg-gray-700/90 hover:bg-gray-800 text-white rounded-full w-8 h-8 flex items-center justify-center shadow-md"
+                        aria-label="Dismiss chatbot for this session" title="Hide until you close the tab">
+                    &times;
+                </button>
+                <!-- Chat bubble -->
+                <a href="{% url 'chatbot:public-swim-ui' %}" target="_blank" rel="noopener noreferrer"
+                   class="bg-red-600 hover:bg-red-700 text-white rounded-full p-4 shadow-lg flex items-center justify-center w-20 h-20"
+                   aria-label="Open Chatbot" title="Chat with us (opens in new tab)">
+                    <i class="fas fa-solid fa-comments text-4xl"></i>
+                </a>
+            </div>
+            <p class="hidden md:block bg-red-600 text-white rounded-full px-4 py-3 shadow-lg whitespace-nowrap text-right">
+                Have a question? Ask SplashBot!
+            </p>
+        </div>
+
         {% block extra_js %}{% endblock %}
     </div>
 
@@ -200,10 +233,37 @@
             }
         };
     </script>
+
+    <!-- Chatbot session-dismiss script -->
+    <script>
+        (function () {
+            function hideChatbot() {
+                var w = document.getElementById('chatbot-widget');
+                if (w) { w.style.display = 'none'; }
+            }
+            document.addEventListener('DOMContentLoaded', function () {
+                try {
+                    if (sessionStorage.getItem('chatbotDismissed') === 'true') {
+                        hideChatbot();
+                    }
+                } catch (e) {
+                    // sessionStorage might be unavailable; fail open
+                }
+
+                var btn = document.getElementById('chatbot-dismiss');
+                if (btn) {
+                    btn.addEventListener('click', function () {
+                        try { sessionStorage.setItem('chatbotDismissed', 'true'); } catch (e) {}
+                        hideChatbot();
+                    });
+                }
+            });
+        })();
+    </script>
     <!-- In _base.html, add this right before the closing </body> tag -->
 <div x-data="{ showLogoutModal: false }" 
      x-on:show-logout-modal.window="showLogoutModal = true">
-    <div x-show="showLogoutModal" x-transition
+    <div x-show="showLogoutModal" x-cloak x-transition
         class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]">
         <div @click.away="showLogoutModal = false" 
              class="bg-white/90 backdrop-blur-md rounded-xl shadow-2xl border border-gray-200 p-8 w-full max-w-md mx-4 transform transition-all duration-300 ease-out">

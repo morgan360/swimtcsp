@@ -3,7 +3,10 @@ from . import views
 from allauth.account.views import EmailVerificationSentView
 from django.contrib.auth.decorators import login_required
 from .views import join_schools_program
+
+from users.views import CustomSignupView, my_bookings
 from users.views import CustomSignupView, after_login
+
 
 app_name = "users"
 
@@ -14,5 +17,9 @@ urlpatterns = [
     path('<int:user_id>/', views.hijack_redirect, name='hijack_redirect'),
     path("join-schools/", join_schools_program, name="join_schools_program"),
     path("swimlings/", views.swimlings_list, name="swimlings_list"),
+
+    path("my-bookings/", my_bookings, name="my_bookings"),
+
     path('after-login/', after_login, name='after_login'),
+
 ]

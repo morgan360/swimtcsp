@@ -16,11 +16,23 @@
 
     <!-- Tailwind CSS -->
     <link href="{% static 'css/styles.css' %}" rel="stylesheet">
+    <!-- Alpine x-cloak helper to prevent initial flicker -->
+    <style>[x-cloak] { display: none !important; }</style>
 
     <!-- HTMX & Alpine with Collapse plugin -->
     <script src="https://unpkg.com/htmx.org@1.9.10" defer></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
+    <script>
+      // Disable transitions during page unload/navigation to prevent flicker
+      window.addEventListener('beforeunload', function() {
+        document.documentElement.classList.add('unloading');
+      });
+    </script>
+    <style>
+      html.unloading *, html.unloading *::before, html.unloading *::after { transition: none !important; }
+      [x-cloak] { display: none !important; }
+    </style>
 
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="/static/favicon/favicon-96x96.png" sizes="96x96" />
@@ -251,7 +263,7 @@
     <!-- In _base.html, add this right before the closing </body> tag -->
 <div x-data="{ showLogoutModal: false }" 
      x-on:show-logout-modal.window="showLogoutModal = true">
-    <div x-show="showLogoutModal" x-transition
+    <div x-show="showLogoutModal" x-cloak x-transition
         class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]">
         <div @click.away="showLogoutModal = false" 
              class="bg-white/90 backdrop-blur-md rounded-xl shadow-2xl border border-gray-200 p-8 w-full max-w-md mx-4 transform transition-all duration-300 ease-out">

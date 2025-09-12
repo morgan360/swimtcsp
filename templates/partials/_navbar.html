@@ -22,7 +22,7 @@
 				</button>
 
 				<!-- User Dropdown box -->
-				<ul x-show="open" x-transition
+				<ul x-show="open" x-cloak x-transition
 					class="absolute right-0 top-full mt-2 p-4 bg-white shadow-xl rounded-2xl w-80 text-blue-900 z-[1300] border-2 border-blue-200"
 					style="position: absolute !important;">
 
@@ -35,23 +35,37 @@
 					</div>
 
 					<li>
-						<a href="{% url 'info' %}" class="block px-4 py-3 hover:bg-blue-50 rounded-xl transition-all duration-200 hover:translate-x-1">
+						<a href="{% url 'info' %}" class="block px-4 py-3 hover:bg-blue-50 rounded-xl transition-colors">
 							<i class="fas fa-info-circle mr-3 text-blue-600 w-5"></i>
 							About
 						</a>
 					</li>
 
 					<li>
-						<a href="{% url 'users:profile' %}" class="block px-4 py-3 hover:bg-blue-50 rounded-xl transition-all duration-200 hover:translate-x-1">
+						<a href="{% url 'users:profile' %}" class="block px-4 py-3 hover:bg-blue-50 rounded-xl transition-colors">
 							<i class="fas fa-user-circle mr-3 text-blue-600 w-5"></i>
 							My Profile
 						</a>
 					</li>
 
+
+					{% if user|is_guardian_user %}
+					<li>
+						<a href="{% url 'swimling_dashboard:guardian_dashboard' %}"
+							class="block px-4 py-3 hover:bg-blue-50 rounded-xl transition-colors">
+							<i class="fas fa-swimmer mr-3 text-blue-600 w-5"></i>
+							Swimling Dashboard
+						</a>
+					</li>
+					<li>
+						<a href="#" class="block px-4 py-3 hover:bg-blue-50 rounded-xl transition-colors">
+							<i class="fas fa-history mr-3 text-blue-600 w-5"></i> 
+
 					<!-- My Bookings: visible to all authenticated users -->
 					<li>
 						<a href="{% url 'users:my_bookings' %}" class="block px-4 py-3 hover:bg-blue-50 rounded-xl transition-all duration-200 hover:translate-x-1">
 							<i class="fas fa-history mr-3 text-blue-600 w-5"></i>
+
 							My Bookings
 						</a>
 					</li>
@@ -70,7 +84,7 @@
 
 					{% if user|is_school_user %}
 					<li>
-						<a href="/schools/school_dashboard/" class="block px-4 py-3 hover:bg-blue-50 rounded-xl transition-all duration-200 hover:translate-x-1">
+						<a href="/schools/school_dashboard/" class="block px-4 py-3 hover:bg-blue-50 rounded-xl transition-colors">
 							<i class="fas fa-school mr-3 text-blue-600 w-5"></i>
 							School Dashboard
 						</a>
@@ -78,8 +92,7 @@
 					{% endif %}
 
 					<li>
-						<a href="/accounts/password/change/" class="block px-4 py-3 hover:bg-blue-50 rounded-xl
-						transition-all duration-200 hover:translate-x-1">
+						<a href="/accounts/password/change/" class="block px-4 py-3 hover:bg-blue-50 rounded-xl transition-colors">
 							<i class="fas fa-key mr-3 text-blue-600 w-5"></i>
 							Change Password
 						</a>
@@ -136,8 +149,8 @@
 		<!-- Mobile burger -->
 		<button @click="mobileOpen = !mobileOpen" 
 			class="text-blue-900 text-2xl p-3 rounded-xl bg-white/80 backdrop-blur-sm hover:bg-white transition-all duration-200 shadow-md hover:shadow-lg border border-blue-200/50">
-			<i x-show="!mobileOpen" class="fas fa-bars transition-transform duration-200"></i>
-			<i x-show="mobileOpen" class="fas fa-times transition-transform duration-200"></i>
+			<i x-show="!mobileOpen" x-cloak class="fas fa-bars transition-transform duration-200"></i>
+			<i x-show="mobileOpen" x-cloak class="fas fa-times transition-transform duration-200"></i>
 		</button>
 	</div>
 
@@ -154,7 +167,7 @@
 						<span class="text-center leading-tight lg:whitespace-nowrap xl:whitespace-normal">{{ group }}</span>
 						<i class="fas fa-caret-down text-sm transition-transform duration-200 flex-shrink-0" :class="{'rotate-180': open}"></i>
 					</button>
-					<ul x-show="open" @click.away="open = false" x-transition
+					<ul x-show="open" x-cloak @click.away="open = false" x-transition
 						class="absolute left-0 top-full mt-3 p-3 bg-white shadow-2xl rounded-2xl w-72 text-left text-blue-900 z-[1200] border-2 border-blue-200"
 						style="position: absolute !important;">
 						{% for item in items %}
@@ -174,7 +187,7 @@
 	</div>
 
 	<!-- Mobile Menu -->
-	<div class="w-full mt-4 lg:hidden" x-show="mobileOpen" x-transition>
+	<div class="w-full mt-4 lg:hidden" x-show="mobileOpen" x-cloak x-transition>
 		<div class="bg-white/95 backdrop-blur-sm rounded-2xl p-6 shadow-xl border-2 border-blue-200">
 			{% for group, items in drawer_menus.items %}
 			<!-- Group Header -->

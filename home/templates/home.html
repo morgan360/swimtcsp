@@ -149,11 +149,11 @@
             </div>
             <div class="mt-auto flex">
                 <a href="/swims/"
-                    class="flex-1 text-center px-6 py-4 font-semibold text-white bg-gradient-to-r from-blue-400 to-blue-500 hover:from-blue-500 hover:to-blue-600 transition-all duration-300 transform hover:scale-105">
+                    class="flex-1 text-center px-6 py-4 font-semibold text-white bg-gradient-to-r from-blue-400 to-blue-500 hover:from-blue-600 hover:to-blue-700 transition-all duration-300 transform">
                     Book a Swim
                 </a>
                 <a href="{% url 'timetable:timetable_grid' %}"
-                    class="flex-1 text-center px-6 py-4 font-semibold text-white bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 transition-all duration-300 transform hover:scale-105">
+                    class="flex-1 text-center px-6 py-4 font-semibold text-white bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-400 hover:to-blue-500 transition-all duration-300 transform">
                     View Timetable
                 </a>
             </div>
@@ -161,7 +161,7 @@
 
 
         <!-- Lessons Card -->
-        <div class="bg-white/30 backdrop-blur-md border border-white/30 rounded-2xl shadow-xl flex flex-col h-full overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
+        <div class="bg-white/30 backdrop-blur-md border border-white/30 rounded-2xl shadow-xl flex flex-col h-full overflow-hidden hover:shadow-2xl transition-all duration-300 transform">
             <div class="relative">
                 <img src="{% static 'img/teacher-1.jpeg' %}" alt="Swimming lessons"
                     class="w-full h-64 object-cover">
@@ -184,7 +184,7 @@
             </div>
             <div class="mt-auto flex">
                 <a href="#" onclick="checkGuardianAccess('/dashboard/')"
-                    class="flex-1 text-center px-6 py-4 font-semibold text-white bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 transition-all duration-300 transform hover:scale-105">
+                    class="flex-1 text-center px-6 py-4 font-semibold text-white bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 transition-all duration-300 transform">
                     Swimling Dashboard
                 </a>
             </div>
@@ -195,7 +195,7 @@
     <div class="grid grid-cols-1 md:grid-cols-3 gap-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto pb-10">
 
         <!-- Our Services Card -->
-        <div class="bg-white/30 backdrop-blur-md border border-white/30 rounded-2xl shadow-xl flex flex-col overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:scale-105" id="our-services">
+        <div class="bg-white/30 backdrop-blur-md border border-white/30 rounded-2xl shadow-xl flex flex-col overflow-hidden hover:shadow-2xl transition-all duration-300 transform" id="our-services">
             <div class="p-8 flex-grow">
                 <div class="flex items-center mb-4">
                     <div class="bg-gradient-to-r from-purple-500 to-purple-600 p-3 rounded-full mr-4">
@@ -211,7 +211,7 @@
             </div>
             <div class="mt-auto">
                 <a href="/info/#our-services" 
-                   class="block w-full text-center px-6 py-4 font-semibold text-white bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 transition-all duration-300 transform hover:scale-105">
+                   class="block w-full text-center px-6 py-4 font-semibold text-white bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 transition-all duration-300 transform">
                     Explore
                 </a>
             </div>
@@ -233,7 +233,7 @@
             </div>
             <div class="mt-auto">
                 <a href="#" id="open-newsletter-popup"
-                   class="block w-full text-center px-6 py-4 font-semibold text-white bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 transition-all duration-300 transform hover:scale-105">
+                   class="block w-full text-center px-6 py-4 font-semibold text-white bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 transition-all duration-300 transform">
                     Subscribe
                 </a>
             </div>
@@ -254,24 +254,11 @@
             </div>
             <div class="mt-auto">
                 <a href="/info/"
-                   class="block w-full text-center px-6 py-4 font-semibold text-white bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 transition-all duration-300 transform hover:scale-105">
+                   class="block w-full text-center px-6 py-4 font-semibold text-white bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 transition-all duration-300 transform">
                     Learn More
                 </a>
             </div>
         </div>
-    </div>
-
-
-    <!-- Chatbot Button/Bubble -->
-    <div class="fixed bottom-6 right-6 flex flex-col items-end space-y-2 z-50 max-w-max">
-        <a href="{% url 'chatbot:public-swim-ui' %}" target="_blank" rel="noopener noreferrer"
-            class="bg-red-600 hover:bg-red-700 text-white rounded-full p-4 shadow-lg flex items-center justify-center w-20 h-20"
-            aria-label="Open Chatbot" title="Chat with us (opens in new tab)">
-            <i class="fas fa-solid fa-comments text-4xl"></i>
-        </a>
-        <p class="hidden md:block bg-red-600 text-white rounded-full px-4 py-3 shadow-lg whitespace-nowrap text-right">
-            Have a question? Ask SplashBot!
-        </p>
     </div>
 </div>
 

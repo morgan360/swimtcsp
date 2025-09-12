@@ -117,6 +117,27 @@
             {% endblock %}
         </footer>
 
+        <!-- Chatbot Button/Bubble (global) -->
+        <div id="chatbot-widget" class="fixed bottom-6 right-6 flex flex-col items-end space-y-2 z-50 max-w-max">
+            <div class="flex items-center space-x-2">
+                <!-- Dismiss button -->
+                <button id="chatbot-dismiss" type="button"
+                        class="bg-gray-700/90 hover:bg-gray-800 text-white rounded-full w-8 h-8 flex items-center justify-center shadow-md"
+                        aria-label="Dismiss chatbot for this session" title="Hide until you close the tab">
+                    &times;
+                </button>
+                <!-- Chat bubble -->
+                <a href="{% url 'chatbot:public-swim-ui' %}" target="_blank" rel="noopener noreferrer"
+                   class="bg-red-600 hover:bg-red-700 text-white rounded-full p-4 shadow-lg flex items-center justify-center w-20 h-20"
+                   aria-label="Open Chatbot" title="Chat with us (opens in new tab)">
+                    <i class="fas fa-solid fa-comments text-4xl"></i>
+                </a>
+            </div>
+            <p class="hidden md:block bg-red-600 text-white rounded-full px-4 py-3 shadow-lg whitespace-nowrap text-right">
+                Have a question? Ask SplashBot!
+            </p>
+        </div>
+
         {% block extra_js %}{% endblock %}
     </div>
 
@@ -199,6 +220,33 @@
                 return el;
             }
         };
+    </script>
+
+    <!-- Chatbot session-dismiss script -->
+    <script>
+        (function () {
+            function hideChatbot() {
+                var w = document.getElementById('chatbot-widget');
+                if (w) { w.style.display = 'none'; }
+            }
+            document.addEventListener('DOMContentLoaded', function () {
+                try {
+                    if (sessionStorage.getItem('chatbotDismissed') === 'true') {
+                        hideChatbot();
+                    }
+                } catch (e) {
+                    // sessionStorage might be unavailable; fail open
+                }
+
+                var btn = document.getElementById('chatbot-dismiss');
+                if (btn) {
+                    btn.addEventListener('click', function () {
+                        try { sessionStorage.setItem('chatbotDismissed', 'true'); } catch (e) {}
+                        hideChatbot();
+                    });
+                }
+            });
+        })();
     </script>
     <!-- In _base.html, add this right before the closing </body> tag -->
 <div x-data="{ showLogoutModal: false }" 

@@ -1,9 +1,11 @@
 {% extends "base/_base.html" %}
+{% load group_filters %}
 {% load static %}
 
 {% block title %}Swimling Dashboard{% endblock %}
 
 {% block content %}
+{% if user|is_guardian_user %}
 <section class="min-h-screen bg-gradient-to-br from-blue-500 to-blue-900 py-8">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     
@@ -127,9 +129,11 @@
     </div>
   </div>
 </section>
+{% endif %}
 {% endblock %}
 
 {% block scripts %}
+{% if user|is_guardian_user %}
 <script>
   function openAddSwimlingModal() {
     const modal = document.getElementById("addSwimlingModal");
@@ -200,4 +204,5 @@
     }
   });
 </script>
+{% endif %}
 {% endblock %}

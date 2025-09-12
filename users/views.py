@@ -5,6 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
+from users.utils.roles import is_guardian
 from .forms import UserForm, GuardianOptInForm, JoinSchoolsForm
 from django.shortcuts import render, redirect
 from allauth.account.views import SignupView
@@ -27,7 +28,7 @@ user = get_user_model()
 def update_profile(request):
     guardian_required = request.GET.get('guardian_required') == 'true'
     from_url = request.GET.get('from', '')
-    is_guardian = request.user.groups.filter(name__in=['guardian', 'Guardian']).exists()
+    is_guardian_flag = is_guardian(request.user)
     user_in_school_group = request.user.groups.filter(name__in=['school', 'Schools']).exists()
 
     if request.method == "POST":
@@ -44,7 +45,7 @@ def update_profile(request):
         "u_form": user_form,
         "guardian_required": guardian_required,
         "from_url": from_url,
-        "is_guardian": is_guardian,
+        "is_guardian": is_guardian_flag,
         "user_in_school_group": user_in_school_group,
     })
 
@@ -64,7 +65,7 @@ def become_guardian_view(request):
         form = GuardianOptInForm(request.POST)
         if form.is_valid() and form.cleaned_data['become_guardian']:
             # Check if user is already in either group
-            if not request.user.groups.filter(name__in=['guardian', 'Guardian']).exists():
+            if not is_guardian(request.user):
                 guardian_group, _ = Group.objects.get_or_create(name='guardian')
                 request.user.groups.add(guardian_group)
                 messages.success(request, "Congratulations! You are now a Guardian and can access the Swimling Dashboard.")
@@ -120,8 +121,20 @@ class CustomSignupView(SignupView):
         if request.user.is_authenticated:
             list(messages.get_messages(request))  # reads + clears the queue
             messages.info(request, "You are already logged in.")
-            return redirect("swimling_dashboard:guardian_dashboard")
+            # Role-aware redirect: Guardians → dashboard; others → profile
+            if is_guardian(request.user):
+                return redirect("swimling_dashboard:guardian_dashboard")
+            return redirect('')
         return super().dispatch(request, *args, **kwargs)
+
+
+# Post-login router used by Get Started button
+@login_required
+def after_login(request):
+    """Redirect guardians to dashboard; others to profile."""
+    if is_guardian(request.user):
+        return redirect('swimling_dashboard:guardian_dashboard')
+    return redirect('users:profile')
 
 
 @staff_member_required

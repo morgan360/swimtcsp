@@ -22,7 +22,8 @@ urlpatterns = [
     # Allauth
     path('accounts/signup/', CustomSignupView.as_view(), name='account_signup'),
     path('accounts/', include('allauth.urls')),
-    path('users/', include('users.urls', namespace='user')),
+    # Use namespace 'users' to match templates and redirects
+    path('users/', include('users.urls', namespace='users')),
     # Lessons
     path('lessons/',
          include('lessons.urls', namespace='lessons')),
@@ -109,7 +110,9 @@ urlpatterns += [
 path('join-waitlist/', redirect_to_swimling_waiting_list, name='join_waitlist')
 ]
 
+
 # Custom error handlers (used when DEBUG=False)
 handler404 = 'core.error_handlers.custom_handler404'
 handler500 = 'core.error_handlers.custom_handler500'
 handler403 = 'core.error_handlers.custom_handler403'
+

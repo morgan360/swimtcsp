@@ -1,5 +1,7 @@
 {% extends "base/_base.html" %}
 {% load static %}
+{% load group_filters %}
+{% load navigation_tags %}
 
 {% block title %}Welcome{% endblock %}
 
@@ -183,6 +185,24 @@
                 </p>
             </div>
             <div class="mt-auto flex">
+
+                {% if user|is_guardian_user %}
+                    <a href="{% url 'swimling_dashboard:guardian_dashboard' %}"
+                        class="flex-1 text-center px-6 py-4 font-semibold text-white bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 transition-all duration-300 transform hover:scale-105">
+                        Swimling Dashboard
+                    </a>
+                {% elif user|is_customer_user %}
+                    <a href="/users/profile/become-guardian/"
+                        class="flex-1 text-center px-6 py-4 font-semibold text-white bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 transition-all duration-300 transform hover:scale-105">
+                        Become a guardian
+                    </a>
+                {% else %}
+                    <a href="{% url 'account_login' %}?next=/users/after-login/"
+                        class="flex-1 text-center px-6 py-4 font-semibold text-white bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 transition-all duration-300 transform hover:scale-105">
+                        Book Lessons
+                    </a>
+                {% endif %}
+
                 <a href="#" onclick="checkGuardianAccess('/dashboard/')"
                     class="flex-1 text-center px-6 py-4 font-semibold text-white bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 transition-all duration-300 transform">
                     Swimling Dashboard

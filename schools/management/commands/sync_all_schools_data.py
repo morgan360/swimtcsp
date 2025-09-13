@@ -85,6 +85,9 @@ class Command(BaseCommand):
             FROM sco_schools
         """)
         for row in cursor.fetchall():
+            if row['roll_num'] and ScoSchool.objects.filter(sco_role_num=row['roll_num']).exists():
+                self.stderr.write(f"⚠️ Duplicate sco_role_num {row['roll_num']} for school {row['id']} – skipping")
+                continue
             ScoSchool.objects.update_or_create(
                 id=row['id'],
                 defaults={

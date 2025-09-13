@@ -1,6 +1,7 @@
 ## Getting Data from Existing DB
 1. Users 
 - python manage.py sync_users_from_remote
+- python manage.py import_swimlings_remote
 2. Public Lessons
 - python manage.py sync_all_public_lessons_data
 3. Public Swims

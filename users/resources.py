@@ -20,8 +20,13 @@ class UserResource(resources.ModelResource):
     class Meta:
         model = User
         fields = (
-        'id', 'email', 'username', 'first_name', 'last_name', 'mobile_phone', 'other_phone', 'notes', 'groups')
-        import_id_fields = ('id',)  # Assuming 'id' is used to identify unique records for update
+            'id', 'email', 'username', 'first_name', 'last_name',
+            'mobile_phone', 'other_phone', 'notes', 'groups'
+        )
+        import_id_fields = ('id',)
+        skip_unchanged = True
+        report_skipped = True
+        use_bulk = True  # speeds up large imports
 
     def before_import_row(self, row, **kwargs):
         if 'groups' in row:

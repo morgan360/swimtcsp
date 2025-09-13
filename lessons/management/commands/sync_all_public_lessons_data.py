@@ -37,6 +37,14 @@ from decouple import config
 from lessons.models import Program, Category, Product
 from lessons_bookings.models import Term, LessonEnrollment
 from users.models import Swimling
+from django.db import connection
+
+def truncate_table(model):
+    """Efficiently truncate a single table, resetting IDs."""
+    table_name = model._meta.db_table
+    with connection.cursor() as cursor:
+        cursor.execute(f'TRUNCATE TABLE "{table_name}" RESTART IDENTITY CASCADE;')
+
 
 def parse_date_safe(date_str):
     if not date_str or str(date_str).startswith("0000"):
@@ -58,13 +66,18 @@ class Command(BaseCommand):
         delete_existing = options.get('delete_existing')
 
         if delete_existing:
-            self.stdout.write("🗑️ Deleting existing lesson data...")
+            self.stdout.write("🗑️ Clearing existing lesson data...")
+
+            # Fast truncate for enrollments (safe as it's a child table)
             LessonEnrollment.objects.all().delete()
+
+            # Safer ORM deletes for others
             Term.objects.all().delete()
             Product.objects.all().delete()
             Category.objects.all().delete()
             Program.objects.all().delete()
-            self.stdout.write("✅ Existing data deleted.\n")
+
+            self.stdout.write("✅ Existing data cleared.\n")
 
         self.stdout.write("🌐 Connecting to remote database...")
 
@@ -205,24 +218,51 @@ class Command(BaseCommand):
                 # Enrollments
                 self.stdout.write("📜 Importing Enrollments...")
                 cursor.execute("""
-                    SELECT id, student_id AS swimling_id,
-                           session_id AS lesson_id,
-                           term_id, wc_order_id AS notes,
-                           booking_date AS created
-                    FROM mor_class_bookings
-                """)
+                               SELECT id,
+                                      student_id   AS swimling_id,
+                                      session_id   AS lesson_id,
+                                      term_id,
+                                      wc_order_id  AS notes,
+                                      booking_date AS created,
+                                      order_status
+                               FROM mor_class_bookings
+                               WHERE order_status = 'completed'
+                               """)
 
                 total = imported = skipped = 0
                 for row in cursor.fetchall():
                     total += 1
                     try:
                         swimling = Swimling.objects.get(id=row['swimling_id'])
-                        lesson = Product.objects.get(id=row['lesson_id'])
-                        term = Term.objects.get(id=row['term_id'])
-                    except (Swimling.DoesNotExist, Product.DoesNotExist, Term.DoesNotExist):
+                    except Swimling.DoesNotExist:
                         skipped += 1
+                        self.stderr.write(
+                            f"⚠️ Skipped enrollment {row['id']} – Swimling {row['swimling_id']} not found "
+                            f"(status={row['order_status']})"
+                        )
                         continue
 
+                    try:
+                        lesson = Product.objects.get(id=row['lesson_id'])
+                    except Product.DoesNotExist:
+                        skipped += 1
+                        self.stderr.write(
+                            f"⚠️ Skipped enrollment {row['id']} – Lesson(Product) {row['lesson_id']} not found "
+                            f"(status={row['order_status']})"
+                        )
+                        continue
+
+                    try:
+                        term = Term.objects.get(id=row['term_id'])
+                    except Term.DoesNotExist:
+                        skipped += 1
+                        self.stderr.write(
+                            f"⚠️ Skipped enrollment {row['id']} – Term {row['term_id']} not found "
+                            f"(status={row['order_status']})"
+                        )
+                        continue
+
+                    # Parse created date
                     created_dt = row['created']
                     if isinstance(created_dt, str):
                         try:
@@ -230,13 +270,13 @@ class Command(BaseCommand):
                         except:
                             created_dt = None
 
-                    # Make it timezone-aware if it's naive
                     if isinstance(created_dt, datetime) and is_naive(created_dt):
                         try:
                             created_dt = make_aware(created_dt)
                         except:
                             created_dt = None
 
+                    # Save enrollment
                     LessonEnrollment.objects.update_or_create(
                         swimling=swimling,
                         lesson=lesson,
@@ -248,9 +288,15 @@ class Command(BaseCommand):
                     )
                     imported += 1
 
+                    # Log imported status too
+                    self.stdout.write(
+                        f"✅ Imported enrollment {row['id']} (status={row['order_status']})"
+                    )
+
                 self.stdout.write(self.style.SUCCESS(
                     f"\n✅ Lesson Enrollments imported: {imported} / {total} (skipped: {skipped})"
                 ))
+
 
         finally:
             connection.close()

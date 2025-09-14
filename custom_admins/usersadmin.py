@@ -12,11 +12,22 @@ from django.utils.html import format_html
 
 from hijack.contrib.admin import HijackUserAdminMixin
 
-from users.models import  Swimling
+from django.contrib import messages
+from django.contrib.auth.tokens import default_token_generator
+from django.utils.http import urlsafe_base64_encode
+from django.utils.encoding import force_bytes
+from django.core.mail import send_mail
+from django.conf import settings
+
+from users.models import Swimling
 from users.resources import SwimlingResource, UserResource, GroupResource
 
-User = get_user_model()
 
+
+
+
+
+User = get_user_model()
 
 
 # 🔹 Admin site
@@ -39,7 +50,6 @@ class SwimlingInline(admin.StackedInline):
     model = Swimling
     extra = 1
     fields = ('first_name', 'last_name', 'dob', 'sco_role_num', 'notes')
-
 
 
 # 🔹 Swimling Admin
@@ -70,6 +80,38 @@ class SwimlingAdmin(ImportExportMixin, admin.ModelAdmin):
         return "-"
     guardian_link.short_description = 'Guardian'
 
+
+# 🔹 Admin action: Send password reset email
+@admin.action(description="📩 Send password reset email")
+def send_password_reset_email(modeladmin, request, queryset):
+    for user in queryset:
+        if not user.email:
+            messages.warning(request, f"⚠️ User {user} has no email address.")
+            continue
+
+        token = default_token_generator.make_token(user)
+        uid = urlsafe_base64_encode(force_bytes(user.pk))
+        reset_path = reverse('password_reset_confirm', kwargs={'uidb64': uid, 'token': token})
+
+        # ✅ Build full URL using request context
+        scheme = request.scheme
+        domain = request.get_host()
+        full_url = f"{scheme}://{domain}{reset_path}"
+
+        send_mail(
+            subject="🔐 Reset your password",
+            message=(
+                f"Hi {user.get_full_name() or user.email},\n\n"
+                f"You requested to reset your password.\n\n"
+                f"Click the link below to set a new password:\n{full_url}\n\n"
+                f"If you didn’t request this, please ignore this email."
+            ),
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[user.email],
+            fail_silently=False,
+        )
+
+        messages.success(request, f"✅ Password reset email sent to {user.email}")
 
 # 🔹 User Admin
 class UserAdmin(HijackUserAdminMixin, ImportExportMixin, BaseUserAdmin):
@@ -109,10 +151,14 @@ class UserAdmin(HijackUserAdminMixin, ImportExportMixin, BaseUserAdmin):
     ordering = ('last_name', 'first_name')
     filter_horizontal = ('groups',)
 
+    # 🔹 Register the password reset action
+    actions = [send_password_reset_email]
+
 
 # 🔹 Group Admin
 class GroupAdmin(BaseGroupAdmin, ImportExportModelAdmin):
     resource_class = GroupResource
+
 
 # 🔹 Register with default admin (for Hijack compatibility)
 try:

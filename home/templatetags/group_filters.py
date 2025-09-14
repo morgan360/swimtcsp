@@ -18,7 +18,7 @@ def is_guardian_user(user):
 
 @register.filter(name='is_school_user') # NEW: 'Schools'
 def is_school_user(user):
-    return user.groups.filter(name__in=['zion', 'bishopgalvin', 'bishop_galvin', 'Schools']).exists()
+    return user.groups.filter(name__in=['zion', 'bishopgalvin', 'bishop_galvin', 'Schools', 'schools']).exists()
 
 @register.filter(name='is_fulltimer_user') # NEW
 def is_fulltimer_user(user):

@@ -40,7 +40,7 @@ def safe_time(val):
 
 
 class Command(BaseCommand):
-    help = "Sync Public Swim data and orders from remote TCSP DB"
+    help = "Sync Public Swim data and orders from remote TCSP DB (forcing remote IDs as PKs)"
 
     def handle(self, *args, **options):
         # === STEP 1: RESET LOCAL TABLES ===
@@ -51,12 +51,13 @@ class Command(BaseCommand):
         PublicSwimProduct.objects.all().delete()
         PublicSwimCategory.objects.all().delete()
 
+        # bump AUTO_INCREMENT high so new objects don't clash
         with connection.cursor() as cursor:
-            cursor.execute("ALTER TABLE swims_orders_orderitem AUTO_INCREMENT = 1;")
-            cursor.execute("ALTER TABLE swims_orders_order AUTO_INCREMENT = 1;")
-            cursor.execute("ALTER TABLE swims_pricevariant AUTO_INCREMENT = 1;")
-            cursor.execute("ALTER TABLE swims_publicswimproduct AUTO_INCREMENT = 1;")
-            cursor.execute("ALTER TABLE swims_publicswimcategory AUTO_INCREMENT = 1;")
+            cursor.execute("ALTER TABLE swims_orders_orderitem AUTO_INCREMENT = 100000;")
+            cursor.execute("ALTER TABLE swims_orders_order AUTO_INCREMENT = 100000;")
+            cursor.execute("ALTER TABLE swims_pricevariant AUTO_INCREMENT = 100000;")
+            cursor.execute("ALTER TABLE swims_publicswimproduct AUTO_INCREMENT = 100000;")
+            cursor.execute("ALTER TABLE swims_publicswimcategory AUTO_INCREMENT = 100000;")
 
         self.stdout.write("✅ Tables cleared and reset.")
 
@@ -72,9 +73,13 @@ class Command(BaseCommand):
                 events = cursor.fetchall()
                 event_map = {}
                 for e in events:
-                    cat, _ = PublicSwimCategory.objects.get_or_create(
-                        slug=slugify(e['event']),
-                        defaults={'name': e['event'], 'description': ''}
+                    cat, _ = PublicSwimCategory.objects.update_or_create(
+                        id=e['id'],  # force PK
+                        defaults={
+                            'name': e['event'],
+                            'slug': slugify(e['event']),
+                            'description': ''
+                        }
                     )
                     event_map[e['id']] = cat
                 self.stdout.write(f"✅ {len(event_map)} categories synced.")
@@ -99,7 +104,7 @@ class Command(BaseCommand):
                     name = f"{category.name} ({DAY_CHOICES.get(s['day_id'], 'Unknown')} {time_str})"
 
                     product, _ = PublicSwimProduct.objects.update_or_create(
-                        external_id=s['id'],
+                        id=s['id'],  # force PK
                         defaults={
                             'slug': slug,
                             'name': name,
@@ -121,19 +126,17 @@ class Command(BaseCommand):
                     'Adult': 9.00, 'Child': 5.00, 'OAP': 3.00,
                     'Student': 4.00, 'Infant': 0.00,
                 }
-                created, skipped = 0, 0
+                created = 0
                 for product in product_map.values():
-                    for code in default_prices:
-                        obj, created_obj = PriceVariant.objects.get_or_create(
+                    for code, price in default_prices.items():
+                        # let Django auto PK here, variants don't have a remote ID
+                        PriceVariant.objects.create(
                             product=product,
                             variant=code,
-                            defaults={'price': default_prices[code]}
+                            price=price
                         )
-                        if created_obj:
-                            created += 1
-                        else:
-                            skipped += 1
-                self.stdout.write(f"✅ {created} new variants created. Skipped {skipped}.")
+                        created += 1
+                self.stdout.write(f"✅ {created} variants created.")
 
                 # === STEP 6: Orders ===
                 self.stdout.write("📄 Importing orders...")
@@ -166,8 +169,8 @@ class Command(BaseCommand):
                         if isinstance(booking_date, str):
                             booking_date = datetime.strptime(booking_date, '%Y-%m-%d').date()
 
-                        order, created = Order.objects.get_or_create(
-                            txId=row['wc_order_id'],
+                        order, created = Order.objects.update_or_create(
+                            id=row['wc_order_id'],  # force PK from remote
                             defaults={
                                 'user': user,
                                 'product': product,
@@ -191,7 +194,11 @@ class Command(BaseCommand):
                             if qty and qty > 0:
                                 variant = PriceVariant.objects.filter(product=product, variant=label).first()
                                 if variant:
-                                    OrderItem.objects.create(order=order, variant=variant, quantity=qty)
+                                    OrderItem.objects.create(
+                                        order=order,
+                                        variant=variant,
+                                        quantity=qty
+                                    )
                                     total += decimal.Decimal(variant.price) * qty
 
                         order.amount = total

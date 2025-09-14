@@ -333,7 +333,7 @@ HIJACK_PERMISSION_CHECK = "hijack.permissions.superusers_and_staff"
 
 
 # Default Email
-DEFAULT_SUPPORT_EMAIL = "swim@tcsp.ie"
+DEFAULT_SUPPORT_EMAIL = "swimming@tcsp.ie"
 # Mailchimp
 MAILCHIMP_API_KEY = config("MAILCHIMP_API_KEY")
 MAILCHIMP_SERVER_PREFIX = config("MAILCHIMP_SERVER_PREFIX")

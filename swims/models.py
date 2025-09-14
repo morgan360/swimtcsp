@@ -51,9 +51,10 @@ class PublicSwimProduct(models.Model):
     external_id = models.IntegerField(null=True, blank=True, unique=True)
 
     def save(self, *args, **kwargs):
-        if not self.name:
-            self.name = self.generate_name()
+        # Always regenerate name
+        self.name = self.generate_name()
 
+        # Only generate slug if this is a new object
         if not self.slug:
             self.slug = slugify(self.name)
 
@@ -83,14 +84,6 @@ class PublicSwimProduct(models.Model):
                     variant=variant_name,
                     price=9.0
                 )
-
-
-@receiver(pre_save, sender=PublicSwimProduct)
-def update_product_name_and_slug(sender, instance, **kwargs):
-    if not instance.name:
-        instance.name = instance.generate_name()
-    if not instance.slug:
-        instance.slug = slugify(instance.name)
 
 # Still commented (safe for remote sync)
 # @receiver(post_save, sender=PublicSwimProduct)

@@ -21,6 +21,8 @@ from schools.models import ScoSchool, ScoProgram, ScoCategory, ScoLessons
 from schools_bookings.models import ScoTerm, ScoEnrollment
 from users.models import Swimling
 from decouple import config
+from django.utils.timezone import make_aware
+import datetime
 
 load_dotenv()
 
@@ -126,22 +128,23 @@ class Command(BaseCommand):
         # LESSONS
         self.stdout.write("📅 Importing Lessons...")
         cursor.execute("""
-            SELECT id,
-                   day_id,
-                   lesson_id AS category,
-                   num_places,
-                   num_weeks,
-                   time_start,
-                   time_end,
-                   active,
-                   CASE category_id
-                       WHEN 19 THEN 23
-                       WHEN 29 THEN 1
-                   END AS school,
-                   price
-            FROM mor_sessions_classes
-            WHERE category_id IN (19, 29)
-        """)
+                       SELECT id,
+                              day_id,
+                              lesson_id AS category,
+                              num_places,
+                              num_weeks,
+                              time_start,
+                              time_end,
+                              active,
+                              CASE category_id
+                                  WHEN 19 THEN 23
+                                  WHEN 29 THEN 1
+                                  END   AS school,
+                              price
+                       FROM mor_sessions_classes
+                       WHERE category_id IN (19, 29)
+                       """)
+
         for row in cursor.fetchall():
             category = ScoCategory.objects.filter(id=row['category']).first()
             school = ScoSchool.objects.filter(id=row['school']).first()
@@ -150,10 +153,20 @@ class Command(BaseCommand):
                 continue
 
             try:
-                start_time = row['time_start'] if isinstance(row['time_start'], time) else time.fromisoformat(str(row['time_start']))
-                end_time = row['time_end'] if isinstance(row['time_end'], time) else time.fromisoformat(str(row['time_end']))
+                start_time = row['time_start'] if isinstance(row['time_start'], time) else time.fromisoformat(
+                    str(row['time_start']))
+                end_time = row['time_end'] if isinstance(row['time_end'], time) else time.fromisoformat(
+                    str(row['time_end']))
             except Exception as e:
                 self.stderr.write(f"⚠️ Skipping lesson {row['id']} due to invalid time: {e}")
+                continue
+
+            # Adjust day_id from 1–7 (Mon–Sun) to 0–6
+            day_id = row['day_id']
+            if day_id is not None and 1 <= day_id <= 7:
+                day_of_week = day_id - 1
+            else:
+                self.stderr.write(f"⚠️ Skipping lesson {row['id']} due to invalid day_id: {day_id}")
                 continue
 
             ScoLessons.objects.update_or_create(
@@ -161,7 +174,7 @@ class Command(BaseCommand):
                 defaults={
                     'category': category,
                     'school': school,
-                    'day_of_week': row['day_id'],
+                    'day_of_week': day_of_week,
                     'num_places': row['num_places'],
                     'num_weeks': row['num_weeks'],
                     'start_time': start_time,
@@ -174,15 +187,16 @@ class Command(BaseCommand):
         # TERMS
         self.stdout.write("🗓️  Importing Terms...")
         cursor.execute("""
-            SELECT id,
-                   COALESCE(start_date, '2000-01-01') AS start_date,
-                   COALESCE(finish_date, '2000-01-01') AS end_date,
-                   COALESCE(booking_start_date, '2000-01-01') AS booking_start_date,
-                   COALESCE(booking_end_date, '2000-01-01') AS booking_end_date,
-                   COALESCE(assesments_complete, '2000-01-01') AS assessment_date,
-                   category_id
-            FROM sco_terms
-        """)
+                       SELECT id,
+                              COALESCE(start_date, '2000-01-01')          AS start_date,
+                              COALESCE(finish_date, '2000-01-01')         AS end_date,
+                              COALESCE(booking_start_date, '2000-01-01')  AS booking_start_date,
+                              COALESCE(booking_end_date, '2000-01-01')    AS booking_end_date,
+                              COALESCE(assesments_complete, '2000-01-01') AS assessment_date,
+                              category_id,
+                              booking_status
+                       FROM sco_terms
+                       """)
         for row in cursor.fetchall():
             school_map = {19: 23, 29: 1}
             school_id = school_map.get(row['category_id'])
@@ -200,32 +214,53 @@ class Command(BaseCommand):
                     'booking_start_date': row['booking_start_date'],
                     'booking_end_date': row['booking_end_date'],
                     'assessment_date': row['assessment_date'],
-                    'school': school
+                    'school': school,
+                    'is_active': row['booking_status'] == 1  # 👈 Mapping booking_status to is_active
                 }
             )
 
         # ENROLLMENTS
         self.stdout.write("👥 Importing Enrollments...")
         cursor.execute("""
-            SELECT mor_class_bookings.id,
-                   mor_class_bookings.student_id AS swimling,
-                   mor_class_bookings.session_id AS lesson,
-                   mor_class_bookings.term_id AS term,
-                   mor_class_bookings.wc_order_id AS notes,
-                   mor_class_bookings.booking_date AS created
-            FROM mor_class_bookings
-            JOIN mor_sessions_classes ON mor_class_bookings.session_id = mor_sessions_classes.id
-            WHERE mor_sessions_classes.category_id IN (19, 29)
-              AND mor_class_bookings.term_id > 40
-              AND mor_class_bookings.paid = 1
-        """)
+                       SELECT mor_class_bookings.id,
+                              mor_class_bookings.student_id   AS swimling,
+                              mor_class_bookings.session_id   AS lesson,
+                              mor_class_bookings.term_id      AS term,
+                              mor_class_bookings.booking_date AS created
+                       FROM mor_class_bookings
+                                JOIN mor_sessions_classes ON mor_class_bookings.session_id = mor_sessions_classes.id
+                       WHERE mor_sessions_classes.category_id IN (19, 29)
+                         AND mor_class_bookings.term_id > 40
+                         AND mor_class_bookings.order_status = 'completed'
+                       """)
+
+        imported = 0
+        skipped = 0
+
         for row in cursor.fetchall():
             lesson = ScoLessons.objects.filter(id=row['lesson']).first()
             swimling = Swimling.objects.filter(id=row['swimling']).first()
             term = ScoTerm.objects.filter(id=row['term']).first()
 
-            if not (lesson and term and swimling):
+            if not lesson:
+                self.stderr.write(f"⛔ Missing lesson {row['lesson']} for enrollment {row['id']}")
+            if not swimling:
+                self.stderr.write(f"⛔ Missing swimling {row['swimling']} for enrollment {row['id']}")
+            if not term:
+                self.stderr.write(f"⛔ Missing term {row['term']} for enrollment {row['id']}")
+
+            if not (lesson and swimling and term):
+                skipped += 1
                 continue
+
+            created_dt = row['created']
+            if created_dt and isinstance(created_dt, datetime.datetime):
+                try:
+                    created_dt = make_aware(created_dt)
+                except Exception as e:
+                    self.stderr.write(f"⚠️ Could not make datetime aware for enrollment {row['id']}: {e}")
+                    skipped += 1
+                    continue
 
             ScoEnrollment.objects.update_or_create(
                 id=row['id'],
@@ -233,10 +268,13 @@ class Command(BaseCommand):
                     'lesson': lesson,
                     'swimling': swimling,
                     'term': term,
-                    'notes': row['notes'],
-                    'created': row['created']
+                    'created': created_dt,
                 }
             )
+            imported += 1
+
+        self.stdout.write(f"✅ Enrollments imported: {imported}")
+        self.stdout.write(f"⚠️ Enrollments skipped: {skipped}")
 
         connection_remote.close()
         self.stdout.write(self.style.SUCCESS("\n✅ School data sync complete."))

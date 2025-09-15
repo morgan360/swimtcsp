@@ -73,11 +73,15 @@ class SwimlingAdmin(ImportExportMixin, admin.ModelAdmin):
                     ),
                     args=[obj.guardian.pk]
                 )
-                name = f"{obj.guardian.first_name} {obj.guardian.last_name or ''}".strip()
+                # 👇 Prefer full name, but fallback to email or __str__
+                name = (f"{obj.guardian.first_name} {obj.guardian.last_name}".strip()
+                        or obj.guardian.email
+                        or str(obj.guardian))
                 return format_html('<a href="{}">{}</a>', url, name)
             except Exception:
-                return f"{obj.guardian.first_name} {obj.guardian.last_name or ''}".strip()
+                return str(obj.guardian)
         return "-"
+
     guardian_link.short_description = 'Guardian'
 
 

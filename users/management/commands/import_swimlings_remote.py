@@ -3,6 +3,7 @@ from decouple import config
 from django.core.management.base import BaseCommand
 from users.models import Swimling, User
 from django.db import connection, transaction
+from datetime import datetime, date
 
 class Command(BaseCommand):
     help = 'Import Swimlings from remote WordPress DB into local Django DB, preserving original IDs and resetting AUTO_INCREMENT'
@@ -19,13 +20,14 @@ class Command(BaseCommand):
         }
 
         query = """
-        SELECT id AS wp_id,
-               guardian_id,
-               first_name,
-               last_name,
-               notes
-        FROM mor_student_details
-        """
+                SELECT id AS wp_id,
+                       guardian_id,
+                       first_name,
+                       last_name,
+                       notes,
+                       dob
+                FROM mor_student_details \
+                """
 
         try:
             self.stdout.write("🔌 Connecting to remote database...")
@@ -61,14 +63,32 @@ class Command(BaseCommand):
                     last_name = row.get('last_name') or ''
                     notes = row.get('notes') or ''
 
+                    raw_dob = row.get('dob')
+                    dob = None
+
+                    if raw_dob and raw_dob not in ("0000-00-00", "0000-00-00 00:00:00"):
+                        if isinstance(raw_dob, date):
+                            # Already a date object
+                            dob = raw_dob
+                        else:
+                            try:
+                                dob = datetime.strptime(raw_dob, "%Y-%m-%d").date()
+                            except ValueError:
+                                try:
+                                    dob = datetime.strptime(raw_dob, "%d/%m/%Y").date()
+                                except ValueError:
+                                    self.stdout.write(
+                                        self.style.WARNING(
+                                            f"⚠️ Could not parse DOB '{raw_dob}' for Swimling {row['wp_id']}")
+                                    )
                     Swimling.objects.create(
                         id=int(row['wp_id']),
                         guardian=guardian,
                         first_name=first_name,
                         last_name=last_name,
-                        notes=notes
+                        notes=notes,
+                        dob=dob  # assuming your Swimling model has a DateField
                     )
-                    created += 1
 
                 # Reset AUTO_INCREMENT to max(id)+1
                 with connection.cursor() as cursor:

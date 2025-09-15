@@ -37,8 +37,12 @@ DATABASES = {
     }
 }
 
-ALLOWED_HOSTS = ['tcsp-morganmck.eu.pythonanywhere.com']
-CSRF_TRUSTED_ORIGINS = ['https://tcsp-morganmck.eu.pythonanywhere.com']
+ALLOWED_HOSTS = ['www.tcsp.ie', 'tcsp.ie']
+CSRF_TRUSTED_ORIGINS = ['https://www.tcsp.ie', 'https://tcsp.ie']
+try:
+    MIDDLEWARE.insert(0, "config.middleware.WwwRedirectMiddleware")
+except NameError:
+    MIDDLEWARE = ["config.middleware.WwwRedirectMiddleware"]
 
 # --- Email (M365) ---
 EMAIL_BACKEND       = 'django.core.mail.backends.smtp.EmailBackend'

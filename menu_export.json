@@ -1,47 +1,17 @@
 [
   {
     "group": {
-      "name": "Main",
+      "name": "Main Menu",
       "slug": "main",
       "order": 0
     },
     "items": [
       {
-        "label": "Public Lessons Chat",
-        "url_name": "chatbot:public-lesson-ui",
+        "label": "Home",
+        "url_name": "home",
         "external_url": "",
-        "icon_class": "fas fa-comments",
+        "icon_class": "fa-solid fa-house",
         "order": 0,
-        "requires_login": true,
-        "requires_staff": false,
-        "groups": []
-      },
-      {
-        "label": "About",
-        "url_name": "about",
-        "external_url": "",
-        "icon_class": "",
-        "order": 2,
-        "requires_login": false,
-        "requires_staff": false,
-        "groups": []
-      },
-      {
-        "label": "Public Chatbot",
-        "url_name": "chatbot:public-swim-ui",
-        "external_url": "",
-        "icon_class": "fas fa-comments",
-        "order": 2,
-        "requires_login": true,
-        "requires_staff": false,
-        "groups": []
-      },
-      {
-        "label": "Contact",
-        "url_name": "contact",
-        "external_url": "",
-        "icon_class": "",
-        "order": 3,
         "requires_login": false,
         "requires_staff": false,
         "groups": []
@@ -51,35 +21,31 @@
         "url_name": "timetable:timetable_grid",
         "external_url": "",
         "icon_class": "fas fa-calendar",
-        "order": 4,
+        "order": 1,
         "requires_login": false,
         "requires_staff": false,
         "groups": []
       },
       {
-        "label": "Public Swims",
+        "label": "Book Public Swim",
         "url_name": "swims:product_list",
         "external_url": "",
         "icon_class": "fas fa-swimmer",
-        "order": 5,
+        "order": 2,
         "requires_login": false,
         "requires_staff": false,
-        "groups": [
-          "Customer",
-          "guardian",
-          "administrator"
-        ]
+        "groups": []
       },
       {
-        "label": "Swimling Dasboard",
+        "label": "Swimling Dashboard",
         "url_name": "swimling_dashboard:guardian_dashboard",
         "external_url": "",
-        "icon_class": "fas fa-tachometer-alt",
-        "order": 6,
+        "icon_class": "fa-solid fa-children",
+        "order": 3,
         "requires_login": true,
         "requires_staff": false,
         "groups": [
-          "guardian"
+          "Guardian"
         ]
       }
     ]
@@ -92,29 +58,41 @@
     },
     "items": [
       {
-        "label": "Move Swimmers",
-        "url_name": "management:move_swimmers",
+        "label": "All Contacts",
+        "url_name": "mailchimp:contacts",
         "external_url": "",
-        "icon_class": "fas fa-exchange-alt",
-        "order": 1,
+        "icon_class": "fa fa-envelope",
+        "order": 0,
         "requires_login": true,
-        "requires_staff": false,
+        "requires_staff": true,
         "groups": [
-          "pool_manager",
-          "manager"
+          "Manager",
+          "Desk",
+          "Full-Timer"
         ]
       },
       {
         "label": "Order Management",
-        "url_name": "management:order_list",
+        "url_name": "dashboard:dashboard_orders",
         "external_url": "",
         "icon_class": "fas fa-box",
         "order": 2,
         "requires_login": true,
         "requires_staff": false,
         "groups": [
-          "pool_manager",
-          "manager"
+          "Manager"
+        ]
+      },
+      {
+        "label": "All Reports",
+        "url_name": "",
+        "external_url": "/reports/",
+        "icon_class": "fas fa-tachometer-alt",
+        "order": 4,
+        "requires_login": true,
+        "requires_staff": true,
+        "groups": [
+          "Manager"
         ]
       }
     ]
@@ -134,7 +112,25 @@
         "order": 0,
         "requires_login": true,
         "requires_staff": true,
-        "groups": []
+        "groups": [
+          "Manager",
+          "Desk",
+          "Full-Timer"
+        ]
+      },
+      {
+        "label": "Move Swimmers",
+        "url_name": "management:move_swimmers",
+        "external_url": "",
+        "icon_class": "fas fa-exchange-alt",
+        "order": 1,
+        "requires_login": true,
+        "requires_staff": true,
+        "groups": [
+          "Manager",
+          "Desk",
+          "Full-Timer"
+        ]
       },
       {
         "label": "Lessons Admin",
@@ -145,8 +141,24 @@
         "requires_login": true,
         "requires_staff": true,
         "groups": [
-          "admin",
-          "administrator"
+          "Manager",
+          "Desk",
+          "Full-Timer"
+        ]
+      },
+      {
+        "label": "Admin Dashboard",
+        "url_name": "dashboard:dashboard_home",
+        "external_url": "",
+        "icon_class": "fa-solid fa-gauge-high",
+        "order": 1,
+        "requires_login": true,
+        "requires_staff": true,
+        "groups": [
+          "Manager",
+          "instructor",
+          "Desk",
+          "Full-Timer"
         ]
       },
       {
@@ -156,9 +168,11 @@
         "icon_class": "fas fa-school",
         "order": 3,
         "requires_login": true,
-        "requires_staff": false,
+        "requires_staff": true,
         "groups": [
-          "administrator"
+          "Manager",
+          "Desk",
+          "Full-Timer"
         ]
       },
       {
@@ -169,7 +183,12 @@
         "order": 4,
         "requires_login": true,
         "requires_staff": true,
-        "groups": []
+        "groups": [
+          "Manager",
+          "Desk",
+          "Instructor",
+          "Full-Timer"
+        ]
       },
       {
         "label": "Instructors Admin",
@@ -179,7 +198,12 @@
         "order": 4,
         "requires_login": true,
         "requires_staff": true,
-        "groups": []
+        "groups": [
+          "Manager",
+          "instructor",
+          "Desk",
+          "Full-Timer"
+        ]
       },
       {
         "label": "General Administration",
@@ -189,7 +213,12 @@
         "order": 5,
         "requires_login": true,
         "requires_staff": true,
-        "groups": []
+        "groups": [
+          "Manager",
+          "instructor",
+          "Desk",
+          "Full-Timer"
+        ]
       },
       {
         "label": "Staff Schedule",
@@ -199,9 +228,7 @@
         "order": 8,
         "requires_login": true,
         "requires_staff": true,
-        "groups": [
-          "administrator"
-        ]
+        "groups": []
       },
       {
         "label": "Analytics",
@@ -212,7 +239,7 @@
         "requires_login": true,
         "requires_staff": true,
         "groups": [
-          "administrator"
+          "Manager"
         ]
       },
       {
@@ -224,7 +251,9 @@
         "requires_login": true,
         "requires_staff": true,
         "groups": [
-          "administrator"
+          "Manager",
+          "Desk",
+          "Full-Timer"
         ]
       }
     ]
@@ -264,7 +293,11 @@
         "order": 3,
         "requires_login": true,
         "requires_staff": true,
-        "groups": []
+        "groups": [
+          "Manager",
+          "Desk",
+          "Full-Timer"
+        ]
       }
     ]
   },
@@ -283,17 +316,24 @@
         "order": 0,
         "requires_login": true,
         "requires_staff": true,
-        "groups": []
+        "groups": [
+          "Manager",
+          "instructor",
+          "Desk",
+          "Full-Timer"
+        ]
       },
       {
-        "label": "Class Assments",
+        "label": "Class Assesments",
         "url_name": "instructors:evaluate_lesson_skills",
         "external_url": "",
         "icon_class": "",
         "order": 2,
         "requires_login": true,
         "requires_staff": true,
-        "groups": []
+        "groups": [
+          "instructor"
+        ]
       },
       {
         "label": "Skills Matrix",
@@ -320,10 +360,12 @@
         "external_url": "",
         "icon_class": "",
         "order": 0,
-        "requires_login": false,
-        "requires_staff": false,
+        "requires_login": true,
+        "requires_staff": true,
         "groups": [
-          "administrator"
+          "Manager",
+          "Desk",
+          "Full-Timer"
         ]
       },
       {
@@ -334,10 +376,14 @@
         "order": 1,
         "requires_login": true,
         "requires_staff": true,
-        "groups": []
+        "groups": [
+          "Manager",
+          "Desk",
+          "Full-Timer"
+        ]
       },
       {
-        "label": "Class Lists",
+        "label": "Class List Generator",
         "url_name": "reports:class_list_view",
         "external_url": "",
         "icon_class": "fas fa-list",
@@ -354,18 +400,11 @@
         "order": 3,
         "requires_login": true,
         "requires_staff": true,
-        "groups": []
-      },
-      {
-        "label": "All Reports",
-        "url_name": "",
-        "external_url": "/reports/",
-        "icon_class": "fas fa-tachometer-alt",
-        "order": 4,
-        "requires_login": true,
-        "requires_staff": false,
         "groups": [
-          "administrator"
+          "Manager",
+          "instructor",
+          "Desk",
+          "Full-Timer"
         ]
       }
     ]
@@ -459,15 +498,73 @@
       "slug": "mailchimp",
       "order": 10
     },
+    "items": []
+  },
+  {
+    "group": {
+      "name": "Help",
+      "slug": "help",
+      "order": 10
+    },
     "items": [
       {
-        "label": "All Contacts",
-        "url_name": "mailchimp:contacts",
-        "external_url": "",
-        "icon_class": "fa fa-envelope",
+        "label": "Getting Started",
+        "url_name": "",
+        "external_url": "/getting-started/",
+        "icon_class": "fa-solid fa-circle-play",
         "order": 0,
+        "requires_login": false,
+        "requires_staff": false,
+        "groups": []
+      },
+      {
+        "label": "Our Services",
+        "url_name": "",
+        "external_url": "/info/#our-services",
+        "icon_class": "fa-solid fa-person-swimming",
+        "order": 0,
+        "requires_login": false,
+        "requires_staff": false,
+        "groups": []
+      },
+      {
+        "label": "Public Lessons Chat",
+        "url_name": "chatbot:public-lesson-ui",
+        "external_url": "",
+        "icon_class": "fas fa-comments",
+        "order": 6,
         "requires_login": true,
-        "requires_staff": true,
+        "requires_staff": false,
+        "groups": []
+      },
+      {
+        "label": "Public Chatbot",
+        "url_name": "chatbot:public-swim-ui",
+        "external_url": "",
+        "icon_class": "fas fa-comments",
+        "order": 7,
+        "requires_login": true,
+        "requires_staff": false,
+        "groups": []
+      },
+      {
+        "label": "About Us",
+        "url_name": "",
+        "external_url": "/info/",
+        "icon_class": "fa-solid fa-circle-info",
+        "order": 10,
+        "requires_login": false,
+        "requires_staff": false,
+        "groups": []
+      },
+      {
+        "label": "Contact Us",
+        "url_name": "",
+        "external_url": "/info/#contact-form",
+        "icon_class": "fa-solid fa-envelope",
+        "order": 11,
+        "requires_login": false,
+        "requires_staff": false,
         "groups": []
       }
     ]

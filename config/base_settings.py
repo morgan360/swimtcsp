@@ -118,6 +118,7 @@ INSTALLED_APPS = [
     'coupons',
     'mailchimp',
     'anseo',
+    "maintenance_mode",
 ]
 
 MIDDLEWARE = [
@@ -137,6 +138,9 @@ MIDDLEWARE = [
     'django_browser_reload.middleware.BrowserReloadMiddleware',
     'utils.middleware.SetSessionExpiryMiddleware',  # ✅ Your custom one
     'utils.middleware.CustomErrorPageMiddleware',   # Render 401/503 templates
+# Maintanence mode toggle python manage.py maintenance_mode off/on
+    "maintenance_mode.middleware.MaintenanceModeMiddleware"
+
 ]
 
 

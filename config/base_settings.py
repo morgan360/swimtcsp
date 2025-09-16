@@ -348,3 +348,23 @@ SESSION_COOKIE_AGE = 86400  # 1 day
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 SESSION_SAVE_EVERY_REQUEST = True
 CSRF_COOKIE_AGE = 86400
+
+# Let admin and login bypass maintenance mode
+MAINTENANCE_MODE_IGNORE_URLS = (
+    r'^/admin/login/',     # login page
+    r'^/admin/logout/',    # logout page
+    r'^/admin/password_reset/',  # password reset
+    r'^/accounts/login/',  # if using Django's default login
+)
+
+
+# Allow superusers and staff to bypass the maintenance page
+MAINTENANCE_MODE_IGNORE_SUPERUSER = True
+MAINTENANCE_MODE_IGNORE_STAFF = True
+
+# Whitelist trusted IPs (your home/office or PythonAnywhere server)
+MAINTENANCE_MODE_IGNORE_IP_ADDRESSES = [
+    "3.248.36.76",   # tcsp.ie root domain resolves here
+    "18.194.5.49",   # PythonAnywhere webapp server
+    # add your home IP too if needed
+]

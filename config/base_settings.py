@@ -349,12 +349,12 @@ SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 SESSION_SAVE_EVERY_REQUEST = True
 CSRF_COOKIE_AGE = 86400
 
-# Let admin and login bypass maintenance mode
 MAINTENANCE_MODE_IGNORE_URLS = (
-    r'^/admin/login/',     # login page
-    r'^/admin/logout/',    # logout page
-    r'^/admin/password_reset/',  # password reset
-    r'^/accounts/login/',  # if using Django's default login
+    r'^/admin/.*',                 # allow all admin pages
+    r'^/accounts/login/?$',        # Django default login
+    r'^/accounts/logout/?$',       # Django default logout
+    r'^/accounts/password_reset/?$',  # Django default password reset
+    r'^/users/login/?$',           # your custom login if used
 )
 
 

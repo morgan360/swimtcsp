@@ -114,109 +114,73 @@
         </thead>
         <tbody class="bg-white divide-y divide-gray-200">
           {% for product in products %}
-
-      <!-- Table Container -->
-      <div class="overflow-x-auto">
-        <table class="min-w-full divide-y divide-gray-200">
-          <thead class="bg-blue-50">
-            <tr>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-blue-800 uppercase tracking-wider">
-                Name
-              </th>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-blue-800 uppercase tracking-wider">
-                Category
-              </th>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-blue-800 uppercase tracking-wider">
-                Schedule
-              </th>
-              <th scope="col"
-                class="px-6 py-3 text-center text-xs font-semibold text-blue-800 uppercase tracking-wider">
-                Capacity
-              </th>
-              <th scope="col"
-                class="px-6 py-3 text-center text-xs font-semibold text-blue-800 uppercase tracking-wider">
-                Status
-              </th>
-              <th scope="col"
-                class="px-6 py-3 text-center text-xs font-semibold text-blue-800 uppercase tracking-wider">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody class="bg-white divide-y divide-gray-200">
-            {% for product in products %}
-            <tr class="hover:bg-blue-50 transition-colors duration-150">
-              <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                {{ product.name }}
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                <span
-                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                  {{ product.category.name }}
-                </span>
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                <div class="flex flex-col">
-                  <span class="font-medium">{{ product.get_day_of_week_display }}</span>
-                  <span class="text-xs text-gray-500">{{ product.start_time|time:"H:i" }} - {{ product.end_time|time:"H:i" }}</span>
-                </div>
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-600">
-                <span
-                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                  {{ product.num_places }} places
-                </span>
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap text-center">
-                {% if product.available %}
-                <span
-                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                  <i class="fas fa-check-circle mr-1"></i>Active
-                </span>
+          <tr class="hover:bg-blue-50 transition-colors duration-150">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+              {{ product.name }}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                {{ product.category.name }}
+              </span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+              <div class="flex flex-col">
+                <span class="font-medium">{{ product.get_day_of_week_display }}</span>
+                <span class="text-xs text-gray-500">{{ product.start_time|time:"H:i" }} - {{ product.end_time|time:"H:i" }}</span>
+              </div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-600">
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                {{ product.num_places }} places
+              </span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-center">
+              {% if product.available %}
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                <i class="fas fa-check-circle mr-1"></i>Active
+              </span>
+              {% else %}
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                <i class="fas fa-times-circle mr-1"></i>Inactive
+              </span>
+              {% endif %}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-center text-sm">
+              <div class="flex justify-center space-x-2">
+                {% if user.is_superuser or user|is_manager_user or user|is_fulltimer_user %}
+                <a href="/admin/swims/publicswimproduct/{{ product.id }}/change/"
+                  class="inline-flex items-center px-3 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors duration-200">
+                  <i class="fas fa-edit mr-2"></i>
+                  Edit
+                </a>
                 {% else %}
-                <span
-                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                  <i class="fas fa-times-circle mr-1"></i>Inactive
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                  No actions available
                 </span>
                 {% endif %}
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap text-center text-sm">
-                <div class="flex justify-center space-x-2">
-                  {% if user.is_superuser or user|is_manager_user or user|is_fulltimer_user %}
-                  <a href="/admin/swims/publicswimproduct/{{ product.id }}/change/"
-                    class="inline-flex items-center px-3 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors duration-200">
-                    <i class="fas fa-edit mr-2"></i>
-                    Edit
-                  </a>
-                  {% else %}
-                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                    No actions available
-                  </span>
-                  {% endif %}
-                </div>
-              </td>
-            </tr>
-            {% empty %}
-            <tr>
-              <td colspan="6" class="px-6 py-8 text-center text-gray-500 text-sm">
-                <div class="flex flex-col items-center gap-2">
-                  <svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-3-5v5"></path>
-                  </svg>
-                  <span class="font-medium">No Public Swim Products available</span>
-                  <a href="/admin/swims/publicswimproduct/add/"
-                    class="mt-2 inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
-                    <i class="fas fa-plus mr-2"></i>Add First Product
-                  </a>
-                </div>
-              </td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
+              </div>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="6" class="px-6 py-8 text-center text-gray-500 text-sm">
+              <div class="flex flex-col items-center gap-2">
+                <svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-3-5v5"></path>
+                </svg>
+                <span class="font-medium">No Public Swim Products available</span>
+                <a href="/admin/swims/publicswimproduct/add/"
+                  class="mt-2 inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+                  <i class="fas fa-plus mr-2"></i>Add First Product
+                </a>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
     </div>
+  </div>
 
 
     <!-- Mobile Cards (below md) -->

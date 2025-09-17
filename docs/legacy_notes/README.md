@@ -17,7 +17,7 @@ school bookings, and public swim sessions — with integrated e-commerce, admin 
 - [Frontend: Bulma, Alpine, HTMX](../Z-TCSP%20Processes/frontend.md)
 
 ### 🛠 Development
-- [Admin Access & Management](../admin/Restricting-management.md)
+- [Admin Access & Management](admin/Restricting-management.md)
 - [CSV Import/Export Guide](../guides/import-export.md)
 
 ### ✅ Tracking & Notes

@@ -61,6 +61,7 @@ class SwimlingAdmin(ImportExportMixin, admin.ModelAdmin):
         ('first_name', DropdownFilter),
         ('guardian', RelatedDropdownFilter),
     ]
+    search_fields = ['first_name', 'last_name', 'guardian__email', 'guardian__first_name', 'guardian__last_name']
     ordering = ['guardian__last_name', 'last_name']
 
     def guardian_link(self, obj):

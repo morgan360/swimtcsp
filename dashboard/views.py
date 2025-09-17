@@ -8,6 +8,7 @@ from schools_orders.models import Order as SchoolOrder
 from lessons.models import Program, Product
 from lessons_bookings.models import LessonEnrollment
 from instructors.models import InstructorAssignment
+from lessons_bookings.models import LessonAssignment
 from django.contrib.auth import get_user_model
 from datetime import timedelta, time as dt_time
 from django.contrib.auth.models import Group, Permission
@@ -19,6 +20,7 @@ from django.core.paginator import Paginator
 from django.db.models import Q, Sum
 from utils.context_processors import get_term_info
 from utils.terms_utils import get_term_context_data
+from instructors.utils import prefill_next_term_instructors
 
 User = get_user_model()
 
@@ -73,6 +75,13 @@ def lessons(request):
 @user_passes_test(is_staff)
 def admin_lessons_list(request):
     term_data = get_term_context_data()
+    # Opportunistically prefill next-term instructors based on the latest term.
+    # Idempotent and skips lessons already assigned for the next term.
+    try:
+        prefill_next_term_instructors()
+    except Exception:
+        # Avoid breaking the page if prefill hits an edge case
+        pass
     phase = term_data['current_phase_id']
     term = term_data['next_term'] if phase == 'RB' else term_data['current_term']
     day_choices = Product.DAY_CHOICES
@@ -729,12 +738,34 @@ def lessons_history(request, lesson_id):
                     if sid is not None:
                         seen_ids.add(sid)
 
+        # Resolve instructor for (lesson, term): prefer direct InstructorAssignment,
+        # then fall back to LessonAssignment (M2M: term+instructor with many lessons),
+        # finally fall back to any instructor set on the lesson itself.
+        instructor = None
         try:
-            assignment = (
-                InstructorAssignment.objects.select_related("instructor").filter(lesson=lesson, term=term_obj).first()
+            ia = (
+                InstructorAssignment.objects
+                .select_related("instructor")
+                .filter(lesson=lesson, term=term_obj)
+                .first()
             )
-            instructor = assignment.instructor if assignment else getattr(lesson, "instructor", None)
+            if ia and ia.instructor:
+                instructor = ia.instructor
         except Exception:
+            pass
+        if instructor is None:
+            try:
+                la = (
+                    LessonAssignment.objects
+                    .select_related("instructor", "term")
+                    .filter(term=term_obj, lessons=lesson)
+                    .first()
+                )
+                if la and la.instructor:
+                    instructor = la.instructor
+            except Exception:
+                pass
+        if instructor is None:
             instructor = getattr(lesson, "instructor", None)
         capacity = getattr(lesson, "num_places", None)
         try:

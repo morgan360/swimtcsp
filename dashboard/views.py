@@ -8,6 +8,7 @@ from schools_orders.models import Order as SchoolOrder
 from lessons.models import Program, Product
 from lessons_bookings.models import LessonEnrollment
 from instructors.models import InstructorAssignment
+from lessons_bookings.models import LessonAssignment
 from django.contrib.auth import get_user_model
 from datetime import timedelta, time as dt_time
 from django.contrib.auth.models import Group, Permission
@@ -19,6 +20,7 @@ from django.core.paginator import Paginator
 from django.db.models import Q, Sum
 from utils.context_processors import get_term_info
 from utils.terms_utils import get_term_context_data
+from instructors.utils import prefill_next_term_instructors
 
 User = get_user_model()
 
@@ -73,6 +75,13 @@ def lessons(request):
 @user_passes_test(is_staff)
 def admin_lessons_list(request):
     term_data = get_term_context_data()
+    # Opportunistically prefill next-term instructors based on the latest term.
+    # Idempotent and skips lessons already assigned for the next term.
+    try:
+        prefill_next_term_instructors()
+    except Exception:
+        # Avoid breaking the page if prefill hits an edge case
+        pass
     phase = term_data['current_phase_id']
     term = term_data['next_term'] if phase == 'RB' else term_data['current_term']
     day_choices = Product.DAY_CHOICES
@@ -116,7 +125,7 @@ def admin_lessons_list(request):
     elif selected_availability == 'full':
         lessons_info = [li for li in lessons_info if li['is_full']]
 
-    paginator = Paginator(lessons_info, 8)
+    paginator = Paginator(lessons_info, 20)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
@@ -125,6 +134,7 @@ def admin_lessons_list(request):
 
     context = {
         'page_obj': page_obj,
+        'total': paginator.count,
         'programs': programs,
         'days': day_choices,
         'categories': categories,
@@ -140,6 +150,72 @@ def admin_lessons_list(request):
     if request.headers.get('HX-Request'):
         return render(request, 'dashboard/_admin_lessons_list_content.html', context)
     return render(request, 'dashboard/admin_lessons_list.html', context)
+
+
+@login_required
+@user_passes_test(is_staff)
+def admin_lessons_list_rows(request):
+    """Return paginated HTML fragments for admin lessons list (rows or cards)."""
+    term_data = get_term_context_data()
+    phase = term_data['current_phase_id']
+    term = term_data['next_term'] if phase == 'RB' else term_data['current_term']
+
+    active_lessons = Product.objects.filter(active=True)
+
+    selected_level = request.GET.get('level') or ''
+    selected_day = request.GET.get('day') or ''
+    selected_time = request.GET.get('time') or ''
+    selected_availability = request.GET.get('availability') or ''
+
+    if selected_level:
+        try:
+            active_lessons = active_lessons.filter(category_id=int(selected_level))
+        except (TypeError, ValueError):
+            pass
+    if selected_day != '':
+        try:
+            active_lessons = active_lessons.filter(day_of_week=int(selected_day))
+        except (TypeError, ValueError):
+            pass
+    if selected_time:
+        try:
+            h, m = selected_time.split(':')
+            active_lessons = active_lessons.filter(start_time=dt_time(hour=int(h), minute=int(m)))
+        except Exception:
+            pass
+
+    lessons_info = [
+        {
+            'lesson': lesson,
+            'num_places': lesson.num_places,
+            'remaining_spaces': lesson.remaining_spaces(term),
+            'is_full': lesson.is_full(term),
+        }
+        for lesson in active_lessons
+    ]
+
+    if selected_availability == 'available':
+        lessons_info = [li for li in lessons_info if not li['is_full']]
+    elif selected_availability == 'full':
+        lessons_info = [li for li in lessons_info if li['is_full']]
+
+    paginator = Paginator(lessons_info, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    variant = request.GET.get('variant', 'desktop')
+    template_name = 'dashboard/_admin_lesson_rows.html' if variant == 'desktop' else 'dashboard/_admin_lesson_cards.html'
+
+    html = render(request, template_name, {
+        'page_obj': page_obj,
+    }).content.decode('utf-8')
+
+    from django.http import JsonResponse
+    return JsonResponse({
+        'html': html,
+        'next_page': page_obj.next_page_number() if page_obj.has_next() else None,
+        'count_this_page': len(page_obj.object_list),
+    })
 
 
 @login_required
@@ -662,12 +738,34 @@ def lessons_history(request, lesson_id):
                     if sid is not None:
                         seen_ids.add(sid)
 
+        # Resolve instructor for (lesson, term): prefer direct InstructorAssignment,
+        # then fall back to LessonAssignment (M2M: term+instructor with many lessons),
+        # finally fall back to any instructor set on the lesson itself.
+        instructor = None
         try:
-            assignment = (
-                InstructorAssignment.objects.select_related("instructor").filter(lesson=lesson, term=term_obj).first()
+            ia = (
+                InstructorAssignment.objects
+                .select_related("instructor")
+                .filter(lesson=lesson, term=term_obj)
+                .first()
             )
-            instructor = assignment.instructor if assignment else getattr(lesson, "instructor", None)
+            if ia and ia.instructor:
+                instructor = ia.instructor
         except Exception:
+            pass
+        if instructor is None:
+            try:
+                la = (
+                    LessonAssignment.objects
+                    .select_related("instructor", "term")
+                    .filter(term=term_obj, lessons=lesson)
+                    .first()
+                )
+                if la and la.instructor:
+                    instructor = la.instructor
+            except Exception:
+                pass
+        if instructor is None:
             instructor = getattr(lesson, "instructor", None)
         capacity = getattr(lesson, "num_places", None)
         try:

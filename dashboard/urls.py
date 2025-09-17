@@ -8,6 +8,7 @@ urlpatterns = [
     path('public-swims/', views.public_swims, name='dashboard_public_swims'),
     path('lessons/', views.lessons, name='dashboard_lessons'),
     path('admin_lessons_list/', views.admin_lessons_list, name='admin_lessons_list'),
+    path('admin_lessons_list/rows/', views.admin_lessons_list_rows, name='admin_lessons_list_rows'),
     path('lessons/<int:lesson_id>/history/', views.lessons_history, name='lessons_history'),
     path('schools/', views.schools, name='dashboard_schools'),
     path('orders/', views.orders, name='dashboard_orders'),

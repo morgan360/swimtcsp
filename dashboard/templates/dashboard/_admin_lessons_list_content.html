@@ -1,5 +1,15 @@
 <!-- Desktop/Table (md+) -->
 <div class="hidden md:block overflow-x-auto">
+  <!-- State seed for JS -->
+  <div id="admin-lessons-root"
+       data-total="{{ total|default:0 }}"
+       data-loaded="{{ page_obj.end_index }}"
+       data-next-page="{% if page_obj.has_next %}{{ page_obj.next_page_number }}{% endif %}"
+       data-level="{{ selected_level|default:'' }}"
+       data-day="{{ selected_day|default:'' }}"
+       data-time="{{ selected_time|default:'' }}"
+       data-availability="{{ selected_availability|default:'' }}"
+       class="hidden"></div>
   <table class="min-w-full divide-y divide-gray-200">
     <thead class="bg-green-100 rounded-xl">
       <tr>
@@ -9,98 +19,88 @@
         <th class="px-6 py-3 text-center text-xs font-semibold text-green-700 uppercase tracking-wider">Actions</th>
       </tr>
     </thead>
-    <tbody class="divide-y divide-gray-200 bg-white">
-      {% for lesson_info in page_obj %}
-      <tr class="hover:bg-gray-50 transition-colors">
-        <td class="px-6 py-4">
-          <div class="flex items-center">
-            <div class="w-10 h-10 bg-gradient-to-r from-green-400 to-cyan-400 rounded-full flex items-center justify-center mr-3">
-              <i class="fas fa-swimmer text-white"></i>
-            </div>
-            <span class="font-medium text-gray-900">{{ lesson_info.lesson.name }}</span>
-          </div>
-        </td>
-        <td class="px-6 py-4 text-center">
-          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-            {{ lesson_info.num_places }} places
-          </span>
-        </td>
-        <td class="px-6 py-4 text-center">
-          {% if lesson_info.is_full %}
-          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-            <i class="fas fa-times-circle mr-1"></i>Full
-          </span>
-          {% elif lesson_info.remaining_spaces <= 3 %}
-          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-            <i class="fas fa-exclamation-triangle mr-1"></i>{{ lesson_info.remaining_spaces }} left
-          </span>
-          {% else %}
-          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-            <i class="fas fa-check-circle mr-1"></i>{{ lesson_info.remaining_spaces }} available
-          </span>
-          {% endif %}
-        </td>
-        <td class="px-6 py-4 text-center flex-col">
-          <a href="{% url 'dashboard:lessons_history' lesson_info.lesson.id %}" class="mt-1 inline-flex items-center px-4 py-2 bg-orange-600 text-white text-sm font-medium rounded-lg hover:bg-orange-700 transition-colors">
-            <i class="fa-solid fa-clock-rotate-left mr-2"></i>View Class History
-          </a>
-        </td>
-      </tr>
-      {% empty %}
-      <tr>
-        <td colspan="5" class="px-6 py-12 text-center">
-          <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <i class="fas fa-swimming-pool text-gray-400 text-2xl"></i>
-          </div>
-          <h3 class="text-lg font-medium text-gray-900 mb-2">No Lessons Available</h3>
-          <p class="text-gray-500">Check back later for new lesson schedules</p>
-        </td>
-      </tr>
-      {% endfor %}
+    <tbody id="admin-lessons-tbody" class="divide-y divide-gray-200 bg-white">
+      {% include 'dashboard/_admin_lesson_rows.html' %}
     </tbody>
   </table>
+  <div id="admin-lessons-sentinel" class="py-4 text-center text-gray-400">Loading more…</div>
 </div>
 
 <!-- Mobile Cards (below md) -->
-<div class="md:hidden">
-  {% for lesson_info in page_obj %}
-  <div class="p-4 border border-blue-200 mt-2">
-    <div class="flex items-start gap-3">
-      <div class="flex-1 min-w-0">
-        <div class="text-white bg-gradient-to-r from-green-400 to-cyan-400 rounded-lg px-3 py-2 flex flex-col items-center text-center">
-          <i class="fas fa-swimmer text-white mb-1"></i>
-          <h4 class="text-base font-semibold text-white">{{ lesson_info.lesson.name }}</h4>
-        </div>
-        <div class="mt-1 text-sm text-gray-600">Capacity: <span class="font-medium">{{ lesson_info.num_places }}</span></div>
-        <div class="mt-1">
-          {% if lesson_info.is_full %}
-          <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-            <i class="fas fa-times-circle mr-1"></i>Full
-          </span>
-          {% elif lesson_info.remaining_spaces <= 3 %}
-          <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-            <i class="fas fa-exclamation-triangle mr-1"></i>{{ lesson_info.remaining_spaces }} left
-          </span>
-          {% else %}
-          <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-            <i class="fas fa-check-circle mr-1"></i>{{ lesson_info.remaining_spaces }} available
-          </span>
-          {% endif %}
-        </div>
-        <div class="mt-3 flex flex-wrap gap-2">
-          <a href="{% url 'dashboard:lessons_history' lesson_info.lesson.id %}" class="inline-flex items-center px-3 py-1.5 bg-orange-600 text-white text-xs font-medium rounded-lg hover:bg-orange-700 transition-colors">
-            <i class="fa-solid fa-clock-rotate-left mr-1"></i>Class History
-          </a>
-        </div>
-      </div>
-    </div>
-  </div>
-  {% empty %}
-  <div class="p-6 text-center text-gray-500">
-    <div class="flex flex-col items-center">
-      <i class="fas fa-swimming-pool text-3xl text-gray-300 mb-2"></i>
-      <p class="text-sm">No Lessons Available</p>
-    </div>
-  </div>
-  {% endfor %}
+<div class="md:hidden" id="admin-lessons-cards">
+  {% include 'dashboard/_admin_lesson_cards.html' %}
+  <div id="admin-lessons-sentinel-mobile" class="py-4 text-center text-gray-400">Loading more…</div>
 </div>
+
+<script>
+  (function() {
+    const root = document.getElementById('admin-lessons-root');
+    const tbody = document.getElementById('admin-lessons-tbody');
+    const cards = document.getElementById('admin-lessons-cards');
+    const sentinel = document.getElementById('admin-lessons-sentinel');
+    const sentinelMobile = document.getElementById('admin-lessons-sentinel-mobile');
+
+    let total = parseInt(root?.dataset.total || '0', 10);
+    let loaded = parseInt(root?.dataset.loaded || '0', 10);
+    let nextPage = root?.dataset.nextPage ? parseInt(root.dataset.nextPage, 10) : null;
+
+    const params = {
+      level: root?.dataset.level || '',
+      day: root?.dataset.day || '',
+      time: root?.dataset.time || '',
+      availability: root?.dataset.availability || '',
+    };
+
+    function urlFor(page, variant) {
+      const q = new URLSearchParams({
+        page: String(page),
+        variant: variant,
+      });
+      if (params.level) q.set('level', params.level);
+      if (params.day) q.set('day', params.day);
+      if (params.time) q.set('time', params.time);
+      if (params.availability) q.set('availability', params.availability);
+      return `{% url 'dashboard:admin_lessons_list_rows' %}?` + q.toString();
+    }
+
+    let loading = false;
+    async function loadMore(variant) {
+      if (loading || !nextPage) return;
+      loading = true;
+      try {
+        const resp = await fetch(urlFor(nextPage, variant), { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+        if (!resp.ok) throw new Error('Network');
+        const data = await resp.json();
+        if (data.html) {
+          const tmp = document.createElement(variant === 'desktop' ? 'tbody' : 'div');
+          tmp.innerHTML = data.html;
+          [...tmp.children].forEach(el => (variant === 'desktop' ? tbody : cards).appendChild(el));
+        }
+        loaded += (data.count_this_page || 0);
+        nextPage = data.next_page || null;
+        if (!nextPage) {
+          if (sentinel) sentinel.textContent = 'All loaded';
+          if (sentinelMobile) sentinelMobile.textContent = 'All loaded';
+          if (observerDesktop) observerDesktop.disconnect();
+          if (observerMobile) observerMobile.disconnect();
+        }
+      } catch (e) {
+        console.error(e);
+        if (sentinel) sentinel.textContent = 'Error loading more';
+        if (sentinelMobile) sentinelMobile.textContent = 'Error loading more';
+      } finally {
+        loading = false;
+      }
+    }
+
+    const observerDesktop = sentinel ? new IntersectionObserver((entries) => {
+      entries.forEach(entry => { if (entry.isIntersecting) loadMore('desktop'); });
+    }, { rootMargin: '400px' }) : null;
+    if (observerDesktop && sentinel) observerDesktop.observe(sentinel);
+
+    const observerMobile = sentinelMobile ? new IntersectionObserver((entries) => {
+      entries.forEach(entry => { if (entry.isIntersecting) loadMore('mobile'); });
+    }, { rootMargin: '400px' }) : null;
+    if (observerMobile && sentinelMobile) observerMobile.observe(sentinelMobile);
+  })();
+</script>

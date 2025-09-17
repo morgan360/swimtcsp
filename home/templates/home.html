@@ -60,8 +60,8 @@
                     <div class="bg-white/20 backdrop-blur-sm rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
                         <i class="fas fa-user-graduate text-2xl" aria-hidden="true"></i>
                     </div>
-                    <h4 class="text-sm font-bold mb-2 text-white/90">Certified Instructors</h4>
-                    <p class="text-3xl font-extrabold" aria-label="20 plus certified instructors">20+</p>
+                    <h4 class="text-sm font-bold mb-2 text-white/90">Teaching Staff</h4>
+                    <p class="text-3xl font-extrabold" aria-label="45 plus teaching staff">45+</p>
                 </div>
                 
                 <!-- Decorative elements -->
@@ -80,7 +80,7 @@
                         <i class="fas fa-smile text-2xl" aria-hidden="true"></i>
                     </div>
                     <h4 class="text-sm font-bold mb-2 text-white/90">Happy Swimmers</h4>
-                    <p class="text-3xl font-extrabold" aria-label="5000 plus happy swimmers">5,000+</p>
+                    <p class="text-3xl font-extrabold" aria-label="5000 plus happy swimmers">5,000+ weekly</p>
                 </div>
                 
                 <!-- Decorative elements -->
@@ -99,7 +99,7 @@
                         <i class="fas fa-trophy text-white text-2xl" aria-hidden="true"></i>
                     </div>
                     <h4 class="text-sm font-bold mb-2 text-gray-700">Years of Excellence</h4>
-                    <p class="text-3xl font-extrabold text-blue-600" aria-label="15 years of excellence">15</p>
+                    <p class="text-3xl font-extrabold text-blue-600" aria-label="50 years of excellence">59</p>
                 </div>
                 
                 <!-- Decorative elements -->
@@ -118,7 +118,7 @@
                         <i class="fas fa-calendar-check text-2xl" aria-hidden="true"></i>
                     </div>
                     <h4 class="text-sm font-bold mb-2 text-white/90">Weekly Classes</h4>
-                    <p class="text-3xl font-extrabold" aria-label="40 plus weekly classes">40+</p>
+                    <p class="text-3xl font-extrabold" aria-label="150 plus weekly classes">150+</p>
                 </div>
                 
                 <!-- Decorative elements -->
@@ -163,7 +163,7 @@
 
 
         <!-- Lessons Card -->
-        <div class="bg-white/30 backdrop-blur-md border border-white/30 rounded-2xl shadow-xl flex flex-col h-full overflow-hidden hover:shadow-2xl transition-all duration-300 transform">
+        <div class="bg-white/30 backdrop-blur-md border border-white/30 rounded-2xl shadow-xl flex flex-col h-full overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
             <div class="relative">
                 <img src="{% static 'img/teacher-1.jpeg' %}" alt="Swimming lessons"
                     class="w-full h-64 object-cover">
@@ -188,12 +188,12 @@
 
                 {% if user|is_guardian_user %}
                     <a href="{% url 'swimling_dashboard:guardian_dashboard' %}"
-                        class="flex-1 text-center px-6 py-4 font-semibold text-white bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 transition-all duration-300 transform hover:scale-105">
+                        class="flex-1 text-center px-6 py-4 font-semibold text-white bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 transition-all duration-300 transform">
                         Swimling Dashboard
                     </a>
                 {% elif user|is_customer_user %}
                     <a href="/users/profile/become-guardian/"
-                        class="flex-1 text-center px-6 py-4 font-semibold text-white bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 transition-all duration-300 transform hover:scale-105">
+                        class="flex-1 text-center px-6 py-4 font-semibold text-white bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 transition-all duration-300 transform">
                         Become a guardian
                     </a>
                 {% else %}
@@ -202,11 +202,6 @@
                         Book Lessons
                     </a>
                 {% endif %}
-
-                <a href="#" onclick="checkGuardianAccess('/dashboard/')"
-                    class="flex-1 text-center px-6 py-4 font-semibold text-white bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 transition-all duration-300 transform">
-                    Swimling Dashboard
-                </a>
             </div>
         </div>
     </div>
@@ -215,7 +210,7 @@
     <div class="grid grid-cols-1 md:grid-cols-3 gap-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto pb-10">
 
         <!-- Our Services Card -->
-        <div class="bg-white/30 backdrop-blur-md border border-white/30 rounded-2xl shadow-xl flex flex-col overflow-hidden hover:shadow-2xl transition-all duration-300 transform" id="our-services">
+        <div class="bg-white/30 backdrop-blur-md border border-white/30 rounded-2xl shadow-xl flex flex-col overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:scale-105" id="our-services">
             <div class="p-8 flex-grow">
                 <div class="flex items-center mb-4">
                     <div class="bg-gradient-to-r from-purple-500 to-purple-600 p-3 rounded-full mr-4">

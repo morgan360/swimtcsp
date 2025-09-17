@@ -22,18 +22,23 @@
                     class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
                 <button class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
                     title="Search">
-                    <i class="fas fa-search mr-1"></i>
+                    <i class="fas fa-search"></i>
                 </button>
             </div>
         </form>
 
+        <div
+            class="mb-4 text-sm text-white bg-gradient-to-r from-green-600 to-green-500 hover:bg-gradient-to-r hover:from-green-700 hover:to-green-600 p-3 rounded w-fit">
+            <a
+                href="{% url 'lessonsadmin:lessons_bookings_lessonenrollment_add' %}?_changelist_filters={{ 'e=1'|urlencode }}">
+                <i class="fas fa-plus-circle mr-1"></i> New enrollment
+            </a>
+        </div>
+
         <!-- State seed for JS (avoids template vars inside <script>) -->
-        <div id="swimlings-root"
-             data-total="{{ total|default:0 }}"
-             data-loaded="{{ page_obj.end_index }}"
-             data-next-page="{% if page_obj.has_next %}{{ page_obj.next_page_number }}{% endif %}"
-             data-search="{{ search|escapejs }}"
-             class="hidden"></div>
+        <div id="swimlings-root" data-total="{{ total|default:0 }}" data-loaded="{{ page_obj.end_index }}"
+            data-next-page="{% if page_obj.has_next %}{{ page_obj.next_page_number }}{% endif %}"
+            data-search="{{ search|escapejs }}" class="hidden"></div>
 
         <!-- Remaining Progress Bar (shrinks as more results load) -->
         <div class="w-full h-2 bg-gray-100 rounded mb-4 overflow-hidden" aria-hidden="true">

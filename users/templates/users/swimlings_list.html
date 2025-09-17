@@ -27,6 +27,14 @@
             </div>
         </form>
 
+        <!-- State seed for JS (avoids template vars inside <script>) -->
+        <div id="swimlings-root"
+             data-total="{{ total|default:0 }}"
+             data-loaded="{{ page_obj.end_index }}"
+             data-next-page="{% if page_obj.has_next %}{{ page_obj.next_page_number }}{% endif %}"
+             data-search="{{ search|escapejs }}"
+             class="hidden"></div>
+
         <!-- Remaining Progress Bar (shrinks as more results load) -->
         <div class="w-full h-2 bg-gray-100 rounded mb-4 overflow-hidden" aria-hidden="true">
             <div id="remaining-bar" class="h-2 bg-green-500 transition-all duration-300" style="width: 100%"></div>
@@ -78,14 +86,11 @@
                 const sentinelMobile = document.getElementById('infinite-sentinel-mobile');
                 const remainingBar = document.getElementById('remaining-bar');
 
-                const total = {{ total|default:0 }};
-                let loadedCount = {{ page_obj.end_index }}; // items rendered so far
-                {% if page_obj.has_next %}
-                let nextPage = {{ page_obj.next_page_number }};
-                {% else %}
-                let nextPage = null;
-                {% endif %}
-                const searchVal = '{{ search|escapejs }}';
+                const root = document.getElementById('swimlings-root');
+                const total = parseInt((root?.dataset.total || '0'), 10);
+                let loadedCount = parseInt((root?.dataset.loaded || '0'), 10); // items rendered so far
+                let nextPage = (root?.dataset.nextPage ? parseInt(root.dataset.nextPage, 10) : null);
+                const searchVal = root?.dataset.search || '';
 
                 function updateBar() {
                     if (!total || total <= 0) { remainingBar.style.width = '0%'; return; }

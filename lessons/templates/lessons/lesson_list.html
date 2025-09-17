@@ -132,7 +132,8 @@
                 </a>
                 {% else %}
                 <a href="{% url 'waiting_list:join_waiting_list' swimling_id=selected_swimling.id %}?product={{ lesson_info.lesson.id }}"
-                  class="inline-flex items-center px-4 py-2 bg-yellow-400 text-yellow-900 text-sm font-medium rounded-lg hover:bg-yellow-500 transition-colors">
+                  class="inline-flex items-center px-4 py-2 bg-gray-300 text-gray-700 text-sm font-medium rounded-lg cursor-pointer hover:bg-gray-300"
+                  title="Class is full; join the waiting list">
                   <i class="fas fa-clock mr-2"></i>Join Waiting List
                 </a>
                 {% endif %}
@@ -186,7 +187,8 @@
           </a>
           {% else %}
           <a href="{% url 'waiting_list:join_waiting_list' swimling_id=selected_swimling.id %}?product={{ lesson_info.lesson.id }}"
-            class="w-full inline-flex items-center justify-center px-4 py-2 bg-yellow-400 text-yellow-900 text-sm font-medium rounded-lg hover:bg-yellow-500 transition-colors">
+            class="w-full inline-flex items-center justify-center px-4 py-2 bg-gray-300 text-gray-700 text-sm font-medium rounded-lg cursor-pointer hover:bg-gray-300"
+            title="Class is full; join the waiting list">
             <i class="fas fa-clock mr-2"></i>Join Waiting List
           </a>
           {% endif %}

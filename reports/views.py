@@ -146,42 +146,114 @@ def enrollment_report_data(request):
 
 
 def class_print(request):
-    """Print swimlings for selected lesson and term"""
+    """Print swimlings for either a single lesson or all lessons at a time slot."""
     lesson_id = request.GET.get('lesson')
     term_choice = request.GET.get('term', 'current')
+    category_id = request.GET.get('category')
+    day = request.GET.get('day')
+    time_str = request.GET.get('time')
 
     term_lookup = {
         'current': Term.get_current_term,
         'next': Term.get_next_term,
+        'previous': Term.get_previous_term,
     }
     term = term_lookup.get(term_choice, Term.get_current_term)()
-    # print(f"Selected term ({term_choice}):", term.id)
-    swimlings = Swimling.objects.filter(
-        enrollments__lesson__id=lesson_id,
-        enrollments__term=term
-    ) if term and lesson_id else Swimling.objects.none()
 
-    product = get_object_or_404(Product, id=lesson_id) if lesson_id else None
+    # Case 1: specific lesson provided → print one class list
+    if term and lesson_id:
+        swimlings = Swimling.objects.filter(
+            enrollments__lesson__id=lesson_id,
+            enrollments__term=term
+        ).select_related('guardian').order_by('first_name', 'last_name')
+        product = get_object_or_404(Product, id=lesson_id)
+        return render(request, 'reports/printable_swimlings_list.html', {
+            'swimlings': swimlings,
+            'product': product,
+            'term_label': term_choice.title() + " Term"
+        })
 
+    # Case 2: filter by term + day + time → print all lessons at that time
+    products = Product.objects.none()
+    if term and day and time_str:
+        try:
+            from datetime import time as dt_time
+            hh, mm = [int(x) for x in time_str.split(':', 1)]
+            products = Product.objects.filter(
+                day_of_week=int(day),
+                start_time=dt_time(hour=hh, minute=mm),
+                active=True,
+            )
+            if category_id:
+                products = products.filter(category_id=category_id)
+            products = products.select_related('category').order_by('name')
+        except Exception:
+            products = Product.objects.none()
+
+    lesson_lists = []
+    for p in products:
+        s = list(
+            Swimling.objects
+            .filter(enrollments__lesson=p, enrollments__term=term)
+            .select_related('guardian')
+            .order_by('first_name', 'last_name')
+        )
+        lesson_lists.append({'product': p, 'swimlings': s})
+
+    if lesson_lists:
+        return render(request, 'reports/printable_swimlings_list_multi.html', {
+            'lesson_lists': lesson_lists,
+            'term_label': term_choice.title() + " Term",
+            'time_label': time_str,
+        })
+
+    # Fallback: nothing matched; render a simple empty state
     return render(request, 'reports/printable_swimlings_list.html', {
-        'swimlings': swimlings,
-        'product': product,
+        'swimlings': [],
+        'product': None,
         'term_label': term_choice.title() + " Term"
     })
 
 
 def update_lessons(request):
     print("update_lessons:", request.GET)
-    category_id = request.GET.get('category')
     day = request.GET.get('day')
-    lessons = Product.objects.filter(category_id=category_id, day_of_week=day) if category_id and day else Product.objects.none()
+    time_str = request.GET.get('time')
+    lessons = Product.objects.all()
+    # Day is required to populate lessons list
+    if day not in [None, '', 'null', 'undefined']:
+        try:
+            lessons = lessons.filter(day_of_week=int(day))
+        except (TypeError, ValueError):
+            lessons = Product.objects.none()
+    else:
+        lessons = Product.objects.none()
+    # Optional time filter to narrow lessons at a specific time
+    if time_str:
+        try:
+            from datetime import time as dt_time
+            hh, mm = [int(x) for x in time_str.split(':', 1)]
+            lessons = lessons.filter(start_time=dt_time(hour=hh, minute=mm))
+        except Exception:
+            pass
     return render(request, 'reports/partials/lesson_options.html', {'lessons': lessons})
 
 def update_days(request):
-    category_id = request.GET.get('category')
-    days = Product.objects.filter(category_id=category_id).values_list('day_of_week', flat=True).distinct() if category_id else []
+    # Return all distinct days present in lessons (category removed)
+    days = Product.objects.values_list('day_of_week', flat=True).distinct()
     day_choices = [(d, dict(Product.DAY_CHOICES)[d]) for d in days]
     return render(request, 'reports/partials/day_options.html', {'days': day_choices})
+
+def update_times(request):
+    day = request.GET.get('day')
+    times = []
+    if day not in [None, '', 'null', 'undefined']:
+        try:
+            q = Product.objects.filter(day_of_week=int(day))
+            times = sorted({p.start_time.strftime('%H:%M') for p in q if p.start_time})
+        except (TypeError, ValueError):
+            times = []
+    return render(request, 'reports/partials/time_options.html', {'times': times})
 
 
 def class_list_view(request):

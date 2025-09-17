@@ -19,6 +19,7 @@ from django.core.paginator import Paginator
 from .models import Swimling
 from lessons_orders.models import Order as LessonOrder
 from swims_orders.models import Order as SwimOrder
+from django.http import JsonResponse
 
 
 # Get the custom user model
@@ -236,6 +237,108 @@ def swimlings_list(request):
         "total": paginator.count,
     }
     return render(request, "users/swimlings_list.html", context)
+
+
+@staff_member_required
+def swimlings_list_rows(request):
+    """Returns paginated markup for Swimlings to support infinite scroll.
+    Pass `variant=desktop|mobile` to choose rows vs cards.
+    """
+    search = request.GET.get("search", "").strip()
+    page_number = request.GET.get("page")
+
+    qs = (
+        Swimling.objects
+        .select_related("guardian")
+        .order_by("first_name", "last_name")
+    )
+
+    if search:
+        qs = qs.filter(
+            Q(first_name__icontains=search)
+            | Q(last_name__icontains=search)
+            | Q(guardian__email__icontains=search)
+            | Q(guardian__first_name__icontains=search)
+            | Q(guardian__last_name__icontains=search)
+        )
+
+    paginator = Paginator(qs, 25)
+    page_obj = paginator.get_page(page_number)
+
+    # Build current classes like the main view
+    term_info = get_term_info(request)
+    current_term_id = term_info.get("current_term_id")
+
+    public_by_swimling = {}
+    if current_term_id:
+        public_rows = (
+            Product.objects
+            .filter(
+                enrollments__term_id=current_term_id,
+                enrollments__swimling__in=page_obj.object_list,
+            )
+            .values(
+                "enrollments__swimling_id",
+                "name",
+                "enrollments__id",
+            )
+        )
+        for r in public_rows:
+            enrollment_id = r["enrollments__id"]
+            try:
+                admin_url = reverse("lessonsadmin:lessons_bookings_lessonenrollment_change", args=[enrollment_id])
+            except Exception:
+                admin_url = f"/lessonsadmin/lessons_bookings/lessonenrollment/{enrollment_id}/change/"
+            public_by_swimling.setdefault(r["enrollments__swimling_id"], []).append({
+                "name": r["name"],
+                "enrollment_id": enrollment_id,
+                "admin_url": admin_url,
+            })
+
+    for s in page_obj.object_list:
+        classes = list(public_by_swimling.get(s.id, []))
+        if getattr(s, "sco_role_num", None):
+            st = get_latest_active_school_term(s.sco_role_num)
+            if st:
+                school_qs = (
+                    ScoEnrollment.objects
+                    .filter(swimling=s, term=st)
+                    .select_related("lesson")
+                )
+                for se in school_qs:
+                    if getattr(se, "lesson", None) and getattr(se.lesson, "name", None):
+                        try:
+                            se_admin_url = reverse("schoolsadmin:schools_bookings_scoenrollment_change", args=[se.id])
+                        except Exception:
+                            se_admin_url = f"/schoolsadmin/schools_bookings/scoenrollment/{se.id}/change/"
+                        classes.append({
+                            "name": se.lesson.name,
+                            "enrollment_id": se.id,
+                            "admin_url": se_admin_url,
+                        })
+        seen = set()
+        deduped = []
+        for item in classes:
+            nm = item.get("name")
+            key = (nm, item.get("enrollment_id"))
+            if key in seen:
+                continue
+            seen.add(key)
+            deduped.append(item)
+        setattr(s, "current_classes", deduped)
+
+    variant = request.GET.get('variant', 'desktop')
+    template_name = 'users/_swimling_rows.html' if variant == 'desktop' else 'users/_swimling_cards.html'
+    html = render(request, template_name, {
+        'swimlings': page_obj.object_list,
+    }).content.decode('utf-8')
+
+    data = {
+        'html': html,
+        'next_page': page_obj.next_page_number() if page_obj.has_next() else None,
+        'count_this_page': len(page_obj.object_list),
+    }
+    return JsonResponse(data)
 
 
 # =============================

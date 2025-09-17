@@ -17,6 +17,7 @@ urlpatterns = [
     path('<int:user_id>/', views.hijack_redirect, name='hijack_redirect'),
     path("join-schools/", join_schools_program, name="join_schools_program"),
     path("swimlings/", views.swimlings_list, name="swimlings_list"),
+    path("swimlings/rows/", views.swimlings_list_rows, name="swimlings_list_rows"),
 
     path("my-bookings/", my_bookings, name="my_bookings"),
 

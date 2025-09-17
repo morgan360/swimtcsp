@@ -1,0 +1,35 @@
+{% comment %}Cards fragment for admin lessons list (mobile){% endcomment %}
+{% for lesson_info in page_obj %}
+<div class="p-4 border border-blue-200 mt-2">
+  <div class="flex items-start gap-3">
+    <div class="flex-1 min-w-0">
+      <div class="text-white bg-gradient-to-r from-green-400 to-cyan-400 rounded-lg px-3 py-2 flex flex-col items-center text-center">
+        <i class="fas fa-swimmer text-white mb-1"></i>
+        <h4 class="text-base font-semibold text-white">{{ lesson_info.lesson.name }}</h4>
+      </div>
+      <div class="mt-1 text-sm text-gray-600">Capacity: <span class="font-medium">{{ lesson_info.num_places }}</span></div>
+      <div class="mt-1">
+        {% if lesson_info.is_full %}
+        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+          <i class="fas fa-times-circle mr-1"></i>Full
+        </span>
+        {% elif lesson_info.remaining_spaces <= 3 %}
+        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+          <i class="fas fa-exclamation-triangle mr-1"></i>{{ lesson_info.remaining_spaces }} left
+        </span>
+        {% else %}
+        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+          <i class="fas fa-check-circle mr-1"></i>{{ lesson_info.remaining_spaces }} available
+        </span>
+        {% endif %}
+      </div>
+      <div class="mt-3 flex flex-wrap gap-2">
+        <a href="{% url 'dashboard:lessons_history' lesson_info.lesson.id %}" class="inline-flex items-center px-3 py-1.5 bg-orange-600 text-white text-xs font-medium rounded-lg hover:bg-orange-700 transition-colors">
+          <i class="fa-solid fa-clock-rotate-left mr-1"></i>Class History
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endfor %}
+

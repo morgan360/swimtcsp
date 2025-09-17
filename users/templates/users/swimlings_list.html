@@ -27,6 +27,19 @@
             </div>
         </form>
 
+        <!-- State seed for JS (avoids template vars inside <script>) -->
+        <div id="swimlings-root"
+             data-total="{{ total|default:0 }}"
+             data-loaded="{{ page_obj.end_index }}"
+             data-next-page="{% if page_obj.has_next %}{{ page_obj.next_page_number }}{% endif %}"
+             data-search="{{ search|escapejs }}"
+             class="hidden"></div>
+
+        <!-- Remaining Progress Bar (shrinks as more results load) -->
+        <div class="w-full h-2 bg-gray-100 rounded mb-4 overflow-hidden" aria-hidden="true">
+            <div id="remaining-bar" class="h-2 bg-green-500 transition-all duration-300" style="width: 100%"></div>
+        </div>
+
         <!-- Swimlings List -->
         {% if swimlings %}
 
@@ -47,119 +60,89 @@
                             </th>
                         </tr>
                     </thead>
-                    <tbody class="bg-white divide-y divide-gray-200">
-                        {% for s in swimlings %}
-                        <tr class="hover:bg-gray-50 transition-colors">
-                            <td class="px-4 py-3 whitespace-nowrap font-medium text-gray-900">{{ s.first_name }}
-                                {{s.last_name }}</td>
-                            <td class="px-4 py-3 text-gray-900">{{ s.guardian.first_name }} {{ s.guardian.last_name }}
-                            </td>
-                            <td class="px-4 py-3 text-gray-700">{{ s.guardian.email }}</td>
-                            
-                            <td class="px-4 py-3 text-gray-900">
-                                {% if s.current_classes %}
-                                <ul>
-                                    {% for c in s.current_classes %}
-                                    <li class="text-gray-700 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">{{ c.name }}</li>
-                                    <a href="{{ c.admin_url|default:'' }}{% if not c.admin_url and c.enrollment_id %}/lessonsadmin/lessons_bookings/lessonenrollment/{{ c.enrollment_id }}/change/{% endif %}"
-                                        class="inline-flex items-center px-2 py-0.5 bg-purple-600 text-white text-xs font-medium rounded-lg hover:bg-purple-700 transition-colors mt-2"
-                                        title="Move Swimling">
-                                        <i class="fa-solid fa-right-left mr-1"></i>Move
-                                    </a>
-                                    {% endfor %}
-                                </ul>
-                                {% else %}
-                                <span class="text-gray-400 italic">Not booked in yet</span>
-                                {% endif %}
-                            </td>
-                            <!-- Actions -->
-                            <td class="px-4 py-3">
-                                <a href="/usersadmin/users/swimling/{{ s.id }}/change/"
-                                class="px-3 py-1.5 bg-green-600 text-white text-xs font-medium rounded-lg hover:bg-green-700 transition-colors whitespace-nowrap"
-                                title="Edit Swimling Details">
-                                <i class="fas fa-edit mr-1"></i>Edit Details
-                            </a>
-                            </td>
-                        </tr>
-                        {% endfor %}
+                    <tbody id="swimlings-tbody" class="bg-white divide-y divide-gray-200">
+                        {% include 'users/_swimling_rows.html' with swimlings=swimlings %}
                     </tbody>
                 </table>
+                <div id="infinite-sentinel" class="py-4 text-center text-gray-400">Loading more…</div>
             </div>
         </div>
 
         <!-- Mobile (sm) -->
-        <div class="lg:hidden space-y-4">
-            {% for s in swimlings %}
-            <div
-                class="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition overflow-hidden">
-                <div
-                    class="bg-gradient-to-r from-green-50 to-emerald-50 px-4 py-3 border-b border-green-100 flex items-center justify-between">
-                    <div class="flex items-center space-x-3">
-                        <div
-                            class="w-10 h-10 rounded-full bg-gradient-to-r from-green-500 to-emerald-500 flex items-center justify-center text-white">
-                            <i class="fas fa-child text-sm"></i>
-                        </div>
-                        <div>
-                            <div class="font-semibold text-gray-900">{{ s.first_name }} {{ s.last_name }}</div>
-                            <div class="text-xs text-gray-500">Guardian Name: {{ s.guardian.first_name }} {{ s.guardian.last_name }}</div>
-                        </div>
-                    </div>
-                </div>
-                <div class="p-4 text-sm">
-                    <div class="mb-2">
-                        <p class="text-xs font-medium uppercase text-gray-500 mb-1">Guardian Email</p>
-                        <p class="text-gray-700 break-words">{{ s.guardian.email }}</p>
-                    </div>
-                    <div class="mb-4">
-                        <p class="text-xs font-medium uppercase text-gray-500 mb-1">Current Class</p>
-                        {% if s.current_classes %}
-                        <div class="space-y-2">
-                          {% for c in s.current_classes %}
-                          <div class="flex items-center justify-between bg-green-100 rounded-md border border-gray-200 px-3 py-2">
-                            <span class="text-gray-700 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium  text-green-800">{{ c.name }}</span>
-                            <a href="{{ c.admin_url|default:'' }}{% if not c.admin_url and c.enrollment_id %}/lessonsadmin/lessons_bookings/lessonenrollment/{{ c.enrollment_id }}/change/{% endif %}"
-                               class="inline-flex items-center px-2.5 py-1 bg-purple-600 text-white text-xs font-medium rounded-md hover:bg-purple-700 transition-colors"
-                               title="Move Swimling">
-                              <i class="fa-solid fa-right-left mr-1"></i>Move
-                            </a>
-                          </div>
-                          {% endfor %}
-                        </div>
-                        {% else %}
-                        <p class="text-gray-400 italic">Not booked in yet</p>
-                        {% endif %}
-                    </div>
-                    <div class="mt-4">
-                        <a href="/usersadmin/users/swimling/{{ s.id }}/change/"
-                            class="inline-flex items-center px-3 py-1.5 bg-green-600 text-white text-xs font-medium rounded-lg hover:bg-green-700 transition-colors">
-                            <i class="fas fa-edit mr-1"></i>Edit Swimling Details
-                        </a>
-                    </div>
-                </div>
-            </div>
-            {% endfor %}
+        <div class="lg:hidden space-y-4" id="swimlings-cards">
+            {% include 'users/_swimling_cards.html' with swimlings=swimlings %}
         </div>
+        <div id="infinite-sentinel-mobile" class="py-4 text-center text-gray-400 lg:hidden">Loading more…</div>
 
         {% else %}
         <p class="text-gray-600">No swimlings found.</p>
         {% endif %}
 
-        <!-- Pagination -->
-        {% if page_obj.has_other_pages %}
-        <div class="flex items-center justify-between mt-6 text-sm text-gray-700">
-            <div>Showing {{ page_obj.start_index }}–{{ page_obj.end_index }} of {{ total }}</div>
-            <div class="space-x-2">
-                {% if page_obj.has_previous %}
-                <a href="?search={{ search }}&page={{ page_obj.previous_page_number }}"
-                    class="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">Previous</a>
-                {% endif %}
-                {% if page_obj.has_next %}
-                <a href="?search={{ search }}&page={{ page_obj.next_page_number }}"
-                    class="px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">Next</a>
-                {% endif %}
-            </div>
-        </div>
-        {% endif %}
+        <script>
+            (function () {
+                const tbody = document.getElementById('swimlings-tbody');
+                const cards = document.getElementById('swimlings-cards');
+                const sentinel = document.getElementById('infinite-sentinel');
+                const sentinelMobile = document.getElementById('infinite-sentinel-mobile');
+                const remainingBar = document.getElementById('remaining-bar');
+
+                const root = document.getElementById('swimlings-root');
+                const total = parseInt((root?.dataset.total || '0'), 10);
+                let loadedCount = parseInt((root?.dataset.loaded || '0'), 10); // items rendered so far
+                let nextPage = (root?.dataset.nextPage ? parseInt(root.dataset.nextPage, 10) : null);
+                const searchVal = root?.dataset.search || '';
+
+                function updateBar() {
+                    if (!total || total <= 0) { remainingBar.style.width = '0%'; return; }
+                    const remaining = Math.max(0, total - loadedCount);
+                    const pct = (remaining / total) * 100;
+                    remainingBar.style.width = pct + '%';
+                }
+                updateBar();
+
+                let loading = false;
+                async function loadMore(variant) {
+                    if (loading || !nextPage) return;
+                    loading = true;
+                    try {
+                        const url = `{% url 'users:swimlings_list_rows' %}?page=${nextPage}&search=${encodeURIComponent(searchVal || '')}&variant=${variant}`;
+                        const resp = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+                        if (!resp.ok) throw new Error('Network error');
+                        const data = await resp.json();
+                        if (data.html) {
+                            const tmp = document.createElement(variant === 'desktop' ? 'tbody' : 'div');
+                            tmp.innerHTML = data.html;
+                            [...tmp.children].forEach(el => (variant === 'desktop' ? tbody : cards).appendChild(el));
+                        }
+                        loadedCount += (data.count_this_page || 0);
+                        nextPage = data.next_page || null;
+                        if (!nextPage) {
+                            if (sentinel) sentinel.textContent = 'All loaded';
+                            if (sentinelMobile) sentinelMobile.textContent = 'All loaded';
+                            if (observerDesktop) observerDesktop.disconnect();
+                            if (observerMobile) observerMobile.disconnect();
+                        }
+                        updateBar();
+                    } catch (e) {
+                        console.error(e);
+                        if (sentinel) sentinel.textContent = 'Error loading more';
+                        if (sentinelMobile) sentinelMobile.textContent = 'Error loading more';
+                    } finally {
+                        loading = false;
+                    }
+                }
+
+                const observerDesktop = sentinel ? new IntersectionObserver((entries) => {
+                    entries.forEach(entry => { if (entry.isIntersecting) loadMore('desktop'); });
+                }, { rootMargin: '400px' }) : null;
+                if (observerDesktop && sentinel) observerDesktop.observe(sentinel);
+
+                const observerMobile = sentinelMobile ? new IntersectionObserver((entries) => {
+                    entries.forEach(entry => { if (entry.isIntersecting) loadMore('mobile'); });
+                }, { rootMargin: '400px' }) : null;
+                if (observerMobile && sentinelMobile) observerMobile.observe(sentinelMobile);
+            })();
+        </script>
     </div>
 </div>
 {% endblock %}

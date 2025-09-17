@@ -52,9 +52,20 @@
                         <tr class="hover:bg-gray-50 transition-colors">
                             <td class="px-4 py-3 whitespace-nowrap font-medium text-gray-900">{{ s.first_name }}
                                 {{s.last_name }}</td>
-                            <td class="px-4 py-3 text-gray-900">{{ s.guardian.first_name }} {{ s.guardian.last_name }}
+                            <td class="px-4 py-3 text-gray-900">
+                                {% if s.guardian %}
+                                    {{ s.guardian.first_name }} {{ s.guardian.last_name }}
+                                {% else %}
+                                    <span class="text-gray-400 italic">No guardian</span>
+                                {% endif %}
                             </td>
-                            <td class="px-4 py-3 text-gray-700">{{ s.guardian.email }}</td>
+                            <td class="px-4 py-3 text-gray-700">
+                                {% if s.guardian %}
+                                    {{ s.guardian.email }}
+                                {% else %}
+                                    <span class="text-gray-400 italic">—</span>
+                                {% endif %}
+                            </td>
                             
                             <td class="px-4 py-3 text-gray-900">
                                 {% if s.current_classes %}
@@ -101,14 +112,27 @@
                         </div>
                         <div>
                             <div class="font-semibold text-gray-900">{{ s.first_name }} {{ s.last_name }}</div>
-                            <div class="text-xs text-gray-500">Guardian Name: {{ s.guardian.first_name }} {{ s.guardian.last_name }}</div>
+                            <div class="text-xs text-gray-500">
+                                Guardian Name:
+                                {% if s.guardian %}
+                                    {{ s.guardian.first_name }} {{ s.guardian.last_name }}
+                                {% else %}
+                                    <span class="text-gray-400 italic">No guardian</span>
+                                {% endif %}
+                            </div>
                         </div>
                     </div>
                 </div>
                 <div class="p-4 text-sm">
                     <div class="mb-2">
                         <p class="text-xs font-medium uppercase text-gray-500 mb-1">Guardian Email</p>
-                        <p class="text-gray-700 break-words">{{ s.guardian.email }}</p>
+                        <p class="text-gray-700 break-words">
+                            {% if s.guardian %}
+                                {{ s.guardian.email }}
+                            {% else %}
+                                <span class="text-gray-400 italic">—</span>
+                            {% endif %}
+                        </p>
                     </div>
                     <div class="mb-4">
                         <p class="text-xs font-medium uppercase text-gray-500 mb-1">Current Class</p>

@@ -16,6 +16,7 @@ from lessons.models import Product
 from django.contrib.admin.views.decorators import staff_member_required
 from django.db.models import Q
 from django.core.paginator import Paginator
+import logging
 from .models import Swimling
 from lessons_orders.models import Order as LessonOrder
 from swims_orders.models import Order as SwimOrder
@@ -24,6 +25,7 @@ from django.http import JsonResponse
 
 # Get the custom user model
 user = get_user_model()
+logger = logging.getLogger(__name__)
 
 # ✅ User Profile Update View
 @login_required
@@ -120,7 +122,6 @@ def join_schools_program(request):
 
 class CustomSignupView(SignupView):
     def dispatch(self, request, *args, **kwargs):
-        print("🚨 CustomSignupView dispatch triggered")
         if request.user.is_authenticated:
             list(messages.get_messages(request))  # reads + clears the queue
             messages.info(request, "You are already logged in.")
@@ -171,53 +172,60 @@ def swimlings_list(request):
     # Public enrollments grouped by swimling id: [{ name, enrollment_id, admin_url }]
     public_by_swimling = {}
     if current_term_id:
-        public_rows = (
-            Product.objects
-            .filter(
-                enrollments__term_id=current_term_id,
-                enrollments__swimling__in=page_obj.object_list,
+        try:
+            public_rows = (
+                Product.objects
+                .filter(
+                    enrollments__term_id=current_term_id,
+                    enrollments__swimling__in=page_obj.object_list,
+                )
+                .values(
+                    "enrollments__swimling_id",
+                    "name",
+                    "enrollments__id",
+                )
             )
-            .values(
-                "enrollments__swimling_id",
-                "name",
-                "enrollments__id",
-            )
-        )
-        for r in public_rows:
-            enrollment_id = r["enrollments__id"]
-            try:
-                admin_url = reverse("lessonsadmin:lessons_bookings_lessonenrollment_change", args=[enrollment_id])
-            except Exception:
-                admin_url = f"/lessonsadmin/lessons_bookings/lessonenrollment/{enrollment_id}/change/"
-            public_by_swimling.setdefault(r["enrollments__swimling_id"], []).append({
-                "name": r["name"],
-                "enrollment_id": enrollment_id,
-                "admin_url": admin_url,
-            })
+            for r in public_rows:
+                enrollment_id = r["enrollments__id"]
+                try:
+                    admin_url = reverse("lessonsadmin:lessons_bookings_lessonenrollment_change", args=[enrollment_id])
+                except Exception:
+                    admin_url = f"/lessonsadmin/lessons_bookings/lessonenrollment/{enrollment_id}/change/"
+                public_by_swimling.setdefault(r["enrollments__swimling_id"], []).append({
+                    "name": r.get("name") or "",
+                    "enrollment_id": enrollment_id,
+                    "admin_url": admin_url,
+                })
+        except Exception:
+            logger.exception("swimlings_list: failed building public enrollments")
+            public_by_swimling = {}
 
     # Attach combined classes to each swimling on the current page
     for s in page_obj.object_list:
         classes = list(public_by_swimling.get(s.id, []))
         # School: use latest active school term for this swimling
-        if getattr(s, "sco_role_num", None):
-            st = get_latest_active_school_term(s.sco_role_num)
-            if st:
-                school_qs = (
-                    ScoEnrollment.objects
-                    .filter(swimling=s, term=st)
-                    .select_related("lesson")
-                )
-                for se in school_qs:
-                    if getattr(se, "lesson", None) and getattr(se.lesson, "name", None):
-                        try:
-                            se_admin_url = reverse("schoolsadmin:schools_bookings_scoenrollment_change", args=[se.id])
-                        except Exception:
-                            se_admin_url = f"/schoolsadmin/schools_bookings/scoenrollment/{se.id}/change/"
-                        classes.append({
-                            "name": se.lesson.name,
-                            "enrollment_id": se.id,
-                            "admin_url": se_admin_url,
-                        })
+        try:
+            if getattr(s, "sco_role_num", None):
+                st = get_latest_active_school_term(s.sco_role_num)
+                if st:
+                    school_qs = (
+                        ScoEnrollment.objects
+                        .filter(swimling=s, term=st)
+                        .select_related("lesson")
+                    )
+                    for se in school_qs:
+                        if getattr(se, "lesson", None) and getattr(se.lesson, "name", None):
+                            try:
+                                se_admin_url = reverse("schoolsadmin:schools_bookings_scoenrollment_change", args=[se.id])
+                            except Exception:
+                                se_admin_url = f"/schoolsadmin/schools_bookings/scoenrollment/{se.id}/change/"
+                            classes.append({
+                                "name": se.lesson.name,
+                                "enrollment_id": se.id,
+                                "admin_url": se_admin_url,
+                            })
+        except Exception:
+            logger.exception("swimlings_list: failed building school enrollments for swimling=%s", getattr(s, 'id', '?'))
         # Optional: dedupe by name while preserving order (handles duplicate same-named classes)
         seen = set()
         deduped = []
@@ -271,51 +279,58 @@ def swimlings_list_rows(request):
 
     public_by_swimling = {}
     if current_term_id:
-        public_rows = (
-            Product.objects
-            .filter(
-                enrollments__term_id=current_term_id,
-                enrollments__swimling__in=page_obj.object_list,
+        try:
+            public_rows = (
+                Product.objects
+                .filter(
+                    enrollments__term_id=current_term_id,
+                    enrollments__swimling__in=page_obj.object_list,
+                )
+                .values(
+                    "enrollments__swimling_id",
+                    "name",
+                    "enrollments__id",
+                )
             )
-            .values(
-                "enrollments__swimling_id",
-                "name",
-                "enrollments__id",
-            )
-        )
-        for r in public_rows:
-            enrollment_id = r["enrollments__id"]
-            try:
-                admin_url = reverse("lessonsadmin:lessons_bookings_lessonenrollment_change", args=[enrollment_id])
-            except Exception:
-                admin_url = f"/lessonsadmin/lessons_bookings/lessonenrollment/{enrollment_id}/change/"
-            public_by_swimling.setdefault(r["enrollments__swimling_id"], []).append({
-                "name": r["name"],
-                "enrollment_id": enrollment_id,
-                "admin_url": admin_url,
-            })
+            for r in public_rows:
+                enrollment_id = r["enrollments__id"]
+                try:
+                    admin_url = reverse("lessonsadmin:lessons_bookings_lessonenrollment_change", args=[enrollment_id])
+                except Exception:
+                    admin_url = f"/lessonsadmin/lessons_bookings/lessonenrollment/{enrollment_id}/change/"
+                public_by_swimling.setdefault(r["enrollments__swimling_id"], []).append({
+                    "name": r.get("name") or "",
+                    "enrollment_id": enrollment_id,
+                    "admin_url": admin_url,
+                })
+        except Exception:
+            logger.exception("swimlings_list_rows: failed building public enrollments")
+            public_by_swimling = {}
 
     for s in page_obj.object_list:
         classes = list(public_by_swimling.get(s.id, []))
-        if getattr(s, "sco_role_num", None):
-            st = get_latest_active_school_term(s.sco_role_num)
-            if st:
-                school_qs = (
-                    ScoEnrollment.objects
-                    .filter(swimling=s, term=st)
-                    .select_related("lesson")
-                )
-                for se in school_qs:
-                    if getattr(se, "lesson", None) and getattr(se.lesson, "name", None):
-                        try:
-                            se_admin_url = reverse("schoolsadmin:schools_bookings_scoenrollment_change", args=[se.id])
-                        except Exception:
-                            se_admin_url = f"/schoolsadmin/schools_bookings/scoenrollment/{se.id}/change/"
-                        classes.append({
-                            "name": se.lesson.name,
-                            "enrollment_id": se.id,
-                            "admin_url": se_admin_url,
-                        })
+        try:
+            if getattr(s, "sco_role_num", None):
+                st = get_latest_active_school_term(s.sco_role_num)
+                if st:
+                    school_qs = (
+                        ScoEnrollment.objects
+                        .filter(swimling=s, term=st)
+                        .select_related("lesson")
+                    )
+                    for se in school_qs:
+                        if getattr(se, "lesson", None) and getattr(se.lesson, "name", None):
+                            try:
+                                se_admin_url = reverse("schoolsadmin:schools_bookings_scoenrollment_change", args=[se.id])
+                            except Exception:
+                                se_admin_url = f"/schoolsadmin/schools_bookings/scoenrollment/{se.id}/change/"
+                            classes.append({
+                                "name": se.lesson.name,
+                                "enrollment_id": se.id,
+                                "admin_url": se_admin_url,
+                            })
+        except Exception:
+            logger.exception("swimlings_list_rows: failed building school enrollments for swimling=%s", getattr(s, 'id', '?'))
         seen = set()
         deduped = []
         for item in classes:

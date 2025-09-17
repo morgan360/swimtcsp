@@ -27,12 +27,14 @@ from django.utils import timezone
 # Because of circular references had to use string references instead: 'lessons_orders.Order'
 
 
+
+
 class Term(models.Model):
     start_date = models.DateField(null=True, blank=True)
     end_date = models.DateField(null=True, blank=True)
     rebooking_date = models.DateField(null=True, blank=True)
     booking_date = models.DateField(null=True, blank=True)
-    assessment_date = models.DateField(null=True, blank=True)  # already nullable
+    assessment_date = models.DateField(null=True, blank=True)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
     changed_by = models.ForeignKey(
@@ -42,8 +44,12 @@ class Term(models.Model):
         blank=True
     )
 
+    class Meta:
+        ordering = ['-start_date', '-id']   # ✅ newest term first
+
     def __str__(self):
-        return f"{self.id}"
+        # use label so dropdowns are clearer
+        return self.label
 
     @property
     def label(self):
@@ -51,12 +57,13 @@ class Term(models.Model):
             return f"Term {self.id} ({self.start_date} → {self.end_date})"
         return f"Term {self.id}"
 
-    # Method to bring back formated term
-
     @classmethod
     def get_current_term_id(cls):
         today = timezone.now().date()
-        current_term = cls.objects.filter(start_date__lte=today, end_date__gte=today).first()
+        current_term = cls.objects.filter(
+            start_date__lte=today,
+            end_date__gte=today
+        ).first()
         return current_term.id if current_term else None
 
     @classmethod
@@ -82,35 +89,29 @@ class Term(models.Model):
         ).order_by('start_date').first()
 
     def concatenated_term(self):
-        formatted_start_date = self.start_date.strftime('%d %b %Y')  # ISO format
-        formatted_end_date = self.end_date.strftime('%d %b %Y')
-        return f"({self.id}) - {formatted_start_date} ~ {formatted_end_date}"
+        if self.start_date and self.end_date:
+            return f"({self.id}) - {self.start_date:%d %b %Y} ~ {self.end_date:%d %b %Y}"
+        return f"({self.id})"
 
     def determine_phase(self):
         today = timezone.now().date()
-        current_term_id = Term.get_current_term_id()
-
-        if self.start_date <= today < self.rebooking_date:
-            return f'BK'
-        elif self.rebooking_date <= today < self.booking_date:
-            return f'RB'
-        elif self.booking_date <= today <= self.end_date:
-            return f'BN'
-        else:
-            return 'Outside Term Dates'
+        if self.start_date and self.rebooking_date and today < self.rebooking_date:
+            return 'BK'
+        elif self.rebooking_date and self.booking_date and self.rebooking_date <= today < self.booking_date:
+            return 'RB'
+        elif self.booking_date and self.end_date and self.booking_date <= today <= self.end_date:
+            return 'BN'
+        return 'Outside Term Dates'
 
     def get_phase_code(self):
         today = timezone.now().date()
-        current_term_id = Term.get_current_term_id()
-
-        if self.start_date <= today < self.booking_date:
-            return '1'  # Code for 'Booking for Current Term'
-        elif self.booking_date <= today < self.rebooking_date:
-            return '2'  # Code for 'Rebooking for Next Term'
-        elif self.rebooking_date <= today <= self.end_date:
-            return '3'  # Code for 'Booking for Next Term'
-        else:
-            return '0'  # Code for 'Outside Term'
+        if self.start_date and self.booking_date and today < self.booking_date:
+            return '1'
+        elif self.booking_date and self.rebooking_date and self.booking_date <= today < self.rebooking_date:
+            return '2'
+        elif self.rebooking_date and self.end_date and self.rebooking_date <= today <= self.end_date:
+            return '3'
+        return '0'
 
 
 # Contains all the bookings that have being confirmed

@@ -4,6 +4,7 @@ from datetime import datetime
 from import_export.results import RowResult
 from utils.sync_terms import sync_terms_from_remote
 
+
 class TermResource(resources.ModelResource):
     term_id = fields.Field(attribute='id', column_name='term_id')
     start_date = fields.Field(attribute='start_date', column_name='start_date')
@@ -41,27 +42,42 @@ class TermResource(resources.ModelResource):
         row["assesments_complete"] = self.clean_date(row.get("assesments_complete"))
 
 
-   # Import Bookings from TCSP
+# ✅ Export Bookings with readable fields
+
+
 
 class EnrollmentResource(resources.ModelResource):
+    # custom export-only fields
+    swimling_name = fields.Field(column_name='Swimling')
+    term_label = fields.Field(column_name='Term')
+    lesson_name = fields.Field(column_name='Lesson')
+    changed_by_name = fields.Field(column_name='Changed By')
+
     class Meta:
         model = LessonEnrollment
         import_id_fields = ('id',)
-        fields = ('id', 'term', 'swimling', 'lesson', 'notes', 'created', 'updated', 'changed_by')
+        # ✅ only include the custom field names here
+        fields = (
+            'id',
+            'swimling_name',
+            'term_label',
+            'lesson_name',
+            'notes',
+            'created',
+            'updated',
+            'changed_by_name',
+        )
+        export_order = fields
 
-    def import_row(self, row, instance_loader, **kwargs):
-        import_result = super().import_row(row, instance_loader, **kwargs)
+    # ✅ hydrate fields with readable values
+    def dehydrate_swimling_name(self, obj):
+        return str(obj.swimling) if obj.swimling else ""
 
-        if import_result.import_type == RowResult.IMPORT_TYPE_ERROR:
-            # Manually construct field names list
-            field_names = self._meta.fields
+    def dehydrate_term_label(self, obj):
+        return obj.term.label if obj.term else ""
 
-            # Log the row values and the errors
-            import_result.diff = [row.get(name, '') for name in field_names]
-            import_result.diff.append("Errors: {}".format(", ".join([str(err.error) for err in import_result.errors])))
+    def dehydrate_lesson_name(self, obj):
+        return str(obj.lesson) if obj.lesson else ""
 
-            # Clear errors and mark the record to skip
-            import_result.errors = []
-            import_result.import_type = RowResult.IMPORT_TYPE_SKIP
-
-        return import_result
+    def dehydrate_changed_by_name(self, obj):
+        return str(obj.changed_by) if obj.changed_by else "-"

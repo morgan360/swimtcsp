@@ -1,4 +1,6 @@
 {% extends "dashboard/base_dashboard.html" %}
+{% load group_filters%}
+
 {% block content %}
 <section class="max-w-7xl mx-auto">
   <div class="bg-white shadow-lg rounded-lg overflow-hidden">
@@ -8,14 +10,32 @@
       </h2>
     </div>
 
+    
     <div class="px-6 py-6">
+      {% if user|in_group:'Manager' %}
       {% if order_stats %}
       <!-- Monthly Stats (Management only) -->
-      <div class="mt-2 mb-6 text-left">
-        <h4 class="text-lg font-semibold text-gray-900 mb-3">
-          Month to Date — {{ order_stats.month_label }}
-        </h4>
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+      <div id="monthly-stats" class="mt-2 mb-6 text-left">
+        <div class="flex items-center justify-between mb-3">
+          <h4 class="text-md font-semibold text-gray-900">
+            Selected Month: {{ order_stats.month_label }}
+          </h4>
+          <form method="get" class="flex items-center gap-2"
+                hx-get="{% url 'dashboard:orders_history' %}"
+                hx-target="#monthly-stats"
+                hx-swap="outerHTML"
+                hx-select="#monthly-stats">
+            <input type="month" name="month" value="{{ selected_month }}" class="border rounded px-2 py-1 text-sm" />
+            {# Preserve existing filters #}
+            <input type="hidden" name="q" value="{{ q }}" />
+            <input type="hidden" name="status" value="{{ status }}" />
+            <input type="hidden" name="category" value="{{ category }}" />
+            <input type="hidden" name="from" value="{{ date_from }}" />
+            <input type="hidden" name="to" value="{{ date_to }}" />
+            <button type="submit" class="bg-purple-600 hover:bg-purple-700 text-white text-xs px-3 py-1.5 rounded">Apply</button>
+          </form>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           
 
           <!-- Total Orders -->
@@ -23,40 +43,47 @@
             <div class="flex items-center justify-between">
               <div>
                 <p class="text-xs uppercase text-blue-600 font-semibold">Total Orders</p>
+                <p class="text-xs text-blue-600 mt-1 italic">All orders (paid + unpaid) this month</p>
                 <p class="text-2xl font-bold text-gray-900 mt-1">{{ order_stats.total_orders }}</p>
               </div>
               <i class="fas fa-receipt text-blue-600 text-xl"></i>
             </div>
           </div>
 
-          <!-- Revenue: Swims -->
+          <!-- Revenue: Swims (paid) -->
           <div class="bg-cyan-50 border border-cyan-200 rounded-lg p-4">
             <div class="flex items-center justify-between">
               <div>
-                <p class="text-xs uppercase text-cyan-700 font-semibold">Revenue: Swims</p>
-                <p class="text-xl font-bold text-gray-900 mt-1">€{{ order_stats.revenue_swims|floatformat:2 }}</p>
+                <p class="text-xs uppercase text-cyan-700 font-semibold">Revenue: Swims (paid)</p>
+                <p class="text-xs text-cyan-700 mt-1 italic">Paid public swim orders this month</p>
+                <p class="text-xl font-bold text-gray-900 mt-1">€{{ order_stats.swims.revenue_paid|floatformat:2 }}</p>
+                <p class="text-xs text-cyan-700 mt-1">Orders: {{ order_stats.swims.count_paid }}/{{ order_stats.swims.count_total }}</p>
               </div>
               <i class="fas fa-swimmer text-cyan-700 text-lg"></i>
             </div>
           </div>
 
-          <!-- Revenue: Lessons -->
+          <!-- Revenue: Lessons (paid) -->
           <div class="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
             <div class="flex items-center justify-between">
               <div>
-                <p class="text-xs uppercase text-emerald-700 font-semibold">Revenue: Lessons</p>
-                <p class="text-xl font-bold text-gray-900 mt-1">€{{ order_stats.revenue_lessons|floatformat:2 }}</p>
+                <p class="text-xs uppercase text-emerald-700 font-semibold">Revenue: Lessons (paid)</p>
+                <p class="text-xs text-emerald-700 mt-1 italic">Paid public lesson orders this month</p>
+                <p class="text-xl font-bold text-gray-900 mt-1">€{{ order_stats.lessons.revenue_paid|floatformat:2 }}</p>
+                <p class="text-xs text-emerald-700 mt-1">Orders: {{ order_stats.lessons.count_paid }}/{{ order_stats.lessons.count_total }}</p>
               </div>
               <i class="fas fa-book text-emerald-700 text-lg"></i>
             </div>
           </div>
 
-          <!-- Revenue: Schools -->
+          <!-- Revenue: Schools (paid) -->
           <div class="bg-amber-50 border border-amber-200 rounded-lg p-4">
             <div class="flex items-center justify-between">
               <div>
-                <p class="text-xs uppercase text-amber-700 font-semibold">Revenue: Schools</p>
-                <p class="text-xl font-bold text-gray-900 mt-1">€{{ order_stats.revenue_schools|floatformat:2 }}</p>
+                <p class="text-xs uppercase text-amber-700 font-semibold">Revenue: Schools (paid)</p>
+                <p class="text-xs text-amber-700 mt-1 italic">Paid school lesson orders this month</p>
+                <p class="text-xl font-bold text-gray-900 mt-1">€{{ order_stats.schools.revenue_paid|floatformat:2 }}</p>
+                <p class="text-xs text-amber-700 mt-1">Orders: {{ order_stats.schools.count_paid }}/{{ order_stats.schools.count_total }}</p>
               </div>
               <i class="fas fa-school text-amber-700 text-lg"></i>
             </div>
@@ -67,13 +94,37 @@
             <div class="flex items-center justify-between">
               <div>
                 <p class="text-xs uppercase text-purple-600 font-semibold">Total Revenue</p>
+                <p class="text-xs text-purple-600 mt-1 italic">Paid + unpaid revenue combined</p>
                 <p class="text-2xl font-bold text-gray-900 mt-1">€{{ order_stats.revenue_total|floatformat:2 }}</p>
               </div>
               <i class="fas fa-euro-sign text-purple-600 text-xl"></i>
             </div>
           </div>
+
+          <!-- Paid vs Unpaid Revenue -->
+          <div class="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-xs uppercase text-indigo-700 font-semibold">Paid Revenue</p>
+                <p class="text-xl font-bold text-gray-900 mt-1">€{{ order_stats.revenue_paid_total|floatformat:2 }}</p>
+                <p class="text-xs text-indigo-700 mt-1">Avg Paid Order: €{{ order_stats.avg_order_value_paid|floatformat:2 }}</p>
+              </div>
+              <i class="fas fa-money-bill text-indigo-700 text-lg"></i>
+            </div>
+          </div>
+          <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-xs uppercase text-yellow-700 font-semibold">Unpaid Revenue</p>
+                <p class="text-xl font-bold text-gray-900 mt-1">€{{ order_stats.revenue_unpaid_total|floatformat:2 }}</p>
+                <p class="text-xs text-yellow-700 mt-1">Unpaid Orders: {{ order_stats.unpaid_orders }}</p>
+              </div>
+              <i class="fas fa-hourglass-half text-yellow-700 text-lg"></i>
+            </div>
+          </div>
         </div>
       </div>
+      {% endif %}
       {% endif %}
       <!-- Filters -->
       <form method="get" class="grid grid-cols-1 md:grid-cols-6 gap-3 mb-6">

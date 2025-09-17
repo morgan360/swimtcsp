@@ -25,6 +25,22 @@
         <a href="/admin-dashboard/users/add/" class="inline-flex items-center justify-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm sm:text-base">
           <i class="fas fa-plus mr-2"></i>Add User
         </a>
+        <a href="/usersadmin/users/user/" id="hijack-warning-link"
+           class="inline-flex items-center justify-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm sm:text-base">
+          <i class="fa-solid fa-user-secret mr-2"></i>Hijack User
+        </a>
+
+        <script>
+          (function() {
+            const link = document.getElementById('hijack-warning-link');
+            if (!link) return;
+            link.addEventListener('click', function(ev) {
+              ev.preventDefault();
+              const proceed = window.confirm('WARNING: You are about to impersonate another user. By continuing, you confirm that you have permission to act on their behalf. You will be acting as this user until you release them. Continue?');
+              if (proceed) window.location.href = this.href;
+            });
+          })();
+        </script>
       </div>
     </div>
   </div>
@@ -33,7 +49,7 @@
   <div class="p-4 sm:p-6 border-b border-gray-200">
     <form method="GET" class="space-y-4">
       <!-- Search Bar -->
-       <p class="text-blue-700 mt-2 text-sm"><i class="fas fa-info-circle mr-2"></i>This search is for account holders. Swimlings will not appear here.</p>
+       <p class="text-blue-700 mt-2 text-sm"><i class="fas fa-info-circle mr-2"></i>This search is for <strong>account holders</strong> only. Swimlings will not appear here.</p>
       <div>
         <input type="text" name="search" value="{{ request.GET.search }}" 
                placeholder="Search by name or email..."

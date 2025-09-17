@@ -8,6 +8,7 @@ urlpatterns = [
     path('class/print/', views.class_print, name='class_print'),  # ✅ This is the key line
     path('update-lessons/', views.update_lessons, name='update-lessons'),
     path('update-days/', views.update_days, name='update-days'),
+    path('update-times/', views.update_times, name='update-times'),
     path('enrollment/', views.enrollment_report, name='enrollment_report'),
     path('enrollment/data/', views.enrollment_report_data, name='enrollment-data'),
     path('term/', views.term_information, name='term_information'),

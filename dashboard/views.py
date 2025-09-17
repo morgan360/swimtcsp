@@ -240,8 +240,19 @@ def orders_history(request):
     order_stats = None
     try:
         if request.user.is_superuser or is_Manager(request.user):
-            now = timezone.now()
-            month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+            # Allow selecting a specific month (YYYY-MM); default to current month
+            month_param = request.GET.get('month', '').strip()
+            tz = timezone.get_current_timezone()
+            if month_param:
+                try:
+                    year, month = [int(x) for x in month_param.split('-')]
+                    month_start = timezone.datetime(year, month, 1, 0, 0, 0, tzinfo=tz)
+                except Exception:
+                    now = timezone.now()
+                    month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+            else:
+                now = timezone.now()
+                month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
             # first day of next month
             if month_start.month == 12:
                 next_month_start = month_start.replace(year=month_start.year + 1, month=1)
@@ -262,27 +273,44 @@ def orders_history(request):
             def qs_paid_count(qs):
                 return qs.filter(paid=True).count()
 
+            def breakdown(qs):
+                total = qs_count(qs)
+                paid = qs_paid_count(qs)
+                unpaid = total - paid
+                rev_total = qs_sum_amount(qs)
+                rev_paid = qs_sum_amount(qs.filter(paid=True))
+                rev_unpaid = rev_total - rev_paid
+                avg_paid = (rev_paid / paid) if paid else 0
+                return {
+                    'count_total': total,
+                    'count_paid': paid,
+                    'count_unpaid': unpaid,
+                    'revenue_total': rev_total,
+                    'revenue_paid': rev_paid,
+                    'revenue_unpaid': rev_unpaid,
+                    'avg_paid': avg_paid,
+                }
+
+            swims_bd = breakdown(swims_m)
+            lessons_bd = breakdown(lessons_m)
+            schools_bd = breakdown(schools_m)
+
             order_stats = {
-                'month_label': now.strftime('%B %Y'),
-                'total_orders': qs_count(swims_m) + qs_count(lessons_m) + qs_count(schools_m),
-                'paid_orders': qs_paid_count(swims_m) + qs_paid_count(lessons_m) + qs_paid_count(schools_m),
-                'unpaid_orders': (
-                    (qs_count(swims_m) - qs_paid_count(swims_m)) +
-                    (qs_count(lessons_m) - qs_paid_count(lessons_m)) +
-                    (qs_count(schools_m) - qs_paid_count(schools_m))
-                ),
-                'revenue_total': qs_sum_amount(swims_m) + qs_sum_amount(lessons_m) + qs_sum_amount(schools_m),
-                'revenue_swims': qs_sum_amount(swims_m),
-                'revenue_lessons': qs_sum_amount(lessons_m),
-                'revenue_schools': qs_sum_amount(schools_m),
+                'month_label': month_start.strftime('%B %Y'),
+                'total_orders': swims_bd['count_total'] + lessons_bd['count_total'] + schools_bd['count_total'],
+                'paid_orders': swims_bd['count_paid'] + lessons_bd['count_paid'] + schools_bd['count_paid'],
+                'unpaid_orders': swims_bd['count_unpaid'] + lessons_bd['count_unpaid'] + schools_bd['count_unpaid'],
+                'revenue_total': swims_bd['revenue_total'] + lessons_bd['revenue_total'] + schools_bd['revenue_total'],
+                'revenue_paid_total': swims_bd['revenue_paid'] + lessons_bd['revenue_paid'] + schools_bd['revenue_paid'],
+                'revenue_unpaid_total': swims_bd['revenue_unpaid'] + lessons_bd['revenue_unpaid'] + schools_bd['revenue_unpaid'],
+                # per-category
+                'swims': swims_bd,
+                'lessons': lessons_bd,
+                'schools': schools_bd,
             }
 
-            paid_total = (
-                qs_sum_amount(swims_m.filter(paid=True)) +
-                qs_sum_amount(lessons_m.filter(paid=True)) +
-                qs_sum_amount(schools_m.filter(paid=True))
-            )
-            paid_count = qs_paid_count(swims_m) + qs_paid_count(lessons_m) + qs_paid_count(schools_m)
+            paid_total = order_stats['revenue_paid_total']
+            paid_count = order_stats['paid_orders']
             all_count = order_stats['total_orders'] or 1
             order_stats['avg_order_value_paid'] = (paid_total / paid_count) if paid_count else 0
             order_stats['avg_order_value_overall'] = (order_stats['revenue_total'] / all_count) if all_count else 0
@@ -437,6 +465,7 @@ def orders_history(request):
         'date_from': date_from,
         'date_to': date_to,
         'order_stats': order_stats,
+        'selected_month': request.GET.get('month', ''),
     }
     return render(request, 'dashboard/orders_history.html', context)
 

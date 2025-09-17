@@ -1,0 +1,6 @@
+{% comment %}Options for start times (HH:MM). Expect 'times' in context.{% endcomment %}
+<option value="">Any Time</option>
+{% for t in times %}
+  <option value="{{ t }}">{{ t }}</option>
+{% endfor %}
+

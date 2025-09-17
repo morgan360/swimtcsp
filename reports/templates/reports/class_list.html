@@ -32,7 +32,7 @@
     <div class="p-8">
       <form method="get" action="{% url 'reports:class_print' %}" class="space-y-8">
         
-        <!-- Form Grid -->
+        <!-- Form Grid (reordered: Term → Day → Time → Lesson) -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           
           <!-- Term Selection -->
@@ -54,30 +54,6 @@
             <p class="text-xs text-gray-500 mt-1">Choose which term period to generate lists for</p>
           </div>
 
-          <!-- Category Selection -->
-          <div class="space-y-2">
-            <label for="id_category" class="flex items-center text-sm font-semibold text-gray-700 mb-3">
-              <i class="fas fa-tags text-purple-500 mr-2"></i>
-              Lesson Category
-            </label>
-            <div class="relative">
-              <select name="category" id="id_category"
-                      hx-get="{% url 'reports:update-days' %}"
-                      hx-trigger="change"
-                      hx-target="#id_day"
-                      class="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-gray-900 focus:bg-white focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all duration-200 appearance-none">
-                <option value="">🎯 Select a Category</option>
-                {% for category in categories %}
-                  <option value="{{ category.id }}">{{ category.name }}</option>
-                {% endfor %}
-              </select>
-              <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
-                <i class="fas fa-chevron-down text-gray-400"></i>
-              </div>
-            </div>
-            <p class="text-xs text-gray-500 mt-1">Filter by lesson type or category</p>
-          </div>
-
           <!-- Day Selection -->
           <div class="space-y-2">
             <label for="id_day" class="flex items-center text-sm font-semibold text-gray-700 mb-3">
@@ -86,18 +62,40 @@
             </label>
             <div class="relative">
               <select name="day" id="id_day"
-                      hx-get="{% url 'reports:update-lessons' %}"
+                      hx-get="{% url 'reports:update-times' %}"
                       hx-trigger="change"
-                      hx-include="#id_category"
-                      hx-target="#id_lesson"
+                      hx-include="closest form"
+                      hx-target="#id_time"
                       class="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-gray-900 focus:bg-white focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all duration-200 appearance-none">
-                {% include 'reports/partials/day_options.html' %}
+                {% include 'reports/partials/day_options.html' with days=day_choices %}
               </select>
               <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
                 <i class="fas fa-chevron-down text-gray-400"></i>
               </div>
             </div>
             <p class="text-xs text-gray-500 mt-1">Choose specific day of the week</p>
+          </div>
+
+          <!-- Time Selection (optional) -->
+          <div class="space-y-2">
+            <label for="id_time" class="flex items-center text-sm font-semibold text-gray-700 mb-3">
+              <i class="fas fa-clock text-indigo-500 mr-2"></i>
+              Start Time (optional)
+            </label>
+            <div class="relative">
+              <select name="time" id="id_time"
+                      hx-get="{% url 'reports:update-lessons' %}"
+                      hx-trigger="change"
+                      hx-include="closest form"
+                      hx-target="#id_lesson"
+                      class="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-gray-900 focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-200 appearance-none">
+                {% include 'reports/partials/time_options.html' %}
+              </select>
+              <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                <i class="fas fa-chevron-down text-gray-400"></i>
+              </div>
+            </div>
+            <p class="text-xs text-gray-500 mt-1">Pick a time to print all classes at that slot</p>
           </div>
 
           <!-- Lesson Selection -->
@@ -149,14 +147,14 @@
 <script>
 function checkFormValidity() {
   const term = document.getElementById('id_term').value;
-  const category = document.getElementById('id_category').value;
   const day = document.getElementById('id_day').value;
   const lesson = document.getElementById('id_lesson').value;
+  const time = document.getElementById('id_time').value;
   
   const button = document.getElementById('generateButton');
   
-  // Check if all fields have values
-  if (term && category && day && lesson) {
+  // Enable if: (term && lesson) OR (term && day && time)
+  if ((term && lesson) || (term && day && time)) {
     // Enable button with active styling
     button.disabled = false;
     button.className = "inline-flex items-center justify-center px-8 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-blue-800 focus:ring-4 focus:ring-blue-300 transition-all duration-200 shadow-lg transform hover:scale-105 cursor-pointer";
@@ -169,9 +167,7 @@ function checkFormValidity() {
     // Dynamic tooltip based on missing fields
     const missingFields = [];
     if (!term) missingFields.push("Term");
-    if (!category) missingFields.push("Category");
-    if (!day) missingFields.push("Day");
-    if (!lesson) missingFields.push("Lesson");
+    if (!(lesson || (day && time))) missingFields.push("Lesson or Day+Time");
     
     button.title = `Please select an option for: ${missingFields.join(", ")} to generate a class list`;
   }
@@ -179,7 +175,7 @@ function checkFormValidity() {
 
 // Add event listeners to all form fields
 document.addEventListener('DOMContentLoaded', function() {
-  const fields = ['id_term', 'id_category', 'id_day', 'id_lesson'];
+  const fields = ['id_term', 'id_category', 'id_day', 'id_time', 'id_lesson'];
   
   fields.forEach(fieldId => {
     const field = document.getElementById(fieldId);

@@ -43,6 +43,18 @@ try:
     MIDDLEWARE.insert(0, "config.middleware.WwwRedirectMiddleware")
 except NameError:
     MIDDLEWARE = ["config.middleware.WwwRedirectMiddleware"]
+# Set to False if you dont want maintanence mode
+MAINTENANCE_MODE = True
+
+MAINTENANCE_MODE_IGNORE_URLS = (
+    r'^/admin/.*',
+    r'^/accounts/login/?$',
+    r'^/accounts/logout/?$',
+    r'^/accounts/password/reset/.*$',
+    r'^/accounts/signup/?$',
+    r'^/users/login/?$',
+    r'^/users/logout/?$',
+)
 
 # --- Email (M365) ---
 EMAIL_BACKEND       = 'django.core.mail.backends.smtp.EmailBackend'

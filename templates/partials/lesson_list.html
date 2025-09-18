@@ -1,10 +1,23 @@
 {% comment %}
   Shared lesson listing snippet. Expects `lessons_info` items with keys:
   - lesson
-  - remaining_spaces
+  - remaining_spaces (may be None when term not yet open)
   - is_full
-  Optional context: selected_swimling
+  - can_book
+  Optional context: selected_swimling, booking_term_label, booking_term_is_next, booking_term_available
 {% endcomment %}
+
+{% if booking_term_label %}
+  <div class="mb-4 text-xs sm:text-sm text-blue-700 bg-blue-50 border border-blue-200 rounded-lg px-3 py-2">
+    Booking for <strong>{{ booking_term_label }}</strong>{% if booking_term_is_next %} (Next Term){% endif %}
+    {% if booking_term_dates %}<span class="block text-blue-600 mt-1">Schedule: {{ booking_term_dates }}</span>{% endif %}
+  </div>
+{% elif booking_term_is_next %}
+  <div class="mb-4 text-xs sm:text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+    Next term timetable is being finalised. Booking will reopen when the schedule is published.
+  </div>
+{% endif %}
+
 {% if lessons_info %}
   <div class="space-y-4">
     {% for lesson_info in lessons_info %}
@@ -14,7 +27,11 @@
           <p class="text-sm text-gray-500">€{{ lesson_info.lesson.price }}</p>
         </div>
         <div class="flex items-center gap-3">
-          {% if lesson_info.is_full %}
+          {% if lesson_info.remaining_spaces is None %}
+            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
+              <i class="fas fa-calendar-clock mr-1"></i>Schedule pending
+            </span>
+          {% elif lesson_info.is_full %}
             <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700">
               <i class="fas fa-times-circle mr-1"></i>Full
             </span>
@@ -28,7 +45,7 @@
             </span>
           {% endif %}
 
-          {% if not lesson_info.is_full %}
+          {% if lesson_info.can_book %}
             {% if selected_swimling %}
               <a href="{% url 'lessons:product_detail' id=lesson_info.lesson.id %}?swimling={{ selected_swimling.id }}"
                  class="inline-flex items-center px-4 py-2 bg-green-600 text-white text-xs font-medium rounded-lg hover:bg-green-700 transition-colors">
@@ -40,6 +57,10 @@
                 <i class="fas fa-eye mr-1"></i>View Details
               </a>
             {% endif %}
+          {% elif lesson_info.remaining_spaces is None %}
+            <span class="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-500 text-xs font-medium rounded-lg">
+              <i class="fas fa-calendar-day mr-1"></i>Coming soon
+            </span>
           {% else %}
             {% if selected_swimling %}
               <a href="{% url 'waiting_list:join_waiting_list' swimling_id=selected_swimling.id %}?product={{ lesson_info.lesson.id }}"
@@ -47,8 +68,8 @@
                 <i class="fas fa-clock mr-1"></i>Join Waiting List
               </a>
             {% else %}
-              <span class="inline-flex items-center px-4 py-2 bg-gray-200 text-gray-500 text-xs font-medium rounded-lg">
-                <i class="fas fa-ban mr-1"></i>Full Class
+              <span class="inline-flex items-center px-4 py-2 bg-gray-200 text-gray-600 text-xs font-medium rounded-lg">
+                <i class="fas fa-user-clock mr-1"></i>Select a swimling
               </span>
             {% endif %}
           {% endif %}

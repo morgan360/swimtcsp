@@ -31,6 +31,9 @@
       <div class="w-full flex items-center justify-center mb-2">
         <p class="font-bold text-xl text-blue-800">Filter Lessons</p>
       </div>
+      {% if selected_swimling %}
+      <input type="hidden" name="swimling" value="{{ selected_swimling.id }}">
+      {% endif %}
       <!-- Day filter -->
       <div class="bg-gradient-to-r from-blue-500 to-cyan-500 p-4 rounded-lg">
         <label for="day" class="block text-sm font-bold text-white mb-1">Day:</label>
@@ -95,7 +98,7 @@
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-200 bg-white">
-            {% for lesson_info in page_obj %}
+            {% for lesson_info in lessons_info %}
             <tr class="hover:bg-gray-50 transition-colors">
               <td class="px-6 py-4">
                 <div class="flex items-center">
@@ -168,7 +171,7 @@
 
       <!-- Mobile Cards -->
       <div class="md:hidden p-4 space-y-4">
-        {% for lesson_info in page_obj %}
+        {% for lesson_info in lessons_info %}
         <div class="bg-gray-50 rounded-lg border border-gray-200 p-4">
           <div class="flex items-center justify-between mb-3">
             <div class="flex items-center space-x-3">
@@ -230,49 +233,7 @@
     </div>
 
     <!-- Pagination -->
-    {% if page_obj.paginator.num_pages > 1 %}
-    <div class="mt-8">
-      <div class="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
-        <nav class="flex flex-wrap justify-center gap-2" role="navigation" aria-label="pagination">
-          {% if page_obj.has_previous %}
-          <a href="?{% if base_query %}{{ base_query }}&{% endif %}page=1"
-            class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">First</a>
-          <a href="?{% if base_query %}{{ base_query }}&{% endif %}page={{ page_obj.previous_page_number }}"
-            class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">Previous</a>
-          {% else %}
-          <span class="px-4 py-2 bg-gray-50 text-gray-400 rounded-lg cursor-not-allowed">First</span>
-          <span class="px-4 py-2 bg-gray-50 text-gray-400 rounded-lg cursor-not-allowed">Previous</span>
-          {% endif %}
-
-          {% if page_obj.has_next %}
-          <a href="?{% if base_query %}{{ base_query }}&{% endif %}page={{ page_obj.next_page_number }}"
-            class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">Next</a>
-          <a href="?{% if base_query %}{{ base_query }}&{% endif %}page={{ page_obj.paginator.num_pages }}"
-            class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">Last</a>
-          {% else %}
-          <span class="px-4 py-2 bg-gray-50 text-gray-400 rounded-lg cursor-not-allowed">Next</span>
-          <span class="px-4 py-2 bg-gray-50 text-gray-400 rounded-lg cursor-not-allowed">Last</span>
-          {% endif %}
-        </nav>
-
-        <div class="flex justify-center mt-4 space-x-1">
-          {% for num in page_obj.paginator.page_range %}
-          {% if page_obj.number == num %}
-          <span class="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium">{{ num }}</span>
-          {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %} <a href="?{% if base_query %}{{ base_query }}&{% endif %}page={{ num }}"
-            class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">{{ num }}</a>
-            {% elif num == page_obj.number|add:'-3' or num == page_obj.number|add:'3' %}
-            <span class="px-2 py-2 text-gray-400">…</span>
-            {% endif %}
-            {% endfor %}
-        </div>
-
-        <div class="text-center text-gray-500 text-sm mt-4">
-          Showing page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
-        </div>
-      </div>
-    </div>
-    {% endif %}
+    {% comment %} Pagination removed: all lessons displayed at once {% endcomment %}
 
     <!-- Booking Term Information -->
     <div class="space-y-6 mb-10 mt-10">

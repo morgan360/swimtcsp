@@ -3,7 +3,6 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.template.loader import render_to_string
 from django.http import JsonResponse, HttpResponse
 from django.contrib import messages
-from django.core.paginator import Paginator
 from django.db.models import Q
 from lessons_bookings.models import Term
 from shopping_cart.forms import CartAddProductForm
@@ -193,20 +192,8 @@ def lesson_list(request):
         for lesson in query
     ]
 
-    paginator = Paginator(lessons_info, 8)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
-
-    query_params = request.GET.copy()
-    if 'page' in query_params:
-        try:
-            query_params.pop('page')
-        except KeyError:
-            pass
-    base_query = query_params.urlencode()
-
     return render(request, 'lessons/lesson_list.html', {
-        'page_obj': page_obj,
+        'lessons_info': lessons_info,
         'programs': programs,
         'days': day_choices,
         'levels': LEVEL_ORDER,                  # 👈 expose levels to the template
@@ -214,7 +201,6 @@ def lesson_list(request):
         'selected_levels': selected_levels,     # for keeping filter UI state
         'current_term': term,
         'selected_swimling': selected_swimling,
-        'base_query': base_query,
         **get_term_info(request),
     })
 
@@ -263,7 +249,7 @@ def update_lesson_list(request):
             lvl_q |= _level_q(lvl)
         query = query.filter(lvl_q)
 
-    # Build lesson info + paginate
+    # Build lesson info without pagination so all lessons are returned
     lessons_info = [
         {
             'lesson': lesson,
@@ -274,12 +260,8 @@ def update_lesson_list(request):
         for lesson in query
     ]
 
-    paginator = Paginator(lessons_info, 8)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
-
     return render(request, 'partials/lesson_list.html', {
-        'page_obj': page_obj,
+        'lessons_info': lessons_info,
         'current_term': term,
         'selected_days': selected_days,       # useful if the partial shows active filters
         'selected_levels': selected_levels,   # idem

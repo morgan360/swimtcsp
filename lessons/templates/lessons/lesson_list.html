@@ -126,16 +126,28 @@
               </td>
               <td class="px-6 py-4 text-center">
                 {% if lesson_info.remaining_spaces > 0 %}
-                <a href="{% url 'lessons:product_detail' id=lesson_info.lesson.id %}?swimling={{ selected_swimling.id }}"
-                  class="inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors">
-                  <i class="fas fa-ticket-alt mr-2"></i>Book Now
-                </a>
+                  {% if selected_swimling %}
+                  <a href="{% url 'lessons:product_detail' id=lesson_info.lesson.id %}?swimling={{ selected_swimling.id }}"
+                    class="inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors">
+                    <i class="fas fa-ticket-alt mr-2"></i>Book Now
+                  </a>
+                  {% else %}
+                  <span class="inline-flex items-center px-4 py-2 bg-gray-200 text-gray-600 text-sm font-medium rounded-lg" title="Select a swimling to book this lesson">
+                    <i class="fas fa-user mr-2"></i>Select a swimling
+                  </span>
+                  {% endif %}
                 {% else %}
-                <a href="{% url 'waiting_list:join_waiting_list' swimling_id=selected_swimling.id %}?product={{ lesson_info.lesson.id }}"
-                  class="inline-flex items-center px-4 py-2 bg-gray-300 text-gray-700 text-sm font-medium rounded-lg cursor-pointer hover:bg-gray-300"
-                  title="Class is full; join the waiting list">
-                  <i class="fas fa-clock mr-2"></i>Join Waiting List
-                </a>
+                  {% if selected_swimling %}
+                  <a href="{% url 'waiting_list:join_waiting_list' swimling_id=selected_swimling.id %}?product={{ lesson_info.lesson.id }}"
+                    class="inline-flex items-center px-4 py-2 bg-gray-300 text-gray-700 text-sm font-medium rounded-lg cursor-pointer hover:bg-gray-300"
+                    title="Class is full; join the waiting list">
+                    <i class="fas fa-clock mr-2"></i>Join Waiting List
+                  </a>
+                  {% else %}
+                  <span class="inline-flex items-center px-4 py-2 bg-gray-200 text-gray-600 text-sm font-medium rounded-lg" title="Select a swimling to join the waiting list">
+                    <i class="fas fa-user-clock mr-2"></i>Select a swimling
+                  </span>
+                  {% endif %}
                 {% endif %}
               </td>
             </tr>
@@ -181,16 +193,28 @@
             </div>
           </div>
           {% if lesson_info.remaining_spaces > 0 %}
-          <a href="{% url 'lessons:product_detail' id=lesson_info.lesson.id %}?swimling={{ selected_swimling.id }}"
-            class="w-full inline-flex items-center justify-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors">
-            <i class="fas fa-ticket-alt mr-2"></i>Book Now
-          </a>
+            {% if selected_swimling %}
+            <a href="{% url 'lessons:product_detail' id=lesson_info.lesson.id %}?swimling={{ selected_swimling.id }}"
+              class="w-full inline-flex items-center justify-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors">
+              <i class="fas fa-ticket-alt mr-2"></i>Book Now
+            </a>
+            {% else %}
+            <span class="w-full inline-flex items-center justify-center px-4 py-2 bg-gray-200 text-gray-600 text-sm font-medium rounded-lg" title="Select a swimling to book this lesson">
+              <i class="fas fa-user mr-2"></i>Select a swimling
+            </span>
+            {% endif %}
           {% else %}
-          <a href="{% url 'waiting_list:join_waiting_list' swimling_id=selected_swimling.id %}?product={{ lesson_info.lesson.id }}"
-            class="w-full inline-flex items-center justify-center px-4 py-2 bg-gray-300 text-gray-700 text-sm font-medium rounded-lg cursor-pointer hover:bg-gray-300"
-            title="Class is full; join the waiting list">
-            <i class="fas fa-clock mr-2"></i>Join Waiting List
-          </a>
+            {% if selected_swimling %}
+            <a href="{% url 'waiting_list:join_waiting_list' swimling_id=selected_swimling.id %}?product={{ lesson_info.lesson.id }}"
+              class="w-full inline-flex items-center justify-center px-4 py-2 bg-gray-300 text-gray-700 text-sm font-medium rounded-lg cursor-pointer hover:bg-gray-300"
+              title="Class is full; join the waiting list">
+              <i class="fas fa-clock mr-2"></i>Join Waiting List
+            </a>
+            {% else %}
+            <span class="w-full inline-flex items-center justify-center px-4 py-2 bg-gray-200 text-gray-600 text-sm font-medium rounded-lg" title="Select a swimling to join the waiting list">
+              <i class="fas fa-user-clock mr-2"></i>Select a swimling
+            </span>
+            {% endif %}
           {% endif %}
         </div>
         {% empty %}
@@ -211,9 +235,9 @@
       <div class="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
         <nav class="flex flex-wrap justify-center gap-2" role="navigation" aria-label="pagination">
           {% if page_obj.has_previous %}
-          <a href="?page=1"
+          <a href="?{% if base_query %}{{ base_query }}&{% endif %}page=1"
             class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">First</a>
-          <a href="?page={{ page_obj.previous_page_number }}"
+          <a href="?{% if base_query %}{{ base_query }}&{% endif %}page={{ page_obj.previous_page_number }}"
             class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">Previous</a>
           {% else %}
           <span class="px-4 py-2 bg-gray-50 text-gray-400 rounded-lg cursor-not-allowed">First</span>
@@ -221,9 +245,9 @@
           {% endif %}
 
           {% if page_obj.has_next %}
-          <a href="?page={{ page_obj.next_page_number }}"
+          <a href="?{% if base_query %}{{ base_query }}&{% endif %}page={{ page_obj.next_page_number }}"
             class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">Next</a>
-          <a href="?page={{ page_obj.paginator.num_pages }}"
+          <a href="?{% if base_query %}{{ base_query }}&{% endif %}page={{ page_obj.paginator.num_pages }}"
             class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">Last</a>
           {% else %}
           <span class="px-4 py-2 bg-gray-50 text-gray-400 rounded-lg cursor-not-allowed">Next</span>
@@ -235,7 +259,7 @@
           {% for num in page_obj.paginator.page_range %}
           {% if page_obj.number == num %}
           <span class="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium">{{ num }}</span>
-          {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %} <a href="?page={{ num }}"
+          {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %} <a href="?{% if base_query %}{{ base_query }}&{% endif %}page={{ num }}"
             class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">{{ num }}</a>
             {% elif num == page_obj.number|add:'-3' or num == page_obj.number|add:'3' %}
             <span class="px-2 py-2 text-gray-400">…</span>

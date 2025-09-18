@@ -141,7 +141,6 @@ def lesson_list(request):
     term_data = get_term_context_data()
     phase = term_data['current_phase_id']
     term = term_data['next_term'] if phase == 'RB' else term_data['current_term']
-    print(f"🗓️ Showing lessons for term {term.id} ({'next' if phase == 'RB' else 'current'})")
 
     day_choices = Product.DAY_CHOICES
     programs = Program.objects.all()
@@ -198,6 +197,14 @@ def lesson_list(request):
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
+    query_params = request.GET.copy()
+    if 'page' in query_params:
+        try:
+            query_params.pop('page')
+        except KeyError:
+            pass
+    base_query = query_params.urlencode()
+
     return render(request, 'lessons/lesson_list.html', {
         'page_obj': page_obj,
         'programs': programs,
@@ -207,6 +214,7 @@ def lesson_list(request):
         'selected_levels': selected_levels,     # for keeping filter UI state
         'current_term': term,
         'selected_swimling': selected_swimling,
+        'base_query': base_query,
         **get_term_info(request),
     })
 

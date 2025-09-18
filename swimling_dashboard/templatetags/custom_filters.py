@@ -17,13 +17,13 @@ def is_enrolled_in_term(swimling, term):
 @register.filter
 def get_next_for(next_lessons, current_lesson):
     """
-    Match a next-term lesson based on the current lesson.
-    Adjust matching logic as needed.
+    Return the next-term lesson(s) if the swimling is booked,
+    regardless of whether it's the same class as the current term.
     """
-    for lesson in next_lessons:
-        if lesson.name == current_lesson.name:
-            return lesson
-    return None
+    if not next_lessons:
+        return None
+    # Just return the first booked next-term lesson
+    return next_lessons.first()
 
 @register.filter
 def get_action(actions, label):

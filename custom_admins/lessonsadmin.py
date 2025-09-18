@@ -47,9 +47,10 @@ class LessonEnrollmentAdmin(admin.ModelAdmin):
         "swimling__guardian__email",
         "lesson__name",
         "lesson__category__name",
-        "term__name",
+        "term__id",  # ✅ search directly by Term ID
         "order__id",
     ]
+
     list_per_page = 20
 
     def simple_term(self, obj):

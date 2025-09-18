@@ -139,7 +139,21 @@ def lesson_list(request):
 
     term_data = get_term_context_data()
     phase = term_data['current_phase_id']
-    term = term_data['next_term'] if phase == 'RB' else term_data['current_term']
+    booking_for_next_term = phase in ['RB', 'BN']
+
+    booking_term = term_data['next_term'] if booking_for_next_term else term_data['current_term']
+
+    if booking_for_next_term and booking_term is None:
+        messages.warning(
+            request,
+            "Next term details are not yet available. Booking will open once the schedule is published."
+        )
+
+    booking_term_label = booking_term.concatenated_term() if booking_term else None
+    booking_term_dates = (
+        f"{booking_term.start_date:%d %b %Y} – {booking_term.end_date:%d %b %Y}"
+        if booking_term and booking_term.start_date and booking_term.end_date else None
+    )
 
     day_choices = Product.DAY_CHOICES
     programs = Program.objects.all()
@@ -182,15 +196,24 @@ def lesson_list(request):
     # ----------------------------
     # 🧮 Build lesson info + paginate
     # ----------------------------
-    lessons_info = [
-        {
+    lessons_info = []
+    for lesson in query:
+        if booking_term:
+            remaining = lesson.remaining_spaces(booking_term)
+            is_full = lesson.is_full(booking_term)
+        else:
+            remaining = None
+            is_full = True
+
+        can_book = booking_term is not None and remaining is not None and remaining > 0
+
+        lessons_info.append({
             'lesson': lesson,
             'num_places': lesson.num_places,
-            'remaining_spaces': lesson.remaining_spaces(term),
-            'is_full': lesson.is_full(term),
-        }
-        for lesson in query
-    ]
+            'remaining_spaces': remaining,
+            'is_full': is_full,
+            'can_book': can_book,
+        })
 
     return render(request, 'lessons/lesson_list.html', {
         'lessons_info': lessons_info,
@@ -199,7 +222,11 @@ def lesson_list(request):
         'levels': LEVEL_ORDER,                  # 👈 expose levels to the template
         'selected_days': selected_days,         # for keeping filter UI state
         'selected_levels': selected_levels,     # for keeping filter UI state
-        'current_term': term,
+        'booking_term_label': booking_term_label,
+        'booking_term_dates': booking_term_dates,
+        'booking_term_is_next': booking_for_next_term,
+        'booking_term_available': booking_term is not None,
+        'booking_term_obj': booking_term,
         'selected_swimling': selected_swimling,
         **get_term_info(request),
     })
@@ -210,7 +237,15 @@ def lesson_list(request):
 def update_lesson_list(request):
     term_data = get_term_context_data()
     phase = term_data['current_phase_id']
-    term = term_data['next_term'] if phase == 'RB' else term_data['current_term']
+    booking_for_next_term = phase in ['RB', 'BN']
+
+    booking_term = term_data['next_term'] if booking_for_next_term else term_data['current_term']
+
+    booking_term_label = booking_term.concatenated_term() if booking_term else None
+    booking_term_dates = (
+        f"{booking_term.start_date:%d %b %Y} – {booking_term.end_date:%d %b %Y}"
+        if booking_term and booking_term.start_date and booking_term.end_date else None
+    )
 
     program_id = request.GET.get('program')
 
@@ -250,21 +285,34 @@ def update_lesson_list(request):
         query = query.filter(lvl_q)
 
     # Build lesson info without pagination so all lessons are returned
-    lessons_info = [
-        {
+    lessons_info = []
+    for lesson in query:
+        if booking_term:
+            remaining = lesson.remaining_spaces(booking_term)
+            is_full = lesson.is_full(booking_term)
+        else:
+            remaining = None
+            is_full = True
+
+        can_book = booking_term is not None and remaining is not None and remaining > 0
+
+        lessons_info.append({
             'lesson': lesson,
             'num_places': lesson.num_places,
-            'remaining_spaces': lesson.remaining_spaces(term),
-            'is_full': lesson.is_full(term),
-        }
-        for lesson in query
-    ]
+            'remaining_spaces': remaining,
+            'is_full': is_full,
+            'can_book': can_book,
+        })
 
     return render(request, 'partials/lesson_list.html', {
         'lessons_info': lessons_info,
-        'current_term': term,
         'selected_days': selected_days,       # useful if the partial shows active filters
         'selected_levels': selected_levels,   # idem
+        'booking_term_label': booking_term_label,
+        'booking_term_dates': booking_term_dates,
+        'booking_term_is_next': booking_for_next_term,
+        'booking_term_available': booking_term is not None,
+        'booking_term_obj': booking_term,
     })
 
 

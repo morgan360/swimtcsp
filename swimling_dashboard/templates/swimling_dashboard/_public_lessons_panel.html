@@ -81,11 +81,12 @@
                     </a>
                     {% endwith %}
                     {% with action=item.actions|get_action:'Rebook' %}
-                    <a href="{% if action.disabled %}#{% else %}{% url 'shopping_cart:direct_rebooking' swimling.id lesson.id %}{% endif %}"
-                      class="inline-flex items-center px-3 py-2 text-xs font-medium rounded-lg transition-colors {{ action.disabled|yesno:'pointer-events-none bg-gray-100 text-gray-400 cursor-not-allowed,bg-blue-600 text-white hover:bg-blue-700' }}"
-                      {% if action.disabled %}aria-disabled="true"{% endif %}>
-                      <i class="fa-solid fa-repeat mr-1"></i>Rebook
-                    </a>
+                      {% if not action.disabled %}
+                      <a href="{% url 'shopping_cart:direct_rebooking' swimling.id lesson.id %}"
+                        class="inline-flex items-center px-3 py-2 text-xs font-medium rounded-lg transition-colors bg-blue-600 text-white hover:bg-blue-700">
+                        <i class="fa-solid fa-repeat mr-1"></i>Rebook
+                      </a>
+                      {% endif %}
                     {% endwith %}
                     <a href="{% url 'waiting_list:join_waiting_list' swimling.id %}"
                       class="inline-flex items-center px-3 py-2 text-xs font-medium bg-yellow-400 text-yellow-900 hover:bg-yellow-500 rounded-lg transition-colors">
@@ -177,12 +178,13 @@
                 </a>
                 {% endwith %}
                 {% with action=item.actions|get_action:'Rebook' %}
-                <a href="{% if action.disabled %}#{% else %}{% url 'shopping_cart:direct_rebooking' swimling.id lesson.id %}{% endif %}"
-                  class="inline-flex items-center px-3 py-1 text-xs rounded text-center {{ action.disabled|yesno:'pointer-events-none bg-gray-300 text-gray-700 cursor-not-allowed,pointer-events-auto bg-blue-600 text-white hover:bg-blue-700' }}"
-                  {% if action.disabled %}aria-disabled="true"{% endif %}>
-                  <i class="fa-solid fa-repeat mr-1"></i>
-                  Rebook
-                </a>
+                  {% if not action.disabled %}
+                  <a href="{% url 'shopping_cart:direct_rebooking' swimling.id lesson.id %}"
+                    class="inline-flex items-center px-3 py-1 text-xs rounded text-center bg-blue-600 text-white hover:bg-blue-700">
+                    <i class="fa-solid fa-repeat mr-1"></i>
+                    Rebook
+                  </a>
+                  {% endif %}
                 {% endwith %}
                 <a href="{% url 'waiting_list:join_waiting_list' swimling.id %}"
                   class="inline-flex items-center px-3 py-1 text-xs rounded bg-yellow-400 text-black hover:bg-yellow-500 text-center">

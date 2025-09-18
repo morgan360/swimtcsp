@@ -44,7 +44,7 @@ try:
 except NameError:
     MIDDLEWARE = ["config.middleware.WwwRedirectMiddleware"]
 # Set to False if you dont want maintanence mode
-MAINTENANCE_MODE = True
+# MAINTENANCE_MODE = True
 
 MAINTENANCE_MODE_IGNORE_URLS = (
     r'^/admin/.*',

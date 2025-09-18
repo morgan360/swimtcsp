@@ -28,6 +28,18 @@ from django.core.exceptions import ValidationError
 import logging
 
 
+def _ensure_rebooking_open(request):
+    """Redirect to the dashboard with an error if rebooking is closed."""
+    term_data = get_term_context_data()
+    current_phase = term_data.get('current_phase_id')
+
+    if current_phase != 'RB':
+        messages.error(request, "Rebooking is not currently available.")
+        return redirect('swimling_dashboard:guardian_dashboard')
+
+    return None
+
+
 # Create a logger object
 logger = logging.getLogger('cart')
 
@@ -266,10 +278,19 @@ def direct_order(request, swimling_id, school_id, active_term):
     })
 
 
+@login_required
 def review_rebooking(request, swimling_id, product_id):
+    phase_guard = _ensure_rebooking_open(request)
+    if phase_guard:
+        return phase_guard
+
     """Displays the order details for review before confirming."""
     swimling = get_object_or_404(Swimling, id=swimling_id)
     lesson = get_object_or_404(Product, id=product_id)
+
+    if swimling.guardian != request.user and not request.user.is_staff:
+        messages.error(request, "You do not have permission to rebook for this swimling.")
+        return redirect('swimling_dashboard:guardian_dashboard')
 
     if request.method == 'POST':
         # Redirect to the confirmation view
@@ -281,10 +302,19 @@ def review_rebooking(request, swimling_id, product_id):
     })
 
 
+@login_required
 def direct_rebooking(request, swimling_id, product_id):
+    phase_guard = _ensure_rebooking_open(request)
+    if phase_guard:
+        return phase_guard
+
     """Handles the final order submission and initiates the payment process."""
     swimling = get_object_or_404(Swimling, id=swimling_id)
     lesson = get_object_or_404(Product, id=product_id)
+
+    if swimling.guardian != request.user and not request.user.is_staff:
+        messages.error(request, "You do not have permission to rebook for this swimling.")
+        return redirect('swimling_dashboard:guardian_dashboard')
 
     if request.method == 'POST':
         total_price = lesson.price

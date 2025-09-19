@@ -83,12 +83,12 @@
                                     {% endif %}
                                 </td>
                                 <td class="px-6 py-4 text-center">
-                                    <form action="{% url 'shopping_cart:cart_remove' product_id=item.product_id type=item.type swimling_id=item.swimling.id %}" method="post" class="inline">
-                                        {% csrf_token %}
-                                        <button type="submit" class="inline-flex items-center px-3 py-2 bg-red-600 text-white text-xs font-medium rounded-lg hover:bg-red-700 transition-colors">
-                                            <i class="fas fa-trash mr-1"></i>Remove
-                                        </button>
-                                    </form>
+                                    <button type="submit"
+                                        formaction="{% url 'shopping_cart:cart_remove' product_id=item.product_id type=item.type swimling_id=item.swimling.id %}"
+                                        formmethod="post"
+                                        class="inline-flex items-center px-3 py-2 bg-red-600 text-white text-xs font-medium rounded-lg hover:bg-red-700 transition-colors">
+                                        <i class="fas fa-trash mr-1"></i>Remove
+                                    </button>
                                 </td>
                             </tr>
                             {% endfor %}
@@ -129,12 +129,12 @@
                             {% endif %}
                         </div>
                         
-                        <form action="{% url 'shopping_cart:cart_remove' product_id=item.product_id type=item.type swimling_id=item.swimling.id %}" method="post">
-                            {% csrf_token %}
-                            <button type="submit" class="w-full inline-flex items-center justify-center px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition-colors">
-                                <i class="fas fa-trash mr-2"></i>Remove Item
-                            </button>
-                        </form>
+                        <button type="submit"
+                            formaction="{% url 'shopping_cart:cart_remove' product_id=item.product_id type=item.type swimling_id=item.swimling.id %}"
+                            formmethod="post"
+                            class="w-full inline-flex items-center justify-center px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition-colors">
+                            <i class="fas fa-trash mr-2"></i>Remove Item
+                        </button>
                     </div>
                     {% endfor %}
                 </div>

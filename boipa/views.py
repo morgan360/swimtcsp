@@ -17,7 +17,7 @@ from swims_orders.tasks import send_order_email
 from lessons_orders.tasks import send_lesson_order_email
 from django.contrib.admin.views.decorators import staff_member_required
 from django.http import JsonResponse
-
+from urllib.parse import parse_qs
 
 # Initialize logging
 boipa_logger = logging.getLogger("boipa")
@@ -91,23 +91,34 @@ def payment_notification(request):
         raw_body = "<unable to decode>"
     boipa_logger.debug(f"🔎 RAW BODY: {raw_body}")
 
-    # Parse GET/POST
+    # --- Parse data ---
+    data = {}
     if request.method == "POST":
-        data = request.POST
+        data = request.POST.dict()
+        if data:
+            boipa_logger.debug(f"📦 Parsed notification data from request.POST: {data}")
+        else:
+            boipa_logger.warning("⚠️ request.POST is empty, trying manual parse of raw body")
+            if raw_body and raw_body != "<unable to decode>":
+                try:
+                    parsed = parse_qs(raw_body)
+                    data = {k: v[0] for k, v in parsed.items()}
+                    boipa_logger.debug(f"📦 Parsed notification data from raw body: {data}")
+                except Exception as e:
+                    boipa_logger.error(f"❌ Failed to parse raw body manually: {e}")
     elif request.method == "GET":
-        data = request.GET
+        data = request.GET.dict()
+        boipa_logger.debug(f"📦 Parsed notification data from request.GET: {data}")
     else:
         boipa_logger.error(f"❌ Invalid request method: {request.method}")
         return HttpResponse("Invalid request method", status=405)
-
-    boipa_logger.debug(f"📦 Parsed notification data: {data.dict()}")
 
     merchantTxId = data.get("merchantTxId")
     if not merchantTxId:
         boipa_logger.error("❌ merchantTxId missing from payload")
         return HttpResponse("Missing merchantTxId", status=400)
 
-    # Parse merchantTxId into prefix + numeric order_id
+    # --- Parse merchantTxId ---
     parts = merchantTxId.split("_")
     if len(parts) < 2:
         boipa_logger.error(f"❌ Invalid merchantTxId format: {merchantTxId}")
@@ -125,8 +136,7 @@ def payment_notification(request):
     )
 
     # --- Models mapping ---
-    def noop(order):
-        return
+    def noop(order): return
 
     model_map = {
         "swims": (SwimOrder, SwimOrderPaymentNotification, noop),
@@ -150,8 +160,6 @@ def payment_notification(request):
             # ✅ Only mark as paid if BOIPA confirms
             if result == "success" or status == "CAPTURED":
                 boipa_logger.debug(f"Marking order {order.id} as paid (result={result}, status={status})")
-                order.paid = True
-                order.txId = data.get("txId", "")
                 order.paid = True
                 order.txId = data.get("txId", "")
                 order.save()

@@ -17,7 +17,7 @@ from .payment_functions import get_boipa_session_token  # External function
 from swims_orders.tasks import send_order_email
 from lessons_orders.tasks import send_lesson_order_email
 from django.contrib.admin.views.decorators import staff_member_required
-
+from django.http import JsonResponse
 
 
 # Initialize logging
@@ -60,21 +60,22 @@ def payment_response(request):
         return render(request, 'boipa/payment_failure.html', {'order_ref': merchantTxId, 'message': result})
     return render(request, 'boipa/error.html', {'error_message': 'Unknown payment response.'})
 
-
-from django.http import JsonResponse
-
-
 @csrf_exempt
 def payment_notification(request):
     print("📥 payment_notification view triggered")
-    payments_logger.debug(f"Received payment Notification (POST): {request.POST.dict()}")
+    payments_logger.debug(f"Received payment Notification ({request.method}): "
+                          f"GET={request.GET.dict()} POST={request.POST.dict()}")
 
-    if request.method != 'POST':
+    # ✅ Accept both POST and GET
+    if request.method == 'POST':
+        data = request.POST
+    elif request.method == 'GET':
+        data = request.GET
+    else:
         print("❌ Invalid request method:", request.method)
         return HttpResponse("Invalid request method", status=405)
 
-    data = QueryDict(request.body)
-    print("📦 Raw request body parsed:", data)
+    print("📦 Parsed notification data:", data.dict())
 
     merchantTxId = data.get('merchantTxId')
     if not merchantTxId:

@@ -39,10 +39,10 @@ DATABASES = {
 
 ALLOWED_HOSTS = ['www.tcsp.ie', 'tcsp.ie']
 CSRF_TRUSTED_ORIGINS = ['https://www.tcsp.ie', 'https://tcsp.ie']
-try:
-    MIDDLEWARE.insert(0, "config.middleware.WwwRedirectMiddleware")
-except NameError:
-    MIDDLEWARE = ["config.middleware.WwwRedirectMiddleware"]
+# try:
+#     MIDDLEWARE.insert(0, "config.middleware.WwwRedirectMiddleware")
+# except NameError:
+#     MIDDLEWARE = ["config.middleware.WwwRedirectMiddleware"]
 # Set to False if you dont want maintanence mode
 # MAINTENANCE_MODE = True
 

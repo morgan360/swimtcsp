@@ -362,24 +362,30 @@ def swimlings_list_rows(request):
 @login_required
 def my_bookings(request):
     # Lessons: group by order to show coupon/discount breakdown
-    lesson_orders = (
+    lesson_orders_base = (
         LessonOrder.objects
         .filter(user=request.user)
         .prefetch_related('items__product', 'items__term', 'items__swimling')
         .select_related('coupon')
         .order_by('-created')
     )
+    lesson_orders_paid = lesson_orders_base.filter(paid=True)
+    lesson_orders_unpaid = lesson_orders_base.filter(paid=False)
 
     # Public Swims: orders with items and product/variants
-    swim_orders = (
+    swim_orders_base = (
         SwimOrder.objects
         .filter(user=request.user)
         .select_related('product', 'coupon')
         .prefetch_related('items__variant')
         .order_by('-created')
     )
+    swim_orders_paid = swim_orders_base.filter(paid=True)
+    swim_orders_unpaid = swim_orders_base.filter(paid=False)
 
     return render(request, 'users/my_bookings.html', {
-        'lesson_orders': lesson_orders,
-        'swim_orders': swim_orders,
+        'lesson_orders_paid': lesson_orders_paid,
+        'lesson_orders_unpaid': lesson_orders_unpaid,
+        'swim_orders_paid': swim_orders_paid,
+        'swim_orders_unpaid': swim_orders_unpaid,
     })

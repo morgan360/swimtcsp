@@ -157,17 +157,26 @@ def payment_process(request):
         phase = term_data['current_phase_id']
         term = term_data['next_term'] if phase in ['RB', 'BN'] else term_data['current_term']
 
-        # Pass a lambda so the function signature stays the same
-        total_price = process_order_items(
-            cart,
-            LessonOrderItem,
-            order,
-            Product,
-            lambda: term
-        )
+        try:
+            total_price = process_order_items(
+                cart,
+                LessonOrderItem,
+                order,
+                Product,
+                lambda: term
+            )
+        except ValueError as exc:
+            order.delete()
+            messages.error(request, str(exc))
+            return redirect('shopping_cart:cart_detail')
     elif cart_type == 'school':
         order = SchoolOrder.objects.create(user=request.user)
-        total_price = process_order_items(cart, SchoolOrderItem, order, ScoLessons, get_current_sco_term)
+        try:
+            total_price = process_order_items(cart, SchoolOrderItem, order, ScoLessons, get_current_sco_term)
+        except ValueError as exc:
+            order.delete()
+            messages.error(request, str(exc))
+            return redirect('shopping_cart:cart_detail')
     else:
         return HttpResponse("Invalid product type in cart.", status=400)
 
@@ -210,13 +219,17 @@ def process_order_items(cart, OrderItemModel, order, ProductModel, get_term_func
         quantity = item_data.get('quantity', 1)
         price = Decimal(item_data['price'])
 
+        term = get_term_func()
+        if term is None:
+            raise ValueError("We couldn't determine which term to book for right now. Please try again later.")
+
         OrderItemModel.objects.create(
             order=order,
             product=product,
             price=price,
             quantity=quantity,
             swimling=swimling,
-            term=get_term_func(),
+            term=term,
         )
         total_price += price * quantity  # Add to total_price correctly
 
@@ -321,6 +334,10 @@ def direct_rebooking(request, swimling_id, product_id):
         next_term = get_next_term()
         print('term', next_term)
 
+        if next_term is None:
+            messages.error(request, "We couldn't determine the upcoming term for this rebooking. Please try again later.")
+            return redirect('swimling_dashboard:guardian_dashboard')
+
         # Create the main order
         order = LessonOrder.objects.create(
             user=request.user,
@@ -371,6 +388,10 @@ def confirm_waiting_list_booking(request, swimling_id, product_id):
         total_price = lesson.price
         current_term = get_current_term()
         print('term', current_term)
+
+        if current_term is None:
+            messages.error(request, "We couldn't find an active term for this booking. Please try again later.")
+            return redirect('shopping_cart:review_waiting_list_booking', swimling_id=swimling_id, product_id=product_id)
 
         # Create the main order
         order = LessonOrder.objects.create(

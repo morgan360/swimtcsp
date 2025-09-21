@@ -22,8 +22,12 @@ def get_next_for(next_lessons, current_lesson):
     """
     if not next_lessons:
         return None
-    # Just return the first booked next-term lesson
-    return next_lessons.first()
+    first = next_lessons[0]
+
+    if isinstance(first, dict):
+        return first
+
+    return str(first)
 
 @register.filter
 def get_action(actions, label):

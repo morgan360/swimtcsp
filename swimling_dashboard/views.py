@@ -2,6 +2,7 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, get_object_or_404, redirect
 from utils.context_processors import get_term_info
 from lessons.models import Product
+from lessons_bookings.models import LessonEnrollment
 from users.helpers import fetch_waiting_list_data
 from schools_bookings.utils.swimling_utils import (
     get_latest_active_school_term,
@@ -273,10 +274,24 @@ def guardian_dashboard(request):
             enrollments__swimling=swimling
         ).distinct()
 
-        next_lessons = Product.objects.filter(
-            enrollments__term_id=next_term_id,
-            enrollments__swimling=swimling
-        ).distinct()
+        next_enrollments = (
+            LessonEnrollment.objects
+            .filter(term_id=next_term_id, swimling=swimling)
+            .select_related('lesson', 'term')
+        ) if next_term_id else LessonEnrollment.objects.none()
+
+        next_lessons = []
+        for enrollment in next_enrollments:
+            lesson_obj = enrollment.lesson
+            term_obj = enrollment.term
+            next_lessons.append({
+                'lesson': str(lesson_obj) if lesson_obj else '',
+                'term_label': f"Term {term_obj.id}" if term_obj else None,
+                'term_dates': (
+                    f"{term_obj.start_date:%d %b} – {term_obj.end_date:%d %b %Y}"
+                    if term_obj and term_obj.start_date and term_obj.end_date else None
+                ),
+            })
 
         actions = []
         if current_phase in ['BK', 'RB']:

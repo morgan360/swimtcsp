@@ -1,7 +1,12 @@
+import logging
+
 from django.db import transaction
 from lessons_orders.models import Order, OrderItem
 from lessons_bookings.models import LessonEnrollment
 from waiting_list.models import WaitingList
+
+
+logger = logging.getLogger(__name__)
 
 def handle_lessons_enrollment(order):
     # print( 'lesson_enrollment')
@@ -15,6 +20,11 @@ def handle_lessons_enrollment(order):
                 swimling = order_item.swimling
                 lesson = order_item.product
                 term = order_item.term
+
+                if term is None:
+                    raise ValueError(
+                        f"Order item {order_item.id} (order {order.id}) is missing a term; cannot create enrollment."
+                    )
 
                 # Create LessonEnrollment record for the current order item
                 LessonEnrollment.objects.create(
@@ -32,7 +42,6 @@ def handle_lessons_enrollment(order):
                 ).update(completed=True)
         # Optional: Further actions upon successful enrollment (e.g., sending confirmation emails)
 
-    except Exception as e:
-        # Handle exceptions (e.g., invalid data, database errors)
-        print(f"Error handling lessons enrollment: {str(e)}")
-        # Optionally, re-raise the exception or handle it as per your application's error handling strategy
+    except Exception:
+        logger.exception("Error handling lessons enrollment for order %s", getattr(order, 'id', '?'))
+        raise

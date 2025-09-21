@@ -836,11 +836,13 @@ def lessons_history(request, lesson_id):
         return (end_date or today, start_date or today)
 
     current_data.sort(key=sort_key)
+    upcoming_data.sort(key=sort_key)
     previous_data.sort(key=sort_key, reverse=True)
 
     context = {
         "lesson": lesson,
         "current_data": current_data,
+        "upcoming_data": upcoming_data,
         "previous_data": previous_data,
     }
     return render(request, "dashboard/lessons_history.html", context)

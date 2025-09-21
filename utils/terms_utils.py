@@ -16,11 +16,14 @@ def get_previous_term():
     return None
 
 def get_next_term():
+    today = timezone.now().date()
     current_term = get_current_term()
+
+    future_terms = Term.objects.filter(start_date__gt=today).order_by('start_date')
     if current_term:
-        next_term = Term.objects.filter(start_date__gt=current_term.end_date).order_by('start_date').first()
-        return next_term
-    return None
+        return future_terms.filter(start_date__gt=current_term.end_date).first() or future_terms.first()
+
+    return future_terms.first()
 
 def get_current_sco_term():
     today = timezone.now().date()

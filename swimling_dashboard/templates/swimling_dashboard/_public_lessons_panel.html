@@ -64,7 +64,15 @@
                         <i class="fas fa-arrow-right mr-1"></i>Next
                       </span>
                       {% if next_lesson %}
-                      <span class="text-sm text-gray-700">{{ next_lesson }}</span>
+                      <div class="flex items-center space-x-3">
+                        <span class="text-sm text-gray-700">{{ next_lesson.lesson }}</span>
+                        {% if next_lesson.term_label %}
+                        <span class="text-xs text-gray-500">({{ next_lesson.term_label }})</span>
+                        {% endif %}
+                        {% if next_lesson.term_dates %}
+                        <span class="text-xs text-gray-400">{{ next_lesson.term_dates }}</span>
+                        {% endif %}
+                      </div>
                       {% else %}
                       <span class="text-sm text-gray-500 italic">Not registered</span>
                       {% endif %}
@@ -98,17 +106,39 @@
               {% endfor %}
             </div>
             {% else %}
-            <div class="bg-white rounded-xl border-2 border-dashed border-gray-300 p-8 text-center">
-              <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <div class="bg-white rounded-xl border-2 border-dashed border-gray-300 p-8 text-center space-y-6">
+              <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto">
                 <i class="fas fa-swimming-pool text-gray-400 text-xl"></i>
               </div>
-              <h5 class="text-lg font-medium text-gray-900 mb-2">No Current Lessons</h5>
-              <p class="text-gray-500 mb-6">Get started by booking your first swimming lesson</p>
+              <div class="space-y-2">
+                <h5 class="text-lg font-medium text-gray-900">No Current Lessons</h5>
+                {% if item.next_lessons %}
+                <p class="text-gray-600">Upcoming lesson(s) booked for the next term:</p>
+                <div class="space-y-2">
+                  {% for lesson in item.next_lessons %}
+                  <div class="flex items-center justify-center space-x-2 text-sm text-gray-700">
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">
+                      <i class="fas fa-arrow-right mr-1"></i>Next
+                    </span>
+                    <span>{{ lesson.lesson }}</span>
+                    {% if lesson.term_label %}
+                    <span class="text-xs text-gray-500">({{ lesson.term_label }})</span>
+                    {% endif %}
+                    {% if lesson.term_dates %}
+                    <span class="text-xs text-gray-400">{{ lesson.term_dates }}</span>
+                    {% endif %}
+                  </div>
+                  {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-gray-500">Get started by booking your first swimming lesson.</p>
+                {% endif %}
+              </div>
               <div class="flex justify-center space-x-2">
                 {% with action=item.actions|get_action:'Book' %}
                 <a href="{{ action.url }}"
                   class="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-colors {{ action.disabled|yesno:'bg-gray-100 text-gray-400 cursor-not-allowed,bg-green-600 text-white hover:bg-green-700' }}">
-                  <i class="fa-solid fa-plus mr-2"></i>Book First Lesson
+                  <i class="fa-solid fa-plus mr-2"></i>{% if item.next_lessons %}Book Another Lesson{% else %}Book First Lesson{% endif %}
                 </a>
                 {% endwith %}
                 <a href="{% url 'waiting_list:join_waiting_list' swimling.id %}"
@@ -195,9 +225,29 @@
             </div>
             {% endfor %}
             {% else %}
-            <div class="bg-white rounded-md p-3 space-y-1">
+            <div class="bg-white rounded-md p-3 space-y-2">
               <p class="italic text-gray-600">No current lessons</p>
+              {% if item.next_lessons %}
+              <div class="space-y-2 text-sm">
+                <p class="text-gray-600">Upcoming lesson(s) booked for the next term:</p>
+                {% for lesson in item.next_lessons %}
+                <div class="flex items-center">
+                  <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-800 mr-2">
+                    Next
+                  </span>
+                  <span>{{ lesson.lesson }}</span>
+                  {% if lesson.term_label %}
+                  <span class="text-xs text-gray-500 ml-2">({{ lesson.term_label }})</span>
+                  {% endif %}
+                  {% if lesson.term_dates %}
+                  <span class="text-xs text-gray-400 ml-2">{{ lesson.term_dates }}</span>
+                  {% endif %}
+                </div>
+                {% endfor %}
+              </div>
+              {% else %}
               <p class="italic text-gray-600">Not registered</p>
+              {% endif %}
               <div class="flex flex-wrap gap-2 pt-2 items-start">
                 {% with action=item.actions|get_action:'Book' %}
                 <a href="{{ action.url }}"

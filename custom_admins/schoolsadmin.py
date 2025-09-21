@@ -3,7 +3,8 @@ from django.contrib import admin
 from schools.models import ScoLessons, ScoCategory, ScoProgram, ScoSchool
 from schools_orders.models import Order
 from schools_bookings.models import ScoTerm, ScoEnrollment
-from .lessonsadmin import LessonEnrollmentAdmin
+from users.models import Swimling
+from .lessonsadmin import LessonEnrollmentAdmin, SwimlingAutocompleteAdmin
 from import_export.admin import ImportExportMixin
 from schools_bookings.resources import TermResource  # adjust if needed
 
@@ -37,6 +38,7 @@ schools_admin_site = SchoolsAdminSite(name='schoolsadmin')
 
 # ✅ Register models to your custom site
 schools_admin_site.register(ScoEnrollment, LessonEnrollmentAdmin)
+schools_admin_site.register(Swimling, SwimlingAutocompleteAdmin)
 schools_admin_site.register(ScoLessons)
 schools_admin_site.register(ScoCategory)
 schools_admin_site.register(ScoProgram)

@@ -9,8 +9,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
 from .models import (
     SwimOrderPaymentNotification, LessonOrderPaymentNotification, SchoolOrderPaymentNotification,
-    SwimOrder, LessonOrder, SchoolOrder
-)
+    SwimOrder, LessonOrder, SchoolOrder)
 from lessons_bookings.utils.enrollment import handle_lessons_enrollment
 from schools_bookings.utils.enrollment import handle_schools_enrollment
 from .payment_functions import get_boipa_session_token  # External function
@@ -21,7 +20,7 @@ from django.http import JsonResponse
 
 
 # Initialize logging
-payments_logger = logging.getLogger('payments')
+payments_logger = logging.getLogger('boipa')
 
 
 def initiate_boipa_payment_session(request, order_ref, total_price):
@@ -51,111 +50,145 @@ def initiate_boipa_payment_session(request, order_ref, total_price):
 
 
 def payment_response(request):
-    payments_logger.debug(f"Received payment response: {request.GET.dict()}")
-    result = request.GET.get('result')
-    merchantTxId = request.GET.get('merchantTxId')
-    if result == "success":
-        return render(request, 'boipa/payment_success.html', {'order_ref': merchantTxId, 'message': result})
-    elif result == "failure":
-        return render(request, 'boipa/payment_failure.html', {'order_ref': merchantTxId, 'message': result})
-    return render(request, 'boipa/error.html', {'error_message': 'Unknown payment response.'})
+    boipa_logger = logging.getLogger("boipa")
+    boipa_logger.debug(f"Received payment response: {request.GET.dict()}")
 
+    result = request.GET.get("result")
+    merchantTxId = request.GET.get("merchantTxId")
+
+    order_ref = None
+    if merchantTxId:
+        parts = merchantTxId.split("_")
+        if len(parts) >= 2:
+            try:
+                order_ref = int(parts[1])  # ✅ only second part is numeric ID
+            except ValueError:
+                order_ref = merchantTxId  # fallback to raw if parsing fails
+
+    context = {
+        "order_ref": order_ref,
+        "merchantTxId": merchantTxId,  # optional, for debugging/logging
+        "message": result,
+    }
+
+    if result == "success":
+        return render(request, "boipa/payment_success.html", context)
+    elif result == "failure":
+        return render(request, "boipa/payment_failure.html", context)
+    return render(request, "boipa/error.html", {"error_message": "Unknown payment response."})
 @csrf_exempt
 def payment_notification(request):
     print("📥 payment_notification view triggered")
-    payments_logger.debug(f"Received payment Notification ({request.method}): "
-                          f"GET={request.GET.dict()} POST={request.POST.dict()}")
+    boipa_logger.debug("📥 payment_notification view triggered")
+
+    # 🔎 Debug raw request
+    boipa_logger.debug(f"🔎 RAW PATH: {request.get_full_path()}")
+    boipa_logger.debug(f"🔎 QUERY STRING: {request.META.get('QUERY_STRING')}")
+    boipa_logger.debug(f"🔎 HEADERS: {dict(request.headers)}")
+    try:
+        raw_body = request.body.decode("utf-8")
+    except Exception:
+        raw_body = "<unable to decode>"
+    boipa_logger.debug(f"🔎 RAW BODY: {raw_body}")
 
     # ✅ Accept both POST and GET
-    if request.method == 'POST':
+    if request.method == "POST":
         data = request.POST
-    elif request.method == 'GET':
+    elif request.method == "GET":
         data = request.GET
     else:
-        print("❌ Invalid request method:", request.method)
+        boipa_logger.error(f"❌ Invalid request method: {request.method}")
         return HttpResponse("Invalid request method", status=405)
 
-    print("📦 Parsed notification data:", data.dict())
+    boipa_logger.debug(f"📦 Parsed notification data: {data.dict()}")
 
-    merchantTxId = data.get('merchantTxId')
+    merchantTxId = data.get("merchantTxId")
     if not merchantTxId:
-        print("❌ merchantTxId missing from payload")
+        boipa_logger.error("❌ merchantTxId missing from payload")
         return HttpResponse("Missing merchantTxId", status=400)
 
-    try:
-        parts = merchantTxId.split("_")
-        source_prefix = parts[0]
-        order_id = int(parts[1])
-        print(f"🔍 Extracted source_prefix: {source_prefix}, order_id: {order_id}")
-    except (ValueError, IndexError) as e:
-        print(f"❌ Error parsing merchantTxId: {merchantTxId} → {e}")
+    # ✅ FIXED parsing logic
+    parts = merchantTxId.split("_")
+    if len(parts) < 2:
+        boipa_logger.error(f"❌ Invalid merchantTxId format: {merchantTxId}")
         return HttpResponse("Invalid merchantTxId format", status=400)
 
-    def noop(order): return
+    source_prefix = parts[0]
+    try:
+        order_id = int(parts[1])   # only second part is numeric order ID
+    except ValueError:
+        boipa_logger.error(f"❌ Could not parse order_id from {parts[1]}")
+        return HttpResponse("Invalid order_id", status=400)
+
+    boipa_logger.debug(
+        f"🔍 Extracted source_prefix={source_prefix}, order_id={order_id}, full merchantTxId={merchantTxId}"
+    )
+
+    def noop(order):
+        return
 
     model_map = {
-        'swims': (SwimOrder, SwimOrderPaymentNotification, noop),
-        'lesson': (LessonOrder, LessonOrderPaymentNotification, handle_lessons_enrollment),
-        'school': (SchoolOrder, SchoolOrderPaymentNotification, handle_schools_enrollment),
+        "swims": (SwimOrder, SwimOrderPaymentNotification, noop),
+        "lesson": (LessonOrder, LessonOrderPaymentNotification, handle_lessons_enrollment),
+        "school": (SchoolOrder, SchoolOrderPaymentNotification, handle_schools_enrollment),
     }
 
-    print("🔑 Available source prefixes:", list(model_map.keys()))
+    boipa_logger.debug(f"🔑 Available source prefixes: {list(model_map.keys())}")
 
     if source_prefix in model_map:
         OrderModel, NotificationModel, enrollment_func = model_map[source_prefix]
         try:
-            print(f"📄 Looking up order with ID {order_id} from model {OrderModel.__name__}")
+            boipa_logger.debug(f"📄 Looking up order with ID {order_id} in {OrderModel.__name__}")
             with transaction.atomic():
                 order = OrderModel.objects.get(id=order_id)
                 order.paid = True
-                order.txId = data.get('txId', '')
+                order.txId = data.get("txId", "")
                 order.save()
-                print(f"✅ Order {order_id} marked as paid")
+                boipa_logger.info(f"✅ Order {order_id} marked as paid")
 
-                # ✅ Explicit email dispatch based on type
-                if source_prefix == 'swims':
-                    print("📧 Sending swim order email")
+                # ✅ Explicit email dispatch
+                if source_prefix == "swims":
+                    boipa_logger.debug("📧 Sending swim order email")
                     send_order_email(order.id)
-                elif source_prefix == 'lesson':
-                    print("📨 Sending lesson order email")
+                elif source_prefix == "lesson":
+                    boipa_logger.debug("📨 Sending lesson order email")
                     send_lesson_order_email(order.id)
 
                 NotificationModel.objects.create(
                     order=order,
-                    txId=data.get('txId', ''),
-                    merchantTxId=data.get('merchantTxId', ''),
-                    country=data.get('country', ''),
-                    amount=data.get('amount', None),
-                    currency=data.get('currency', ''),
-                    action=data.get('action', ''),
-                    auth_code=data.get('auth_code', ''),
-                    acquirer=data.get('acquirer', ''),
-                    acquirerAmount=data.get('acquirerAmount', None),
-                    merchantId=data.get('merchantId', ''),
-                    brandId=data.get('brandId', ''),
-                    customerId=data.get('customerId', ''),
-                    acquirerCurrency=data.get('acquirerCurrency', ''),
-                    paymentSolutionId=data.get('paymentSolutionId', None),
-                    status=data.get('status', ''),
-                    errorMessage=data.get('errorMessage', 'No error message provided'),
+                    txId=data.get("txId", ""),
+                    merchantTxId=merchantTxId,
+                    country=data.get("country", ""),
+                    amount=data.get("amount", None),
+                    currency=data.get("currency", ""),
+                    action=data.get("action", ""),
+                    auth_code=data.get("auth_code", ""),
+                    acquirer=data.get("acquirer", ""),
+                    acquirerAmount=data.get("acquirerAmount", None),
+                    merchantId=data.get("merchantId", ""),
+                    brandId=data.get("brandId", ""),
+                    customerId=data.get("customerId", ""),
+                    acquirerCurrency=data.get("acquirerCurrency", ""),
+                    paymentSolutionId=data.get("paymentSolutionId", None),
+                    status=data.get("status", ""),
+                    errorMessage=data.get("errorMessage", "No error message provided"),
                 )
-                print("📝 Payment notification record created")
+                boipa_logger.info("📝 Payment notification record created")
 
                 enrollment_func(order)
-                print("📚 Enrollment function called")
+                boipa_logger.debug("📚 Enrollment function called")
 
-                return HttpResponse('Payment processed successfully', status=200)
+                return HttpResponse("Payment processed successfully", status=200)
 
         except OrderModel.DoesNotExist:
-            print(f"❌ Order {order_id} not found in model {OrderModel.__name__}")
+            boipa_logger.error(f"❌ Order {order_id} not found in {OrderModel.__name__}")
             return HttpResponse("Order not found", status=404)
         except Exception as e:
-            print(f"❌ Exception during processing: {e}")
+            boipa_logger.exception(f"❌ Exception during processing: {e}")
             return HttpResponse(f"Error processing payment: {str(e)}", status=500)
 
-    print(f"❌ Source prefix '{source_prefix}' not recognized")
+    boipa_logger.error(f"❌ Source prefix '{source_prefix}' not recognized")
     return HttpResponse("Source prefix not recognized", status=400)
-
 
 #### REFUND LOGIC ####
 @staff_member_required

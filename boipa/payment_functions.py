@@ -12,49 +12,49 @@ def get_boipa_session_token(request, order_ref, total_price):
     try:
         amount = Decimal(f"{total_price:.2f}")
         ip_address = get_client_ip(request)
-        url = settings.BOIPA_TOKEN_URL
-        headers = {'Content-Type': 'application/x-www-form-urlencoded'}
+
+        # 🔧 Normalise base URL to www.tcsp.ie
+        base_url = settings.NGROK
+        if base_url.endswith("tcsp.ie"):
+            base_url = "https://www.tcsp.ie"
+
         payload = {
             "merchantId": settings.BOIPA_MERCHANT_ID,
             "password": settings.BOIPA_PASSWORD,
             "action": "PURCHASE",
             "timestamp": int(time.time() * 1000),
-            "allowOriginUrl": settings.NGROK,
+            "allowOriginUrl": base_url,
             "channel": "ECOM",
             "country": "IE",
             "currency": "EUR",
             "amount": str(amount),
-            "merchantTxId": order_ref,
-            "merchantLandingPageUrl": settings.NGROK + reverse('boipa:payment_response'),
-            "merchantNotificationUrl": settings.NGROK + reverse('boipa:payment_notification'),
+            "merchantTxId": f"{order_ref}_{int(time.time())}",
+            "merchantLandingPageUrl": base_url + reverse('boipa:payment_response'),
+            "merchantNotificationUrl": base_url + reverse('boipa:payment_notification'),
             "merchantLandingPageRedirectMethod": "GET",
             "userDevice": "DESKTOP",
             "customerIPAddress": ip_address,
             "merchantChallengeInd": "01",
             "merchantDecReqInd": "N",
             "freeText": "Optional extra transaction info",
-            # New fields with dummy data
-            'customerAddressStreet': "123 Fake Street",
-            'customerAddressCity': "Dublin",
-            'customerAddressPostalCode': "D02 X285",
+            "customerAddressStreet": "123 Fake Street",
+            "customerAddressCity": "Dublin",
+            "customerAddressPostalCode": "D02 X285",
         }
 
-        payments_logger.debug("Sending payload to API: %s", {k: v for k, v in payload.items() if k != 'password'})
-        response = requests.post(url, data=payload, headers=headers)
+        payments_logger.debug("Sending payload to API: %s",
+                              {k: v for k, v in payload.items() if k != 'password'})
+
+        response = requests.post(settings.BOIPA_TOKEN_URL, data=payload, headers={'Content-Type': 'application/x-www-form-urlencoded'})
         if response.status_code == 200:
-            return response.json().get('token')
+            return response.json().get("token")
         else:
             error_message = response.text
-            payments_logger.error("Failed to obtain session token: HTTP Status %s: %s", response.status_code,
-                                  error_message)
-            # Handle specific HTTP errors e.g., 400, 401, 500, etc.
-            handle_http_errors(response.status_code, error_message)
+            payments_logger.error("Failed to obtain session token: HTTP %s: %s",
+                                  response.status_code, error_message)
             return None
-    except requests.RequestException as e:
-        payments_logger.error("Network-related error when obtaining session token: %s", str(e))
-        return None
     except Exception as e:
-        payments_logger.error("Unexpected error when obtaining session token: %s", str(e))
+        payments_logger.exception("Unexpected error when obtaining session token: %s", str(e))
         return None
 
 

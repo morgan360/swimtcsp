@@ -6,7 +6,7 @@ from django.conf import settings
 import logging
 
 
-payments_logger = logging.getLogger('payments')
+payments_logger = logging.getLogger('boipa')
 
 def get_boipa_session_token(request, order_ref, total_price):
     try:
@@ -24,7 +24,7 @@ def get_boipa_session_token(request, order_ref, total_price):
             "country": "IE",
             "currency": "EUR",
             "amount": str(amount),
-            "merchantTxId": f"{order_ref}_{int(time.time())}",
+            "merchantTxId": order_ref,
             "merchantLandingPageUrl": settings.NGROK + reverse('boipa:payment_response'),
             "merchantNotificationUrl": settings.NGROK + reverse('boipa:payment_notification'),
             "merchantLandingPageRedirectMethod": "GET",

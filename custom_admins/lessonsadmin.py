@@ -6,6 +6,7 @@ from django.urls import path
 from django_admin_listfilter_dropdown.filters import RelatedDropdownFilter
 
 from lessons_bookings.models import LessonEnrollment
+from users.models import Swimling
 from reportlab.lib.pagesizes import A4
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
 from reportlab.lib import colors
@@ -34,7 +35,7 @@ lessons_admin_site = LessonsAdminSite(name="lessonsadmin")
 class LessonEnrollmentAdmin(admin.ModelAdmin):
     list_display = ["swimling", "simple_term", "lesson", "order_link"]
     list_display_links = ("swimling",)
-    raw_id_fields = ["swimling"]
+    autocomplete_fields = ["swimling"]
     list_filter = [
         ("term", RelatedDropdownFilter),
         ("lesson", RelatedDropdownFilter),
@@ -132,5 +133,20 @@ class LessonEnrollmentAdmin(admin.ModelAdmin):
     class Media:
         js = ("js/add_print_button.js",)  # 👈 still adds Print button in admin toolbar
 
+# ✅ Lightweight admin to power Swimling autocomplete while hiding it from the menu
+class SwimlingAutocompleteAdmin(admin.ModelAdmin):
+    search_fields = [
+        "first_name",
+        "last_name",
+        "guardian__first_name",
+        "guardian__last_name",
+        "guardian__email",
+    ]
+
+    def has_module_permission(self, request):  # hide from the left nav
+        return False
+
+
 # ✅ Register the model to the custom admin site
+lessons_admin_site.register(Swimling, SwimlingAutocompleteAdmin)
 lessons_admin_site.register(LessonEnrollment, LessonEnrollmentAdmin)

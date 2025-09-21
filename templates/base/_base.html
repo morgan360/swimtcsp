@@ -130,7 +130,7 @@
         </footer>
 
         <!-- Chatbot Button/Bubble (global) -->
-        <div id="chatbot-widget" class="fixed bottom-6 right-6 flex flex-col items-end space-y-2 z-50 max-w-max">
+        <div id="chatbot-widget" class="fixed bottom-6 left-6 flex flex-col items-start space-y-2 z-50 max-w-max">
             <div class="flex items-center space-x-2">
                 <!-- Dismiss button -->
                 <button id="chatbot-dismiss" type="button"
@@ -140,12 +140,12 @@
                 </button>
                 <!-- Chat bubble -->
                 <a href="{% url 'chatbot:public-swim-ui' %}" target="_blank" rel="noopener noreferrer"
-                   class="bg-red-600 hover:bg-red-700 text-white rounded-full p-4 shadow-lg flex items-center justify-center w-20 h-20"
+                   class="bg-red-600 hover:bg-red-700 text-white rounded-full p-4 shadow-lg flex items-center justify-center w-14 h-14"
                    aria-label="Open Chatbot" title="Chat with us (opens in new tab)">
-                    <i class="fas fa-solid fa-comments text-4xl"></i>
+                    <i class="fas fa-solid fa-comments text-2xl"></i>
                 </a>
             </div>
-            <p class="hidden md:block bg-red-600 text-white rounded-full px-4 py-3 shadow-lg whitespace-nowrap text-right">
+            <p class="hidden md:block bg-red-600 text-white rounded-full px-3 py-2 shadow-lg whitespace-nowrap text-left text-xs">
                 Have a question? Ask SplashBot!
             </p>
         </div>

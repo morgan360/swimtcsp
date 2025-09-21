@@ -9,13 +9,13 @@ DEBUG = False
 # --- Core secrets/env (prod reads from real env) ---
 SECRET_KEY = config('SECRET_KEY')
 
-# OpenAI (read-only; no dotenv, no os.environ writes)
+# OpenAI
 OPENAI_API_KEY     = config("OPENAI_API_KEY")
 OPENAI_CHAT_MODEL  = config("OPENAI_CHAT_MODEL", default="gpt-4o")
 OPENAI_EMBED_MODEL = config("OPENAI_EMBED_MODEL", default="text-embedding-3-small")
-OPENAI_PROJECT     = config("OPENAI_PROJECT", default="")  # leave blank if unused
+OPENAI_PROJECT     = config("OPENAI_PROJECT", default="")
 
-# --- BOIPA etc. ---
+# --- BOIPA ---
 BOIPA_MERCHANT_ID  = config('BOIPA_MERCHANT_ID')
 BOIPA_PASSWORD     = config('BOIPA_PASSWORD')
 BOIPA_TOKEN_URL    = config('BOIPA_TOKEN_URL')
@@ -26,6 +26,7 @@ BOIPA_PAYMENT_URL  = config('BOIPA_PAYMENT_URL')
 
 CART_SESSION_ID = 'cart'
 
+# --- Database ---
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
@@ -37,15 +38,11 @@ DATABASES = {
     }
 }
 
+# --- Hosts / CSRF ---
 ALLOWED_HOSTS = ['www.tcsp.ie', 'tcsp.ie']
 CSRF_TRUSTED_ORIGINS = ['https://www.tcsp.ie', 'https://tcsp.ie']
-# try:
-#     MIDDLEWARE.insert(0, "config.middleware.WwwRedirectMiddleware")
-# except NameError:
-#     MIDDLEWARE = ["config.middleware.WwwRedirectMiddleware"]
-# Set to False if you dont want maintanence mode
-# MAINTENANCE_MODE = True
 
+# --- Maintenance mode ---
 MAINTENANCE_MODE_IGNORE_URLS = (
     r'^/admin/.*',
     r'^/accounts/login/?$',
@@ -65,40 +62,83 @@ EMAIL_HOST_USER     = config('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
 DEFAULT_FROM_EMAIL  = config('DEFAULT_FROM_EMAIL')
 
-# --- Logging (ensure directory exists) ---
+# --- Logging ---
 LOG_BASE = '/home/morganmck/swimtcsp/logs'
 os.makedirs(LOG_BASE, exist_ok=True)
 
 PAYMENTS_LOG_FILE_PATH = os.path.join(LOG_BASE, 'payments.log')
 CART_LOG_FILE_PATH     = os.path.join(LOG_BASE, 'cart.log')
 APP_LOG_FILE_PATH      = os.path.join(LOG_BASE, 'app.log')
+BOIPA_LOG_FILE_PATH    = os.path.join(LOG_BASE, 'boipa.log')
 
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
-    'handlers': {
-        'payments_file': {'level': 'DEBUG','class': 'logging.FileHandler','filename': PAYMENTS_LOG_FILE_PATH,'formatter': 'detailed'},
-        'cart_file':     {'level': 'DEBUG','class': 'logging.FileHandler','filename': CART_LOG_FILE_PATH,'formatter': 'detailed'},
-        'app_file':      {'level': 'DEBUG','class': 'logging.FileHandler','filename': APP_LOG_FILE_PATH,'formatter': 'detailed'},
-        'console':       {'level': 'DEBUG','class': 'logging.StreamHandler','formatter': 'simple'},
-    },
     'formatters': {
         'detailed': {'format': '{asctime} {levelname} {module} {message}', 'style': '{'},
         'simple':   {'format': '{levelname} {message}', 'style': '{'},
     },
+    'handlers': {
+        'payments_file': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': PAYMENTS_LOG_FILE_PATH,
+            'formatter': 'detailed'
+        },
+        'cart_file': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': CART_LOG_FILE_PATH,
+            'formatter': 'detailed'
+        },
+        'app_file': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': APP_LOG_FILE_PATH,
+            'formatter': 'detailed'
+        },
+        'boipa_file': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': BOIPA_LOG_FILE_PATH,
+            'formatter': 'detailed'
+        },
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple'
+        },
+    },
     'loggers': {
-        'payments':    {'handlers': ['payments_file'],         'level': 'DEBUG', 'propagate': False},
-        'cart':        {'handlers': ['cart_file'],             'level': 'DEBUG', 'propagate': False},
-        'application': {'handlers': ['app_file', 'console'],   'level': 'DEBUG', 'propagate': False},
+        'payments': {
+            'handlers': ['payments_file'],
+            'level': 'DEBUG',
+            'propagate': False
+        },
+        'cart': {
+            'handlers': ['cart_file'],
+            'level': 'DEBUG',
+            'propagate': False
+        },
+        'application': {
+            'handlers': ['app_file', 'console'],
+            'level': 'DEBUG',
+            'propagate': False
+        },
+        'boipa': {
+            'handlers': ['boipa_file', 'console'],
+            'level': 'DEBUG',
+            'propagate': False
+        },
     },
 }
 
-# --- Security hardening for prod ---
+# --- Security hardening ---
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE    = True
 SECURE_SSL_REDIRECT   = True
 SECURE_HSTS_SECONDS   = 31536000  # 1 year
-SECURE_HSTS_INCLUDE_SUBDOMAINS = False  # set True only if you control subdomains
+SECURE_HSTS_INCLUDE_SUBDOMAINS = False  # enable if you control all subdomains
 SECURE_HSTS_PRELOAD   = False
 
 SITE_ID = 2

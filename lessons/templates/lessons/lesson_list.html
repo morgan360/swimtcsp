@@ -31,6 +31,9 @@
       <div class="w-full flex items-center justify-center mb-2">
         <p class="font-bold text-xl text-blue-800">Filter Lessons</p>
       </div>
+      {% if selected_swimling %}
+      <input type="hidden" name="swimling" value="{{ selected_swimling.id }}">
+      {% endif %}
       <!-- Day filter -->
       <div class="bg-gradient-to-r from-blue-500 to-cyan-500 p-4 rounded-lg">
         <label for="day" class="block text-sm font-bold text-white mb-1">Day:</label>
@@ -71,6 +74,22 @@
 
     </form>
 
+    {% if booking_term_label %}
+    <div class="bg-blue-50 border border-blue-200 text-blue-900 rounded-xl px-6 py-4 mb-6 shadow-sm">
+      <p class="font-semibold text-sm sm:text-base">You are booking for
+        <span class="underline decoration-blue-400">{{ booking_term_label }}</span>
+        {% if booking_term_is_next %}<span class="uppercase text-xs text-blue-600 tracking-wide ml-1">Next Term</span>{% endif %}
+      </p>
+      {% if booking_term_dates %}
+      <p class="text-xs sm:text-sm text-blue-700 mt-1">Schedule: {{ booking_term_dates }}</p>
+      {% endif %}
+    </div>
+    {% elif booking_term_is_next %}
+    <div class="bg-amber-50 border border-amber-200 text-amber-800 rounded-xl px-6 py-4 mb-6 shadow-sm">
+      <p class="font-semibold text-sm sm:text-base">Next term timetable is being finalised. Booking will open once the schedule is published.</p>
+    </div>
+    {% endif %}
+
     <!-- Lessons Table -->
     <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
       <!-- Header -->
@@ -95,7 +114,7 @@
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-200 bg-white">
-            {% for lesson_info in page_obj %}
+            {% for lesson_info in lessons_info %}
             <tr class="hover:bg-gray-50 transition-colors">
               <td class="px-6 py-4">
                 <div class="flex items-center">
@@ -108,34 +127,56 @@
               </td>
               <td class="px-6 py-4 text-sm font-semibold text-gray-900">€{{ lesson_info.lesson.price }}</td>
               <td class="px-6 py-4 text-center">
-                {% if lesson_info.is_full %}
+                {% if lesson_info.remaining_spaces is None %}
+                <span
+                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
+                  <i class="fas fa-calendar-clock mr-1"></i>Schedule pending
+                </span>
+                {% elif lesson_info.is_full %}
                 <span
                   class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
                   <i class="fas fa-times-circle mr-1"></i>Full
                 </span>
-                {% elif lesson_info.remaining_spaces <= 3 %} <span
+                {% elif lesson_info.remaining_spaces <= 3 %}
+                <span
                   class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
                   <i class="fas fa-exclamation-triangle mr-1"></i>{{ lesson_info.remaining_spaces }} left
-                  </span>
-                  {% else %}
-                  <span
-                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                    <i class="fas fa-check-circle mr-1"></i>{{ lesson_info.remaining_spaces }} available
-                  </span>
-                  {% endif %}
+                </span>
+                {% else %}
+                <span
+                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                  <i class="fas fa-check-circle mr-1"></i>{{ lesson_info.remaining_spaces }} available
+                </span>
+                {% endif %}
               </td>
               <td class="px-6 py-4 text-center">
-                {% if lesson_info.remaining_spaces > 0 %}
-                <a href="{% url 'lessons:product_detail' id=lesson_info.lesson.id %}?swimling={{ selected_swimling.id }}"
-                  class="inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors">
-                  <i class="fas fa-ticket-alt mr-2"></i>Book Now
-                </a>
+                {% if lesson_info.can_book %}
+                  {% if selected_swimling %}
+                  <a href="{% url 'lessons:product_detail' id=lesson_info.lesson.id %}?swimling={{ selected_swimling.id }}"
+                    class="inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors">
+                    <i class="fas fa-ticket-alt mr-2"></i>Book Now
+                  </a>
+                  {% else %}
+                  <span class="inline-flex items-center px-4 py-2 bg-gray-200 text-gray-600 text-sm font-medium rounded-lg" title="Select a swimling to book this lesson">
+                    <i class="fas fa-user mr-2"></i>Select a swimling
+                  </span>
+                  {% endif %}
+                {% elif lesson_info.remaining_spaces is None %}
+                  <span class="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-500 text-sm font-medium rounded-lg" title="Next term schedule pending">
+                    <i class="fas fa-calendar-day mr-2"></i>Coming soon
+                  </span>
                 {% else %}
-                <a href="{% url 'waiting_list:join_waiting_list' swimling_id=selected_swimling.id %}?product={{ lesson_info.lesson.id }}"
-                  class="inline-flex items-center px-4 py-2 bg-gray-300 text-gray-700 text-sm font-medium rounded-lg cursor-pointer hover:bg-gray-300"
-                  title="Class is full; join the waiting list">
-                  <i class="fas fa-clock mr-2"></i>Join Waiting List
-                </a>
+                  {% if selected_swimling %}
+                  <a href="{% url 'waiting_list:join_waiting_list' swimling_id=selected_swimling.id %}?product={{ lesson_info.lesson.id }}"
+                    class="inline-flex items-center px-4 py-2 bg-gray-300 text-gray-700 text-sm font-medium rounded-lg cursor-pointer hover:bg-gray-300"
+                    title="Class is full; join the waiting list">
+                    <i class="fas fa-clock mr-2"></i>Join Waiting List
+                  </a>
+                  {% else %}
+                  <span class="inline-flex items-center px-4 py-2 bg-gray-200 text-gray-600 text-sm font-medium rounded-lg" title="Select a swimling to join the waiting list">
+                    <i class="fas fa-user-clock mr-2"></i>Select a swimling
+                  </span>
+                  {% endif %}
                 {% endif %}
               </td>
             </tr>
@@ -156,7 +197,7 @@
 
       <!-- Mobile Cards -->
       <div class="md:hidden p-4 space-y-4">
-        {% for lesson_info in page_obj %}
+        {% for lesson_info in lessons_info %}
         <div class="bg-gray-50 rounded-lg border border-gray-200 p-4">
           <div class="flex items-center justify-between mb-3">
             <div class="flex items-center space-x-3">
@@ -171,26 +212,44 @@
           <div class="space-y-2 text-sm mb-4">
             <div class="flex justify-between">
               <span class="text-gray-500">Status:</span>
-              {% if lesson_info.is_full %}
+              {% if lesson_info.remaining_spaces is None %}
+              <span class="text-gray-500 font-medium">Schedule pending</span>
+              {% elif lesson_info.is_full %}
               <span class="text-red-600 font-medium">Full</span>
-              {% elif lesson_info.remaining_spaces <= 3 %} <span class="text-yellow-600 font-medium">{{
-                lesson_info.remaining_spaces }} left</span>
-                {% else %}
-                <span class="text-green-600 font-medium">{{ lesson_info.remaining_spaces }} available</span>
-                {% endif %}
+              {% elif lesson_info.remaining_spaces <= 3 %}
+              <span class="text-yellow-600 font-medium">{{ lesson_info.remaining_spaces }} left</span>
+              {% else %}
+              <span class="text-green-600 font-medium">{{ lesson_info.remaining_spaces }} available</span>
+              {% endif %}
             </div>
           </div>
-          {% if lesson_info.remaining_spaces > 0 %}
-          <a href="{% url 'lessons:product_detail' id=lesson_info.lesson.id %}?swimling={{ selected_swimling.id }}"
-            class="w-full inline-flex items-center justify-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors">
-            <i class="fas fa-ticket-alt mr-2"></i>Book Now
-          </a>
+          {% if lesson_info.can_book %}
+            {% if selected_swimling %}
+            <a href="{% url 'lessons:product_detail' id=lesson_info.lesson.id %}?swimling={{ selected_swimling.id }}"
+              class="w-full inline-flex items-center justify-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors">
+              <i class="fas fa-ticket-alt mr-2"></i>Book Now
+            </a>
+            {% else %}
+            <span class="w-full inline-flex items-center justify-center px-4 py-2 bg-gray-200 text-gray-600 text-sm font-medium rounded-lg" title="Select a swimling to book this lesson">
+              <i class="fas fa-user mr-2"></i>Select a swimling
+            </span>
+            {% endif %}
+          {% elif lesson_info.remaining_spaces is None %}
+          <span class="w-full inline-flex items-center justify-center px-4 py-2 bg-gray-100 text-gray-500 text-sm font-medium rounded-lg" title="Next term schedule pending">
+            <i class="fas fa-calendar-day mr-2"></i>Coming soon
+          </span>
           {% else %}
-          <a href="{% url 'waiting_list:join_waiting_list' swimling_id=selected_swimling.id %}?product={{ lesson_info.lesson.id }}"
-            class="w-full inline-flex items-center justify-center px-4 py-2 bg-gray-300 text-gray-700 text-sm font-medium rounded-lg cursor-pointer hover:bg-gray-300"
-            title="Class is full; join the waiting list">
-            <i class="fas fa-clock mr-2"></i>Join Waiting List
-          </a>
+            {% if selected_swimling %}
+            <a href="{% url 'waiting_list:join_waiting_list' swimling_id=selected_swimling.id %}?product={{ lesson_info.lesson.id }}"
+              class="w-full inline-flex items-center justify-center px-4 py-2 bg-gray-300 text-gray-700 text-sm font-medium rounded-lg cursor-pointer hover:bg-gray-300"
+              title="Class is full; join the waiting list">
+              <i class="fas fa-clock mr-2"></i>Join Waiting List
+            </a>
+            {% else %}
+            <span class="w-full inline-flex items-center justify-center px-4 py-2 bg-gray-200 text-gray-600 text-sm font-medium rounded-lg" title="Select a swimling to join the waiting list">
+              <i class="fas fa-user-clock mr-2"></i>Select a swimling
+            </span>
+            {% endif %}
           {% endif %}
         </div>
         {% empty %}
@@ -206,49 +265,7 @@
     </div>
 
     <!-- Pagination -->
-    {% if page_obj.paginator.num_pages > 1 %}
-    <div class="mt-8">
-      <div class="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
-        <nav class="flex flex-wrap justify-center gap-2" role="navigation" aria-label="pagination">
-          {% if page_obj.has_previous %}
-          <a href="?page=1"
-            class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">First</a>
-          <a href="?page={{ page_obj.previous_page_number }}"
-            class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">Previous</a>
-          {% else %}
-          <span class="px-4 py-2 bg-gray-50 text-gray-400 rounded-lg cursor-not-allowed">First</span>
-          <span class="px-4 py-2 bg-gray-50 text-gray-400 rounded-lg cursor-not-allowed">Previous</span>
-          {% endif %}
-
-          {% if page_obj.has_next %}
-          <a href="?page={{ page_obj.next_page_number }}"
-            class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">Next</a>
-          <a href="?page={{ page_obj.paginator.num_pages }}"
-            class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">Last</a>
-          {% else %}
-          <span class="px-4 py-2 bg-gray-50 text-gray-400 rounded-lg cursor-not-allowed">Next</span>
-          <span class="px-4 py-2 bg-gray-50 text-gray-400 rounded-lg cursor-not-allowed">Last</span>
-          {% endif %}
-        </nav>
-
-        <div class="flex justify-center mt-4 space-x-1">
-          {% for num in page_obj.paginator.page_range %}
-          {% if page_obj.number == num %}
-          <span class="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium">{{ num }}</span>
-          {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %} <a href="?page={{ num }}"
-            class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">{{ num }}</a>
-            {% elif num == page_obj.number|add:'-3' or num == page_obj.number|add:'3' %}
-            <span class="px-2 py-2 text-gray-400">…</span>
-            {% endif %}
-            {% endfor %}
-        </div>
-
-        <div class="text-center text-gray-500 text-sm mt-4">
-          Showing page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
-        </div>
-      </div>
-    </div>
-    {% endif %}
+    {% comment %} Pagination removed: all lessons displayed at once {% endcomment %}
 
     <!-- Booking Term Information -->
     <div class="space-y-6 mb-10 mt-10">

@@ -115,6 +115,24 @@
                     {% endif %}
                 </div>
 
+                <!-- Phone Number -->
+                <div class="mb-4">
+                    <label for="{{ u_form.mobile_phone.id_for_label }}" class="block font-semibold mb-1 text-blue-800">
+                        <i class="fas fa-phone mr-1"></i>Phone Number
+                    </label>
+                    <div class="relative">
+                        {{ u_form.mobile_phone|add_class:"input w-full border rounded px-4 py-2 pr-10 focus:outline-none focus:ring" }}
+                        <div class="absolute left-3 top-2.5 text-gray-400">
+                        </div>
+                    </div>
+                    {% if u_form.mobile_phone.help_text %}
+                    <p class="text-sm text-gray-500 mt-1">{{ u_form.mobile_phone.help_text }}</p>
+                    {% endif %}
+                    {% if u_form.mobile_phone.errors %}
+                    <p class="text-sm text-red-600 mt-1">{{ u_form.mobile_phone.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
                 <!-- Email (read-only) -->
                 <div class="mb-4">
                     <label class="block font-semibold mb-1 text-blue-800">

@@ -60,9 +60,16 @@ class CustomSignupForm(SignupForm):
 
 # Update Profile - NO USERNAME
 class UserForm(forms.ModelForm):
+    mobile_phone = PhoneNumberField(
+        region='IE',
+        required=False,
+        label="Phone Number",
+        help_text="Irish numbers only (e.g. 085..., 01..., or +353 ...)",
+    )
+
     class Meta:
         model = User
-        fields = ("first_name", "last_name", "admin_notes")
+        fields = ("first_name", "last_name", "mobile_phone", "admin_notes")
         widgets = {
             "admin_notes": forms.Textarea(attrs={
                 "rows": 4,
@@ -70,6 +77,7 @@ class UserForm(forms.ModelForm):
             }),
         }
         labels = {
+            "mobile_phone": "Phone Number",
             "admin_notes": "Notes",
         }
 
@@ -81,6 +89,9 @@ class UserForm(forms.ModelForm):
         })
         self.fields['last_name'].widget.attrs.update({
             'placeholder': 'Enter your last name'
+        })
+        self.fields['mobile_phone'].widget.attrs.update({
+            'placeholder': 'Enter your phone number'
         })
 
 

@@ -11,6 +11,7 @@ from django.shortcuts import render, redirect
 from allauth.account.views import SignupView
 from schools_bookings.utils.swimling_utils import get_latest_active_school_term
 from schools_bookings.models import ScoEnrollment
+from lessons_bookings.models import LessonEnrollment
 from utils.context_processors import get_term_info
 from lessons.models import Product
 from django.contrib.admin.views.decorators import staff_member_required
@@ -21,11 +22,71 @@ from .models import Swimling
 from lessons_orders.models import Order as LessonOrder
 from swims_orders.models import Order as SwimOrder
 from django.http import JsonResponse
+from collections import defaultdict
 
 
 # Get the custom user model
 user = get_user_model()
 logger = logging.getLogger(__name__)
+
+
+def _collect_previous_lessons(swimlings, current_term_id):
+    """Return a mapping swimling_id -> list of prior lesson summaries ordered newest first."""
+    history = defaultdict(list)
+    swimlings = list(swimlings)
+    if not swimlings:
+        return history
+
+    enrollments = (
+        LessonEnrollment.objects
+        .filter(swimling__in=swimlings)
+        .select_related("lesson__category", "term")
+        .order_by("-term__start_date", "-term__id", "-created")
+    )
+    if current_term_id:
+        enrollments = enrollments.exclude(term_id=current_term_id)
+
+    day_display_cache = {}
+    for enrollment in enrollments:
+        lesson = getattr(enrollment, "lesson", None)
+        term = getattr(enrollment, "term", None)
+        if not lesson or not term:
+            continue
+
+        category = getattr(lesson, "category", None)
+        level = (
+            getattr(category, "short_name", None)
+            or getattr(category, "name", None)
+            or getattr(lesson, "name", "")
+        )
+
+        day_key = getattr(lesson, "day_of_week", None)
+        if day_key in day_display_cache:
+            day_display = day_display_cache[day_key]
+        else:
+            try:
+                day_display = lesson.get_day_of_week_display()
+            except Exception:
+                day_display = ""
+            day_display_cache[day_key] = day_display
+
+        start_time = getattr(lesson, "start_time", None)
+        end_time = getattr(lesson, "end_time", None)
+        time_parts = []
+        if start_time:
+            time_parts.append(start_time.strftime("%H:%M"))
+        if end_time:
+            time_parts.append(end_time.strftime("%H:%M"))
+        time_label = " - ".join(time_parts)
+
+        history[enrollment.swimling_id].append({
+            "level": level,
+            "day": day_display,
+            "time": time_label,
+            "term": getattr(term, "label", str(term)),
+        })
+
+    return history
 
 # ✅ User Profile Update View
 @login_required
@@ -238,6 +299,10 @@ def swimlings_list(request):
             deduped.append(item)
         setattr(s, "current_classes", deduped)
 
+    history_map = _collect_previous_lessons(page_obj.object_list, current_term_id)
+    for s in page_obj.object_list:
+        setattr(s, "previous_terms", history_map.get(s.id, []))
+
     context = {
         "search": search,
         "page_obj": page_obj,
@@ -341,6 +406,10 @@ def swimlings_list_rows(request):
             seen.add(key)
             deduped.append(item)
         setattr(s, "current_classes", deduped)
+
+    history_map = _collect_previous_lessons(page_obj.object_list, current_term_id)
+    for s in page_obj.object_list:
+        setattr(s, "previous_terms", history_map.get(s.id, []))
 
     variant = request.GET.get('variant', 'desktop')
     template_name = 'users/_swimling_rows.html' if variant == 'desktop' else 'users/_swimling_cards.html'

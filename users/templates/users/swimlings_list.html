@@ -5,12 +5,12 @@
 <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
     <!-- Header -->
     <div
-        class="bg-gradient-to-r from-green-500 to-green-600 px-4 sm:px-6 py-4 sm:py-6 flex items-center justify-between">
+        class="bg-gradient-to-r from-purple-500 to-purple-600 px-4 sm:px-6 py-4 sm:py-6 flex items-center justify-between">
         <div>
             <h1 class="text-2xl sm:text-3xl font-bold text-white flex items-center">
                 <i class="fas fa-child mr-2 sm:mr-3"></i> Swimlings
             </h1>
-            <p class="text-green-100 mt-2 text-sm sm:text-base">Browse and manage swimling personal details.</p>
+            <p class="text-purple-100 mt-2 text-sm sm:text-base">Browse and manage swimling personal details.</p>
         </div>
     </div>
 
@@ -19,8 +19,8 @@
         <form method="get" class="mb-6">
             <div class="flex gap-2">
                 <input type="text" name="search" value="{{ search }}" placeholder="Search by swimling or guardian..."
-                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
-                <button class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                <button class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
                     title="Search">
                     <i class="fas fa-search"></i>
                 </button>
@@ -28,7 +28,7 @@
         </form>
 
         <div
-            class="mb-4 text-sm text-white bg-gradient-to-r from-green-600 to-green-500 hover:bg-gradient-to-r hover:from-green-700 hover:to-green-600 p-3 rounded w-fit">
+            class="mb-4 text-sm text-white bg-gradient-to-r from-purple-600 to-purple-500 hover:bg-gradient-to-r hover:from-purple-700 hover:to-purple-600 p-3 rounded w-fit">
             <a
                 href="{% url 'lessonsadmin:lessons_bookings_lessonenrollment_add' %}?_changelist_filters={{ 'e=1'|urlencode }}">
                 <i class="fas fa-plus-circle mr-1"></i> New enrollment
@@ -42,7 +42,7 @@
 
         <!-- Remaining Progress Bar (shrinks as more results load) -->
         <div class="w-full h-2 bg-gray-100 rounded mb-4 overflow-hidden" aria-hidden="true">
-            <div id="remaining-bar" class="h-2 bg-green-500 transition-all duration-300" style="width: 100%"></div>
+            <div id="remaining-bar" class="h-2 bg-purple-500 transition-all duration-300" style="width: 100%"></div>
         </div>
 
         <!-- Swimlings List -->
@@ -59,10 +59,11 @@
                                 Name</th>
                             <th class="px-4 py-3 text-left font-medium text-gray-600 uppercase tracking-wider">Guardian
                                 Email</th>
+                            <th class="px-4 py-3 text-left font-medium text-gray-600 uppercase tracking-wider">Guardian
+                                Phone</th>
                             <th class="px-4 py-3 text-left font-medium text-gray-600 uppercase tracking-wider">Current
                                 Class</th>
-                            <th class="px-4 py-3 text-left font-medium text-gray-600 uppercase tracking-wider">Actions
-                            </th>
+                            <th class="px-4 py-3 text-left font-medium text-gray-600 uppercase tracking-wider">Actions</th>
                         </tr>
                     </thead>
                     <tbody id="swimlings-tbody" class="bg-white divide-y divide-gray-200">
@@ -147,6 +148,32 @@
                 }, { rootMargin: '400px' }) : null;
                 if (observerMobile && sentinelMobile) observerMobile.observe(sentinelMobile);
             })();
+        </script>
+        <script>
+            function openHistoryModal(id) {
+                const modal = document.getElementById(id);
+                if (!modal) return;
+                modal.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+                if (!modal.dataset.boundBackdrop) {
+                    modal.addEventListener('click', function (event) {
+                        if (event.target === modal) {
+                            closeHistoryModal(id);
+                        }
+                    });
+                    modal.dataset.boundBackdrop = '1';
+                }
+            }
+
+            function closeHistoryModal(id) {
+                const modal = document.getElementById(id);
+                if (!modal) return;
+                modal.classList.add('hidden');
+                document.body.style.overflow = '';
+            }
+
+            window.openHistoryModal = openHistoryModal;
+            window.closeHistoryModal = closeHistoryModal;
         </script>
     </div>
 </div>

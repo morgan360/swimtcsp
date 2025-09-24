@@ -11,6 +11,7 @@
     <div class="flex flex-wrap gap-2 mb-6">
       <button @click="tab='lessons'" :class="tab==='lessons' ? 'bg-blue-600 text-white' : 'bg-white text-blue-700'" class="px-4 py-2 rounded-lg border border-blue-200 shadow-sm hover:shadow transition">Lesson Bookings</button>
       <button @click="tab='swims'" :class="tab==='swims' ? 'bg-blue-600 text-white' : 'bg-white text-blue-700'" class="px-4 py-2 rounded-lg border border-blue-200 shadow-sm hover:shadow transition">Public Swim Bookings</button>
+      <button @click="tab='schools'" :class="tab==='schools' ? 'bg-blue-600 text-white' : 'bg-white text-blue-700'" class="px-4 py-2 rounded-lg border border-blue-200 shadow-sm hover:shadow transition">School Bookings</button>
     </div>
 
     <!-- Lessons Tab -->
@@ -85,7 +86,42 @@
       <p class="text-blue-900/70">No public swim bookings yet.</p>
       {% endif %}
     </div>
+
+    <!-- Schools Tab -->
+    <div x-show="tab==='schools'" x-transition class="space-y-6">
+      {% if school_orders_paid or school_orders_unpaid %}
+      {% if school_orders_paid %}
+      <div class="space-y-3">
+        <h2 class="text-lg font-semibold text-blue-900">Paid Bookings</h2>
+        <div class="overflow-x-hidden">
+          <div class="grid grid-cols-1 gap-4">
+            {% for order in school_orders_paid %}
+            {% include 'users/_school_booking_card.html' with order=order status_label='Paid' status_classes='bg-green-100 text-green-800 border-green-200' status_hint='' %}
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+      {% endif %}
+
+      {% if school_orders_unpaid %}
+      <div class="space-y-3">
+        <div>
+          <h2 class="text-lg font-semibold text-amber-800">Awaiting Payment</h2>
+          <p class="text-sm text-amber-700/80">Complete payment to confirm these school bookings.</p>
+        </div>
+        <div class="overflow-x-hidden">
+          <div class="grid grid-cols-1 gap-4">
+            {% for order in school_orders_unpaid %}
+            {% include 'users/_school_booking_card.html' with order=order status_label='Awaiting Payment' status_classes='bg-amber-100 text-amber-800 border-amber-200' status_hint='Seats are confirmed once payment succeeds.' %}
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+      {% endif %}
+      {% else %}
+      <p class="text-blue-900/70">No school bookings yet.</p>
+      {% endif %}
+    </div>
   </div>
 </section>
 {% endblock %}
-

@@ -14,7 +14,6 @@ from decimal import Decimal
 from coupons.models import Coupon
 from coupons.services import CouponService
 from django.core.exceptions import ValidationError
-from schools_orders.tasks import send_school_order_email
 import logging
 import sys
 
@@ -91,13 +90,6 @@ def book_lesson(request, swimling_id, term_id):
                 quantity=1,
                 swimling=swimling
             )
-
-            # Send confirmation email
-            try:
-                send_school_order_email(order.id)
-                print(f"📧 Email sent for order {order.id}", file=sys.stderr)
-            except Exception as e:
-                print(f"❌ Email sending failed: {e}", file=sys.stderr)
 
             # Log final details
             print(f"FINAL ORDER ID: {order.id}", file=sys.stderr)

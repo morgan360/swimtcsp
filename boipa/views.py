@@ -15,6 +15,7 @@ from schools_bookings.utils.enrollment import handle_schools_enrollment
 from .payment_functions import get_boipa_session_token  # External function
 from swims_orders.tasks import send_order_email
 from lessons_orders.tasks import send_lesson_order_email
+from schools_orders.tasks import send_school_order_email
 from django.contrib.admin.views.decorators import staff_member_required
 from django.http import JsonResponse
 from urllib.parse import parse_qs
@@ -203,6 +204,9 @@ def payment_notification(request):
             elif source_prefix == "lesson":
                 boipa_logger.debug(f"📨 Sending lesson order email for order {order.id}")
                 send_lesson_order_email(order.id)
+            elif source_prefix == "school":
+                boipa_logger.debug(f"🏫 Sending school order email for order {order.id}")
+                send_school_order_email(order.id)
 
             return HttpResponse("Payment processed successfully", status=200)
 

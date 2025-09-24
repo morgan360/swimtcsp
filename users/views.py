@@ -20,6 +20,7 @@ import logging
 from .models import Swimling
 from lessons_orders.models import Order as LessonOrder
 from swims_orders.models import Order as SwimOrder
+from schools_orders.models import Order as SchoolOrder
 from django.http import JsonResponse
 
 
@@ -383,9 +384,21 @@ def my_bookings(request):
     swim_orders_paid = swim_orders_base.filter(paid=True)
     swim_orders_unpaid = swim_orders_base.filter(paid=False)
 
+    school_orders_base = (
+        SchoolOrder.objects
+        .filter(user=request.user)
+        .select_related('school', 'coupon')
+        .prefetch_related('items__product', 'items__term', 'items__swimling')
+        .order_by('-created')
+    )
+    school_orders_paid = school_orders_base.filter(paid=True)
+    school_orders_unpaid = school_orders_base.filter(paid=False)
+
     return render(request, 'users/my_bookings.html', {
         'lesson_orders_paid': lesson_orders_paid,
         'lesson_orders_unpaid': lesson_orders_unpaid,
         'swim_orders_paid': swim_orders_paid,
         'swim_orders_unpaid': swim_orders_unpaid,
+        'school_orders_paid': school_orders_paid,
+        'school_orders_unpaid': school_orders_unpaid,
     })

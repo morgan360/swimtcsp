@@ -261,7 +261,8 @@ def guardian_dashboard(request):
     current_term_id = term_info['current_term_id']
     next_term_id = term_info['next_term_id']
     current_phase = term_info['current_phase_id']
-    is_school_user = request.user.groups.filter(name='schools').exists()
+    school_group_names = ['schools', 'Schools', 'zion', 'bishopgalvin', 'bishop_galvin']
+    is_school_user = request.user.groups.filter(name__in=school_group_names).exists()
 
     public_lessons_data = []
     school_panel_data = []
@@ -314,24 +315,32 @@ def guardian_dashboard(request):
 
         # === School Panel Logic ===
         if is_school_user and swimling.sco_role_num:
+            term = None
+            enrollment = None
+
+            term_dates = None
+
             term = get_latest_active_school_term(swimling.sco_role_num)
-            is_enrolled = swimling_is_enrolled(swimling, term) if term else False
-
-            # Capture the first active term found
-            if not first_active_term and term:
+            if term and not first_active_term:
                 first_active_term = term
-
-            enrollment = ScoEnrollment.objects.filter(
-                swimling=swimling,
-                term=term
-            ).select_related('lesson__school').first()
+            if term and term.start_date and term.end_date:
+                term_dates = f"{term.start_date:%d %b %Y} – {term.end_date:%d %b %Y}"
+            if term:
+                enrollment = (
+                    ScoEnrollment.objects
+                    .filter(swimling=swimling, term=term)
+                    .select_related('lesson__school')
+                    .first()
+                )
 
             school_panel_data.append({
                 'swimling': swimling,
                 'term': term,
+                'has_role_number': True,
                 'is_enrolled': bool(enrollment),
                 'lesson_name': enrollment.lesson.name if enrollment else None,
                 'school_name': enrollment.lesson.school.name if enrollment else None,
+                'term_dates': term_dates,
             })
 
     context = {

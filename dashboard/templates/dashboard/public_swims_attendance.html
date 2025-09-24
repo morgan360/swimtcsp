@@ -1,0 +1,275 @@
+{% extends "dashboard/base_dashboard.html" %}
+{% load group_filters %}
+
+{% block content %}
+<section class="max-w-7xl mx-auto space-y-6">
+  <header class="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+    <h2 class="text-3xl font-bold text-white flex items-center gap-3">
+      <i class="fa-solid fa-person-swimming"></i>
+      Public Swim Attendance
+    </h2>
+    <p class="text-sm text-blue-100 md:text-right">
+      Review confirmed bookings, filter by session, and locate swimmers quickly.
+    </p>
+      <!-- Admin quick links -->
+  <div class="mt-4 md:mt-0">
+    <a href="{% url 'dashboard:dashboard_public_swims' %}"
+      class="inline-flex items-center px-4 py-2 bg-slate-600 text-white text-sm font-medium rounded-lg hover:bg-slate-700 transition-colors duration-200">
+      <i class="fas fa-arrow-left mr-2"></i>Back to Products
+    </a>
+  </div>
+  </header>
+
+  <!-- Filtered attendance snapshot -->
+  <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+    <div class="bg-gradient-to-r from-lime-500 to-lime-600 rounded-lg p-4 text-white shadow">
+      <p class="text-blue-100 text-sm uppercase tracking-wide">Bookings Shown</p>
+      <p class="text-3xl font-semibold">{{ filtered_stats.total_bookings|default:0 }}</p>
+    </div>
+    <div class="bg-gradient-to-r from-pink-500 to-pink-600 rounded-lg p-4 text-white shadow">
+      <p class="text-emerald-100 text-sm uppercase tracking-wide">Tickets</p>
+      <p class="text-3xl font-semibold">{{ filtered_stats.total_attendees|default:0 }}</p>
+    </div>
+    <div class="bg-gradient-to-r from-red-500 to-orange-600 rounded-lg p-4 text-white shadow">
+      <p class="text-indigo-100 text-sm uppercase tracking-wide">Unique Swimmers</p>
+      <p class="text-3xl font-semibold">{{ filtered_stats.unique_swimmers|default:0 }}</p>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <form method="get" class="bg-white rounded-lg shadow-md p-4 space-y-4" id="attendance-filter-form">
+    <div class="grid gap-4 md:grid-cols-4">
+      <label class="flex flex-col text-sm font-medium text-gray-700 gap-1 bg-blue-100 p-2 rounded-lg">
+        Booking Day
+        <select name="day" class="rounded-md border-gray-300 py-2 px-3 focus:border-blue-500 focus:ring-blue-500"
+          id="filter-day">
+          <option value="">All days</option>
+          {% for day in booking_days %}
+          <option value="{{ day.value }}" {% if filters.day == day.value %}selected{% endif %}>
+            {{ day.label }}
+          </option>
+          {% endfor %}
+        </select>
+      </label>
+
+      <label class="flex flex-col text-sm font-medium text-gray-700 gap-1  bg-blue-100 p-2 rounded-lg">
+        Category
+        <select name="category" class="rounded-md border-gray-300 py-2 px-3 focus:border-blue-500 focus:ring-blue-500"
+          id="filter-category">
+          <option value="">All categories</option>
+          {% for category in categories %}
+          <option value="{{ category.id }}" {% if filters.category == category.id|stringformat:"s" %}selected{% endif %}>
+            {{ category.name }}
+          </option>
+          {% endfor %}
+        </select>
+      </label>
+
+      <label class="flex flex-col text-sm font-medium text-gray-700 gap-1  bg-blue-100 p-2 rounded-lg">
+        Product / Session
+        <select name="product" class="rounded-md border-gray-300 py-2 px-3 focus:border-blue-500 focus:ring-blue-500"
+          id="filter-product">
+          <option value="">All products</option>
+          {% for product in products %}
+          <option value="{{ product.id }}" data-category="{{ product.category_id }}"
+            {% if filters.product == product.id|stringformat:"s" %}selected{% endif %}>
+            {{ product.category.name }} · {{ product.get_day_of_week_display }} {{ product.start_time|time:"H:i" }}
+          </option>
+          {% endfor %}
+        </select>
+      </label>
+
+      <label class="flex flex-col text-sm font-medium text-gray-700 gap-1  bg-blue-100 p-2 rounded-lg">
+        Search user
+        <div class="relative">
+          <input type="search" name="q" value="{{ filters.q }}"
+            class="w-full rounded-md border-gray-300 py-2 px-3 pr-10 focus:border-blue-500 focus:ring-blue-500"
+            placeholder="Name (first, last, or full)">
+          <span class="absolute inset-y-0 right-3 flex items-center text-gray-400">
+            <i class="fas fa-magnifying-glass"></i>
+          </span>
+        </div>
+      </label>
+    </div>
+
+    <div class="flex flex-wrap gap-2 justify-end">
+      <button type="submit"
+        class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors">
+        <i class="fas fa-filter mr-2"></i>Apply filters
+      </button>
+      <a href="{% url 'dashboard:dashboard_public_swims_attendance' %}"
+        class="inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-50 transition-colors">
+        Reset
+      </a>
+    </div>
+  </form>
+
+  <!-- Attendance listing -->
+  <div class="bg-white shadow-lg rounded-lg overflow-hidden">
+    <div class="px-6 py-4 border-b border-gray-200 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+      <div>
+        <h3 class="text-xl font-semibold text-gray-900">Attendance</h3>
+        <p class="text-sm text-gray-500">Showing {{ page_obj.paginator.count }} booking{{ page_obj.paginator.count|pluralize }} matching
+          your filters.</p>
+      </div>
+      {% if filters.day or filters.category or filters.product or filters.q %}
+      <div class="flex flex-wrap gap-2 text-xs uppercase tracking-wide text-gray-600">
+        <span class="inline-flex items-center gap-2 bg-gray-100 px-3 py-1 rounded-full">
+          <i class="fas fa-sliders-h"></i>
+          Filters active
+        </span>
+      </div>
+      {% endif %}
+    </div>
+
+    {% if page_obj.paginator.count == 0 %}
+    <div class="px-6 py-12 text-center text-gray-500">
+      <i class="fas fa-person-circle-question text-4xl mb-3 text-gray-300"></i>
+      <p class="text-lg font-medium">No attendance records found for the selected filters.</p>
+      <p class="text-sm">Try adjusting the booking day, category, or your search query.</p>
+    </div>
+    {% else %}
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr class="text-xs font-semibold uppercase tracking-wider text-gray-600">
+            <th scope="col" class="px-6 py-3 text-left">Booking</th>
+            <th scope="col" class="px-6 py-3 text-left">Session</th>
+            <th scope="col" class="px-6 py-3 text-left">Swimmer</th>
+            <th scope="col" class="px-6 py-3 text-center">Check-in</th>
+            <th scope="col" class="px-6 py-3 text-right">Tickets</th>
+            <th scope="col" class="px-6 py-3 text-left">Breakdown</th>
+            <th scope="col" class="px-6 py-3 text-left">Created</th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+          {% for order in page_obj %}
+          <tr class="hover:bg-blue-50 transition-colors duration-150">
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+              <div class="font-semibold">{{ order.booking|date:"D d M Y" }}</div>
+              <div class="text-xs text-gray-500 uppercase tracking-wide">{{ order.product.get_day_of_week_display }}</div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+              <div class="font-medium text-gray-900">{{ order.product.category.name }}</div>
+              <div class="text-xs text-gray-500">{{ order.product.start_time|time:"H:i" }} - {{ order.product.end_time|time:"H:i" }}</div>
+            </td>
+            <td class="px-6 py-4 text-sm text-gray-700">
+              <div class="font-medium text-gray-900">{{ order.user.get_full_name }}</div>
+              <div class="text-xs text-gray-500">{{ order.user.email }}</div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-center">
+              <label for="checkin-{{ order.id }}" class="inline-flex items-center gap-2 text-xs font-medium text-gray-600">
+                <input type="checkbox" id="checkin-{{ order.id }}" name="checkin-{{ order.id }}"
+                  class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                Checked in
+              </label>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-semibold text-gray-900">
+              {{ order.attendee_count }}
+            </td>
+            <td class="px-6 py-4 text-sm text-gray-700">
+              <ul class="space-y-1">
+                {% for item in order.items.all %}
+                <li class="flex items-center gap-2">
+                  <span class="inline-flex items-center px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 text-xs font-semibold">
+                    {{ item.variant.variant }}
+                  </span>
+                  <span class="text-xs text-gray-600">× {{ item.quantity }}</span>
+                </li>
+                {% empty %}
+                <li class="text-xs text-gray-600 italic">No ticket lines recorded</li>
+                {% endfor %}
+              </ul>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+              {{ order.created|date:"D d M Y" }}<br>
+              <span class="text-xs">{{ order.created|date:"H:i" }}</span>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+    <div class="px-6 py-4 border-t border-gray-200 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+      <p class="text-sm text-gray-600">
+        Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+      </p>
+      <nav class="flex items-center gap-2">
+        {% if page_obj.has_previous %}
+        <a class="px-3 py-1 rounded-md border border-gray-300 text-sm text-gray-700 hover:bg-gray-50"
+          href="?{% if query_string %}{{ query_string }}&{% endif %}page={{ page_obj.previous_page_number }}">
+          Previous
+        </a>
+        {% else %}
+        <span class="px-3 py-1 rounded-md border border-gray-200 text-sm text-gray-400 cursor-not-allowed">Previous</span>
+        {% endif %}
+
+        <span class="px-3 py-1 rounded-md border border-blue-500 bg-blue-50 text-sm text-blue-700">
+          {{ page_obj.number }}
+        </span>
+
+        {% if page_obj.has_next %}
+        <a class="px-3 py-1 rounded-md border border-gray-300 text-sm text-gray-700 hover:bg-gray-50"
+          href="?{% if query_string %}{{ query_string }}&{% endif %}page={{ page_obj.next_page_number }}">
+          Next
+        </a>
+        {% else %}
+        <span class="px-3 py-1 rounded-md border border-gray-200 text-sm text-gray-400 cursor-not-allowed">Next</span>
+        {% endif %}
+      </nav>
+    </div>
+    {% endif %}
+    {% endif %}
+  </div>
+</section>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const categorySelect = document.getElementById('filter-category');
+    const productSelect = document.getElementById('filter-product');
+    if (!categorySelect || !productSelect) {
+      return;
+    }
+
+    let selectedProduct = '{{ filters.product|default:""|escapejs }}';
+    const rawOptions = Array.from(productSelect.options).map(option => ({
+      value: option.value,
+      label: option.textContent,
+      category: option.dataset.category || '',
+    }));
+
+    const rebuildOptions = () => {
+      const chosenCategory = categorySelect.value;
+      const fragment = document.createDocumentFragment();
+
+      rawOptions.forEach(({ value, label, category }) => {
+        if (!value || !chosenCategory || category === chosenCategory) {
+          const option = document.createElement('option');
+          option.value = value;
+          option.textContent = label;
+          if (category) {
+            option.dataset.category = category;
+          }
+          option.selected = value ? selectedProduct === value : !selectedProduct;
+          fragment.appendChild(option);
+        }
+      });
+
+      productSelect.innerHTML = '';
+      productSelect.appendChild(fragment);
+    };
+
+    rebuildOptions();
+    categorySelect.addEventListener('change', () => {
+      selectedProduct = '';
+      rebuildOptions();
+    });
+    productSelect.addEventListener('change', () => {
+      selectedProduct = productSelect.value;
+    });
+  });
+</script>
+{% endblock %}

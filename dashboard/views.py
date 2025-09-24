@@ -10,14 +10,15 @@ from lessons_bookings.models import LessonEnrollment
 from instructors.models import InstructorAssignment
 from lessons_bookings.models import LessonAssignment
 from django.contrib.auth import get_user_model
-from datetime import timedelta, time as dt_time
+from datetime import datetime, timedelta, time as dt_time
 from django.contrib.auth.models import Group, Permission
 from django.contrib.auth.forms import UserCreationForm
 from django import forms
 from django.contrib import messages
 from django.http import HttpResponseNotFound
 from django.core.paginator import Paginator
-from django.db.models import Q, Sum
+from django.db.models import Q, Sum, Count, Value
+from django.db.models.functions import Concat, Coalesce
 from utils.context_processors import get_term_info
 from utils.terms_utils import get_term_context_data
 from instructors.utils import prefill_next_term_instructors
@@ -63,6 +64,116 @@ def public_swims(request):
         'recent_orders': SwimOrder.objects.select_related('product', 'user').order_by('-created')[:10],
     }
     return render(request, 'dashboard/public_swims.html', {'products': products, 'stats': stats})
+
+
+@login_required
+@user_passes_test(is_staff)
+def public_swims_attendance(request):
+    base_orders = (
+        SwimOrder.objects.filter(paid=True, booking__isnull=False)
+        .select_related('product', 'product__category', 'user')
+        .prefetch_related('items__variant')
+    )
+
+    categories = PublicSwimCategory.objects.order_by('name')
+    products = PublicSwimProduct.objects.select_related('category').order_by(
+        'category__name', 'day_of_week', 'start_time'
+    )
+
+    booking_days = [
+        {
+            'value': day.isoformat(),
+            'label': day.strftime('%a %d %b %Y'),
+        }
+        for day in sorted(
+            {
+                order_date
+                for order_date in base_orders.values_list('booking', flat=True)
+                if order_date
+            }
+        )
+    ]
+
+    selected_day = request.GET.get('day', '').strip()
+    selected_category = request.GET.get('category', '').strip()
+    selected_product = request.GET.get('product', '').strip()
+    search_term = request.GET.get('q', '').strip()
+
+    filtered_orders = base_orders
+
+    if selected_day:
+        try:
+            parsed_day = datetime.strptime(selected_day, "%Y-%m-%d").date()
+            filtered_orders = filtered_orders.filter(booking=parsed_day)
+        except ValueError:
+            pass
+
+    if selected_category:
+        try:
+            filtered_orders = filtered_orders.filter(product__category_id=int(selected_category))
+        except (TypeError, ValueError):
+            pass
+
+    if selected_product:
+        try:
+            filtered_orders = filtered_orders.filter(product_id=int(selected_product))
+        except (TypeError, ValueError):
+            pass
+
+    filtered_orders = filtered_orders.annotate(
+        attendee_count=Coalesce(Sum('items__quantity'), Value(0)),
+        full_name=Concat(
+            Coalesce('user__first_name', Value('')),
+            Value(' '),
+            Coalesce('user__last_name', Value('')),
+        ),
+    )
+
+    if search_term:
+        filtered_orders = filtered_orders.filter(
+            Q(user__first_name__icontains=search_term)
+            | Q(user__last_name__icontains=search_term)
+            | Q(full_name__icontains=search_term)
+        )
+
+    filtered_orders = filtered_orders.order_by('-booking', 'product__day_of_week', 'product__start_time', '-created')
+
+    paginator = Paginator(filtered_orders, 50)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    filtered_stats = filtered_orders.aggregate(
+        total_bookings=Count('id', distinct=True),
+        total_attendees=Coalesce(Sum('items__quantity'), Value(0)),
+        unique_swimmers=Count('user', distinct=True),
+    )
+
+    catalog_stats = {
+        'total_products': PublicSwimProduct.objects.count(),
+        'active_products': PublicSwimProduct.objects.filter(available=True).count(),
+        'categories_count': PublicSwimCategory.objects.count(),
+    }
+
+    query_params = request.GET.copy()
+    query_params.pop('page', None)
+
+    context = {
+        'page_obj': page_obj,
+        'filters': {
+            'day': selected_day,
+            'category': selected_category,
+            'product': selected_product,
+            'q': search_term,
+        },
+        'categories': categories,
+        'products': products,
+        'booking_days': booking_days,
+        'catalog_stats': catalog_stats,
+        'filtered_stats': filtered_stats,
+        'query_string': query_params.urlencode(),
+    }
+
+    return render(request, 'dashboard/public_swims_attendance.html', context)
 
 
 @login_required

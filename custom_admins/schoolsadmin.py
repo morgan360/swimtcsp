@@ -8,6 +8,11 @@ from .lessonsadmin import LessonEnrollmentAdmin, SwimlingAutocompleteAdmin
 from import_export.admin import ImportExportMixin
 from schools_bookings.resources import TermResource  # adjust if needed
 
+class ScoEnrollmentAdmin(admin.ModelAdmin):
+    list_display = ['id', 'lesson', 'term', 'swimling', 'order', 'created', 'updated']
+    list_filter = ['term', 'lesson', 'swimling']
+    search_fields = ['notes', 'swimling__first_name', 'swimling__last_name']
+    readonly_fields = ['created', 'updated']
 
 class ScoTermAdmin(ImportExportMixin, admin.ModelAdmin):
     resource_class = TermResource
@@ -37,7 +42,7 @@ class SchoolsAdminSite(AdminSite):
 schools_admin_site = SchoolsAdminSite(name='schoolsadmin')
 
 # ✅ Register models to your custom site
-schools_admin_site.register(ScoEnrollment, LessonEnrollmentAdmin)
+schools_admin_site.register(ScoEnrollment, ScoEnrollmentAdmin)
 schools_admin_site.register(Swimling, SwimlingAutocompleteAdmin)
 schools_admin_site.register(ScoLessons)
 schools_admin_site.register(ScoCategory)

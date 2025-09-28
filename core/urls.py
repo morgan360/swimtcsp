@@ -54,6 +54,7 @@ urlpatterns = [
     path('timetable/', include('timetable.urls')),
     path('hijack/', include('hijack.urls')),
     path('reports/', include('reports.urls')),
+    path("finances/", include("finances.urls")),
     # BOIPA
     path('boipa/', include(('boipa.urls', 'boipa'), namespace='boipa')),  # Note the namespace argument
     # Waiting List

@@ -28,6 +28,13 @@
       window.addEventListener('beforeunload', function() {
         document.documentElement.classList.add('unloading');
       });
+      <!-- jQuery first -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+<!-- Your local DataTables bundle -->
+    <link rel="stylesheet" href="{% static 'DataTables/datatables.min.css' %}">
+    <script src="{% static 'DataTables/datatables.min.js' %}"></script>
+
     </script>
     <style>
       html.unloading *, html.unloading *::before, html.unloading *::after { transition: none !important; }

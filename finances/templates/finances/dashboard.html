@@ -1,0 +1,49 @@
+{% extends "base/_base.html" %}
+{% block content %}
+<div class="p-6 grid grid-cols-3 gap-6">
+  <div class="bg-white shadow rounded-lg p-4">
+    <h3 class="text-lg font-bold">Today</h3>
+    <p class="text-2xl text-green-600">€{{ today_rev }}</p>
+  </div>
+  <div class="bg-white shadow rounded-lg p-4">
+    <h3 class="text-lg font-bold">This Week</h3>
+    <p class="text-2xl text-blue-600">€{{ week_rev }}</p>
+  </div>
+  <div class="bg-white shadow rounded-lg p-4">
+    <h3 class="text-lg font-bold">This Month</h3>
+    <p class="text-2xl text-purple-600">€{{ month_rev }}</p>
+  </div>
+</div>
+
+<div class="mt-8">
+  <h3 class="text-lg font-bold">Recent Transactions</h3>
+  <table id="finance-table" class="display">
+    <thead>
+  <tr>
+    <th>Date</th>
+    <th>Guardian</th>
+    <th>Amount (€)</th>
+    <th>Product</th>
+    <th>Status</th>
+  </tr>
+</thead>
+
+
+  </table>
+</div>
+
+<script>
+$(document).ready(function() {
+    $('#finance-table').DataTable({
+        ajax: "{% url 'finances:transactions_data' %}",
+        columns: [
+            { data: "date" },
+            { data: "guardian" },
+            { data: "amount" },
+            { data: "product" },
+            { data: "status" }
+        ]
+    });
+});
+</script>
+{% endblock %}

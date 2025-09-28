@@ -119,6 +119,7 @@ INSTALLED_APPS = [
     'mailchimp',
     'anseo',
     "maintenance_mode",
+    'finances',
 ]
 
 MIDDLEWARE = [

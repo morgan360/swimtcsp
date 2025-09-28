@@ -42,10 +42,45 @@
             <td class="px-6 py-4 whitespace-nowrap">{{ swimling.notes|default:"—" }}</td>
             <td class="px-6 py-4 whitespace-nowrap">{{ swimling.sco_role_num|default:"—" }}</td>
             <td class="px-6 py-4 whitespace-nowrap">
-              <a href="{% url 'swimling_dashboard:edit-swimling' id=swimling.id %}"
-                class="inline-flex items-center px-3 py-1 text-xs font-medium text-white bg-blue-600 rounded hover:bg-blue-700 transition">
-                ✏️ Edit
-              </a>
+              <div class="flex flex-wrap items-center gap-2">
+                <a href="{% url 'swimling_dashboard:edit-swimling' id=swimling.id %}"
+                  class="inline-flex items-center px-3 py-1 text-xs font-medium text-white bg-blue-600 rounded hover:bg-blue-700 transition">
+                  ✏️ Edit
+                </a>
+                <button type="button"
+                  class="inline-flex items-center px-3 py-1 text-xs font-medium text-white bg-purple-600 rounded hover:bg-purple-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  {% if swimling.previous_terms %}onclick="openHistoryModal('guardian-history-{{ swimling.id }}')"{% else %}disabled{% endif %}>
+                  <i class="fas fa-history mr-1"></i>
+                  Enrollment History
+                </button>
+              </div>
+
+              <div id="guardian-history-{{ swimling.id }}" class="fixed inset-0 z-50 hidden bg-black bg-opacity-50 flex items-center justify-center p-4">
+                <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg">
+                  <div class="flex items-center justify-between px-4 py-3 border-b border-gray-200">
+                    <h3 class="text-base font-semibold text-gray-900">Previous Enrollments</h3>
+                    <button type="button" class="text-gray-500 hover:text-gray-700"
+                      onclick="closeHistoryModal('guardian-history-{{ swimling.id }}')">
+                      <i class="fas fa-times"></i>
+                    </button>
+                  </div>
+                  <div class="px-4 py-3 max-h-[70vh] overflow-y-auto">
+                    {% if swimling.previous_terms %}
+                    <div class="space-y-3">
+                      {% for entry in swimling.previous_terms %}
+                      <div class="border border-gray-200 rounded-lg p-3 bg-gray-50">
+                        <p class="text-gray-900 text-sm font-semibold">{{ entry.level }}</p>
+                        <p class="text-gray-600 text-xs">{{ entry.day }}{% if entry.time %} • {{ entry.time }}{% endif %}</p>
+                        <p class="text-gray-500 text-xs">{{ entry.term }}</p>
+                      </div>
+                      {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-sm text-gray-500">No previous enrollments recorded.</p>
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
             </td>
           </tr>
           {% endfor %}

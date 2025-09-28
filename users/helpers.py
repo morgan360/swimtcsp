@@ -1,3 +1,4 @@
+from collections import defaultdict
 from users.models import  User, Swimling
 from lessons_bookings.models import LessonEnrollment, Term
 from schools_bookings.models import ScoEnrollment, ScoTerm
@@ -197,3 +198,62 @@ def fetch_waiting_list_data(user):
         })
 
     return waiting_list_data
+
+
+def collect_previous_lessons(swimlings, current_term_id=None):
+    """Return a mapping of swimling.id -> list of previous lesson summaries (newest first)."""
+    history = defaultdict(list)
+    swimlings = list(swimlings)
+    if not swimlings:
+        return history
+
+    enrollments = (
+        LessonEnrollment.objects
+        .filter(swimling__in=swimlings)
+        .select_related("lesson__category", "term")
+        .order_by("-term__start_date", "-term__id", "-created")
+    )
+    if current_term_id:
+        enrollments = enrollments.exclude(term_id=current_term_id)
+
+    day_display_cache = {}
+    for enrollment in enrollments:
+        lesson = getattr(enrollment, "lesson", None)
+        term = getattr(enrollment, "term", None)
+        if not lesson or not term:
+            continue
+
+        category = getattr(lesson, "category", None)
+        level = (
+            getattr(category, "short_name", None)
+            or getattr(category, "name", None)
+            or getattr(lesson, "name", "")
+        )
+
+        day_key = getattr(lesson, "day_of_week", None)
+        if day_key in day_display_cache:
+            day_display = day_display_cache[day_key]
+        else:
+            try:
+                day_display = lesson.get_day_of_week_display()
+            except Exception:
+                day_display = ""
+            day_display_cache[day_key] = day_display
+
+        start_time = getattr(lesson, "start_time", None)
+        end_time = getattr(lesson, "end_time", None)
+        time_parts = []
+        if start_time:
+            time_parts.append(start_time.strftime("%H:%M"))
+        if end_time:
+            time_parts.append(end_time.strftime("%H:%M"))
+        time_label = " - ".join(time_parts)
+
+        history[enrollment.swimling_id].append({
+            "level": level,
+            "day": day_display,
+            "time": time_label,
+            "term": getattr(term, "label", str(term)),
+        })
+
+    return history

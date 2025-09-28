@@ -3,7 +3,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from utils.context_processors import get_term_info
 from lessons.models import Product
 from lessons_bookings.models import LessonEnrollment
-from users.helpers import fetch_waiting_list_data
+from users.helpers import fetch_waiting_list_data, collect_previous_lessons
 from schools_bookings.utils.swimling_utils import (
     get_latest_active_school_term,
     swimling_is_enrolled,
@@ -262,6 +262,10 @@ def guardian_dashboard(request):
     next_term_id = term_info['next_term_id']
     current_phase = term_info['current_phase_id']
     is_school_user = request.user.groups.filter(name='schools').exists()
+
+    history_map = collect_previous_lessons(swimlings, current_term_id)
+    for swimling in swimlings:
+        setattr(swimling, 'previous_terms', history_map.get(swimling.id, []))
 
     public_lessons_data = []
     school_panel_data = []

@@ -203,6 +203,31 @@
       closeEditSwimlingModal();
     }
   });
+
+  function openHistoryModal(id) {
+    const modal = document.getElementById(id);
+    if (!modal) return;
+    modal.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+    if (!modal.dataset.boundBackdrop) {
+      modal.addEventListener('click', function(event) {
+        if (event.target === modal) {
+          closeHistoryModal(id);
+        }
+      });
+      modal.dataset.boundBackdrop = '1';
+    }
+  }
+
+  function closeHistoryModal(id) {
+    const modal = document.getElementById(id);
+    if (!modal) return;
+    modal.classList.add('hidden');
+    document.body.style.overflow = 'auto';
+  }
+
+  window.openHistoryModal = openHistoryModal;
+  window.closeHistoryModal = closeHistoryModal;
 </script>
 {% endif %}
 {% endblock %}

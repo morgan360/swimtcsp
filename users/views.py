@@ -21,6 +21,7 @@ from .models import Swimling
 from lessons_orders.models import Order as LessonOrder
 from swims_orders.models import Order as SwimOrder
 from django.http import JsonResponse
+from users.helpers import collect_previous_lessons
 
 
 # Get the custom user model
@@ -238,6 +239,10 @@ def swimlings_list(request):
             deduped.append(item)
         setattr(s, "current_classes", deduped)
 
+    history_map = collect_previous_lessons(page_obj.object_list, current_term_id)
+    for s in page_obj.object_list:
+        setattr(s, "previous_terms", history_map.get(s.id, []))
+
     context = {
         "search": search,
         "page_obj": page_obj,
@@ -341,6 +346,10 @@ def swimlings_list_rows(request):
             seen.add(key)
             deduped.append(item)
         setattr(s, "current_classes", deduped)
+
+    history_map = collect_previous_lessons(page_obj.object_list, current_term_id)
+    for s in page_obj.object_list:
+        setattr(s, "previous_terms", history_map.get(s.id, []))
 
     variant = request.GET.get('variant', 'desktop')
     template_name = 'users/_swimling_rows.html' if variant == 'desktop' else 'users/_swimling_cards.html'

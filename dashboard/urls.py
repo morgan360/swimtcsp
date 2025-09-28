@@ -6,6 +6,7 @@ app_name = 'dashboard'
 urlpatterns = [
     path('', views.dashboard_home, name='dashboard_home'),
     path('public-swims/', views.public_swims, name='dashboard_public_swims'),
+    path('public-swims/attendance/', views.public_swims_attendance, name='dashboard_public_swims_attendance'),
     path('lessons/', views.lessons, name='dashboard_lessons'),
     path('admin_lessons_list/', views.admin_lessons_list, name='admin_lessons_list'),
     path('admin_lessons_list/rows/', views.admin_lessons_list_rows, name='admin_lessons_list_rows'),

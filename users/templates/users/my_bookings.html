@@ -34,13 +34,13 @@
       <div class="space-y-3">
         <div>
           <h2 class="text-lg font-semibold text-blue-100">
-            Awaiting Payment <i class="fa-solid fa-clock ml-1"></i>
+            Failed Payments <i class="fa-solid fa-circle-xmark ml-1"></i>
           </h2>
         </div>
         <div class="overflow-x-hidden">
           <div class="grid grid-cols-1 gap-4">
             {% for order in lesson_orders_unpaid %}
-            {% include 'users/_lesson_booking_card.html' with order=order status_label='Awaiting Payment' status_classes='bg-amber-100 text-amber-800 border-amber-200' status_hint='Complete your payment to confirm this booking.' %}
+            {% include 'users/_lesson_booking_card.html' with order=order status_label='Payment Failed' status_classes='bg-red-100 text-red-800 border-red-200' status_hint='Complete your payment to confirm this booking.' %}
             {% endfor %}
           </div>
         </div>
@@ -56,7 +56,7 @@
       {% if swim_orders_paid or swim_orders_unpaid %}
       {% if swim_orders_paid %}
       <div class="space-y-3">
-        <h2 class="text-lg font-semibold text-blue-900">Paid Bookings</h2>
+        <h2 class="text-lg font-semibold text-blue-100">Paid Bookings <i class="fa-solid fa-circle-check ml-1"></i></h2>
         <div class="overflow-x-hidden">
           <div class="grid grid-cols-1 gap-4">
             {% for order in swim_orders_paid %}
@@ -70,13 +70,13 @@
       {% if swim_orders_unpaid %}
       <div class="space-y-3">
         <div>
-          <h2 class="text-lg font-semibold text-amber-800">Awaiting Payment</h2>
-          <p class="text-sm text-amber-700/80">Return to checkout to finish these swim bookings.</p>
+          <h2 class="text-lg font-semibold text-amber-800">Failed Payments</h2>
+          <p class="text-sm text-amber-700/80">Contact us to complete this booking. Spaces can only be reserved upon successful payment.</p>
         </div>
         <div class="overflow-x-hidden">
           <div class="grid grid-cols-1 gap-4">
             {% for order in swim_orders_unpaid %}
-            {% include 'users/_swim_booking_card.html' with order=order status_label='Awaiting Payment' status_classes='bg-amber-100 text-amber-800 border-amber-200' status_hint='Payment pending — seats are not guaranteed until paid.' %}
+            {% include 'users/_swim_booking_card.html' with order=order status_label='Payment Failed' status_classes='bg-red-100 text-red-800 border-red-200' status_hint='Payment pending — seats are not guaranteed until paid.' %}
             {% endfor %}
           </div>
         </div>

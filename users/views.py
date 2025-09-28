@@ -14,7 +14,8 @@ from schools_bookings.models import ScoEnrollment
 from utils.context_processors import get_term_info
 from lessons.models import Product
 from django.contrib.admin.views.decorators import staff_member_required
-from django.db.models import Q
+from django.db.models import Q, Value
+from django.db.models.functions import Concat, Coalesce
 from django.core.paginator import Paginator
 import logging
 from .models import Swimling
@@ -150,6 +151,18 @@ def swimlings_list(request):
     qs = (
         Swimling.objects
         .select_related("guardian")
+        .annotate(
+            full_name=Concat(
+                Coalesce("first_name", Value("")),
+                Value(" "),
+                Coalesce("last_name", Value("")),
+            ),
+            guardian_full_name=Concat(
+                Coalesce("guardian__first_name", Value("")),
+                Value(" "),
+                Coalesce("guardian__last_name", Value("")),
+            ),
+        )
         .order_by("first_name", "last_name")
     )
 
@@ -160,6 +173,8 @@ def swimlings_list(request):
             | Q(guardian__email__icontains=search)
             | Q(guardian__first_name__icontains=search)
             | Q(guardian__last_name__icontains=search)
+            | Q(full_name__icontains=search)
+            | Q(guardian_full_name__icontains=search)
         )
 
     paginator = Paginator(qs, 25)  # 25 per page
@@ -263,6 +278,18 @@ def swimlings_list_rows(request):
     qs = (
         Swimling.objects
         .select_related("guardian")
+        .annotate(
+            full_name=Concat(
+                Coalesce("first_name", Value("")),
+                Value(" "),
+                Coalesce("last_name", Value("")),
+            ),
+            guardian_full_name=Concat(
+                Coalesce("guardian__first_name", Value("")),
+                Value(" "),
+                Coalesce("guardian__last_name", Value("")),
+            ),
+        )
         .order_by("first_name", "last_name")
     )
 
@@ -273,6 +300,8 @@ def swimlings_list_rows(request):
             | Q(guardian__email__icontains=search)
             | Q(guardian__first_name__icontains=search)
             | Q(guardian__last_name__icontains=search)
+            | Q(full_name__icontains=search)
+            | Q(guardian_full_name__icontains=search)
         )
 
     paginator = Paginator(qs, 25)

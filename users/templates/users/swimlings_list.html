@@ -150,14 +150,18 @@
             })();
         </script>
         <script>
-            function openHistoryModal(id) {
+            function openHistoryModal(evtOrId, maybeId) {
+                const id = typeof evtOrId === 'string' ? evtOrId : maybeId;
                 const modal = document.getElementById(id);
                 if (!modal) return;
+
                 modal.classList.remove('hidden');
                 document.body.style.overflow = 'hidden';
+
                 if (!modal.dataset.boundBackdrop) {
                     modal.addEventListener('click', function (event) {
-                        if (event.target === modal) {
+                        const dialog = modal.querySelector('[data-history-dialog]');
+                        if (!dialog || !dialog.contains(event.target)) {
                             closeHistoryModal(id);
                         }
                     });

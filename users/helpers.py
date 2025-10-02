@@ -213,8 +213,6 @@ def collect_previous_lessons(swimlings, current_term_id=None):
         .select_related("lesson__category", "term")
         .order_by("-term__start_date", "-term__id", "-created")
     )
-    if current_term_id:
-        enrollments = enrollments.exclude(term_id=current_term_id)
 
     day_display_cache = {}
     for enrollment in enrollments:

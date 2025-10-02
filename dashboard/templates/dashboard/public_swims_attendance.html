@@ -41,15 +41,12 @@
     <div class="grid gap-4 md:grid-cols-4">
       <label class="flex flex-col text-sm font-medium text-gray-700 gap-1 bg-blue-100 p-2 rounded-lg">
         Booking Day
-        <select name="day" class="rounded-md border-gray-300 py-2 px-3 focus:border-blue-500 focus:ring-blue-500"
-          id="filter-day">
-          <option value="">All days</option>
-          {% for day in booking_days %}
-          <option value="{{ day.value }}" {% if filters.day == day.value %}selected{% endif %}>
-            {{ day.label }}
-          </option>
-          {% endfor %}
-        </select>
+        <input type="date" name="day" id="filter-day"
+          class="rounded-md border-gray-300 py-2 px-3 focus:border-blue-500 focus:ring-blue-500"
+          value="{{ filters.day }}">
+        {% if auto_selected_day %}
+        <span class="text-xs text-gray-500">Auto-selected to today. Clear to view all days.</span>
+        {% endif %}
       </label>
 
       <label class="flex flex-col text-sm font-medium text-gray-700 gap-1  bg-blue-100 p-2 rounded-lg">

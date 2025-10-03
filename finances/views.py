@@ -5,6 +5,8 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.http import JsonResponse
 from django.utils.timezone import localtime
 from swims_orders.models import Order  # ✅ your Order model
+from django.utils.timezone import localtime, make_aware
+import datetime
 
 
 @staff_member_required
@@ -33,14 +35,20 @@ def transactions_data(request):
 
 @staff_member_required
 def dashboard(request):
-    today = now().date()
+    today = localtime(now()).date()
     week_start = today - timedelta(days=today.weekday())
     month_start = today.replace(day=1)
 
-    # Revenue summaries (only count paid orders)
-    today_rev = Order.objects.filter(paid=True, created__date=today).aggregate(Sum("amount"))["amount__sum"] or 0
-    week_rev = Order.objects.filter(paid=True, created__date__gte=week_start).aggregate(Sum("amount"))["amount__sum"] or 0
-    month_rev = Order.objects.filter(paid=True, created__date__gte=month_start).aggregate(Sum("amount"))["amount__sum"] or 0
+    # Create datetime ranges in the correct timezone
+    start_of_today = make_aware(datetime.datetime.combine(today, datetime.time.min))
+    start_of_week = make_aware(datetime.datetime.combine(week_start, datetime.time.min))
+    start_of_month = make_aware(datetime.datetime.combine(month_start, datetime.time.min))
+
+    qs = Order.objects.filter(paid=True)
+
+    today_rev = qs.filter(created__gte=start_of_today).aggregate(Sum("amount"))["amount__sum"] or 0
+    week_rev = qs.filter(created__gte=start_of_week).aggregate(Sum("amount"))["amount__sum"] or 0
+    month_rev = qs.filter(created__gte=start_of_month).aggregate(Sum("amount"))["amount__sum"] or 0
 
     context = {
         "today_rev": today_rev,

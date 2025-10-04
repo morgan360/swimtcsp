@@ -42,9 +42,14 @@
           🎟️ Coupons Admin
         </a>
       </li>
-    <li>
-        <a href="/attendanceadmin/" class="admin-link {% if 'attendanceadmin/' in request.path %}is-active{% endif %}">
-          🎟️ Attendance Admin
+      <li>
+        <a href="/attendanceadmin/" class="admin-link {% if '/attendanceadmin/' in request.path %}is-active{% endif %}">
+          🕓 Attendance Admin
+        </a>
+      </li>
+      <li>
+        <a href="/finance-admin/" class="admin-link {% if '/finance-admin/' in request.path %}is-active{% endif %}">
+          💶 Finance Admin
         </a>
       </li>
     </ul>

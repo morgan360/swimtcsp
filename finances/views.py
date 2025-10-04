@@ -12,22 +12,36 @@ import datetime
 @staff_member_required
 def transactions_data(request):
     """
-    Return JSON for DataTables with Swim Orders
+    Return JSON for DataTables with optional period filter
     """
     data = []
-    orders = Order.objects.select_related("user", "product", "coupon").order_by("-created")[:500]
+    orders = Order.objects.select_related("user", "product", "coupon")
+
+    # Check filter
+    period = request.GET.get("period")
+    today = localtime(now()).date()
+
+    if period == "today":
+        start = make_aware(datetime.datetime.combine(today, datetime.time.min))
+        orders = orders.filter(created__gte=start)
+    elif period == "week":
+        week_start = today - timedelta(days=today.weekday())
+        start = make_aware(datetime.datetime.combine(week_start, datetime.time.min))
+        orders = orders.filter(created__gte=start)
+    elif period == "month":
+        month_start = today.replace(day=1)
+        start = make_aware(datetime.datetime.combine(month_start, datetime.time.min))
+        orders = orders.filter(created__gte=start)
+
+    orders = orders.order_by("-created")[:500]
 
     for o in orders:
         data.append({
             "date": localtime(o.created).strftime("%Y-%m-%d %H:%M"),
-            "guardian": getattr(o.user, "email", str(o.user)),  # or .get_full_name()
+            "guardian": getattr(o.user, "email", str(o.user)),
             "amount": float(o.amount),
-            "discount": float(o.discount_amount or 0),
-            "coupon": o.coupon.code if o.coupon else "",
             "product": o.product.name if o.product else "",
             "status": "Paid" if o.paid else "Unpaid",
-            "tx_id": o.txId,
-            "payment_status": o.payment_status,
         })
 
     return JsonResponse({"data": data})

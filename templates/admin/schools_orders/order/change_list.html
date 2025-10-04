@@ -1,0 +1,12 @@
+{% extends "admin/change_list.html" %}
+
+{% block content %}
+  {% if summary_total %}
+    <div style="margin: 1em 0; padding: 1em;
+                background: #e8f4ff; border: 1px solid #cce0ff;
+                border-radius: 5px; font-weight: bold;">
+      💶 Total (filtered): €{{ summary_total|floatformat:2 }}
+    </div>
+  {% endif %}
+  {{ block.super }}
+{% endblock %}

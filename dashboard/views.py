@@ -80,21 +80,11 @@ def public_swims_attendance(request):
         'category__name', 'day_of_week', 'start_time'
     )
 
-    booking_days = [
-        {
-            'value': day.isoformat(),
-            'label': day.strftime('%a %d %b %Y'),
-        }
-        for day in sorted(
-            {
-                order_date
-                for order_date in base_orders.values_list('booking', flat=True)
-                if order_date
-            }
-        )
-    ]
+    today = timezone.localdate()
 
-    selected_day = request.GET.get('day', '').strip()
+    selected_day_raw = request.GET.get('day', '').strip()
+    has_day_param = 'day' in request.GET
+    selected_day = selected_day_raw if has_day_param else today.isoformat()
     selected_category = request.GET.get('category', '').strip()
     selected_product = request.GET.get('product', '').strip()
     search_term = request.GET.get('q', '').strip()
@@ -107,6 +97,9 @@ def public_swims_attendance(request):
             filtered_orders = filtered_orders.filter(booking=parsed_day)
         except ValueError:
             pass
+    elif has_day_param:
+        # user intentionally cleared the day filter; show all days
+        selected_day = ''
 
     if selected_category:
         try:
@@ -161,17 +154,17 @@ def public_swims_attendance(request):
         'page_obj': page_obj,
         'filters': {
             'day': selected_day,
-            'category': selected_category,
-            'product': selected_product,
-            'q': search_term,
-        },
-        'categories': categories,
-        'products': products,
-        'booking_days': booking_days,
-        'catalog_stats': catalog_stats,
-        'filtered_stats': filtered_stats,
-        'query_string': query_params.urlencode(),
-    }
+        'category': selected_category,
+        'product': selected_product,
+        'q': search_term,
+    },
+    'categories': categories,
+    'products': products,
+    'catalog_stats': catalog_stats,
+    'filtered_stats': filtered_stats,
+    'query_string': query_params.urlencode(),
+    'auto_selected_day': not has_day_param,
+}
 
     return render(request, 'dashboard/public_swims_attendance.html', context)
 

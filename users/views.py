@@ -12,7 +12,7 @@ from allauth.account.views import SignupView
 from schools_bookings.utils.swimling_utils import get_latest_active_school_term
 from schools_bookings.models import ScoEnrollment
 from utils.context_processors import get_term_info
-from lessons.models import Product
+from lessons_bookings.models import LessonEnrollment, Term
 from django.contrib.admin.views.decorators import staff_member_required
 from django.db.models import Q, Value
 from django.db.models.functions import Concat, Coalesce
@@ -184,33 +184,33 @@ def swimlings_list(request):
 
     # === Build current classes per swimling (Public + School) ===
     term_info = get_term_info(request)
-    current_term_id = term_info.get("current_term_id")
+    current_term_id = Term.get_current_term_id() or term_info.get("current_term_id")
 
     # Public enrollments grouped by swimling id: [{ name, enrollment_id, admin_url }]
     public_by_swimling = {}
     if current_term_id:
         try:
-            public_rows = (
-                Product.objects
+            public_enrollments = (
+                LessonEnrollment.objects
                 .filter(
-                    enrollments__term_id=current_term_id,
-                    enrollments__swimling__in=page_obj.object_list,
+                    term_id=current_term_id,
+                    swimling__in=page_obj.object_list,
                 )
-                .values(
-                    "enrollments__swimling_id",
-                    "name",
-                    "enrollments__id",
-                )
+                .select_related("lesson")
             )
-            for r in public_rows:
-                enrollment_id = r["enrollments__id"]
+            for enrollment in public_enrollments:
+                lesson = getattr(enrollment, "lesson", None)
                 try:
-                    admin_url = reverse("lessonsadmin:lessons_bookings_lessonenrollment_change", args=[enrollment_id])
+                    admin_url = reverse(
+                        "lessonsadmin:lessons_bookings_lessonenrollment_change",
+                        args=[enrollment.id],
+                    )
                 except Exception:
-                    admin_url = f"/lessonsadmin/lessons_bookings/lessonenrollment/{enrollment_id}/change/"
-                public_by_swimling.setdefault(r["enrollments__swimling_id"], []).append({
-                    "name": r.get("name") or "",
-                    "enrollment_id": enrollment_id,
+                    admin_url = f"/lessonsadmin/lessons_bookings/lessonenrollment/{enrollment.id}/change/"
+
+                public_by_swimling.setdefault(enrollment.swimling_id, []).append({
+                    "name": getattr(lesson, "name", ""),
+                    "enrollment_id": enrollment.id,
                     "admin_url": admin_url,
                 })
         except Exception:
@@ -315,27 +315,27 @@ def swimlings_list_rows(request):
     public_by_swimling = {}
     if current_term_id:
         try:
-            public_rows = (
-                Product.objects
+            public_enrollments = (
+                LessonEnrollment.objects
                 .filter(
-                    enrollments__term_id=current_term_id,
-                    enrollments__swimling__in=page_obj.object_list,
+                    term_id=current_term_id,
+                    swimling__in=page_obj.object_list,
                 )
-                .values(
-                    "enrollments__swimling_id",
-                    "name",
-                    "enrollments__id",
-                )
+                .select_related("lesson")
             )
-            for r in public_rows:
-                enrollment_id = r["enrollments__id"]
+            for enrollment in public_enrollments:
+                lesson = getattr(enrollment, "lesson", None)
                 try:
-                    admin_url = reverse("lessonsadmin:lessons_bookings_lessonenrollment_change", args=[enrollment_id])
+                    admin_url = reverse(
+                        "lessonsadmin:lessons_bookings_lessonenrollment_change",
+                        args=[enrollment.id],
+                    )
                 except Exception:
-                    admin_url = f"/lessonsadmin/lessons_bookings/lessonenrollment/{enrollment_id}/change/"
-                public_by_swimling.setdefault(r["enrollments__swimling_id"], []).append({
-                    "name": r.get("name") or "",
-                    "enrollment_id": enrollment_id,
+                    admin_url = f"/lessonsadmin/lessons_bookings/lessonenrollment/{enrollment.id}/change/"
+
+                public_by_swimling.setdefault(enrollment.swimling_id, []).append({
+                    "name": getattr(lesson, "name", ""),
+                    "enrollment_id": enrollment.id,
                     "admin_url": admin_url,
                 })
         except Exception:

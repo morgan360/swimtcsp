@@ -15,6 +15,7 @@ class Order(models.Model):
     updated = models.DateTimeField(auto_now=True)
     paid = models.BooleanField(default=False)
     txId = models.CharField(max_length=250, blank=True)
+    boipa_reconciled = models.BooleanField(default=False)
     payment_status = models.CharField(max_length=100, blank=True)
     amount = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
     school = models.ForeignKey(ScoSchool, on_delete=models.CASCADE, related_name='orders', null=True, blank=True)

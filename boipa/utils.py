@@ -4,6 +4,40 @@ from django.conf import settings
 from urllib.parse import urlencode
 from decimal import Decimal
 import logging
+import requests, time
+
+MERCHANT_ID = "100121"
+PASSWORD = "u0AYACBNI2643G87wk4o"
+TOKEN_URL = "https://api.boipapaymentgateway.com/token"
+PAYMENTS_URL = "https://api.boipapaymentgateway.com/payments"
+
+
+def verify_boipa_transaction(tx_id):
+    """Return True if BOIPA confirms the transaction is captured."""
+    try:
+        # Step 1: Token
+        token_data = requests.post(TOKEN_URL, data={
+            "merchantId": MERCHANT_ID,
+            "password": PASSWORD,
+            "action": "GET_STATUS",
+            "timestamp": int(time.time() * 1000),
+        }).json()
+
+        token = token_data.get("token")
+        if not token:
+            return False
+
+        # Step 2: Get status
+        status_data = requests.post(PAYMENTS_URL, data={
+            "merchantId": MERCHANT_ID,
+            "token": token,
+            "action": "GET_STATUS",
+            "txId": tx_id,
+        }).json()
+
+        return status_data.get("status") == "CAPTURED"
+    except Exception:
+        return False
 
 
 def initiate_boipa_payment(order_id, amount):

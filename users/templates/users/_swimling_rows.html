@@ -50,20 +50,20 @@
             </a>
             <button type="button"
                class="inline-flex items-center px-3 py-1.5 bg-blue-600 text-white text-xs font-medium rounded-lg hover:bg-blue-700 transition-colors whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
-               {% if s.previous_terms %}onclick="openHistoryModal('swimling-history-{{ s.id }}')"{% else %}disabled{% endif %}>
+               {% if s.previous_terms %}onclick="openHistoryModal(event, 'swimling-history-desktop-{{ s.id }}')"{% else %}disabled{% endif %}>
                <i class="fas fa-history mr-1"></i>Previous Enrollments
             </button>
         </div>
-        <div id="swimling-history-{{ s.id }}" class="fixed inset-0 z-50 hidden bg-black bg-opacity-50 flex items-center justify-center p-4">
-            <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg">
+        <div id="swimling-history-desktop-{{ s.id }}" class="fixed inset-0 z-[1000] hidden bg-black bg-opacity-50 flex items-center justify-center p-4 sm:p-6">
+            <div data-history-dialog class="bg-white rounded-xl shadow-2xl w-full max-w-lg max-h-[85vh] flex flex-col overflow-hidden border border-gray-200">
                 <div class="flex items-center justify-between px-4 py-3 border-b border-gray-200">
                     <h3 class="text-base font-semibold text-gray-900">Previous Enrollments</h3>
                     <button type="button" class="text-gray-500 hover:text-gray-700"
-                        onclick="closeHistoryModal('swimling-history-{{ s.id }}')">
+                        onclick="closeHistoryModal('swimling-history-desktop-{{ s.id }}')">
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
-                <div class="px-4 py-3 max-h-[70vh] overflow-y-auto">
+                <div class="px-4 py-3 overflow-y-auto">
                     {% if s.previous_terms %}
                     <div class="space-y-3">
                         {% for entry in s.previous_terms %}

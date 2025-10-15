@@ -13,7 +13,26 @@ from schools_orders.models import Order as SchoolOrder
 # Date range filter
 from rangefilter.filters import DateRangeFilter
 
+from django.utils import timezone
+from django.contrib.admin import SimpleListFilter
+from datetime import timedelta
 
+class TodayFilter(SimpleListFilter):
+    title = "Date"
+    parameter_name = "created_today"
+
+    def lookups(self, request, model_admin):
+        return [("today", "Today")]
+
+    def queryset(self, request, queryset):
+        if self.value() == "today":
+            now = timezone.now()
+            start = timezone.make_aware(
+                timezone.datetime.combine(now.date(), timezone.datetime.min.time())
+            )
+            end = start + timedelta(days=1)
+            return queryset.filter(created__gte=start, created__lt=end)
+        return queryset
 # ---------------------------
 # BOIPA verification helper
 # ---------------------------
@@ -77,7 +96,8 @@ class BaseOrderAdmin(ModelAdmin):
     list_display_links = ("order_number", "created_fmt")
     list_filter = (
         "paid",
-        "boipa_reconciled",           # ✅ new filter
+        "boipa_reconciled",
+        TodayFilter,
         ("created", DateRangeFilter),
     )
     search_fields = ("id", "user__email", "txId")

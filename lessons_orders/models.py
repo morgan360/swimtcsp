@@ -35,6 +35,8 @@ class Order(models.Model):
     )
 
     class Meta:
+        verbose_name = "Lesson Order"
+        verbose_name_plural = "Lesson Orders"
         ordering = ['-created']
         indexes = [
             models.Index(fields=['-created']),

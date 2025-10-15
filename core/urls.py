@@ -16,6 +16,8 @@ from waiting_list.views import redirect_to_swimling_waiting_list
 from django.views.generic import TemplateView
 from django.http import HttpResponse
 from django.contrib.auth import views as auth_views
+from custom_admins.financeadmin import finance_admin_site
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('home.urls')),
@@ -92,6 +94,8 @@ urlpatterns += [
     path('instructorsadmin/', instructors_admin_site.urls),
     path("couponsadmin/", coupons_admin_site.urls),
     path("attendanceadmin/", attendance_admin_site.urls),
+    path("finance-admin/", finance_admin_site.urls),
+
     ]
 if settings.DEBUG:
     # add auto reload (only in development)

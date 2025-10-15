@@ -4,9 +4,12 @@ from coupons.models import Coupon, CouponRedemption
 from coupons.utils import generate_coupon_code
 from django.http import HttpResponse
 import csv
+from django_admin_listfilter_dropdown.filters import RelatedDropdownFilter
+from django.contrib.auth import get_user_model
 
+User = get_user_model()
 
-# ✅ Define the custom admin site
+# ✅ Define the custom admin site *first*
 class CouponsAdminSite(AdminSite):
     site_header = "Coupons Admin"
     site_title = "Coupons Admin Portal"
@@ -14,22 +17,38 @@ class CouponsAdminSite(AdminSite):
 
 coupons_admin_site = CouponsAdminSite(name='couponsadmin')
 
+
+# ✅ Minimal User admin for coupons site autocomplete
+class UserAutocompleteAdmin(admin.ModelAdmin):
+    search_fields = ('email', 'first_name', 'last_name')
+    list_display = ('email', 'first_name', 'last_name')  # optional
+
+try:
+    coupons_admin_site.register(User, UserAutocompleteAdmin)
+except admin.sites.AlreadyRegistered:
+    pass
+
+
 @admin.register(Coupon, site=coupons_admin_site)
 class CouponAdmin(admin.ModelAdmin):
     list_display = (
         'code',
-        'discount_type',
-        'discount_value',
-        'balance_remaining',
-        'valid_from',
-        'valid_to',
         'active',
-        'assigned_to',  # ✅ Optional: show who it’s for
         'is_valid_now',
+        'discount_type',
+        'amount_display',
+        'balance_display',
+        'note',
+        'created_by',
+        'assigned_to',
     )
-    list_filter = ('active', 'valid_from', 'valid_to', 'discount_type')
-    search_fields = ('code', 'assigned_to__email')
-
+    list_editable = ('note', 'active',)
+    list_filter = (
+        'active',
+        ('assigned_to', RelatedDropdownFilter),
+    )
+    autocomplete_fields = ['assigned_to']  # ✅ now works
+    search_fields = ('code', 'assigned_to__email', 'note')
     readonly_fields = ('code', 'created_at', 'updated_at', 'created_by')
 
     fields = (
@@ -40,16 +59,25 @@ class CouponAdmin(admin.ModelAdmin):
         'valid_from',
         'valid_to',
         'active',
+        'note',
         'assigned_to',
         'created_at',
         'updated_at',
         'created_by',
     )
 
+    def amount_display(self, obj):
+        return obj.discount_value
+    amount_display.short_description = "Amount"
+
+    def balance_display(self, obj):
+        return obj.balance_remaining
+    balance_display.short_description = "Balance"
+
     def is_valid_now(self, obj):
         return obj.is_valid()
     is_valid_now.boolean = True
-    is_valid_now.short_description = "Valid Now"
+    is_valid_now.short_description = "Valid"
 
     def save_model(self, request, obj, form, change):
         if not obj.pk and not obj.code:

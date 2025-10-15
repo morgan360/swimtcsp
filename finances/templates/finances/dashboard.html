@@ -1,49 +1,62 @@
 {% extends "base/_base.html" %}
+{% load static %}
+
 {% block content %}
-<div class="p-6 grid grid-cols-3 gap-6">
-  <div class="bg-white shadow rounded-lg p-4">
-    <h3 class="text-lg font-bold">Today</h3>
-    <p class="text-2xl text-green-600">€{{ today_rev }}</p>
-  </div>
-  <div class="bg-white shadow rounded-lg p-4">
-    <h3 class="text-lg font-bold">This Week</h3>
-    <p class="text-2xl text-blue-600">€{{ week_rev }}</p>
-  </div>
-  <div class="bg-white shadow rounded-lg p-4">
-    <h3 class="text-lg font-bold">This Month</h3>
-    <p class="text-2xl text-purple-600">€{{ month_rev }}</p>
-  </div>
-</div>
+    <div class="p-6 grid grid-cols-3 gap-6">
+        <div class="bg-white shadow rounded-lg p-4">
+            <h3 class="text-lg font-bold">Today</h3>
+            <p class="text-2xl text-green-600">€{{ today_rev }}</p>
+        </div>
+        <div class="bg-white shadow rounded-lg p-4">
+            <h3 class="text-lg font-bold">This Week</h3>
+            <p class="text-2xl text-blue-600">€{{ week_rev }}</p>
+        </div>
+        <div class="bg-white shadow rounded-lg p-4">
+            <h3 class="text-lg font-bold">This Month</h3>
+            <p class="text-2xl text-purple-600">€{{ month_rev }}</p>
+        </div>
+    </div>
 
-<div class="mt-8">
-  <h3 class="text-lg font-bold">Recent Transactions</h3>
-  <table id="finance-table" class="display">
-    <thead>
-  <tr>
-    <th>Date</th>
-    <th>Guardian</th>
-    <th>Amount (€)</th>
-    <th>Product</th>
-    <th>Status</th>
-  </tr>
-</thead>
+    <div class="mt-8">
+        <div class="flex items-center space-x-4 mb-4">
+            <label for="filter-period" class="font-semibold">Filter:</label>
+            <select id="filter-period" class="border rounded p-2">
+                <option value="">All</option>
+                <option value="today">Today</option>
+                <option value="week">This Week</option>
+                <option value="month">This Month</option>
+            </select>
+        </div>
 
+        <h3 class="text-lg font-bold">Recent Transactions</h3>
+        <table id="finance-table" class="stripe hover row-border w-full text-sm">
+            <thead class="bg-gray-100">
+            <tr>
+                <th class="px-4 py-2 text-left">Date</th>
+                <th class="px-4 py-2 text-left">Guardian</th>
+                <th class="px-4 py-2 text-right">Amount (€)</th>
+                <th class="px-4 py-2 text-left">Product</th>
+                <th class="px-4 py-2 text-left">Status</th>
+            </tr>
+            </thead>
+            <tfoot class="bg-gray-100 font-bold text-gray-800">
+            <tr>
+                <td colspan="2" class="px-4 py-2 text-right">Page Total:</td>
+                <td class="px-4 py-2 text-right" id="page-total"></td>
+                <td colspan="2"></td>
+            </tr>
+            <tr>
+                <td colspan="2" class="px-4 py-2 text-right">Overall Total:</td>
+                <td class="px-4 py-2 text-right" id="overall-total"></td>
+                <td colspan="2"></td>
+            </tr>
+            </tfoot>
 
-  </table>
-</div>
+        </table>
 
-<script>
-$(document).ready(function() {
-    $('#finance-table').DataTable({
-        ajax: "{% url 'finances:transactions_data' %}",
-        columns: [
-            { data: "date" },
-            { data: "guardian" },
-            { data: "amount" },
-            { data: "product" },
-            { data: "status" }
-        ]
-    });
-});
-</script>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <script src="{% static 'js/finances.js' %}"></script>
 {% endblock %}

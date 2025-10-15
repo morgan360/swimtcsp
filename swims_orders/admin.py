@@ -47,12 +47,14 @@ export_to_csv.short_description = 'Export to CSV'
 class SwimOrderAdmin(ImportExportModelAdmin):
     resource_class = OrderResource
     list_display = ['id', 'get_product_name', 'short_booking_day', 'booking', 'paid', 'user', 'created']
-    list_filter = ['booking', 'paid', 'booking']
+    list_filter = ['booking', 'paid']
     inlines = [SwimOrderItemInline]
     actions = [export_to_csv]
 
+    # ✅ Add this
+    search_fields = ["id", "user__email", "user__first_name", "user__last_name", "product__name"]
+
     def get_product_name(self, obj):
-        # Now directly accessing the product's name from the Order model
         return obj.product.name if obj.product else "No Product"
 
     get_product_name.short_description = 'Swim'
@@ -60,8 +62,7 @@ class SwimOrderAdmin(ImportExportModelAdmin):
     def short_booking_day(self, obj):
         return calendar.day_abbr[obj.booking.weekday()]
 
-    short_booking_day.short_description = '' \
-                                          'Day'
+    short_booking_day.short_description = 'Day'
 
 
 # Register a model Second Time

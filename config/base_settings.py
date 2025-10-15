@@ -93,6 +93,7 @@ INSTALLED_APPS = [
     'django_browser_reload',  # when debug load automaticaly browser
     'django_extensions', # For Documentation
     'rest_framework',
+    'rangefilter',
     # My Apps
     'chatbot',
     'users',

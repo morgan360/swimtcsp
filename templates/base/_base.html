@@ -3,8 +3,8 @@
 <html lang="en">
 
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 
     {% block subhead %}{% endblock %}
 
@@ -17,36 +17,44 @@
     <!-- Tailwind CSS -->
     <link href="{% static 'css/styles.css' %}" rel="stylesheet">
     <!-- Alpine x-cloak helper to prevent initial flicker -->
-    <style>[x-cloak] { display: none !important; }</style>
+    <style>[x-cloak] {
+        display: none !important;
+    }</style>
+    <!-- jQuery first -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+    <!-- DataTables -->
+    <link rel="stylesheet" href="{% static 'DataTables/datatables.min.css' %}">
+    <script src="{% static 'DataTables/datatables.min.js' %}"></script>
 
     <!-- HTMX & Alpine with Collapse plugin -->
     <script src="https://unpkg.com/htmx.org@1.9.10" defer></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
     <script>
-      // Disable transitions during page unload/navigation to prevent flicker
-      window.addEventListener('beforeunload', function() {
-        document.documentElement.classList.add('unloading');
-      });
-      <!-- jQuery first -->
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-
-<!-- Your local DataTables bundle -->
-    <link rel="stylesheet" href="{% static 'DataTables/datatables.min.css' %}">
-    <script src="{% static 'DataTables/datatables.min.js' %}"></script>
-
+        // Disable transitions during page unload/navigation to prevent flicker
+        window.addEventListener('beforeunload', function () {
+            document.documentElement.classList.add('unloading');
+        });
     </script>
+
+
     <style>
-      html.unloading *, html.unloading *::before, html.unloading *::after { transition: none !important; }
-      [x-cloak] { display: none !important; }
+        html.unloading *, html.unloading *::before, html.unloading *::after {
+            transition: none !important;
+        }
+
+        [x-cloak] {
+            display: none !important;
+        }
     </style>
 
     <!-- Favicon -->
-    <link rel="icon" type="image/png" href="/static/favicon/favicon-96x96.png" sizes="96x96" />
-    <link rel="icon" type="image/svg+xml" href="/static/favicon/favicon.svg" />
-    <link rel="shortcut icon" href="/static/favicon/favicon.ico" />
-    <link rel="apple-touch-icon" sizes="180x180" href="/static/favicon/apple-touch-icon.png" />
-    <link rel="manifest" href="/static/favicon/site.webmanifest" />
+    <link rel="icon" type="image/png" href="/static/favicon/favicon-96x96.png" sizes="96x96"/>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon/favicon.svg"/>
+    <link rel="shortcut icon" href="/static/favicon/favicon.ico"/>
+    <link rel="apple-touch-icon" sizes="180x180" href="/static/favicon/apple-touch-icon.png"/>
+    <link rel="manifest" href="/static/favicon/site.webmanifest"/>
 
     <title>{% block title %}TCSP Home{% endblock %}</title>
 
@@ -57,33 +65,35 @@
 </head>
 
 <body class="overflow-x-hidden bg-gradient-to-br from-blue-400 to-blue-900 min-h-screen">
-    <div x-data="{ dark: false, drawerOpen: false }" class="relative min-h-screen">
-        
-        <!-- Background Pattern Overlay -->
-        <div class="fixed inset-0 opacity-10 pointer-events-none">
-            <div class="absolute inset-0 bg-gradient-to-r from-blue-600/20 to-purple-600/20"></div>
-            <div class="absolute inset-0" style="background-image: radial-gradient(circle at 20% 50%, rgba(120, 119, 198, 0.3) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 50%), radial-gradient(circle at 40% 80%, rgba(120, 119, 198, 0.2) 0%, transparent 50%);"></div>
+<div x-data="{ dark: false, drawerOpen: false }" class="relative min-h-screen">
+
+    <!-- Background Pattern Overlay -->
+    <div class="fixed inset-0 opacity-10 pointer-events-none">
+        <div class="absolute inset-0 bg-gradient-to-r from-blue-600/20 to-purple-600/20"></div>
+        <div class="absolute inset-0"
+             style="background-image: radial-gradient(circle at 20% 50%, rgba(120, 119, 198, 0.3) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 50%), radial-gradient(circle at 40% 80%, rgba(120, 119, 198, 0.2) 0%, transparent 50%);"></div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="relative z-50">
+        <!-- Mobile Drawer -->
+        <div class="lg:hidden">
+            {% include "partials/_drawer.html" %}
         </div>
 
-        <!-- Navigation -->
-        <nav class="relative z-50">
-            <!-- Mobile Drawer -->
-            <div class="lg:hidden">
-                {% include "partials/_drawer.html" %}
-            </div>
+        <!-- Desktop Navbar -->
+        <div class="hidden lg:block">
+            {% include "partials/_navbar.html" %}
+        </div>
+    </nav>
 
-            <!-- Desktop Navbar -->
-            <div class="hidden lg:block">
-                {% include "partials/_navbar.html" %}
-            </div>
-        </nav>
-
-                <!-- Enhanced Message System -->
-        {% if messages %}
-        <div id="message-container" class="fixed top-[40%] left-1/2 -translate-x-1/2 -translate-y-1/2 z-[60] w-fit max-w-md px-4">
+    <!-- Enhanced Message System -->
+    {% if messages %}
+        <div id="message-container"
+             class="fixed top-[40%] left-1/2 -translate-x-1/2 -translate-y-1/2 z-[60] w-fit max-w-md px-4">
             {% for message in messages %}
-            <div id="message-{{ forloop.counter }}" 
-                 class="fade-message mb-3 p-4 rounded-xl shadow-2xl backdrop-blur-md border transform transition-all duration-300 ease-out text-center
+                <div id="message-{{ forloop.counter }}"
+                     class="fade-message mb-3 p-4 rounded-xl shadow-2xl backdrop-blur-md border transform transition-all duration-300 ease-out text-center
                  {% if message.tags == 'success' %}
                      bg-green-100/90 text-green-800 border-green-200
                  {% elif message.tags == 'error' %}
@@ -95,137 +105,137 @@
                  {% else %}
                      bg-white/90 text-gray-800 border-gray-200
                  {% endif %}"
-                 style="opacity: 1;">
-                
-                <div class="flex items-center justify-center space-x-3">
-                    <div class="flex-shrink-0">
-                        {% if message.tags == 'success' %}
-                            <i class="fas fa-check-circle text-green-600"></i>
-                        {% elif message.tags == 'error' %}
-                            <i class="fas fa-exclamation-circle text-red-600"></i>
-                        {% elif message.tags == 'warning' %}
-                            <i class="fas fa-exclamation-triangle text-yellow-600"></i>
-                        {% elif message.tags == 'info' %}
-                            <i class="fas fa-info-circle text-blue-600"></i>
-                        {% else %}
-                            <i class="fas fa-bell text-gray-600"></i>
-                        {% endif %}
+                     style="opacity: 1;">
+
+                    <div class="flex items-center justify-center space-x-3">
+                        <div class="flex-shrink-0">
+                            {% if message.tags == 'success' %}
+                                <i class="fas fa-check-circle text-green-600"></i>
+                            {% elif message.tags == 'error' %}
+                                <i class="fas fa-exclamation-circle text-red-600"></i>
+                            {% elif message.tags == 'warning' %}
+                                <i class="fas fa-exclamation-triangle text-yellow-600"></i>
+                            {% elif message.tags == 'info' %}
+                                <i class="fas fa-info-circle text-blue-600"></i>
+                            {% else %}
+                                <i class="fas fa-bell text-gray-600"></i>
+                            {% endif %}
+                        </div>
+                        <div class="flex-1 font-medium text-sm leading-relaxed text-center">
+                            {{ message }}
+                        </div>
+                        <button onclick="this.parentElement.parentElement.remove()"
+                                class="flex-shrink-0 text-gray-400 hover:text-gray-600 transition-colors duration-200">
+                            <i class="fas fa-times text-xs"></i>
+                        </button>
                     </div>
-                    <div class="flex-1 font-medium text-sm leading-relaxed text-center">
-                        {{ message }}
-                    </div>
-                    <button onclick="this.parentElement.parentElement.remove()" 
-                            class="flex-shrink-0 text-gray-400 hover:text-gray-600 transition-colors duration-200">
-                        <i class="fas fa-times text-xs"></i>
-                    </button>
                 </div>
-            </div>
             {% endfor %}
         </div>
-        {% endif %}
+    {% endif %}
 
-        <!-- Main Content Area -->
-        <main class="relative z-10 min-h-screen">
-            {% block content %}{% endblock %}
-        </main>
+    <!-- Main Content Area -->
+    <main class="relative z-10 min-h-screen">
+        {% block content %}{% endblock %}
+    </main>
 
-        <!-- Enhanced Footer -->
-        <footer class="relative z-10 mt-auto">
-            {% block footer %}
+    <!-- Enhanced Footer -->
+    <footer class="relative z-10 mt-auto">
+        {% block footer %}
             {% include "partials/_footer.html" %}
-            {% endblock %}
-        </footer>
+        {% endblock %}
+    </footer>
 
-        <!-- Chatbot Button/Bubble (global) -->
-        <div id="chatbot-widget" class="fixed bottom-6 left-6 flex flex-col items-start space-y-2 z-50 max-w-max">
-            <div class="flex items-center space-x-2">
-                <!-- Dismiss button -->
-                <button id="chatbot-dismiss" type="button"
-                        class="bg-gray-700/90 hover:bg-gray-800 text-white rounded-full w-8 h-8 flex items-center justify-center shadow-md"
-                        aria-label="Dismiss chatbot for this session" title="Hide until you close the tab">
-                    &times;
-                </button>
-                <!-- Chat bubble -->
-                <a href="{% url 'chatbot:public-swim-ui' %}" target="_blank" rel="noopener noreferrer"
-                   class="bg-red-600 hover:bg-red-700 text-white rounded-full p-4 shadow-lg flex items-center justify-center w-14 h-14"
-                   aria-label="Open Chatbot" title="Chat with us (opens in new tab)">
-                    <i class="fas fa-solid fa-comments text-2xl"></i>
-                </a>
-            </div>
-            <p class="hidden md:block bg-red-600 text-white rounded-full px-3 py-2 shadow-lg whitespace-nowrap text-left text-xs">
-                Have a question? Ask SplashBot!
-            </p>
+    <!-- Chatbot Button/Bubble (global) -->
+    <div id="chatbot-widget" class="fixed bottom-6 left-6 flex flex-col items-start space-y-2 z-50 max-w-max">
+        <div class="flex items-center space-x-2">
+            <!-- Dismiss button -->
+            <button id="chatbot-dismiss" type="button"
+                    class="bg-gray-700/90 hover:bg-gray-800 text-white rounded-full w-8 h-8 flex items-center justify-center shadow-md"
+                    aria-label="Dismiss chatbot for this session" title="Hide until you close the tab">
+                &times;
+            </button>
+            <!-- Chat bubble -->
+            <a href="{% url 'chatbot:public-swim-ui' %}" target="_blank" rel="noopener noreferrer"
+               class="bg-red-600 hover:bg-red-700 text-white rounded-full p-4 shadow-lg flex items-center justify-center w-14 h-14"
+               aria-label="Open Chatbot" title="Chat with us (opens in new tab)">
+                <i class="fas fa-solid fa-comments text-2xl"></i>
+            </a>
         </div>
-
-        {% block extra_js %}{% endblock %}
+        <p class="hidden md:block bg-red-600 text-white rounded-full px-3 py-2 shadow-lg whitespace-nowrap text-left text-xs">
+            Have a question? Ask SplashBot!
+        </p>
     </div>
 
-    {% block scripts %}{% endblock %}
+    {% block extra_js %}{% endblock %}
+</div>
 
-    <!-- Enhanced Message Animation Script -->
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            // Auto-hide messages after 5 seconds
-            setTimeout(() => {
-                const messages = document.querySelectorAll(".fade-message");
-                messages.forEach((el, index) => {
-                    setTimeout(() => {
-                        el.style.opacity = "0";
-                        el.style.transform = "translateY(-20px) scale(0.95)";
-                        
-                        setTimeout(() => {
-                            el.remove();
-                            // Clean up container if empty
-                            const container = document.getElementById("message-container");
-                            if (container && container.children.length === 0) {
-                                container.remove();
-                            }
-                        }, 300);
-                    }, index * 100); // Stagger the fade-out animations
-                });
-            }, 5000);
+{% block scripts %}{% endblock %}
 
-            // Add entrance animation
+<!-- Enhanced Message Animation Script -->
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        // Auto-hide messages after 5 seconds
+        setTimeout(() => {
             const messages = document.querySelectorAll(".fade-message");
             messages.forEach((el, index) => {
-                el.style.transform = "translateY(-20px) scale(0.95)";
-                el.style.opacity = "0";
-                
                 setTimeout(() => {
-                    el.style.transform = "translateY(0) scale(1)";
-                    el.style.opacity = "1";
-                }, index * 100);
-            });
-        });
+                    el.style.opacity = "0";
+                    el.style.transform = "translateY(-20px) scale(0.95)";
 
-        // Global utility functions for enhanced interactivity
-        window.tcspUtils = {
-            showNotification: function(message, type = 'info') {
-                // Function to programmatically show notifications
-                const container = document.getElementById('message-container') || this.createMessageContainer();
-                const messageEl = this.createMessageElement(message, type);
-                container.appendChild(messageEl);
-                
-                // Auto-hide after 5 seconds
-                setTimeout(() => {
-                    messageEl.style.opacity = "0";
-                    messageEl.style.transform = "translateY(-20px) scale(0.95)";
-                    setTimeout(() => messageEl.remove(), 300);
-                }, 5000);
-            },
-            
-            createMessageContainer: function() {
-                const container = document.createElement('div');
-                container.id = 'message-container';
-                container.className = 'fixed top-20 left-1/2 -translate-x-1/2 z-50 w-fit max-w-md px-4';
-                document.body.appendChild(container);
-                return container;
-            },
-            
-            createMessageElement: function(message, type) {
-                const el = document.createElement('div');
-                el.className = `fade-message mb-3 p-4 rounded-xl shadow-2xl backdrop-blur-md border transform transition-all duration-300 ease-out bg-${type === 'success' ? 'green' : type === 'error' ? 'red' : type === 'warning' ? 'yellow' : 'blue'}-100/90 text-${type === 'success' ? 'green' : type === 'error' ? 'red' : type === 'warning' ? 'yellow' : 'blue'}-800 border-${type === 'success' ? 'green' : type === 'error' ? 'red' : type === 'warning' ? 'yellow' : 'blue'}-200`;
-                el.innerHTML = `
+                    setTimeout(() => {
+                        el.remove();
+                        // Clean up container if empty
+                        const container = document.getElementById("message-container");
+                        if (container && container.children.length === 0) {
+                            container.remove();
+                        }
+                    }, 300);
+                }, index * 100); // Stagger the fade-out animations
+            });
+        }, 5000);
+
+        // Add entrance animation
+        const messages = document.querySelectorAll(".fade-message");
+        messages.forEach((el, index) => {
+            el.style.transform = "translateY(-20px) scale(0.95)";
+            el.style.opacity = "0";
+
+            setTimeout(() => {
+                el.style.transform = "translateY(0) scale(1)";
+                el.style.opacity = "1";
+            }, index * 100);
+        });
+    });
+
+    // Global utility functions for enhanced interactivity
+    window.tcspUtils = {
+        showNotification: function (message, type = 'info') {
+            // Function to programmatically show notifications
+            const container = document.getElementById('message-container') || this.createMessageContainer();
+            const messageEl = this.createMessageElement(message, type);
+            container.appendChild(messageEl);
+
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                messageEl.style.opacity = "0";
+                messageEl.style.transform = "translateY(-20px) scale(0.95)";
+                setTimeout(() => messageEl.remove(), 300);
+            }, 5000);
+        },
+
+        createMessageContainer: function () {
+            const container = document.createElement('div');
+            container.id = 'message-container';
+            container.className = 'fixed top-20 left-1/2 -translate-x-1/2 z-50 w-fit max-w-md px-4';
+            document.body.appendChild(container);
+            return container;
+        },
+
+        createMessageElement: function (message, type) {
+            const el = document.createElement('div');
+            el.className = `fade-message mb-3 p-4 rounded-xl shadow-2xl backdrop-blur-md border transform transition-all duration-300 ease-out bg-${type === 'success' ? 'green' : type === 'error' ? 'red' : type === 'warning' ? 'yellow' : 'blue'}-100/90 text-${type === 'success' ? 'green' : type === 'error' ? 'red' : type === 'warning' ? 'yellow' : 'blue'}-800 border-${type === 'success' ? 'green' : type === 'error' ? 'red' : type === 'warning' ? 'yellow' : 'blue'}-200`;
+            el.innerHTML = `
                     <div class="flex items-start space-x-3">
                         <div class="flex-shrink-0 mt-0.5">
                             <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : type === 'warning' ? 'exclamation-triangle' : 'info-circle'} text-${type === 'success' ? 'green' : type === 'error' ? 'red' : type === 'warning' ? 'yellow' : 'blue'}-600"></i>
@@ -236,45 +246,51 @@
                         </button>
                     </div>
                 `;
-                return el;
-            }
-        };
-    </script>
+            return el;
+        }
+    };
+</script>
 
-    <!-- Chatbot session-dismiss script -->
-    <script>
-        (function () {
-            function hideChatbot() {
-                var w = document.getElementById('chatbot-widget');
-                if (w) { w.style.display = 'none'; }
+<!-- Chatbot session-dismiss script -->
+<script>
+    (function () {
+        function hideChatbot() {
+            var w = document.getElementById('chatbot-widget');
+            if (w) {
+                w.style.display = 'none';
             }
-            document.addEventListener('DOMContentLoaded', function () {
-                try {
-                    if (sessionStorage.getItem('chatbotDismissed') === 'true') {
-                        hideChatbot();
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            try {
+                if (sessionStorage.getItem('chatbotDismissed') === 'true') {
+                    hideChatbot();
+                }
+            } catch (e) {
+                // sessionStorage might be unavailable; fail open
+            }
+
+            var btn = document.getElementById('chatbot-dismiss');
+            if (btn) {
+                btn.addEventListener('click', function () {
+                    try {
+                        sessionStorage.setItem('chatbotDismissed', 'true');
+                    } catch (e) {
                     }
-                } catch (e) {
-                    // sessionStorage might be unavailable; fail open
-                }
-
-                var btn = document.getElementById('chatbot-dismiss');
-                if (btn) {
-                    btn.addEventListener('click', function () {
-                        try { sessionStorage.setItem('chatbotDismissed', 'true'); } catch (e) {}
-                        hideChatbot();
-                    });
-                }
-            });
-        })();
-    </script>
-    <!-- In _base.html, add this right before the closing </body> tag -->
-<div x-data="{ showLogoutModal: false }" 
+                    hideChatbot();
+                });
+            }
+        });
+    })();
+</script>
+<!-- In _base.html, add this right before the closing </body> tag -->
+<div x-data="{ showLogoutModal: false }"
      x-on:show-logout-modal.window="showLogoutModal = true">
     <div x-show="showLogoutModal" x-cloak x-transition
-        class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]">
-        <div @click.away="showLogoutModal = false" 
+         class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]">
+        <div @click.away="showLogoutModal = false"
              class="bg-white/90 backdrop-blur-md rounded-xl shadow-2xl border border-gray-200 p-8 w-full max-w-md mx-4 transform transition-all duration-300 ease-out">
-            
+
             <!-- Header with Icon -->
             <div class="text-center mb-6">
                 <div class="bg-gradient-to-r from-red-500 to-red-600 p-4 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center shadow-lg">
@@ -291,10 +307,10 @@
                     <i class="fas fa-times mr-2"></i>
                     Cancel
                 </button>
-                
+
                 <form method="POST" action="{% url 'account_logout' %}" class="flex-1">
                     {% csrf_token %}
-                    <button type="submit" 
+                    <button type="submit"
                             class="w-full px-6 py-3 rounded-lg bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-semibold transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg flex items-center justify-center">
                         <i class="fas fa-sign-out-alt mr-2"></i>
                         Logout

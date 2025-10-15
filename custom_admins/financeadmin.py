@@ -66,6 +66,7 @@ finance_admin_site = FinanceAdminSite(name="financeadmin")
 class BaseOrderAdmin(ModelAdmin):
     list_display = (
         "order_number",
+        'txId',
         "created_fmt",
         "user_email",
         "product_display",

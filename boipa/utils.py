@@ -6,10 +6,10 @@ from decimal import Decimal
 import logging
 import requests, time
 
-MERCHANT_ID = "100121"
-PASSWORD = "u0AYACBNI2643G87wk4o"
-TOKEN_URL = "https://api.boipapaymentgateway.com/token"
-PAYMENTS_URL = "https://api.boipapaymentgateway.com/payments"
+MERCHANT_ID = settings.BOIPA_MERCHANT_ID
+PASSWORD = settings.BOIPA_PASSWORD
+TOKEN_URL = settings.BOIPA_TOKEN_URL
+PAYMENTS_URL = settings.BOIPA_PAYMENT_URL
 
 
 def verify_boipa_transaction(tx_id):

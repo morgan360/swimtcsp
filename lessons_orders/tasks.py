@@ -1,39 +1,61 @@
+from decimal import Decimal
+import logging
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.conf import settings
-from .models import Order, OrderItem
+from .models import Order
 
+logger = logging.getLogger("orders")
+
+def _as_decimal(value, default="0"):
+    """Safely convert a value (tuple, list, None, str, int, Decimal) to Decimal."""
+    if isinstance(value, (list, tuple)):
+        value = value[0] if value else default
+    if value is None:
+        value = default
+    try:
+        return Decimal(str(value))
+    except Exception:
+        return Decimal(default)
 
 def send_lesson_order_email(order_id):
     try:
         order = Order.objects.get(id=order_id)
         order_items = order.items.all()
     except Order.DoesNotExist:
+        logger.error(f"Order {order_id} not found — email not sent.")
         return False
 
     subject = f"📘 TCSP Lesson Booking Confirmation — Order #{order.id}"
     from_email = settings.DEFAULT_FROM_EMAIL
     to_email = [order.user.email]
 
-    # Calculate total
-    total_price = sum(item.get_cost() for item in order_items)
+    # --- Safe arithmetic for totals ---
+    amount = _as_decimal(order.amount)
+    discount = _as_decimal(order.discount_amount)
+    original_price = amount + discount
 
     context = {
         "user": order.user,
         "order": order,
         "order_items": order_items,
-        "total_price": order.amount,  # ✅ already discounted
+        "total_price": amount,            # discounted total
         "coupon": order.coupon,
-        "discount": order.discount_amount,
-        "original_price": order.amount + (order.discount_amount or 0),  # Optional
+        "discount": discount,
+        "original_price": original_price, # pre-discount price
         "support_email": settings.DEFAULT_FROM_EMAIL,
     }
 
-    text_body = render_to_string("emails/lesson_order_confirmation.txt", context)
-    html_body = render_to_string("emails/lesson_order_confirmation.html", context)
+    try:
+        text_body = render_to_string("emails/lesson_order_confirmation.txt", context)
+        html_body = render_to_string("emails/lesson_order_confirmation.html", context)
 
-    msg = EmailMultiAlternatives(subject, text_body, from_email, to_email)
-    msg.attach_alternative(html_body, "text/html")
-    msg.send()
+        msg = EmailMultiAlternatives(subject, text_body, from_email, to_email)
+        msg.attach_alternative(html_body, "text/html")
+        msg.send()
+        logger.info(f"Lesson order confirmation sent for order {order.id}")
+        return True
 
-    return True
+    except Exception as e:
+        logger.exception(f"Error sending lesson order email for order {order.id}: {e}")
+        return False

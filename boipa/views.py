@@ -4,7 +4,6 @@ import requests
 from django.shortcuts import render, redirect
 from django.http import HttpResponse, QueryDict
 from django.urls import reverse
-from django.db import transaction
 from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
 from .models import (
@@ -19,6 +18,9 @@ from schools_orders.tasks import send_school_order_email
 from django.contrib.admin.views.decorators import staff_member_required
 from django.http import JsonResponse
 from urllib.parse import parse_qs
+from decimal import Decimal, InvalidOperation
+from django.db import transaction, IntegrityError
+
 
 # Initialize logging
 boipa_logger = logging.getLogger("boipa")
@@ -78,48 +80,43 @@ def payment_response(request):
         return render(request, "boipa/payment_failure.html", context)
     return render(request, "boipa/error.html", {"error_message": "Unknown payment response."})
 
+
+
+
 @csrf_exempt
 def payment_notification(request):
     boipa_logger.debug("📥 payment_notification view triggered")
-
-    # 🔎 Raw request info
     boipa_logger.debug(f"🔎 RAW PATH: {request.get_full_path()}")
     boipa_logger.debug(f"🔎 QUERY STRING: {request.META.get('QUERY_STRING')}")
     boipa_logger.debug(f"🔎 HEADERS: {dict(request.headers)}")
+
     try:
         raw_body = request.body.decode("utf-8")
     except Exception:
         raw_body = "<unable to decode>"
     boipa_logger.debug(f"🔎 RAW BODY: {raw_body}")
 
-    # --- Parse data ---
-    data = {}
+    # --- Parse incoming data ---
     if request.method == "POST":
         data = request.POST.dict()
-        if data:
-            boipa_logger.debug(f"📦 Parsed notification data from request.POST: {data}")
-        else:
-            boipa_logger.warning("⚠️ request.POST is empty, trying manual parse of raw body")
-            if raw_body and raw_body != "<unable to decode>":
-                try:
-                    parsed = parse_qs(raw_body)
-                    data = {k: v[0] for k, v in parsed.items()}
-                    boipa_logger.debug(f"📦 Parsed notification data from raw body: {data}")
-                except Exception as e:
-                    boipa_logger.error(f"❌ Failed to parse raw body manually: {e}")
+        if not data and raw_body and raw_body != "<unable to decode>":
+            try:
+                parsed = parse_qs(raw_body)
+                data = {k: v[0] for k, v in parsed.items()}
+            except Exception as e:
+                boipa_logger.error(f"❌ Failed to parse raw body manually: {e}")
     elif request.method == "GET":
         data = request.GET.dict()
-        boipa_logger.debug(f"📦 Parsed notification data from request.GET: {data}")
     else:
-        boipa_logger.error(f"❌ Invalid request method: {request.method}")
         return HttpResponse("Invalid request method", status=405)
+
+    boipa_logger.debug(f"📦 Parsed notification data: {data}")
 
     merchantTxId = data.get("merchantTxId")
     if not merchantTxId:
         boipa_logger.error("❌ merchantTxId missing from payload")
         return HttpResponse("Missing merchantTxId", status=400)
 
-    # --- Parse merchantTxId ---
     parts = merchantTxId.split("_")
     if len(parts) < 2:
         boipa_logger.error(f"❌ Invalid merchantTxId format: {merchantTxId}")
@@ -132,90 +129,124 @@ def payment_notification(request):
         boipa_logger.error(f"❌ Could not parse order_id from {parts[1]}")
         return HttpResponse("Invalid order_id", status=400)
 
-    boipa_logger.debug(
-        f"🔍 Extracted source_prefix={source_prefix}, order_id={order_id}, full merchantTxId={merchantTxId}"
-    )
-
-    # --- Models mapping ---
-    def noop(order): return
-
     model_map = {
-        "swims": (SwimOrder, SwimOrderPaymentNotification, noop),
-        "lesson": (LessonOrder, LessonOrderPaymentNotification, handle_lessons_enrollment),
-        "school": (SchoolOrder, SchoolOrderPaymentNotification, handle_schools_enrollment),
+        "swims": (SwimOrder, SwimOrderPaymentNotification, send_order_email, None),
+        "lesson": (LessonOrder, LessonOrderPaymentNotification, send_lesson_order_email, handle_lessons_enrollment),
+        "school": (SchoolOrder, SchoolOrderPaymentNotification, send_school_order_email, handle_schools_enrollment),
     }
-
     if source_prefix not in model_map:
         boipa_logger.error(f"❌ Source prefix '{source_prefix}' not recognized")
         return HttpResponse("Source prefix not recognized", status=400)
 
-    OrderModel, NotificationModel, enrollment_func = model_map[source_prefix]
+    OrderModel, NotificationModel, email_func, enrollment_func = model_map[source_prefix]
+
+    # Normalize useful fields
+    tx_id = data.get("txId", "")
+    result = data.get("result", "")
+    status = data.get("status", "")
+
+    # Quick success gate (BOIPA sends both 'status' and/or 'result')
+    is_success = (result.lower() == "success") or (status.upper() == "CAPTURED")
 
     try:
-        with transaction.atomic():
-            order = OrderModel.objects.get(id=order_id)
-
-            result = data.get("result")
-            status = data.get("status")
-
-            # ✅ Only mark as paid if BOIPA confirms
-            if result == "success" or status == "CAPTURED":
-                boipa_logger.debug(f"Marking order {order.id} as paid (result={result}, status={status})")
-                order.paid = True
-                order.txId = data.get("txId", "")
-                order.save()
-                boipa_logger.debug(f"✅ Order saved in DB: id={order.id}, paid={order.paid}, txId={order.txId}")
-            else:
-                boipa_logger.warning(
-                    f"Payment not marked as paid for order {order.id}: result={result}, status={status}"
-                )
-                return HttpResponse("Payment not successful", status=200)
-
-            # ✅ Create notification record
-            NotificationModel.objects.create(
-                order=order,
-                txId=data.get("txId", ""),
-                merchantTxId=merchantTxId,
-                country=data.get("country", ""),
-                amount=data.get("amount", None),
-                currency=data.get("currency", ""),
-                action=data.get("action", ""),
-                auth_code=data.get("auth_code", ""),
-                acquirer=data.get("acquirer", ""),
-                acquirerAmount=data.get("acquirerAmount", None),
-                merchantId=data.get("merchantId", ""),
-                brandId=data.get("brandId", ""),
-                customerId=data.get("customerId", ""),
-                acquirerCurrency=data.get("acquirerCurrency", ""),
-                paymentSolutionId=data.get("paymentSolutionId", None),
-                status=status or "",
-                errorMessage=data.get("errorMessage", "No error message provided"),
-            )
-            boipa_logger.info(f"📝 Payment notification record created for order {order.id}")
-
-            # ✅ Enrollment / follow-up actions
-            enrollment_func(order)
-            boipa_logger.debug(f"📚 Enrollment function called for order {order.id}")
-
-            # ✅ Send emails last
-            if source_prefix == "swims":
-                boipa_logger.debug(f"📧 Sending swim order email for order {order.id}")
-                send_order_email(order.id)
-            elif source_prefix == "lesson":
-                boipa_logger.debug(f"📨 Sending lesson order email for order {order.id}")
-                send_lesson_order_email(order.id)
-            elif source_prefix == "school":
-                boipa_logger.debug(f"🏫 Sending school order email for order {order.id}")
-                send_school_order_email(order.id)
-
-            return HttpResponse("Payment processed successfully", status=200)
-
+        order = OrderModel.objects.get(id=order_id)
     except OrderModel.DoesNotExist:
         boipa_logger.error(f"❌ Order {order_id} not found in {OrderModel.__name__}")
         return HttpResponse("Order not found", status=404)
-    except Exception as e:
-        boipa_logger.exception(f"❌ Exception during processing: {e}")
-        return HttpResponse(f"Error processing payment: {str(e)}", status=500)
+
+    # Idempotency: if we already have a notification with this txId, return 200
+    if tx_id and NotificationModel.objects.filter(order=order, txId=tx_id).exists():
+        boipa_logger.info(f"ℹ️ Duplicate notification ignored for order {order.id}, txId={tx_id}")
+        return HttpResponse("Already processed", status=200)
+
+    if not is_success:
+        boipa_logger.warning(
+            f"Payment not marked as paid (result={result}, status={status}) for order {order.id}"
+        )
+        # Still persist a notification record for audit
+        NotificationModel.objects.create(
+            order=order,
+            txId=tx_id,
+            merchantTxId=merchantTxId,
+            country=data.get("country", ""),
+            amount=data.get("amount"),
+            currency=data.get("currency", ""),
+            action=data.get("action", ""),
+            auth_code=data.get("auth_code", ""),
+            acquirer=data.get("acquirer", ""),
+            acquirerAmount=data.get("acquirerAmount"),
+            merchantId=data.get("merchantId", ""),
+            brandId=data.get("brandId", ""),
+            customerId=data.get("customerId", ""),
+            acquirerCurrency=data.get("acquirerCurrency", ""),
+            paymentSolutionId=data.get("paymentSolutionId"),
+            status=status or "",
+            errorMessage=data.get("errorMessage", "Not successful"),
+        )
+        return HttpResponse("Payment not successful", status=200)
+
+    # ---- SUCCESS path: mark paid and create notification atomically ----
+    def _to_decimal(v):
+        if v in (None, ""):
+            return None
+        try:
+            return Decimal(str(v))
+        except (InvalidOperation, TypeError):
+            return None
+
+    with transaction.atomic():
+        # Mark order paid + attach txId
+        order.paid = True
+        if tx_id:
+            order.txId = tx_id
+        order.save(update_fields=["paid", "txId"] if tx_id else ["paid"])
+        boipa_logger.debug(f"✅ Order saved: id={order.id}, paid={order.paid}, txId={order.txId}")
+
+        # Create notification row
+        NotificationModel.objects.create(
+            order=order,
+            txId=tx_id,
+            merchantTxId=merchantTxId,
+            country=data.get("country", ""),
+            amount=_to_decimal(data.get("amount")),
+            currency=data.get("currency", ""),
+            action=data.get("action", ""),
+            auth_code=data.get("auth_code", "") or data.get("paymentSolutionDetails", ""),
+            acquirer=data.get("acquirer", ""),
+            acquirerAmount=_to_decimal(data.get("acquirerAmount")),
+            merchantId=data.get("merchantId", ""),
+            brandId=data.get("brandId", ""),
+            customerId=data.get("customerId", ""),
+            acquirerCurrency=data.get("acquirerCurrency", ""),
+            paymentSolutionId=data.get("paymentSolutionId"),
+            status=status or "",
+            errorMessage=data.get("errorMessage", "No error message provided"),
+        )
+        boipa_logger.info(f"📝 Payment notification record created for order {order.id}")
+
+        # Defer risky follow-ups until AFTER commit so they cannot roll back 'paid=True'
+        def _post_commit():
+            # Enrollment first (if applicable)
+            if enrollment_func:
+                try:
+                    enrollment_func(order)
+                    boipa_logger.debug(f"📚 Enrollment done for order {order.id}")
+                except IntegrityError:
+                    # Unique constraint hit → enrollment already exists
+                    boipa_logger.warning(f"⚠️ Enrollment duplicate for order {order.id} – skipping")
+                except Exception as e:
+                    boipa_logger.error(f"❌ Enrollment failed for order {order.id}: {e}")
+
+            # Then email
+            try:
+                email_func(order.id)
+                boipa_logger.debug(f"📧 Email dispatched for order {order.id}")
+            except Exception as e:
+                boipa_logger.error(f"❌ Email send failed for order {order.id}: {e}")
+
+        transaction.on_commit(_post_commit)
+
+    return HttpResponse("Payment processed successfully", status=200)
 
 #### REFUND LOGIC ####
 @staff_member_required

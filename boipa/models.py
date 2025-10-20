@@ -8,21 +8,21 @@ from lessons_orders.models import Order
 class SwimOrderPaymentNotification(models.Model):
     order = models.ForeignKey(SwimOrder, on_delete=models.CASCADE, related_name='notifications')
     # Other fields specific to the payment notification...
-    txId = models.CharField(max_length=50)  # The unique identifier for the transaction in the BOIPA Gateway
-    merchantTxId = models.CharField(max_length=50)  # The merchant’s reference for the transaction provided in the
+    txId = models.CharField(max_length=100)  # The unique identifier for the transaction in the BOIPA Gateway
+    merchantTxId = models.CharField(max_length=100)  # The merchant’s reference for the transaction provided in the
     country = models.CharField(max_length=2, null=True, blank=True)
     amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     currency = models.CharField(max_length=3, null=True, blank=True)
-    action = models.CharField(max_length=10, null=True, blank=True)
-    auth_code = models.CharField(max_length=10, null=True, blank=True)  # Extracted from paymentSolutionDetails
-    acquirer = models.CharField(max_length=100, null=True, blank=True)
+    action = models.CharField(max_length=20, null=True, blank=True)
+    auth_code = models.CharField(max_length=255, null=True, blank=True)  # Extracted from paymentSolutionDetails
+    acquirer = models.CharField(max_length=255, null=True, blank=True)
     acquirerAmount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
-    merchantId = models.CharField(max_length=50, null=True, blank=True)
-    brandId = models.CharField(max_length=50, null=True, blank=True)
-    customerId = models.CharField(max_length=50, null=True)
+    merchantId = models.CharField(max_length=100, null=True, blank=True)
+    brandId = models.CharField(max_length=100, null=True, blank=True)
+    customerId = models.CharField(max_length=255, null=True)
     acquirerCurrency = models.CharField(max_length=3, null=True, blank=True)
     paymentSolutionId = models.IntegerField(null=True, blank=True)
-    status = models.CharField(max_length=50, null=True, blank=True)
+    status = models.CharField(max_length=100, null=True, blank=True)
     errorMessage = models.TextField(blank=True, null=True)
 
 
@@ -33,22 +33,22 @@ def __str__(self):
 class LessonOrderPaymentNotification(models.Model):
     order = models.ForeignKey(LessonOrder, on_delete=models.CASCADE, related_name='notifications')
     # Other fields specific to the payment notification...
-    txId = models.CharField(max_length=50)  # The unique identifier for the transaction in the BOIPA Gateway
+    txId = models.CharField(max_length=100)  # The unique identifier for the transaction in the BOIPA Gateway
     merchantTxId = models.CharField(
-        max_length=50)  # The merchant’s reference for the transaction provided in the
+        max_length=100)  # The merchant’s reference for the transaction provided in the
     country = models.CharField(max_length=2, null=True, blank=True)
     amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     currency = models.CharField(max_length=3, null=True, blank=True)
-    action = models.CharField(max_length=10, null=True, blank=True)
-    auth_code = models.CharField(max_length=10, null=True, blank=True)  # Extracted from paymentSolutionDetails
-    acquirer = models.CharField(max_length=100, null=True, blank=True)
+    action = models.CharField(max_length=20, null=True, blank=True)
+    auth_code = models.CharField(max_length=255, null=True, blank=True)  # Extracted from paymentSolutionDetails
+    acquirer = models.CharField(max_length=255, null=True, blank=True)
     acquirerAmount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
-    merchantId = models.CharField(max_length=50, null=True, blank=True)
-    brandId = models.CharField(max_length=50, null=True, blank=True)
-    customerId = models.CharField(max_length=50, null=True)
+    merchantId = models.CharField(max_length=100, null=True, blank=True)
+    brandId = models.CharField(max_length=100, null=True, blank=True)
+    customerId = models.CharField(max_length=255, null=True)
     acquirerCurrency = models.CharField(max_length=3, null=True, blank=True)
     paymentSolutionId = models.IntegerField(null=True, blank=True)
-    status = models.CharField(max_length=50, null=True, blank=True)
+    status = models.CharField(max_length=100, null=True, blank=True)
     errorMessage = models.TextField(blank=True, null=True)
 
     # Additional fields as required
@@ -61,21 +61,21 @@ class LessonOrderPaymentNotification(models.Model):
 class SchoolOrderPaymentNotification(models.Model):
     order = models.ForeignKey(SchoolOrder, on_delete=models.CASCADE, related_name='notifications')
     # Other fields specific to the payment notification...
-    txId = models.CharField(max_length=50)  # The unique identifier for the transaction in the BOIPA Gateway
-    merchantTxId = models.CharField(max_length=50)  # The merchant’s reference for the transaction provided in the
+    txId = models.CharField(max_length=100)  # The unique identifier for the transaction in the BOIPA Gateway
+    merchantTxId = models.CharField(max_length=100)  # The merchant’s reference for the transaction provided in the
     country = models.CharField(max_length=2, null=True, blank=True)
     amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     currency = models.CharField(max_length=3, null=True, blank=True)
-    action = models.CharField(max_length=10, null=True, blank=True)
-    auth_code = models.CharField(max_length=10, null=True, blank=True)  # Extracted from paymentSolutionDetails
-    acquirer = models.CharField(max_length=100, null=True, blank=True)
+    action = models.CharField(max_length=20, null=True, blank=True)
+    auth_code = models.CharField(max_length=255, null=True, blank=True)  # Extracted from paymentSolutionDetails
+    acquirer = models.CharField(max_length=255, null=True, blank=True)
     acquirerAmount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
-    merchantId = models.CharField(max_length=50, null=True, blank=True)
-    brandId = models.CharField(max_length=50, null=True, blank=True)
-    customerId = models.CharField(max_length=50, null=True)
+    merchantId = models.CharField(max_length=100, null=True, blank=True)
+    brandId = models.CharField(max_length=100, null=True, blank=True)
+    customerId = models.CharField(max_length=255, null=True)
     acquirerCurrency = models.CharField(max_length=3, null=True, blank=True)
     paymentSolutionId = models.IntegerField(null=True, blank=True)
-    status = models.CharField(max_length=50, null=True, blank=True)
+    status = models.CharField(max_length=100, null=True, blank=True)
     errorMessage = models.TextField(blank=True, null=True)
 
     # Additional fields as required

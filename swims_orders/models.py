@@ -28,6 +28,7 @@ class Order(models.Model):
         help_text="Coupon used for this swim order."
     )
     discount_amount = models.DecimalField(max_digits=6, decimal_places=2, null=True, blank=True, default=0)
+    redeemed = models.BooleanField(default=False)
 
     class Meta:
         ordering = ['-created']

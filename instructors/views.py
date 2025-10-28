@@ -19,6 +19,39 @@ from django.db import transaction
 from django.contrib import messages
 
 
+DEFAULT_LEVEL_ORDER = 100
+
+
+def normalise_category_name(name: str) -> str:
+    if not name:
+        return ''
+    return ''.join(ch for ch in name.lower() if ch.isalnum())
+
+
+def level_order_for(category_name: str) -> int:
+    normalised = normalise_category_name(category_name)
+    if not normalised:
+        return DEFAULT_LEVEL_ORDER
+
+    if normalised.startswith('beginners') or normalised.startswith('beginner'):
+        return 1 if '2' in normalised else 0
+
+    if normalised.startswith('improvers') or normalised.startswith('improver'):
+        return 3 if '2' in normalised else 2
+
+    if normalised.startswith('advanced'):
+        return 4
+
+    if normalised.startswith('ll'):
+        if '3' in normalised:
+            return 7
+        if '2' in normalised:
+            return 6
+        return 5
+
+    return DEFAULT_LEVEL_ORDER
+
+
 #### START ####
 @login_required
 def instructor_dashboard(request):
@@ -63,11 +96,7 @@ def instructor_dashboard(request):
             seen_pairs.add((lesson_id, term_id))
 
     assignments.sort(
-        key=lambda a: (
-            getattr(a.term, 'start_date', None) or dt_date.min,
-            getattr(a.lesson, 'day_of_week', None) if getattr(a.lesson, 'day_of_week', None) is not None else 0,
-            getattr(a.lesson, 'start_time', None) or dt_time.min
-        ),
+        key=lambda a: getattr(a.term, 'start_date', dt_date.min),
         reverse=True
     )
 
@@ -96,6 +125,12 @@ def instructor_dashboard(request):
             (getattr(assignment, 'lesson_id', None), getattr(assignment, 'term_id', None)),
             0
         )
+        category_name = ''
+        lesson_obj = getattr(assignment, 'lesson', None)
+        if lesson_obj is not None:
+            category_obj = getattr(lesson_obj, 'category', None)
+            category_name = getattr(category_obj, 'name', '')
+        assignment.level_order = level_order_for(category_name)
 
     grouped = OrderedDict()
     for assignment in assignments:
@@ -108,6 +143,23 @@ def instructor_dashboard(request):
             }
         grouped[key]["assignments"].append(assignment)
     assignment_groups = list(grouped.values())
+
+    assignment_groups.sort(
+        key=lambda grp: getattr(grp.get('term'), 'start_date', dt_date.min),
+        reverse=True
+    )
+
+    for group in assignment_groups:
+        def assignment_sort_key(assignment):
+            lesson = getattr(assignment, 'lesson', None)
+            day = getattr(lesson, 'day_of_week', None)
+            day_value = day if day is not None else 99
+            start_time = getattr(lesson, 'start_time', None) or dt_time.max
+            level_value = getattr(assignment, 'level_order', DEFAULT_LEVEL_ORDER)
+            name_value = getattr(lesson, 'name', '')
+            return (day_value, start_time, level_value, name_value)
+
+        group['assignments'].sort(key=assignment_sort_key)
 
     current_term_id = getattr(current_term, 'id', None)
     lessons_this_week = sum(1 for a in assignments if getattr(a, 'term_id', None) == current_term_id)

@@ -3,8 +3,9 @@ from django.http import JsonResponse
 from django.db.models import Count, Q
 from datetime import date
 
-from lessons_bookings.models import Term, LessonEnrollment
+from lessons_bookings.models import Term, LessonEnrollment, LessonAssignment
 from lessons.models import Product, Category
+from instructors.models import InstructorAssignment
 from schools_bookings.models import ScoTerm
 from schools.models import ScoSchool
 from users.models import Swimling
@@ -68,6 +69,7 @@ def enrollment_report_data(request):
         base_queryset = base_queryset.order_by(order_field)
 
     paginated_queryset = base_queryset if length == -1 else base_queryset[start:start + length]
+    paginated_list = list(paginated_queryset)
 
     total_enrollments = sum(p.current_enrollments for p in all_products)
     total_capacity = sum(p.num_places or 0 for p in all_products)
@@ -80,8 +82,52 @@ def enrollment_report_data(request):
         'overall_utilization': round(utilization, 1)
     }
 
+    def format_instructor_name(user):
+        if not user:
+            return 'TBA'
+        first = (getattr(user, 'first_name', '') or '').strip()
+        last = (getattr(user, 'last_name', '') or '').strip()
+        full = f"{first} {last}".strip()
+        if full:
+            return full
+        email = getattr(user, 'email', '') or ''
+        if email:
+            return email
+        username = getattr(user, 'get_username', None)
+        if callable(username):
+            try:
+                return username() or 'TBA'
+            except Exception:
+                pass
+        return str(user) if user else 'TBA'
+
+    instructor_map = {}
+    fallback_instructor_map = {}
+    if term and paginated_list:
+        product_ids = [p.id for p in paginated_list if getattr(p, 'id', None)]
+        if product_ids:
+            assigned = (
+                InstructorAssignment.objects
+                .select_related('instructor')
+                .filter(term=term, lesson_id__in=product_ids)
+            )
+            instructor_map = {a.lesson_id: a.instructor for a in assigned}
+
+            lesson_assignments = (
+                LessonAssignment.objects
+                .select_related('instructor')
+                .filter(term=term, lessons__id__in=product_ids)
+                .prefetch_related('lessons')
+            )
+            for assignment in lesson_assignments:
+                instructor = assignment.instructor
+                for lesson in assignment.lessons.all():
+                    lesson_id = getattr(lesson, 'id', None)
+                    if lesson_id in product_ids and lesson_id not in instructor_map and lesson_id not in fallback_instructor_map:
+                        fallback_instructor_map[lesson_id] = instructor
+
     data = []
-    for p in paginated_queryset:
+    for p in paginated_list:
         day_label = dict(Product.DAY_CHOICES).get(p.day_of_week, 'Not scheduled') if p.day_of_week is not None else 'Not scheduled'
         schedule_parts = []
         if p.day_of_week is not None:
@@ -99,7 +145,11 @@ def enrollment_report_data(request):
         data.append({
             'name': p.name,
             'category': p.category.name if p.category else 'N/A',
-            'instructor': getattr(p, 'instructor', 'TBA') or 'TBA',
+            'instructor': format_instructor_name(
+                instructor_map.get(p.id) or
+                fallback_instructor_map.get(p.id) or
+                getattr(p, 'instructor', None)
+            ),
             'day': day_label,
             'schedule': schedule,
             'enrollments': enr,

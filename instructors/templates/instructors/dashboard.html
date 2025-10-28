@@ -39,99 +39,110 @@
             </div>
 
         <!-- Assignments Grid -->
-        {% if assignments %}
-            <div class="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-                {% for assignment in assignments %}
-                    <div class="bg-white/90 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 overflow-hidden">
-                        <!-- Card Header -->
-                        <div class="bg-gradient-to-r from-blue-600 to-blue-500 p-6 text-white">
-                            <h3 class="text-xl font-bold mb-2">{{ assignment.lesson.name }}</h3>
-                            <div class="flex items-center justify-between text-blue-100">
-                                <span class="bg-white/20 px-2 py-1 rounded-full text-xs font-semibold">
-                                    {{ assignment.lesson.get_day_of_week_display }}
-                                </span>
-                            </div>
-                        </div>
-
-                        <!-- Card Content -->
-                        <div class="p-6">
-                            <!-- Lesson Details -->
-                            <div class="space-y-3 mb-6">
-                                <div class="flex items-center text-gray-700">
-                                    <i class="fas fa-calendar-day w-5 h-5 mr-3 text-blue-500"></i>
-                                    <span class="font-medium">{{ assignment.lesson.get_day_of_week_display }}</span>
-                                </div>
-                                <div class="flex items-center text-gray-700">
-                                    <i class="fas fa-clock w-5 h-5 mr-3 text-green-500"></i>
-                                    <span class="font-medium">{{ assignment.lesson.start_time|time:"g:i A" }} – {{ assignment.lesson.end_time|time:"g:i A" }}</span>
-                                </div>
-                                <div class="flex items-center text-gray-700">
-                                    <i class="fas fa-graduation-cap w-5 h-5 mr-3 text-purple-500"></i>
-                                    <span class="font-medium">{{ assignment.term.label }}</span>
-                                </div>
-                            </div>
-
-                            <!-- Action Buttons -->
-                            <div class="space-y-3">
-                                <!-- Primary Actions Row -->
-                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                    <!-- Evaluate Skills -->
-                                    <a class="flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-3 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md"
-                                       href="{% url 'instructors:evaluate_lesson_skills' assignment.lesson.id assignment.term.id %}">
-                                        <i class="fa-solid fa-file-pen mr-2"></i>
-                                        Evaluate Skills
-                                    </a>
-
-                                    <!-- Attendance -->
-                                    {% if assignment.lesson.id and assignment.term.id %}
-                                        <a href="{% url 'anseo:take_roll' product_id=assignment.lesson.id term_id=assignment.term.id %}"
-                                           class="flex items-center justify-center bg-green-600 hover:bg-green-700 text-white text-sm font-semibold px-4 py-3 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md">
-                                           <i class="fa-solid fa-user-check mr-2"></i>
-                                            Attendance
-                                        </a>
+        {% if assignment_groups %}
+            {% for group in assignment_groups %}
+                <section class="mb-12">
+                    <div class="rounded-2xl shadow-xl overflow-hidden bg-white/55 border border-slate-200/70 backdrop-blur-md">
+                        <div class="flex flex-col md:flex-row md:items-center md:justify-between px-6 py-5 bg-slate-900/85 text-white border-b border-white/10">
+                            <div>
+                                <h3 class="text-2xl font-bold">
+                                    {% if group.term %}
+                                        {{ group.term.label }}
                                     {% else %}
-                                        <span class="flex items-center justify-center bg-gray-300 text-gray-500 text-sm font-semibold px-4 py-3 rounded-lg cursor-not-allowed"
-                                              title="Missing product or term ID">
-                                            <i class="fa-solid fa-user-check mr-2"></i>
-                                            Attendance
-                                        </span>
+                                        Unassigned Term
                                     {% endif %}
-                                </div>
-
-                                <!-- Secondary Actions Row -->
-                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                    <!-- Class List -->
-                                    <a class="flex items-center justify-center bg-red-600 hover:bg-red-700 text-white text-sm font-semibold px-4 py-3 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md"
-                                       href="{% url 'reports:class_print' %}?lesson={{ assignment.lesson.id }}&term=current">
-                                        <i class="fa-solid fa-list mr-2"></i>
-                                        Class List
-                                    </a>
-
-                                    <!-- Class Notes -->
-                                    <button class="flex items-center justify-center bg-gray-400 hover:bg-gray-500 text-white text-sm font-semibold px-4 py-3 rounded-lg transition-all duration-200 cursor-not-allowed opacity-75"
-                                           disabled title="Coming Soon">
-                                        <i class="fa-solid fa-note-sticky mr-2"></i>
-                                        Class Notes
-                                    </button>
-                                </div>
+                                </h3>
+                                <p class="text-sm text-white/80 mt-1">
+                                    {% if group.term and group.term.start_date and group.term.end_date %}
+                                        {{ group.term.start_date|date:"M j, Y" }} – {{ group.term.end_date|date:"M j, Y" }}
+                                    {% elif group.term and group.term.start_date %}
+                                        Starts {{ group.term.start_date|date:"M j, Y" }}
+                                    {% else %}
+                                        Waiting for scheduling details
+                                    {% endif %}
+                                </p>
+                            </div>
+                            <div class="mt-4 md:mt-0 flex items-center gap-3 text-sm">
+                                <span class="px-3 py-1 rounded-full bg-white/20 font-semibold">
+                                    {{ group.assignments|length }} lesson{{ group.assignments|length|pluralize }}
+                                </span>
                             </div>
                         </div>
 
-                        <!-- Card Footer -->
-                        <div class="bg-gray-50 px-6 py-3 border-t border-gray-200">
-                            <div class="flex items-center justify-between text-sm text-gray-600">
-                                <span class="flex items-center">
-                                    <i class="fas fa-users mr-1"></i>
-                                    Students: <span class="font-semibold ml-1">{{ assignment.lesson.enrolled_count|default:"0" }}</span>
-                                </span>
-                                <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">
-                                    Active
-                                </span>
+                        <div class="px-6 py-8 bg-slate-50/70">
+                            <div class="border-l-4 border-slate-300/70 pl-4 mb-6 text-xs font-semibold text-slate-600 tracking-wide uppercase">
+                                Lesson Assignments
+                            </div>
+                            <div class="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+                                {% for assignment in group.assignments %}
+                                    <div class="bg-white rounded-xl border border-slate-200 shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden">
+                                        <div class="bg-gradient-to-r from-blue-600 to-indigo-500 p-6 text-white">
+                                            <h4 class="text-lg font-bold mb-1">{{ assignment.lesson.name }}</h4>
+                                            <p class="text-sm text-blue-100">
+                                                {{ assignment.lesson.get_day_of_week_display }} ·
+                                                {{ assignment.lesson.start_time|time:"g:i A" }} – {{ assignment.lesson.end_time|time:"g:i A" }}
+                                            </p>
+                                        </div>
+
+                                        <div class="p-6 space-y-4">
+                                            <div class="flex items-center text-gray-700">
+                                                <i class="fas fa-users w-5 h-5 mr-3 text-purple-500"></i>
+                                                <span class="font-medium">Students: {{ assignment.enrolled_count }}</span>
+                                            </div>
+                                            <div class="flex items-center text-gray-700">
+                                                <i class="fas fa-layer-group w-5 h-5 mr-3 text-blue-500"></i>
+                                                <span class="font-medium">{{ assignment.lesson.category.name|default:"No category" }}</span>
+                                            </div>
+
+                                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                                                {% if assignment.lesson.id and assignment.term and assignment.term.id %}
+                                                    <a class="flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-3 rounded-lg transition-all duration-200 shadow-md"
+                                                       href="{% url 'instructors:evaluate_lesson_skills' assignment.lesson.id assignment.term.id %}">
+                                                        <i class="fa-solid fa-file-pen mr-2"></i>
+                                                        Evaluate Skills
+                                                    </a>
+                                                {% else %}
+                                                    <span class="flex items-center justify-center bg-gray-300 text-gray-500 text-sm font-semibold px-4 py-3 rounded-lg cursor-not-allowed"
+                                                          title="Missing product or term ID">
+                                                        <i class="fa-solid fa-file-pen mr-2"></i>
+                                                        Evaluate Skills
+                                                    </span>
+                                                {% endif %}
+
+                                                {% if assignment.lesson.id and assignment.term and assignment.term.id %}
+                                                    <a href="{% url 'anseo:take_roll' product_id=assignment.lesson.id term_id=assignment.term.id %}"
+                                                       class="flex items-center justify-center bg-green-600 hover:bg-green-700 text-white text-sm font-semibold px-4 py-3 rounded-lg transition-all duration-200 shadow-md">
+                                                       <i class="fa-solid fa-user-check mr-2"></i>
+                                                        Attendance
+                                                    </a>
+                                                {% else %}
+                                                    <span class="flex items-center justify-center bg-gray-300 text-gray-500 text-sm font-semibold px-4 py-3 rounded-lg cursor-not-allowed"
+                                                          title="Missing product or term ID">
+                                                        <i class="fa-solid fa-user-check mr-2"></i>
+                                                        Attendance
+                                                    </span>
+                                                {% endif %}
+
+                                                <a class="flex items-center justify-center bg-red-600 hover:bg-red-700 text-white text-sm font-semibold px-4 py-3 rounded-lg transition-all duration-200 shadow-md"
+                                                   href="{% url 'reports:class_print' %}?lesson={{ assignment.lesson.id }}&term=current">
+                                                    <i class="fa-solid fa-list mr-2"></i>
+                                                    Class List
+                                                </a>
+
+                                                <button class="flex items-center justify-center bg-gray-400 hover:bg-gray-500 text-white text-sm font-semibold px-4 py-3 rounded-lg transition-all duration-200 cursor-not-allowed opacity-75"
+                                                        disabled title="Coming Soon">
+                                                    <i class="fa-solid fa-note-sticky mr-2"></i>
+                                                    Class Notes
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
                             </div>
                         </div>
                     </div>
-                {% endfor %}
-            </div>
+                </section>
+            {% endfor %}
 
         {% else %}
             <!-- Empty State -->

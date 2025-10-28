@@ -11,7 +11,8 @@ from users.models import Swimling
 import weasyprint
 from django.template.loader import render_to_string
 from django.http import HttpResponse
-from collections import defaultdict
+from collections import defaultdict, OrderedDict
+from django.db.models import Count, Prefetch
 from django.views.decorators.http import require_POST
 from .forms import AssessmentFormSet, InstructorNoteForm
 from django.db import transaction
@@ -29,7 +30,7 @@ def instructor_dashboard(request):
     direct_assignments_qs = (
         InstructorAssignment.objects
         .filter(instructor=request.user, term__in=terms)
-        .select_related('lesson', 'term')
+        .select_related('lesson__category', 'term')
     )
 
     assignments = list(direct_assignments_qs)
@@ -39,7 +40,9 @@ def instructor_dashboard(request):
         LessonAssignment.objects
         .filter(instructor=request.user, term__in=terms)
         .select_related('term', 'instructor')
-        .prefetch_related('lessons')
+        .prefetch_related(
+            Prefetch('lessons', queryset=Product.objects.select_related('category'))
+        )
     )
 
     for assignment in lesson_assignments:
@@ -72,17 +75,46 @@ def instructor_dashboard(request):
     term_ids = {a.term_id for a in assignments if getattr(a, 'term_id', None)}
 
     total_students = 0
+    enrollment_counts = {}
     if lesson_ids and term_ids:
-        total_students = LessonEnrollment.objects.filter(
-            lesson_id__in=lesson_ids,
-            term_id__in=term_ids
-        ).count()
+        enrollment_rows = (
+            LessonEnrollment.objects
+            .filter(
+                lesson_id__in=lesson_ids,
+                term_id__in=term_ids
+            )
+            .values('lesson_id', 'term_id')
+            .annotate(total=Count('id'))
+        )
+        enrollment_counts = {
+            (row['lesson_id'], row['term_id']): row['total']
+            for row in enrollment_rows
+        }
+        total_students = sum(enrollment_counts.values())
+    for assignment in assignments:
+        assignment.enrolled_count = enrollment_counts.get(
+            (getattr(assignment, 'lesson_id', None), getattr(assignment, 'term_id', None)),
+            0
+        )
+
+    grouped = OrderedDict()
+    for assignment in assignments:
+        term = getattr(assignment, 'term', None)
+        key = f"term-{getattr(term, 'id', 'unassigned')}" if term else 'unassigned'
+        if key not in grouped:
+            grouped[key] = {
+                "term": term,
+                "assignments": []
+            }
+        grouped[key]["assignments"].append(assignment)
+    assignment_groups = list(grouped.values())
 
     current_term_id = getattr(current_term, 'id', None)
     lessons_this_week = sum(1 for a in assignments if getattr(a, 'term_id', None) == current_term_id)
 
     return render(request, "instructors/dashboard.html", {
         "assignments": assignments,
+        "assignment_groups": assignment_groups,
         "terms": terms,
         "total_students": total_students,
         "lessons_this_week": lessons_this_week,

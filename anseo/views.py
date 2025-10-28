@@ -3,26 +3,30 @@ from datetime import timedelta
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 
-from lessons_bookings.models import LessonEnrollment
+from lessons_bookings.models import LessonEnrollment, Term
+from lessons.models import Product
 from anseo.models import AttendanceEntry, AttendanceRoll
 
 
 @login_required
 def take_roll(request, product_id: int, term_id: int):
+    lesson = get_object_or_404(Product, pk=product_id)
+    term = get_object_or_404(Term, pk=term_id)
+
     enrolments = (
         LessonEnrollment.objects
-        .filter(lesson_id=product_id, term_id=term_id)
+        .filter(lesson_id=lesson.id, term_id=term.id)
         .select_related("swimling", "lesson", "term")
         .order_by("swimling__last_name", "swimling__first_name")
     )
 
     if not enrolments:
         return render(request, "anseo/take_roll.html", {
-            "product": None,
-            "term": None,
+            "product": lesson,
+            "term": term,
             "enrolments": [],
             "roll": SimpleNamespace(
                 window_start=timezone.localtime(),
@@ -31,9 +35,6 @@ def take_roll(request, product_id: int, term_id: int):
             "existing": {},
             "status_choices": AttendanceEntry.STATUS_CHOICES,
         })
-
-    lesson = enrolments[0].lesson
-    term = enrolments[0].term
 
     # Always get the roll for the current window
     roll, _ = AttendanceRoll.get_or_create_current(

@@ -181,26 +181,17 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                     return value;
                 }
-            }
-        ],
-        order: [[4, 'desc']],
-        pageLength: 25,
-        responsive: false,
-        pagingType: 'simple_numbers',
-        dom: "<'flex flex-col sm:flex-row sm:items-center sm:justify-between mt-4 px-6 py-3'<'text-sm text-gray-700'i><'mt-2 sm:mt-0'p>>t",
-        language: {
-            info: 'Showing _START_ to _END_ of _TOTAL_ entries',
-            paginate: {
-                previous: '‹ Previous',
-                next: 'Next ›'
-            }
-        },
-        drawCallback: function () {
-            $('.dataTables_paginate').addClass('flex justify-center space-x-1');
-            $('.dataTables_paginate a').addClass('px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 hover:text-gray-700 transition-colors duration-150');
-            $('.dataTables_paginate .current').addClass('bg-blue-600 text-white border-blue-600 hover:bg-blue-700');
-            $('#enrollmentTable tbody tr').addClass('hover:bg-blue-50 transition-colors duration-150');
-        },
+        }
+    ],
+    order: [[4, 'desc']],
+    responsive: false,
+    paging: false,
+    info: false,
+    lengthChange: false,
+    dom: "t",
+    drawCallback: function () {
+        $('#enrollmentTable tbody tr').addClass('hover:bg-blue-50 transition-colors duration-150');
+    },
         initComplete: function () {
             const api = this.api();
             api.columns([0, 1, 2, 3]).every(function (index) {

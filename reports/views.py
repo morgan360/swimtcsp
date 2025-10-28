@@ -58,7 +58,7 @@ def enrollment_report_data(request):
     all_products = list(base_queryset)
 
     order_columns = [
-        'name', 'category__name', 'instructor', 'day_of_week',
+        'name', 'category__name', 'day_of_week', 'instructor',
         'current_enrollments', 'num_places', None, None
     ]
     if 0 <= order_column < len(order_columns) and order_columns[order_column]:
@@ -82,11 +82,15 @@ def enrollment_report_data(request):
 
     data = []
     for p in paginated_queryset:
-        schedule = ' '.join(filter(None, [
-            dict(Product.DAY_CHOICES).get(p.day_of_week, p.day_of_week) if p.day_of_week else None,
-            p.start_time.strftime('%H:%M') if p.start_time else '',
-            f"- {p.end_time.strftime('%H:%M')}" if p.end_time else ''
-        ])).strip() or 'Not scheduled'
+        day_label = dict(Product.DAY_CHOICES).get(p.day_of_week, 'Not scheduled') if p.day_of_week is not None else 'Not scheduled'
+        schedule_parts = []
+        if p.day_of_week is not None:
+            schedule_parts.append(day_label)
+        if p.start_time:
+            schedule_parts.append(p.start_time.strftime('%H:%M'))
+        if p.end_time:
+            schedule_parts.append(f"- {p.end_time.strftime('%H:%M')}")
+        schedule = ' '.join(schedule_parts).strip() or 'Not scheduled'
 
         cap = p.num_places or 0
         enr = p.current_enrollments or 0
@@ -96,6 +100,7 @@ def enrollment_report_data(request):
             'name': p.name,
             'category': p.category.name if p.category else 'N/A',
             'instructor': getattr(p, 'instructor', 'TBA') or 'TBA',
+            'day': day_label,
             'schedule': schedule,
             'enrollments': enr,
             'capacity': cap,

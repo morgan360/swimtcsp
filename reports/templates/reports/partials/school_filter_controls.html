@@ -1,0 +1,98 @@
+<div id="school-filter-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+  <!-- Term Selection -->
+  <div class="space-y-2">
+    <label for="id_term" class="flex items-center text-sm font-semibold text-gray-700 mb-3">
+      <i class="fas fa-calendar-alt text-yellow-500 mr-2"></i>
+      School Term
+    </label>
+    <div class="relative">
+      <select name="term" id="id_term"
+              class="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-gray-900 focus:bg-white focus:border-yellow-500 focus:ring-2 focus:ring-yellow-200 transition-all duration-200 appearance-none">
+        <option value="">Select a Term</option>
+        {% for term in terms %}
+          <option value="{{ term.id }}" {% if selected_term|default:'' == term.id|stringformat:'s' %}selected{% endif %}>
+            Term {{ term.id }} ({{ term.start_date|date:"M j, Y" }} → {{ term.end_date|date:"M j, Y" }})
+          </option>
+        {% endfor %}
+      </select>
+      <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+        <i class="fas fa-chevron-down text-gray-400"></i>
+      </div>
+    </div>
+    <p class="text-xs text-gray-500 mt-1">Select the active term for this school</p>
+  </div>
+
+  <!-- Day Selection -->
+  <div class="space-y-2">
+    <label for="id_day" class="flex items-center text-sm font-semibold text-gray-700 mb-3">
+      <i class="fas fa-calendar-day text-green-500 mr-2"></i>
+      Day of Week
+    </label>
+    <div class="relative">
+      <select name="day" id="id_day"
+              hx-get="{% url 'reports:update-school-times' %}"
+              hx-trigger="change"
+              hx-include="closest form"
+              hx-target="#id_time"
+              hx-on="htmx:afterOnLoad: resetSchoolLessonOptions()"
+              class="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-gray-900 focus:bg-white focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all duration-200 appearance-none">
+        <option value="">Select a Day</option>
+        {% for value,label in day_choices %}
+          <option value="{{ value }}" {% if selected_day|default:'' == value|stringformat:'s' %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+      <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+        <i class="fas fa-chevron-down text-gray-400"></i>
+      </div>
+    </div>
+    <p class="text-xs text-gray-500 mt-1">Choose a specific day to narrow results</p>
+  </div>
+
+  <!-- Time Selection -->
+  <div class="space-y-2">
+    <label for="id_time" class="flex items-center text-sm font-semibold text-gray-700 mb-3">
+      <i class="fas fa-clock text-indigo-500 mr-2"></i>
+      Start Time (optional)
+    </label>
+    <div class="relative">
+      <select name="time" id="id_time"
+              hx-get="{% url 'reports:update-school-lessons' %}"
+              hx-trigger="change"
+              hx-include="closest form"
+              hx-target="#id_lesson"
+              class="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-gray-900 focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-200 appearance-none">
+        <option value="">Any Time</option>
+        {% for t in time_choices %}
+          <option value="{{ t }}" {% if selected_time|default:'' == t %}selected{% endif %}>{{ t }}</option>
+        {% endfor %}
+      </select>
+      <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+        <i class="fas fa-chevron-down text-gray-400"></i>
+      </div>
+    </div>
+    <p class="text-xs text-gray-500 mt-1">Pick a time to print all classes in that slot</p>
+  </div>
+
+  <!-- Lesson Selection -->
+  <div class="space-y-2">
+    <label for="id_lesson" class="flex items-center text-sm font-semibold text-gray-700 mb-3">
+      <i class="fas fa-school text-orange-500 mr-2"></i>
+      Specific School Lesson
+    </label>
+    <div class="relative">
+      <select name="lesson" id="id_lesson"
+              class="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-gray-900 focus:bg-white focus:border-orange-500 focus:ring-2 focus:ring-orange-200 transition-all duration-200 appearance-none">
+        <option value="">Select a Lesson</option>
+        {% for lesson in lessons %}
+          <option value="{{ lesson.id }}" {% if selected_lesson|default:'' == lesson.id|stringformat:'s' %}selected{% endif %}>
+            {{ lesson.name }}
+          </option>
+        {% endfor %}
+      </select>
+      <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+        <i class="fas fa-chevron-down text-gray-400"></i>
+      </div>
+    </div>
+    <p class="text-xs text-gray-500 mt-1">Select an individual class or leave blank to use day + time</p>
+  </div>
+</div>

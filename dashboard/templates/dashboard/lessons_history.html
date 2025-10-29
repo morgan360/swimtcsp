@@ -4,338 +4,44 @@
 {% block title %}Class History – {{ lesson }}{% endblock %}
 
 {% block content %}
-<div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden max-w-7xl mx-auto my-8 mt-10">
+<div class="max-w-7xl mx-auto my-10">
   <!-- Header -->
-  <div class="bg-gradient-to-r from-orange-600 to-orange-700 px-6 py-4">
-    <div class="flex items-center justify-between">
-      <h2 class="text-2xl font-bold text-white flex items-center gap-2">
-        <i class="fa-solid fa-clock-rotate-left"></i>
-        Class History – {{ lesson }}
-      </h2>
-      <a href="{% url 'dashboard:admin_lessons_list' %}"
-         class="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-lg bg-white/10 text-white hover:bg-white/20">
-        <i class="fa-solid fa-arrow-left mr-2"></i> Back to Lessons
-      </a>
-    </div>
+  <div class="rounded-3xl bg-gradient-to-r from-orange-600 via-orange-500 to-amber-500 shadow-xl overflow-hidden">
+    <div class="px-8 py-6 text-white">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <h2 class="text-3xl font-bold tracking-tight flex items-center gap-3">
+          <i class="fa-solid fa-clock-rotate-left text-white/70"></i>
+          Class History – {{ lesson }}
+        </h2>
+        <a href="{% url 'dashboard:admin_lessons_list' %}"
+           class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-white/15 hover:bg-white/25 transition text-sm font-semibold">
+          <i class="fa-solid fa-arrow-left"></i>
+          Back to Lessons
+        </a>
+      </div>
 
-    <!-- Lesson meta (day/time) -->
-    <div class="mt-2 text-white/90 text-sm flex items-center gap-4">
-      <div class="inline-flex items-center gap-2">
-        <i class="fa-regular fa-calendar"></i>
-        <span>
+      <div class="mt-4 flex flex-wrap items-center gap-4 text-sm text-white/85">
+        <span class="inline-flex items-center gap-2"><i class="fa-regular fa-calendar"></i>
           {% with days=lesson.DAY_CHOICES %}
             {% for d in days %}
               {% if d.0 == lesson.day_of_week %}{{ d.1 }}{% endif %}
             {% endfor %}
           {% endwith %}
         </span>
+        <span class="inline-flex items-center gap-2"><i class="fa-regular fa-clock"></i>{{ lesson.start_time|time:"H:i" }} – {{ lesson.end_time|time:"H:i" }}</span>
+        {% if lesson.category %}
+          <span class="inline-flex items-center gap-2"><i class="fa-solid fa-layer-group"></i>{{ lesson.category }}</span>
+        {% endif %}
       </div>
-      <div class="inline-flex items-center gap-2">
-        <i class="fa-regular fa-clock"></i>
-        <span>{{ lesson.start_time|time:"H:i" }}–{{ lesson.end_time|time:"H:i" }}</span>
-      </div>
-      {% if lesson.category %}
-      <div class="inline-flex items-center gap-2">
-        <i class="fa-solid fa-layer-group"></i>
-        <span>{{ lesson.category }}</span>
-      </div>
-      {% endif %}
     </div>
   </div>
 
-  <div class="px-6 py-8 space-y-10">
+  <div class="mt-10 space-y-12">
+    {% include "dashboard/partials/_lesson_term_section.html" with title="Current Term(s)" icon="fa-bolt" icon_color="text-orange-500" color_class="from-orange-500 via-orange-400 to-amber-500" cards=current_data empty_text="No active terms for this lesson." %}
 
-    <!-- CURRENT TERMS -->
-    <section>
-      <h3 class="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
-        <i class="fa-solid fa-bolt"></i> Current Term(s)
-      </h3>
-      {% if current_data %}
-        <div class="grid md:grid-cols-2 gap-6">
-          {% for item in current_data %}
-            <div class="rounded-xl border border-gray-200 shadow-md p-6 mb-6">
-              <!-- Top row: Term + Instructor -->
-              <div class="flex items-start justify-between mb-3">
-                <div class="font-medium text-gray-900">
-                  <strong>Term:</strong> {{ item.term }}
-                  {% if item.instructor %}
-                    {% if item.instructor.first_name or item.instructor.last_name %}
-                      <span class="text-sm text-gray-500 block"><strong>Assigned to:</strong> {{ item.instructor.first_name }} {{ item.instructor.last_name }}</span>
-                    {% else %}
-                      <span class="text-sm text-gray-500 block"><strong>Assigned to:</strong> {{ item.instructor.email|default:item.instructor }}</span>
-                    {% endif %}
-                  {% endif %}
-                  <div class="text-xs text-gray-600">
-                    {{ item.term.start_date|date:"M j, Y" }} → {{ item.term.end_date|date:"M j, Y" }}
-                  </div>
-                </div>
-                <div class="text-sm text-gray-700 shrink-0 ml-4">
-                  <i class="fa-solid fa-chalkboard-user mr-1"></i>
-                  {% if item.instructor %}
-                    {% if item.instructor.first_name or item.instructor.last_name %}
-                      {{ item.instructor.first_name }} {{ item.instructor.last_name }}
-                    {% else %}
-                      {{ item.instructor.email|default:item.instructor }}
-                    {% endif %}
-                  {% else %}<em>Unassigned</em>{% endif %}
-                </div>
-              </div>
+    {% include "dashboard/partials/_lesson_term_section.html" with title="Future Term(s)" icon="fa-calendar-plus" icon_color="text-blue-500" color_class="from-blue-600 via-indigo-500 to-cyan-500" cards=upcoming_data empty_text="No future terms scheduled yet, or no enrollments for this term have been made." %}
 
-              <!-- Chips: capacity/remaining/enrolled -->
-              <div class="flex flex-wrap items-center gap-2 mb-4">
-                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-gray-100 text-gray-700">
-                  <i class="fa-solid fa-users mr-1"></i> {{ item.roster|length }} enrolled
-                </span>
-                {% if item.capacity %}
-                  <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-gray-100 text-gray-700">
-                    <i class="fa-regular fa-square-check mr-1"></i> Capacity: {{ item.capacity }}
-                  </span>
-                {% endif %}
-                {% if item.remaining is not None %}
-                  {% if item.is_full %}
-                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-red-100 text-red-800">
-                      <i class="fa-solid fa-circle-exclamation mr-1"></i> Full
-                    </span>
-                  {% else %}
-                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-green-100 text-green-800">
-                      <i class="fa-regular fa-circle-check mr-1"></i> {{ item.remaining }} remaining
-                    </span>
-                  {% endif %}
-                {% endif %}
-              </div>
-
-              <!-- Roster (Accordion) -->
-              <div class="mt-4 pt-4 border-t border-gray-200">
-                <details class="group">
-                  <summary class="cursor-pointer select-none text-sm font-semibold text-gray-800 flex items-center gap-2">
-                    <i class="fa-solid fa-people-group"></i>
-                    Class List
-                    <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-gray-100 text-gray-700">
-                      {{ item.roster|length }} enrolled
-                    </span>
-                    <i class="ml-auto fa-solid fa-chevron-down text-gray-500 transition-transform group-open:rotate-180"></i>
-                  </summary>
-                  <div class="mt-3">
-                    {% if item.roster %}
-                      <ul class="text-sm text-gray-800 list-disc ml-5 m-2 bg-blue-200/20 p-3 rounded-lg">
-                        {% for swimling in item.roster %}
-                          <li>{{ swimling }}</li>
-                        {% endfor %}
-                      </ul>
-                    {% else %}
-                      <p class="text-sm text-gray-500">No enrollments for this term.</p>
-                    {% endif %}
-                  </div>
-                </details>
-              </div>
-
-              <!-- Attendance (placeholder) -->
-              <details class="group">
-                <summary class="cursor-pointer select-none text-sm text-gray-700 flex items-center gap-2">
-                  <i class="fa-regular fa-calendar-check"></i>
-                  Attendance Records
-                  <span class="ml-2 text-xs text-gray-400">(not wired yet)</span>
-                  <i class="ml-auto fa-solid fa-chevron-down transition-transform group-open:rotate-180"></i>
-                </summary>
-                <p class="mt-2 text-sm text-gray-500">Hook up your Attendance model here.</p>
-              </details>
-            </div>
-          {% endfor %}
-        </div>
-      {% else %}
-        <p class="text-sm text-gray-500">No active terms for this lesson.</p>
-      {% endif %}
-    </section>
-
-    <!-- UPCOMING TERMS -->
-    <section>
-      <h3 class="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
-        <i class="fa-regular fa-calendar-plus"></i> Future Term(s)
-      </h3>
-      {% if upcoming_data %}
-        <div class="grid md:grid-cols-2 gap-6">
-          {% for item in upcoming_data %}
-            <div class="rounded-xl border border-gray-200 shadow-md p-6 mb-6">
-              <div class="flex items-start justify-between mb-3">
-                <div class="font-medium text-gray-900">
-                  Term {{ item.term }}
-                  {% if item.instructor %}
-                    {% if item.instructor.first_name or item.instructor.last_name %}
-                      <span class="text-sm text-gray-500 block">Assigned to {{ item.instructor.first_name }} {{ item.instructor.last_name }}</span>
-                    {% else %}
-                      <span class="text-sm text-gray-500 block">Assigned to {{ item.instructor.email|default:item.instructor }}</span>
-                    {% endif %}
-                  {% endif %}
-                  <div class="text-xs text-gray-600">
-                    {{ item.term.start_date|date:"M j, Y" }} → {{ item.term.end_date|date:"M j, Y" }}
-                  </div>
-                </div>
-                <div class="text-sm text-gray-700 shrink-0 ml-4">
-                  <i class="fa-solid fa-chalkboard-user mr-1"></i>
-                  {% if item.instructor %}
-                    {% if item.instructor.first_name or item.instructor.last_name %}
-                      {{ item.instructor.first_name }} {{ item.instructor.last_name }}
-                    {% else %}
-                      {{ item.instructor.email|default:item.instructor }}
-                    {% endif %}
-                  {% else %}<em>Unassigned</em>{% endif %}
-                </div>
-              </div>
-
-              <div class="flex flex-wrap items-center gap-2 mb-4">
-                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-gray-100 text-gray-700">
-                  <i class="fa-solid fa-users mr-1"></i> {{ item.roster|length }} enrolled
-                </span>
-                {% if item.capacity %}
-                  <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-gray-100 text-gray-700">
-                    <i class="fa-regular fa-square-check mr-1"></i> Capacity: {{ item.capacity }}
-                  </span>
-                {% endif %}
-                {% if item.remaining is not None %}
-                  {% if item.is_full %}
-                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-red-100 text-red-800">
-                      <i class="fa-solid fa-circle-exclamation mr-1"></i> Full
-                    </span>
-                  {% else %}
-                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-green-100 text-green-800">
-                      <i class="fa-regular fa-circle-check mr-1"></i> {{ item.remaining }} remaining
-                    </span>
-                  {% endif %}
-                {% endif %}
-              </div>
-
-              <div class="mt-4 pt-4 border-t border-gray-200">
-                <details class="group">
-                  <summary class="cursor-pointer select-none text-sm font-semibold text-gray-800 flex items-center gap-2">
-                    <i class="fa-solid fa-people-group"></i>
-                    Class List
-                    <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-gray-100 text-gray-700">
-                      {{ item.roster|length }} enrolled
-                    </span>
-                    <i class="ml-auto fa-solid fa-chevron-down text-gray-500 transition-transform group-open:rotate-180"></i>
-                  </summary>
-                  <div class="mt-3">
-                    {% if item.roster %}
-                      <ul class="text-sm text-gray-800 list-disc ml-5 space-y-1">
-                        {% for swimling in item.roster %}
-                          <li>{{ swimling }}</li>
-                        {% endfor %}
-                      </ul>
-                    {% else %}
-                      <p class="text-sm text-gray-500">No enrollments for this term.</p>
-                    {% endif %}
-                  </div>
-                </details>
-              </div>
-
-              <details class="group">
-                <summary class="cursor-pointer select-none text-sm text-gray-700 flex items-center gap-2">
-                  <i class="fa-regular fa-calendar-check"></i>
-                  Attendance Records
-                  <span class="ml-2 text-xs text-gray-400">(coming soon)</span>
-                  <i class="ml-auto fa-solid fa-chevron-down transition-transform group-open:rotate-180"></i>
-                </summary>
-                <p class="mt-2 text-sm text-gray-500">Hook up Attendance model here.</p>
-              </details>
-            </div>
-          {% endfor %}
-        </div>
-      {% else %}
-        <p class="text-sm text-gray-500">No future terms scheduled yet, or no enrollments for this term have been made.</p>
-      {% endif %}
-    </section>
-
-    <!-- PREVIOUS TERMS -->
-    <section>
-      <h3 class="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
-        <i class="fa-regular fa-clock"></i> Previous Terms
-      </h3>
-      {% if previous_data %}
-        <div class="grid md:grid-cols-2 gap-6">
-          {% for item in previous_data %}
-            <div class="rounded-xl border border-gray-200 shadow-md p-6 mb-6">
-              <div class="flex items-start justify-between mb-3">
-                <div class="font-medium text-gray-900">
-                  Term {{ item.term }}
-                  {% if item.instructor %}
-                    <span class="text-sm text-gray-500 block">Assigned to {{ item.instructor.first_name }} {{ item.instructor.last_name }}</span>
-                  {% endif %}
-                  <div class="text-xs text-gray-600">
-                    {{ item.term.start_date|date:"M j, Y" }} → {{ item.term.end_date|date:"M j, Y" }}
-                  </div>
-                </div>
-                <div class="text-sm text-gray-700 shrink-0 ml-4">
-                  <i class="fa-solid fa-chalkboard-user mr-1"></i>
-                  {% if item.instructor %}{{ item.instructor.first_name }} {{ item.instructor.last_name }}{% else %}<em>Unassigned</em>{% endif %}
-                </div>
-              </div>
-
-              <!-- Chips -->
-              <div class="flex flex-wrap items-center gap-2 mb-4">
-                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-gray-100 text-gray-700">
-                  <i class="fa-solid fa-users mr-1"></i> {{ item.roster|length }} enrolled
-                </span>
-                {% if item.capacity %}
-                  <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-gray-100 text-gray-700">
-                    <i class="fa-regular fa-square-check mr-1"></i> Capacity: {{ item.capacity }}
-                  </span>
-                {% endif %}
-                {% if item.remaining is not None %}
-                  {% if item.is_full %}
-                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-red-100 text-red-800">
-                      <i class="fa-solid fa-circle-exclamation mr-1"></i> Full
-                    </span>
-                  {% else %}
-                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-green-100 text-green-800">
-                      <i class="fa-regular fa-circle-check mr-1"></i> {{ item.remaining }} remaining
-                    </span>
-                  {% endif %}
-                {% endif %}
-              </div>
-
-              <!-- Roster (Accordion) -->
-              <div class="mt-4 pt-4 border-t border-gray-200">
-                <details class="group">
-                  <summary class="cursor-pointer select-none text-sm font-semibold text-gray-800 flex items-center gap-2 m-2">
-                    <i class="fa-solid fa-people-group"></i>
-                    Class List
-                    <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-gray-100 text-gray-700">
-                      {{ item.roster|length }} enrolled
-                    </span>
-                    <i class="ml-auto fa-solid fa-chevron-down text-gray-500 transition-transform group-open:rotate-180"></i>
-                  </summary>
-                  <div class="mt-3">
-                    {% if item.roster %}
-                      <ul class="text-sm text-gray-800 list-disc ml-5 space-y-1">
-                        {% for swimling in item.roster %}
-                          <li>{{ swimling }}</li>
-                        {% endfor %}
-                      </ul>
-                    {% else %}
-                      <p class="text-sm text-gray-500">No enrollments for this term.</p>
-                    {% endif %}
-                  </div>
-                </details>
-              </div>
-
-              <!-- Attendance (placeholder) -->
-              <details class="group">
-                <summary class="cursor-pointer select-none text-sm text-gray-700 flex items-center gap-2 m-2">
-                  <i class="fa-regular fa-calendar-check"></i>
-                  Attendance Records
-                  <span class="ml-2 text-xs text-gray-400">(not wired yet)</span>
-                  <i class="ml-auto fa-solid fa-chevron-down transition-transform group-open:rotate-180"></i>
-                </summary>
-                <p class="mt-2 text-sm text-gray-500">Hook up your Attendance model here.</p>
-              </details>
-            </div>
-          {% endfor %}
-        </div>
-      {% else %}
-        <p class="text-sm text-gray-500">No previous terms found.</p>
-      {% endif %}
-    </section>
-
+    {% include "dashboard/partials/_lesson_term_section.html" with title="Previous Terms" icon="fa-clock" icon_color="text-slate-500" color_class="from-slate-600 via-slate-500 to-zinc-600" cards=previous_data empty_text="No previous terms found." %}
   </div>
 </div>
 {% endblock %}

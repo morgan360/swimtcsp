@@ -34,6 +34,7 @@
   </td>
   <td class="px-6 py-4 text-center">
     <a href="{% url 'dashboard:admin_school_lesson_detail' lesson_info.lesson.pk %}"
+       hx-boost="false"
        class="inline-flex items-center px-4 py-2 bg-yellow-500 text-white text-sm font-medium rounded-lg hover:bg-yellow-600 transition-colors">
       <i class="fa-solid fa-clock-rotate-left mr-2"></i>View History
     </a>

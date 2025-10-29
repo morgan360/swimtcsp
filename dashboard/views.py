@@ -197,6 +197,8 @@ def admin_lessons_list(request):
     selected_day = request.GET.get('day') or ''
     selected_time = request.GET.get('time') or ''
     selected_availability = request.GET.get('availability') or ''
+    selected_sort = request.GET.get('sort') or ''
+    selected_sort = request.GET.get('sort') or ''
 
     if selected_level:
         try:
@@ -229,6 +231,10 @@ def admin_lessons_list(request):
         lessons_info = [li for li in lessons_info if not li['is_full']]
     elif selected_availability == 'full':
         lessons_info = [li for li in lessons_info if li['is_full']]
+
+    lessons_info = _sort_school_lessons(lessons_info, selected_sort)
+
+    lessons_info = _sort_school_lessons(lessons_info, selected_sort)
 
     paginator = Paginator(lessons_info, 20)
     page_number = request.GET.get('page')
@@ -323,6 +329,34 @@ def admin_lessons_list_rows(request):
     })
 
 
+def _sort_school_lessons(lessons_info, sort_key):
+    """Sort school lessons info list according to availability preferences."""
+    if not sort_key:
+        return lessons_info
+
+    def remaining(entry):
+        value = entry.get('remaining_spaces')
+        return value if isinstance(value, int) else 0
+
+    if sort_key == 'availability_desc':
+        lessons_info.sort(
+            key=lambda entry: (
+                entry.get('is_full', False),
+                -remaining(entry),
+                getattr(entry['lesson'], 'name', ''),
+            )
+        )
+    elif sort_key == 'availability_asc':
+        lessons_info.sort(
+            key=lambda entry: (
+                not entry.get('is_full', False),
+                remaining(entry),
+                getattr(entry['lesson'], 'name', ''),
+            )
+        )
+    return lessons_info
+
+
 @login_required
 @user_passes_test(is_staff)
 def admin_school_lessons_list(request):
@@ -333,6 +367,7 @@ def admin_school_lessons_list(request):
     selected_day = request.GET.get('day') or ''
     selected_time = request.GET.get('time') or ''
     selected_availability = request.GET.get('availability') or ''
+    selected_sort = request.GET.get('sort') or ''
 
     if selected_category:
         try:
@@ -370,6 +405,8 @@ def admin_school_lessons_list(request):
         lessons_info = [li for li in lessons_info if not li['is_full']]
     elif selected_availability == 'full':
         lessons_info = [li for li in lessons_info if li['is_full']]
+
+    lessons_info = _sort_school_lessons(lessons_info, selected_sort)
 
     paginator = Paginator(lessons_info, 20)
     page_number = request.GET.get('page')
@@ -392,6 +429,7 @@ def admin_school_lessons_list(request):
         'selected_day': selected_day,
         'selected_time': selected_time,
         'selected_availability': selected_availability,
+        'selected_sort': selected_sort,
     }
 
     if request.headers.get('HX-Request'):
@@ -409,6 +447,7 @@ def admin_school_lessons_list_rows(request):
     selected_day = request.GET.get('day') or ''
     selected_time = request.GET.get('time') or ''
     selected_availability = request.GET.get('availability') or ''
+    selected_sort = request.GET.get('sort') or ''
 
     if selected_category:
         try:
@@ -446,6 +485,8 @@ def admin_school_lessons_list_rows(request):
         lessons_info = [li for li in lessons_info if not li['is_full']]
     elif selected_availability == 'full':
         lessons_info = [li for li in lessons_info if li['is_full']]
+
+    lessons_info = _sort_school_lessons(lessons_info, selected_sort)
 
     paginator = Paginator(lessons_info, 20)
     page_number = request.GET.get('page')

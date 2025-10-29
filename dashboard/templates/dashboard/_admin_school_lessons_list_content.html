@@ -1,0 +1,106 @@
+<div class="hidden md:block overflow-x-auto">
+  <div id="school-lessons-root"
+       data-total="{{ total|default:0 }}"
+       data-loaded="{{ page_obj.end_index }}"
+       data-next-page="{% if page_obj.has_next %}{{ page_obj.next_page_number }}{% endif %}"
+       data-category="{{ selected_category|default:'' }}"
+       data-school="{{ selected_school|default:'' }}"
+       data-day="{{ selected_day|default:'' }}"
+       data-time="{{ selected_time|default:'' }}"
+       data-availability="{{ selected_availability|default:'' }}"
+       class="hidden"></div>
+  <table class="min-w-full divide-y divide-gray-200">
+    <thead class="bg-yellow-100 rounded-xl">
+      <tr>
+        <th class="px-6 py-3 text-left text-xs font-semibold text-yellow-700 uppercase tracking-wider">Lesson</th>
+        <th class="px-6 py-3 text-left text-xs font-semibold text-yellow-700 uppercase tracking-wider">School</th>
+        <th class="px-6 py-3 text-center text-xs font-semibold text-yellow-700 uppercase tracking-wider">Capacity</th>
+        <th class="px-6 py-3 text-center text-xs font-semibold text-yellow-700 uppercase tracking-wider">Availability</th>
+        <th class="px-6 py-3 text-center text-xs font-semibold text-yellow-700 uppercase tracking-wider">Actions</th>
+      </tr>
+    </thead>
+    <tbody id="school-lessons-tbody" class="divide-y divide-gray-200 bg-white">
+      {% include 'dashboard/_admin_school_lesson_rows.html' %}
+    </tbody>
+  </table>
+  <div id="school-lessons-sentinel" class="py-4 text-center text-gray-400">Loading more…</div>
+</div>
+
+<div class="md:hidden" id="school-lessons-cards">
+  {% include 'dashboard/_admin_school_lesson_cards.html' %}
+  <div id="school-lessons-sentinel-mobile" class="py-4 text-center text-gray-400">Loading more…</div>
+</div>
+
+<script>
+  (function() {
+    const root = document.getElementById('school-lessons-root');
+    const tbody = document.getElementById('school-lessons-tbody');
+    const cards = document.getElementById('school-lessons-cards');
+    const sentinel = document.getElementById('school-lessons-sentinel');
+    const sentinelMobile = document.getElementById('school-lessons-sentinel-mobile');
+
+    let total = parseInt(root?.dataset.total || '0', 10);
+    let loaded = parseInt(root?.dataset.loaded || '0', 10);
+    let nextPage = root?.dataset.nextPage ? parseInt(root.dataset.nextPage, 10) : null;
+
+    const params = {
+      category: root?.dataset.category || '',
+      school: root?.dataset.school || '',
+      day: root?.dataset.day || '',
+      time: root?.dataset.time || '',
+      availability: root?.dataset.availability || '',
+    };
+
+    function urlFor(page, variant) {
+      const q = new URLSearchParams({
+        page: String(page),
+        variant: variant,
+      });
+      if (params.category) q.set('category', params.category);
+      if (params.school) q.set('school', params.school);
+      if (params.day) q.set('day', params.day);
+      if (params.time) q.set('time', params.time);
+      if (params.availability) q.set('availability', params.availability);
+      return `{% url 'dashboard:admin_school_lessons_list_rows' %}?` + q.toString();
+    }
+
+    let loading = false;
+    async function loadMore(variant) {
+      if (loading || !nextPage) return;
+      loading = true;
+      try {
+        const resp = await fetch(urlFor(nextPage, variant), { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+        if (!resp.ok) throw new Error('Network');
+        const data = await resp.json();
+        if (data.html) {
+          const tmp = document.createElement(variant === 'desktop' ? 'tbody' : 'div');
+          tmp.innerHTML = data.html;
+          [...tmp.children].forEach(el => (variant === 'desktop' ? tbody : cards).appendChild(el));
+        }
+        loaded += (data.count_this_page || 0);
+        nextPage = data.next_page || null;
+        if (!nextPage) {
+          if (sentinel) sentinel.textContent = 'All loaded';
+          if (sentinelMobile) sentinelMobile.textContent = 'All loaded';
+          if (observerDesktop) observerDesktop.disconnect();
+          if (observerMobile) observerMobile.disconnect();
+        }
+      } catch (e) {
+        if (sentinel) sentinel.textContent = 'Error loading more';
+        if (sentinelMobile) sentinelMobile.textContent = 'Error loading more';
+      } finally {
+        loading = false;
+      }
+    }
+
+    const observerDesktop = sentinel ? new IntersectionObserver((entries) => {
+      entries.forEach(entry => { if (entry.isIntersecting) loadMore('desktop'); });
+    }, { rootMargin: '400px' }) : null;
+    if (observerDesktop && sentinel) observerDesktop.observe(sentinel);
+
+    const observerMobile = sentinelMobile ? new IntersectionObserver((entries) => {
+      entries.forEach(entry => { if (entry.isIntersecting) loadMore('mobile'); });
+    }, { rootMargin: '400px' }) : null;
+    if (observerMobile && sentinelMobile) observerMobile.observe(sentinelMobile);
+  })();
+</script>

@@ -6,11 +6,12 @@ from swims_orders.models import Order as SwimOrder
 from lessons_orders.models import Order as LessonOrder
 from schools_orders.models import Order as SchoolOrder
 from lessons.models import Program, Product
+from schools.models import ScoLessons, ScoCategory, ScoSchool
 from lessons_bookings.models import LessonEnrollment
 from instructors.models import InstructorAssignment
 from lessons_bookings.models import LessonAssignment
 from django.contrib.auth import get_user_model
-from datetime import datetime, timedelta, time as dt_time
+from datetime import datetime, date, timedelta, time as dt_time
 from django.contrib.auth.models import Group, Permission
 from django.contrib.auth.forms import UserCreationForm
 from django import forms
@@ -320,6 +321,202 @@ def admin_lessons_list_rows(request):
         'next_page': page_obj.next_page_number() if page_obj.has_next() else None,
         'count_this_page': len(page_obj.object_list),
     })
+
+
+@login_required
+@user_passes_test(is_staff)
+def admin_school_lessons_list(request):
+    lessons_qs = ScoLessons.objects.select_related('category', 'school').all()
+
+    selected_category = request.GET.get('category') or ''
+    selected_school = request.GET.get('school') or ''
+    selected_day = request.GET.get('day') or ''
+    selected_time = request.GET.get('time') or ''
+    selected_availability = request.GET.get('availability') or ''
+
+    if selected_category:
+        try:
+            lessons_qs = lessons_qs.filter(category_id=int(selected_category))
+        except (TypeError, ValueError):
+            pass
+    if selected_school:
+        try:
+            lessons_qs = lessons_qs.filter(school_id=int(selected_school))
+        except (TypeError, ValueError):
+            pass
+    if selected_day != '':
+        try:
+            lessons_qs = lessons_qs.filter(day_of_week=int(selected_day))
+        except (TypeError, ValueError):
+            pass
+    if selected_time:
+        try:
+            h, m = selected_time.split(':')
+            lessons_qs = lessons_qs.filter(start_time=dt_time(hour=int(h), minute=int(m)))
+        except Exception:
+            pass
+
+    lessons_info = [
+        {
+            'lesson': lesson,
+            'num_places': lesson.num_places,
+            'remaining_spaces': lesson.remaining_spaces(),
+            'is_full': lesson.is_full,
+        }
+        for lesson in lessons_qs
+    ]
+
+    if selected_availability == 'available':
+        lessons_info = [li for li in lessons_info if not li['is_full']]
+    elif selected_availability == 'full':
+        lessons_info = [li for li in lessons_info if li['is_full']]
+
+    paginator = Paginator(lessons_info, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    categories = ScoCategory.objects.all().order_by('name')
+    schools = ScoSchool.objects.filter(school_lessons__isnull=False).distinct().order_by('name')
+    times = sorted({lesson.start_time.strftime('%H:%M') for lesson in ScoLessons.objects.all() if lesson.start_time})
+    day_choices = ScoLessons._meta.get_field('day_of_week').choices
+
+    context = {
+        'page_obj': page_obj,
+        'total': paginator.count,
+        'categories': categories,
+        'schools': schools,
+        'days': day_choices,
+        'times': times,
+        'selected_category': selected_category,
+        'selected_school': selected_school,
+        'selected_day': selected_day,
+        'selected_time': selected_time,
+        'selected_availability': selected_availability,
+    }
+
+    if request.headers.get('HX-Request'):
+        return render(request, 'dashboard/_admin_school_lessons_list_content.html', context)
+    return render(request, 'dashboard/admin_school_lessons_list.html', context)
+
+
+@login_required
+@user_passes_test(is_staff)
+def admin_school_lessons_list_rows(request):
+    lessons_qs = ScoLessons.objects.select_related('category', 'school').all()
+
+    selected_category = request.GET.get('category') or ''
+    selected_school = request.GET.get('school') or ''
+    selected_day = request.GET.get('day') or ''
+    selected_time = request.GET.get('time') or ''
+    selected_availability = request.GET.get('availability') or ''
+
+    if selected_category:
+        try:
+            lessons_qs = lessons_qs.filter(category_id=int(selected_category))
+        except (TypeError, ValueError):
+            pass
+    if selected_school:
+        try:
+            lessons_qs = lessons_qs.filter(school_id=int(selected_school))
+        except (TypeError, ValueError):
+            pass
+    if selected_day != '':
+        try:
+            lessons_qs = lessons_qs.filter(day_of_week=int(selected_day))
+        except (TypeError, ValueError):
+            pass
+    if selected_time:
+        try:
+            h, m = selected_time.split(':')
+            lessons_qs = lessons_qs.filter(start_time=dt_time(hour=int(h), minute=int(m)))
+        except Exception:
+            pass
+
+    lessons_info = [
+        {
+            'lesson': lesson,
+            'num_places': lesson.num_places,
+            'remaining_spaces': lesson.remaining_spaces(),
+            'is_full': lesson.is_full,
+        }
+        for lesson in lessons_qs
+    ]
+
+    if selected_availability == 'available':
+        lessons_info = [li for li in lessons_info if not li['is_full']]
+    elif selected_availability == 'full':
+        lessons_info = [li for li in lessons_info if li['is_full']]
+
+    paginator = Paginator(lessons_info, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    variant = request.GET.get('variant', 'desktop')
+    template_name = 'dashboard/_admin_school_lesson_rows.html' if variant == 'desktop' else 'dashboard/_admin_school_lesson_cards.html'
+
+    html = render(request, template_name, {
+        'page_obj': page_obj,
+    }).content.decode('utf-8')
+
+    from django.http import JsonResponse
+    return JsonResponse({
+        'html': html,
+        'next_page': page_obj.next_page_number() if page_obj.has_next() else None,
+        'count_this_page': len(page_obj.object_list),
+    })
+
+
+@login_required
+@user_passes_test(is_staff)
+def admin_school_lesson_detail(request, lesson_id):
+    lesson = get_object_or_404(
+        ScoLessons.objects.select_related('category', 'school'),
+        pk=lesson_id,
+    )
+
+    from schools_bookings.models import ScoEnrollment
+
+    enrollments = (
+        ScoEnrollment.objects
+        .select_related('term', 'swimling', 'order')
+        .filter(lesson=lesson)
+        .order_by('-term__start_date', 'swimling__last_name', 'swimling__first_name')
+    )
+
+    term_groups = {}
+    for enrollment in enrollments:
+        term = getattr(enrollment, 'term', None)
+        term_groups.setdefault(term, []).append(enrollment)
+
+    term_entries = []
+    for term, term_enrollments in term_groups.items():
+        swimlings = []
+        seen = set()
+        for enr in term_enrollments:
+            swimling = getattr(enr, 'swimling', None)
+            if swimling:
+                sid = getattr(swimling, 'id', None)
+                if sid is None or sid not in seen:
+                    swimlings.append(swimling)
+                    if sid is not None:
+                        seen.add(sid)
+        term_entries.append({
+            'term': term,
+            'enrollments': term_enrollments,
+            'swimlings': swimlings,
+            'count': len(term_enrollments),
+        })
+
+    term_entries.sort(key=lambda entry: getattr(entry['term'], 'start_date', date.min), reverse=True)
+
+    context = {
+        'lesson': lesson,
+        'term_entries': term_entries,
+        'total_enrollments': enrollments.count(),
+        'remaining_spaces': lesson.remaining_spaces(),
+        'is_full': lesson.is_full,
+    }
+    return render(request, 'dashboard/admin_school_lesson_detail.html', context)
 
 
 @login_required

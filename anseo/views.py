@@ -9,6 +9,7 @@ from django.utils import timezone
 from lessons_bookings.models import LessonEnrollment, Term
 from lessons.models import Product
 from anseo.models import AttendanceEntry, AttendanceRoll
+from django.db.models import Count
 
 
 @login_required
@@ -89,5 +90,43 @@ def take_roll(request, product_id: int, term_id: int):
             "roll": roll,
             "existing": existing,
             "status_choices": AttendanceEntry.STATUS_CHOICES,
+        },
+    )
+
+
+@login_required
+def attendance_history(request, product_id: int, term_id: int):
+    lesson = get_object_or_404(Product.objects.select_related("category"), pk=product_id)
+    term = get_object_or_404(Term, pk=term_id)
+
+    rolls = (
+        AttendanceRoll.objects
+        .filter(product=lesson, term=term)
+        .select_related("created_by")
+        .prefetch_related("entries__enrollment__swimling")
+        .order_by("-window_start")
+    )
+
+    roll_summaries = []
+    status_choices = list(AttendanceEntry.STATUS_CHOICES)
+    status_lookup = dict(AttendanceEntry.STATUS_CHOICES)
+    for roll in rolls:
+        counts = roll.entries.values("status").annotate(total=Count("id"))
+        count_map = {row["status"]: row["total"] for row in counts}
+        roll_summaries.append({
+            "roll": roll,
+            "counts": count_map,
+            "total": sum(count_map.values()),
+        })
+
+    return render(
+        request,
+        "anseo/attendance_history.html",
+        {
+            "product": lesson,
+            "term": term,
+            "roll_summaries": roll_summaries,
+            "status_choices": status_choices,
+            "status_lookup": status_lookup,
         },
     )

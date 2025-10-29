@@ -1,0 +1,134 @@
+{% extends "dashboard/base_dashboard.html" %}
+{% load static %}
+
+{% block subhead %}
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+{% endblock %}
+
+{% block content %}
+<section class="max-w-8xl mx-auto">
+  <div class="bg-white shadow-lg rounded-lg overflow-hidden">
+    <div class="bg-gradient-to-r from-amber-500 to-amber-600 px-6 py-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div>
+        <h1 class="text-3xl font-bold text-white">School Enrolment Report</h1>
+        <p class="text-amber-100 mt-1 text-sm">Monitor lesson utilisation across all school programmes.</p>
+      </div>
+    </div>
+
+    <div class="px-6 py-8">
+      <div class="flex justify-center mb-8">
+        <div class="bg-white shadow-lg rounded-lg overflow-hidden w-full max-w-4xl">
+          <div class="bg-gradient-to-r from-amber-500 to-amber-600 px-6 py-4">
+            <h3 class="text-lg font-semibold text-white text-center">Report Filters</h3>
+          </div>
+          <div class="p-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div class="flex flex-col">
+                <label for="termFilter" class="text-sm font-medium text-gray-700 mb-2">Select Term</label>
+                <select id="termFilter"
+                        class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-amber-500 focus:border-amber-500 text-sm">
+                  {% for option in term_options %}
+                  <option value="{{ option.key }}" {% if option.key == default_term %}selected{% endif %} {% if option.disabled %}disabled{% endif %}>
+                    {{ option.label }}{% if option.disabled %} (none){% endif %}
+                  </option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="flex flex-col">
+                <label for="schoolFilter" class="text-sm font-medium text-gray-700 mb-2">Select School</label>
+                <select id="schoolFilter"
+                        class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-amber-500 focus:border-amber-500 text-sm">
+                  <option value="">All Schools</option>
+                  {% for school in schools %}
+                  <option value="{{ school.id }}" {% if default_school and default_school|add:'' == school.id|stringformat:'s' %}selected{% endif %}>{{ school.name }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="flex flex-col">
+                <label for="dayFilter" class="text-sm font-medium text-gray-700 mb-2">Select Day</label>
+                <select id="dayFilter"
+                        class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-amber-500 focus:border-amber-500 text-sm">
+                  <option value="">All Days</option>
+                  {% for value, label in day_choices %}
+                  <option value="{{ value }}" {% if default_day and default_day|add:'' == value|stringformat:'s' %}selected{% endif %}>{{ label }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+        <div class="bg-white rounded-lg shadow-md p-6 text-center">
+          <div class="text-sm font-medium text-gray-500 uppercase tracking-wide">Total Lessons</div>
+          <div class="text-2xl font-bold text-gray-900 mt-2" id="totalPrograms">-</div>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-6 text-center">
+          <div class="text-sm font-medium text-gray-500 uppercase tracking-wide">Total Enrolments</div>
+          <div class="text-2xl font-bold text-amber-600 mt-2" id="totalEnrollments">-</div>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-6 text-center">
+          <div class="text-sm font-medium text-gray-500 uppercase tracking-wide">Total Capacity</div>
+          <div class="text-2xl font-bold text-gray-900 mt-2" id="totalCapacity">-</div>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-6 text-center">
+          <div class="text-sm font-medium text-gray-500 uppercase tracking-wide">Overall Utilisation</div>
+          <div class="text-2xl font-bold text-amber-700 mt-2" id="overallUtilization">-</div>
+        </div>
+      </div>
+
+      <div class="bg-white shadow-md rounded-lg overflow-hidden">
+        <div class="bg-gradient-to-r from-amber-500 to-amber-600 px-6 py-4 border-b border-gray-200">
+          <h3 class="text-lg font-semibold text-white text-center">School Enrolment Details</h3>
+        </div>
+
+        <div class="block md:hidden" id="mobileCards">
+          <div class="p-4 space-y-4 text-center text-gray-500 text-sm">Loading enrolment data...</div>
+        </div>
+
+        <div class="hidden md:block lg:hidden">
+          <div class="overflow-x-auto">
+            <table id="schoolEnrollmentTableTablet" class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gradient-to-r from-amber-50 to-orange-50">
+                <tr>
+                  <th class="px-4 py-3 text-left text-xs font-medium text-amber-700 uppercase tracking-wider">Lesson</th>
+                  <th class="px-4 py-3 text-left text-xs font-medium text-amber-700 uppercase tracking-wider">School</th>
+                  <th class="px-4 py-3 text-left text-xs font-medium text-amber-700 uppercase tracking-wider">Enrolled</th>
+                  <th class="px-4 py-3 text-left text-xs font-medium text-amber-700 uppercase tracking-wider">Capacity</th>
+                </tr>
+              </thead>
+              <tbody class="bg-white divide-y divide-gray-200"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="hidden lg:block overflow-x-auto">
+          <table id="schoolEnrollmentTable"
+                 data-source-url="{% url 'reports:school_enrollment_report_data' %}"
+                 class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gradient-to-r from-amber-50 to-orange-50">
+              <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-amber-700 uppercase tracking-wider bg-amber-50">Lesson</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-amber-700 uppercase tracking-wider bg-amber-50">School</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-amber-700 uppercase tracking-wider bg-amber-50">Programme</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-amber-700 uppercase tracking-wider bg-amber-50">Schedule</th>
+                <th class="px-6 py-3 text-center text-xs font-medium text-green-700 uppercase tracking-wider bg-green-50">Enrolled</th>
+                <th class="px-6 py-3 text-center text-xs font-medium text-orange-700 uppercase tracking-wider bg-orange-50">Capacity</th>
+                <th class="px-6 py-3 text-center text-xs font-medium text-red-700 uppercase tracking-wider bg-red-50">Available</th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="{% static 'js/reports/school_enrollment_report.js' %}"></script>
+{% endblock %}

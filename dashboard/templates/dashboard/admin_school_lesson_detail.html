@@ -1,0 +1,140 @@
+{% extends "dashboard/base_dashboard.html" %}
+
+{% block title %}{{ lesson.name }} - School Lesson Detail{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto">
+  <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+    <div class="bg-gradient-to-r from-yellow-500 to-yellow-600 px-6 py-4 flex items-center justify-between">
+      <div>
+        <h2 class="text-2xl font-bold text-white flex items-center gap-2">
+          <i class="fas fa-school mr-1"></i> {{ lesson.name }}
+        </h2>
+        <p class="text-yellow-100 text-sm">
+          {{ lesson.get_day_of_week_display }} · {{ lesson.start_time|time:"H:i" }} - {{ lesson.end_time|time:"H:i" }}
+        </p>
+      </div>
+      <a href="{% url 'dashboard:admin_school_lessons_list' %}"
+         class="inline-flex items-center px-3 py-2 bg-white/20 text-white text-sm font-medium rounded-lg hover:bg-white/30 transition">
+        <i class="fas fa-arrow-left mr-2"></i>Back to list
+      </a>
+    </div>
+
+    <div class="px-6 py-8 space-y-8">
+      <div class="grid md:grid-cols-2 gap-6">
+        <div class="bg-yellow-50 border border-yellow-100 rounded-lg p-4">
+          <h3 class="text-sm font-semibold text-yellow-800 uppercase tracking-wide mb-2">Lesson Details</h3>
+          <dl class="space-y-2 text-sm text-gray-700">
+            <div class="flex justify-between">
+              <dt class="font-medium text-gray-900">School</dt>
+              <dd>{{ lesson.school|default:"—" }}</dd>
+            </div>
+            <div class="flex justify-between">
+              <dt class="font-medium text-gray-900">Category</dt>
+              <dd>{{ lesson.category }}</dd>
+            </div>
+            <div class="flex justify-between">
+              <dt class="font-medium text-gray-900">Price</dt>
+              <dd>€{{ lesson.price|floatformat:2 }}</dd>
+            </div>
+            <div class="flex justify-between">
+              <dt class="font-medium text-gray-900">Weeks</dt>
+              <dd>{{ lesson.num_weeks|default:"—" }}</dd>
+            </div>
+          </dl>
+        </div>
+
+        <div class="bg-white border border-gray-100 rounded-lg p-4 shadow-sm text-center">
+          <h3 class="text-sm font-semibold text-gray-800 uppercase tracking-wide mb-4">Capacity</h3>
+          <div class="flex items-center justify-between">
+            <div class="bg-blue-100 rounded-lg px-4 py-2">
+              <p class="text-3xl font-semibold text-blue-900">{{ lesson.num_places }}</p>
+              <p class="text-sm text-blue-500">Total Places</p>
+            </div>
+            <div class="bg-green-100 rounded-lg px-4 py-2">
+              <p class="text-3xl font-semibold text-green-900">{{ total_enrollments }}</p>
+              <p class="text-sm text-green-500">Enrolled</p>
+            </div>
+            <div class="bg-red-100 rounded-lg px-4 py-2">
+                <p class="text-3xl font-semibold text-red-900">{{ remaining_spaces }}</p>
+                <p class="text-sm text-red-500">Spaces Left</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+          <i class="fas fa-clipboard-list text-yellow-500"></i>
+          Term Enrollments
+        </h3>
+
+        {% if term_entries %}
+        <div class="space-y-6">
+          {% for entry in term_entries %}
+          <div class="border border-gray-200 rounded-lg shadow-sm">
+            <div class="px-4 py-3 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
+              <div>
+                <h4 class="text-base font-semibold text-gray-900">
+                  {% if entry.term %}
+                    Term {{ entry.term.id }} &middot; {{ entry.term.start_date|date:"M j, Y" }} - {{ entry.term.end_date|date:"M j, Y" }}
+                  {% else %}
+                    Untagged Term
+                  {% endif %}
+                </h4>
+                <p class="text-sm text-gray-600 mt-1">{{ entry.count }} enrollment{{ entry.count|pluralize }}</p>
+              </div>
+            </div>
+            <div class="px-4 py-4">
+              {% if entry.swimlings %}
+              <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200 text-sm">
+                  <thead class="bg-gray-100">
+                    <tr>
+                      <th class="px-3 py-2 text-left font-medium text-gray-700">Swimling</th>
+                      <th class="px-3 py-2 text-left font-medium text-gray-700">Enrollment Date</th>
+                      <th class="px-3 py-2 text-left font-medium text-gray-700">Order</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-gray-100">
+                    {% for enrollment in entry.enrollments %}
+                    <tr class="hover:bg-gray-50">
+                      <td class="px-3 py-2 text-gray-800">
+                        {% if enrollment.swimling %}
+                          {{ enrollment.swimling.first_name }} {{ enrollment.swimling.last_name }}
+                        {% else %}
+                          <span class="text-gray-500 italic">Unknown</span>
+                        {% endif %}
+                      </td>
+                      <td class="px-3 py-2 text-gray-600">
+                        {{ enrollment.created|date:"M j, Y" }}
+                      </td>
+                      <td class="px-3 py-2 text-gray-600">
+                        {% if enrollment.order %}
+                          #{{ enrollment.order.id }}
+                        {% else %}
+                          <span class="text-gray-400">—</span>
+                        {% endif %}
+                      </td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+              {% else %}
+              <p class="text-sm text-gray-500">No swimlings attached to this term yet.</p>
+              {% endif %}
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="bg-white border border-gray-200 rounded-lg p-6 text-center text-gray-500">
+          No enrollments recorded for this lesson.
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

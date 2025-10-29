@@ -75,11 +75,11 @@
                             <div class="space-y-3">
                                 <!-- Primary Actions Row -->
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                    <!-- Evaluate Skills -->
-                                    <a class="flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-3 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md"
-                                       href="{% url 'instructors:evaluate_lesson_skills' assignment.lesson.id assignment.term.id %}">
-                                        <i class="fa-solid fa-file-pen mr-2"></i>
-                                        Evaluate Skills
+                                                                        <!-- Class List -->
+                                    <a class="flex items-center justify-center bg-red-600 hover:bg-red-700 text-white text-sm font-semibold px-4 py-3 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md"
+                                       href="{% url 'reports:class_print' %}?lesson={{ assignment.lesson.id }}&term=current">
+                                        <i class="fa-solid fa-list mr-2"></i>
+                                        Class List
                                     </a>
 
                                     <!-- Attendance -->
@@ -100,19 +100,27 @@
 
                                 <!-- Secondary Actions Row -->
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                    <!-- Class List -->
-                                    <a class="flex items-center justify-center bg-red-600 hover:bg-red-700 text-white text-sm font-semibold px-4 py-3 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md"
-                                       href="{% url 'reports:class_print' %}?lesson={{ assignment.lesson.id }}&term=current">
-                                        <i class="fa-solid fa-list mr-2"></i>
-                                        Class List
+                                    <!-- Evaluate Skills -->
+                                    <a class="flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-2 py-3 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md"
+                                       href="{% url 'instructors:evaluate_lesson_skills' assignment.lesson.id assignment.term.id %}">
+                                        <i class="fa-solid fa-file-pen mr-2"></i>
+                                        Evaluate Skills
                                     </a>
 
-                                    <!-- Class Notes -->
-                                    <button class="flex items-center justify-center bg-gray-400 hover:bg-gray-500 text-white text-sm font-semibold px-4 py-3 rounded-lg transition-all duration-200 cursor-not-allowed opacity-75"
-                                           disabled title="Coming Soon">
-                                        <i class="fa-solid fa-note-sticky mr-2"></i>
-                                        Class Notes
-                                    </button>
+                                    <!-- Attendance History -->
+                                    {% if assignment.lesson.id and assignment.term.id %}
+                                        <a class="flex items-center justify-center bg-orange-600 hover:bg-orange-700 text-white text-sm font-semibold px-2 py-3 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md"
+                                           href="{% url 'anseo:attendance_history' product_id=assignment.lesson.id term_id=assignment.term.id %}">
+                                            <i class="fa-solid fa-clock-rotate-left mr-2"></i>
+                                            Attendance History
+                                        </a>
+                                    {% else %}
+                                        <span class="flex items-center justify-center bg-gray-300 text-gray-500 text-sm font-semibold px-2 py-3 rounded-lg cursor-not-allowed"
+                                              title="Missing product or term ID">
+                                            <i class="fa-solid fa-clock-rotate-left mr-2"></i>
+                                            Attendance History
+                                        </span>
+                                    {% endif %}
                                 </div>
                             </div>
                         </div>

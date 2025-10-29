@@ -55,7 +55,9 @@
           </div>
         </div>
 
-        {% include "reports/partials/school_filter_controls.html" with terms=terms day_choices=day_choices time_choices=time_choices lessons=lessons selected_term=selected_term selected_day=selected_day selected_time=selected_time selected_lesson=selected_lesson %}
+        <div id="school-filter-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {% include "reports/partials/school_filter_controls.html" with terms=terms day_choices=day_choices time_choices=time_choices lessons=lessons selected_term=selected_term selected_day=selected_day selected_time=selected_time selected_lesson=selected_lesson %}
+        </div>
 
         <div class="border-t border-gray-100 pt-8">
           <div class="flex flex-col sm:flex-row gap-4 justify-center">

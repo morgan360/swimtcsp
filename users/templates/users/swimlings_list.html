@@ -5,12 +5,12 @@
 <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
     <!-- Header -->
     <div
-        class="bg-gradient-to-r from-purple-500 to-purple-600 px-4 sm:px-6 py-4 sm:py-6 flex items-center justify-between">
+        class="bg-gradient-to-r from-yellow-500 to-yellow-600 px-4 sm:px-6 py-4 sm:py-6 flex items-center justify-between">
         <div>
             <h1 class="text-2xl sm:text-3xl font-bold text-white flex items-center">
-                <i class="fas fa-child mr-2 sm:mr-3"></i> Swimlings
+                <i class="fa-solid fa-graduation-cap mr-2 sm:mr-3"></i> {{ header_title|default:"Swimlings" }}
             </h1>
-            <p class="text-purple-100 mt-2 text-sm sm:text-base">Manage swimling personal details and view attendance records.</p>
+            <p class="text-yellow-100 mt-2 text-sm sm:text-base">{{ header_subtitle|default:"Browse and manage swimling personal details." }}</p>
         </div>
     </div>
 
@@ -19,26 +19,26 @@
         <form method="get" class="mb-6">
             <div class="flex gap-2">
                 <input type="text" name="search" value="{{ search }}" placeholder="Search by swimling or guardian..."
-                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
-                <button class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500">
+                <button class="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors"
                     title="Search">
                     <i class="fas fa-search"></i>
                 </button>
             </div>
         </form>
 
-        <div
-            class="mb-4 text-sm text-white bg-gradient-to-r from-purple-600 to-purple-500 hover:bg-gradient-to-r hover:from-purple-700 hover:to-purple-600 p-3 rounded w-fit">
+        <div class="mb-4">
             <a
-                href="{% url 'lessonsadmin:lessons_bookings_lessonenrollment_add' %}?_changelist_filters={{ 'e=1'|urlencode }}">
-                <i class="fas fa-plus-circle mr-1"></i> New enrollment
+                href="{% url 'lessonsadmin:lessons_bookings_lessonenrollment_add' %}?_changelist_filters={{ 'e=1'|urlencode }}"
+                class="text-sm text-white bg-gradient-to-r from-yellow-600 to-yellow-500 hover:bg-gradient-to-r hover:from-yellow-700 hover:to-yellow-600 p-3 rounded w-fit">
+                <i class="fas fa-plus-circle mr-1"></i> New enrolment
             </a>
         </div>
 
         <!-- State seed for JS (avoids template vars inside <script>) -->
-        <div id="swimlings-root" data-total="{{ total|default:0 }}" data-loaded="{{ page_obj.end_index }}"
+        <div id="swimlings-root" data-total="{{ total|default:0 }}" data-loaded="{{ page_obj.end_index|default:0 }}"
             data-next-page="{% if page_obj.has_next %}{{ page_obj.next_page_number }}{% endif %}"
-            data-search="{{ search|escapejs }}" class="hidden"></div>
+            data-search="{{ search|escapejs }}" data-rows-url="{{ rows_url }}" class="hidden"></div>
 
         <!-- Remaining Progress Bar (shrinks as more results load) -->
         <div class="w-full h-2 bg-gray-100 rounded mb-4 overflow-hidden" aria-hidden="true">
@@ -97,6 +97,7 @@
                 let loadedCount = parseInt((root?.dataset.loaded || '0'), 10); // items rendered so far
                 let nextPage = (root?.dataset.nextPage ? parseInt(root.dataset.nextPage, 10) : null);
                 const searchVal = root?.dataset.search || '';
+                const rowsUrl = root?.dataset.rowsUrl || '';
 
                 function updateBar() {
                     if (!total || total <= 0) { remainingBar.style.width = '0%'; return; }
@@ -111,7 +112,8 @@
                     if (loading || !nextPage) return;
                     loading = true;
                     try {
-                        const url = `{% url 'users:swimlings_list_rows' %}?page=${nextPage}&search=${encodeURIComponent(searchVal || '')}&variant=${variant}`;
+                        if (!rowsUrl) throw new Error('Missing rows URL');
+                        const url = `${rowsUrl}?page=${nextPage}&search=${encodeURIComponent(searchVal || '')}&variant=${variant}`;
                         const resp = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
                         if (!resp.ok) throw new Error('Network error');
                         const data = await resp.json();

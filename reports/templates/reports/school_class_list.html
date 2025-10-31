@@ -1,0 +1,165 @@
+{% extends "dashboard/base_dashboard.html" %}
+{% load static %}
+
+{% block title %}School Class List Generator{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto m-10">
+<section class="space-y-8">
+  <div class="text-center bg-white/90 rounded-xl p-8 shadow-sm">
+    <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-xl shadow-lg mb-4">
+      <i class="fas fa-school text-2xl text-white"></i>
+    </div>
+    <h2 class="text-3xl font-bold text-yellow-900 mb-2">School Class List Generator</h2>
+    <p class="text-yellow-700 max-w-2xl mx-auto">
+      Generate printable class lists for school programmes. Choose a school, select the term, then filter by specific lesson or by day and time.
+    </p>
+  </div>
+
+  <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+    <div class="bg-gradient-to-r from-yellow-500 to-yellow-600 px-8 py-6">
+      <h2 class="text-xl font-semibold text-white flex items-center gap-3">
+        <i class="fas fa-filter"></i>
+        Filter Criteria
+      </h2>
+      <p class="text-yellow-100 text-sm mt-1">Choose your school and class parameters</p>
+    </div>
+
+    <div class="p-8">
+      <form method="get" action="{% url 'reports:school_class_print' %}" class="space-y-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="space-y-2">
+            <label for="id_school" class="flex items-center text-sm font-semibold text-gray-700 mb-3">
+              <i class="fas fa-school text-yellow-500 mr-2"></i>
+              School
+            </label>
+            <div class="relative">
+              <select name="school" id="id_school"
+                      hx-get="{% url 'reports:update-school-filters' %}"
+                      hx-trigger="change"
+                      hx-include="closest form"
+                      hx-target="#school-filter-grid"
+                      class="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-gray-900 focus:bg-white focus:border-yellow-500 focus:ring-2 focus:ring-yellow-200 transition-all duration-200 appearance-none">
+                <option value="">Select a School</option>
+                {% for school in schools %}
+                  <option value="{{ school.id }}" {% if selected_school|default:'' == school.id|stringformat:'s' %}selected{% endif %}>
+                    {{ school.name }}
+                  </option>
+                {% endfor %}
+              </select>
+              <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                <i class="fas fa-chevron-down text-gray-400"></i>
+              </div>
+            </div>
+            <p class="text-xs text-gray-500 mt-1">Pick the school you want to manage</p>
+          </div>
+        </div>
+
+        <div id="school-filter-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {% include "reports/partials/school_filter_controls.html" with terms=terms day_choices=day_choices time_choices=time_choices lessons=lessons selected_term=selected_term selected_day=selected_day selected_time=selected_time selected_lesson=selected_lesson %}
+        </div>
+
+        <div class="border-t border-gray-100 pt-8">
+          <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            <button type="button"
+                    onclick="previewSchoolClassList()"
+                    class="inline-flex items-center justify-center px-6 py-3 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 focus:ring-4 focus:ring-gray-300 transition-all duration-200 shadow-sm">
+              <i class="fas fa-eye mr-2"></i>
+              Preview List
+            </button>
+
+            <button type="submit" id="generateButton"
+                    class="inline-flex items-center justify-center px-8 py-3 bg-gray-400 text-gray-300 font-semibold rounded-lg cursor-not-allowed transition-all duration-200 shadow-lg"
+                    disabled
+                    title="Please complete the required fields to generate a class list">
+              <i class="fas fa-print mr-2"></i>
+              Generate &amp; Print List
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</section>
+
+<script>
+function resetSchoolLessonOptions() {
+  const lessonSelect = document.getElementById('id_lesson');
+  if (lessonSelect) {
+    lessonSelect.innerHTML = '<option value=\"\">Select a Lesson</option>';
+    lessonSelect.value = '';
+  }
+  const timeSelect = document.getElementById('id_time');
+  if (timeSelect) {
+    timeSelect.value = '';
+  }
+  checkSchoolFormValidity();
+}
+
+function checkSchoolFormValidity() {
+  const school = document.getElementById('id_school')?.value;
+  const term = document.getElementById('id_term')?.value;
+  const day = document.getElementById('id_day')?.value;
+  const time = document.getElementById('id_time')?.value;
+  const lesson = document.getElementById('id_lesson')?.value;
+  const button = document.getElementById('generateButton');
+
+  if (school && term && (lesson || (day && time))) {
+    button.disabled = false;
+    button.className = "inline-flex items-center justify-center px-8 py-3 bg-gradient-to-r from-yellow-500 to-yellow-600 text-white font-semibold rounded-lg hover:from-yellow-600 hover:to-yellow-700 focus:ring-4 focus:ring-yellow-300 transition-all duration-200 shadow-lg transform hover:scale-105 cursor-pointer";
+    button.title = "Click to generate and print your class list";
+  } else {
+    button.disabled = true;
+    button.className = "inline-flex items-center justify-center px-8 py-3 bg-gray-400 text-gray-300 font-semibold rounded-lg cursor-not-allowed transition-all duration-200 shadow-lg";
+    const missing = [];
+    if (!school) missing.push("School");
+    if (!term) missing.push("Term");
+    if (!(lesson || (day && time))) missing.push("Lesson or Day + Time");
+    button.title = `Please select: ${missing.join(", ")}`;
+  }
+}
+
+function previewSchoolClassList() {
+  const form = document.querySelector('form');
+  const formData = new FormData(form);
+  let preview = "School Class List Preview:\\n\\n";
+  let hasData = false;
+  for (let [key, value] of formData.entries()) {
+    if (value) {
+      hasData = true;
+      preview += `${key.charAt(0).toUpperCase() + key.slice(1)}: ${value}\\n`;
+    }
+  }
+  if (!hasData) {
+    alert("Please select at least one filter to preview.");
+  } else {
+    alert(preview);
+  }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  const fields = ['id_school', 'id_term', 'id_day', 'id_time', 'id_lesson'];
+  fields.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.addEventListener('change', checkSchoolFormValidity);
+    }
+  });
+  document.body.addEventListener('htmx:afterOnLoad', function(event) {
+    if (event.target && event.target.id === 'school-filter-grid') {
+      const newFields = ['id_term', 'id_day', 'id_time', 'id_lesson'];
+      newFields.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.addEventListener('change', checkSchoolFormValidity);
+        }
+      });
+    }
+    checkSchoolFormValidity();
+  });
+  checkSchoolFormValidity();
+});
+</script>
+</section>
+</div>
+{% endblock %}

@@ -1,13 +1,14 @@
 from django.shortcuts import render, get_object_or_404
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseBadRequest
 from django.db.models import Count, Q
 from datetime import date
+from django.utils import timezone
 
 from lessons_bookings.models import Term, LessonEnrollment, LessonAssignment
 from lessons.models import Product, Category
 from instructors.models import InstructorAssignment
-from schools_bookings.models import ScoTerm
-from schools.models import ScoSchool
+from schools_bookings.models import ScoTerm, ScoEnrollment
+from schools.models import ScoSchool, ScoLessons
 from users.models import Swimling
 from .forms import ClassListForm
 
@@ -267,6 +268,427 @@ def class_print(request):
         'swimlings': [],
         'product': None,
         'term_label': term_choice.title() + " Term"
+    })
+
+
+def _school_filter_context(school_id=None, selected_day=None, selected_time=None):
+    """Build reusable context for school class list filters."""
+    context = {
+        'terms': [],
+        'day_choices': [],
+        'time_choices': [],
+        'lessons': [],
+    }
+    if not school_id:
+        return context
+
+    lessons = ScoLessons.objects.filter(school_id=school_id, active=True).select_related('school')
+
+    terms = ScoTerm.objects.filter(school_id=school_id).order_by('-start_date', '-id')
+    context['terms'] = terms
+
+    day_label_map = dict(ScoLessons._meta.get_field('day_of_week').choices)
+    day_values = sorted({lesson.day_of_week for lesson in lessons})
+    context['day_choices'] = [(day, day_label_map.get(day, str(day))) for day in day_values]
+
+    filtered_lessons = lessons
+    if selected_day not in (None, '', 'null'):
+        try:
+            day_int = int(selected_day)
+            filtered_lessons = filtered_lessons.filter(day_of_week=day_int)
+        except (TypeError, ValueError):
+            filtered_lessons = lessons.none()
+
+    time_choices = sorted({
+        lesson.start_time.strftime('%H:%M')
+        for lesson in filtered_lessons
+        if lesson.start_time
+    })
+    context['time_choices'] = time_choices
+
+    if selected_time:
+        try:
+            from datetime import time as dt_time
+            hh, mm = [int(x) for x in selected_time.split(':', 1)]
+            filtered_lessons = filtered_lessons.filter(start_time=dt_time(hour=hh, minute=mm))
+        except Exception:
+            filtered_lessons = filtered_lessons.none()
+
+    context['lessons'] = filtered_lessons.order_by('name')
+    return context
+
+
+def school_class_list_view(request):
+    selected_school = request.GET.get('school') or ''
+    selected_term = request.GET.get('term') or ''
+    selected_day = request.GET.get('day') or ''
+    selected_time = request.GET.get('time') or ''
+    selected_lesson = request.GET.get('lesson') or ''
+
+    schools = (
+        ScoSchool.objects.filter(school_lessons__isnull=False)
+        .distinct()
+        .order_by('name')
+    )
+
+    filter_data = _school_filter_context(
+        selected_school or None,
+        selected_day or None,
+        selected_time or None,
+    )
+
+    context = {
+        'schools': schools,
+        'selected_school': selected_school,
+        'selected_term': selected_term,
+        'selected_day': selected_day,
+        'selected_time': selected_time,
+        'selected_lesson': selected_lesson,
+        **filter_data,
+    }
+    return render(request, 'reports/school_class_list.html', context)
+
+
+def update_school_filters(request):
+    """HTMX endpoint to refresh term/day/time/lesson selects when school changes."""
+    school_id = request.GET.get('school') or ''
+    selected_day = request.GET.get('day') or ''
+    selected_time = request.GET.get('time') or ''
+    selected_term = request.GET.get('term') or ''
+    selected_lesson = request.GET.get('lesson') or ''
+
+    filter_data = _school_filter_context(
+        school_id or None,
+        selected_day or None,
+        selected_time or None,
+    )
+
+    context = {
+        'selected_term': selected_term,
+        'selected_day': selected_day,
+        'selected_time': selected_time,
+        'selected_lesson': selected_lesson,
+        **filter_data,
+    }
+    return render(request, 'reports/partials/school_filter_controls.html', context)
+
+
+def update_school_times(request):
+    school_id = request.GET.get('school') or ''
+    selected_day = request.GET.get('day') or ''
+
+    times = []
+    if school_id and selected_day not in ('', None, 'null'):
+        try:
+            day_int = int(selected_day)
+            lessons = ScoLessons.objects.filter(
+                school_id=school_id,
+                day_of_week=day_int,
+                active=True,
+            )
+            times = sorted({
+                lesson.start_time.strftime('%H:%M')
+                for lesson in lessons if lesson.start_time
+            })
+        except (TypeError, ValueError):
+            times = []
+
+    return render(request, 'reports/partials/school_time_options.html', {
+        'times': times,
+    })
+
+
+def update_school_lessons(request):
+    school_id = request.GET.get('school') or ''
+    selected_day = request.GET.get('day') or ''
+    time_str = request.GET.get('time') or ''
+
+    lessons = ScoLessons.objects.none()
+    if school_id:
+        lessons = ScoLessons.objects.filter(school_id=school_id, active=True)
+        if selected_day not in ('', None, 'null'):
+            try:
+                lessons = lessons.filter(day_of_week=int(selected_day))
+            except (TypeError, ValueError):
+                lessons = lessons.none()
+        if time_str:
+            try:
+                from datetime import time as dt_time
+                hh, mm = [int(x) for x in time_str.split(':', 1)]
+                lessons = lessons.filter(start_time=dt_time(hour=hh, minute=mm))
+            except Exception:
+                lessons = lessons.none()
+        lessons = lessons.order_by('name')
+
+    return render(request, 'reports/partials/school_lesson_options.html', {
+        'lessons': lessons,
+    })
+
+
+def school_class_print(request):
+    school_id = request.GET.get('school')
+    term_id = request.GET.get('term')
+    selected_day = request.GET.get('day')
+    time_str = request.GET.get('time')
+    lesson_id = request.GET.get('lesson')
+
+    if not school_id or not term_id:
+        return HttpResponseBadRequest("School and term are required to generate a class list.")
+
+    school = get_object_or_404(ScoSchool, pk=school_id)
+    term = get_object_or_404(ScoTerm, pk=term_id, school=school)
+
+    def unique_swimlings(enrollments_qs):
+        seen = set()
+        swimlings = []
+        for enrollment in enrollments_qs:
+            if enrollment.swimling_id not in seen:
+                seen.add(enrollment.swimling_id)
+                swimlings.append(enrollment.swimling)
+        return swimlings
+
+    if lesson_id:
+        lesson = get_object_or_404(
+            ScoLessons.objects.select_related('school'),
+            pk=lesson_id,
+            school=school,
+        )
+        enrollments = (
+            ScoEnrollment.objects
+            .filter(lesson=lesson, term=term)
+            .select_related('swimling', 'swimling__guardian')
+            .order_by('swimling__first_name', 'swimling__last_name', 'id')
+        )
+        swimlings = unique_swimlings(enrollments)
+        return render(request, 'reports/printable_school_swimlings_list.html', {
+            'swimlings': swimlings,
+            'lesson': lesson,
+            'school': school,
+            'term': term,
+        })
+
+    lessons = ScoLessons.objects.filter(school=school, active=True)
+    if selected_day not in ('', None, 'null'):
+        try:
+            lessons = lessons.filter(day_of_week=int(selected_day))
+        except (TypeError, ValueError):
+            lessons = lessons.none()
+    if time_str:
+        try:
+            from datetime import time as dt_time
+            hh, mm = [int(x) for x in time_str.split(':', 1)]
+            lessons = lessons.filter(start_time=dt_time(hour=hh, minute=mm))
+        except Exception:
+            lessons = lessons.none()
+
+    lesson_lists = []
+    for lesson in lessons.order_by('name'):
+        enrollments = (
+            ScoEnrollment.objects
+            .filter(lesson=lesson, term=term)
+            .select_related('swimling', 'swimling__guardian')
+            .order_by('swimling__first_name', 'swimling__last_name', 'id')
+        )
+        swimlings = unique_swimlings(enrollments)
+        lesson_lists.append({'lesson': lesson, 'swimlings': swimlings})
+
+    if lesson_lists:
+        return render(request, 'reports/printable_school_swimlings_list_multi.html', {
+            'lesson_lists': lesson_lists,
+            'school': school,
+            'term': term,
+            'time_label': time_str,
+        })
+
+    return render(request, 'reports/printable_school_swimlings_list.html', {
+        'swimlings': [],
+        'lesson': None,
+        'school': school,
+        'term': term,
+    })
+
+
+def _get_school_terms_for_filter(filter_key, school_id=None):
+    today = timezone.localdate()
+    base_qs = ScoTerm.objects.all()
+    if school_id:
+        base_qs = base_qs.filter(school_id=school_id)
+
+    if filter_key == 'previous':
+        return list(base_qs.filter(end_date__lt=today).order_by('-end_date')[:1])
+    if filter_key == 'next':
+        return list(base_qs.filter(start_date__gt=today).order_by('start_date')[:1])
+
+    qs = base_qs.filter(start_date__lte=today, end_date__gte=today).order_by('start_date')
+    if qs.exists():
+        return list(qs)
+    qs = base_qs.filter(is_active=True).order_by('-start_date')
+    if qs.exists():
+        return list(qs[:1])
+    return list(base_qs.order_by('-start_date')[:1])
+
+
+def _school_term_label(terms, fallback):
+    if not terms:
+        return fallback
+    term = terms[0]
+    school_name = getattr(getattr(term, 'school', None), 'name', 'All Schools')
+    start = getattr(term, 'start_date', None)
+    end = getattr(term, 'end_date', None)
+    if start and end:
+        return f"{school_name} • {start:%d %b %Y} – {end:%d %b %Y}"
+    return f"{school_name} • Term {term.id}"
+
+
+def _build_school_enrollment_rows(terms, school_id=None, day=None):
+    term_ids = [t.id for t in terms]
+    if school_id:
+        try:
+            school_ids = [int(school_id)]
+        except (TypeError, ValueError):
+            school_ids = [t.school_id for t in terms if getattr(t, 'school_id', None)]
+    else:
+        school_ids = [t.school_id for t in terms if getattr(t, 'school_id', None)]
+
+    lessons_qs = ScoLessons.objects.select_related('category', 'school')
+    if school_ids:
+        lessons_qs = lessons_qs.filter(school_id__in=school_ids)
+    lessons_qs = lessons_qs.filter(active=True)
+    if day not in (None, '', 'null'):
+        try:
+            lessons_qs = lessons_qs.filter(day_of_week=int(day))
+        except (TypeError, ValueError):
+            lessons_qs = lessons_qs.none()
+
+    lessons = list(lessons_qs)
+    if not lessons:
+        return [], {
+            "total_programs": 0,
+            "total_enrollments": 0,
+            "total_capacity": 0,
+            "utilization": 0,
+        }
+
+    enrollment_map = {}
+    if term_ids:
+        enrollment_map = {
+            row['lesson_id']: row['total']
+            for row in (
+                ScoEnrollment.objects
+                .filter(term_id__in=term_ids, lesson_id__in=[lesson.id for lesson in lessons])
+                .values('lesson_id')
+                .annotate(total=Count('id'))
+            )
+        }
+
+    rows = []
+    total_capacity = 0
+    total_enrollments = 0
+
+    for lesson in lessons:
+        capacity = lesson.num_places or 0
+        enrolled = enrollment_map.get(lesson.id, 0)
+        spaces_left = capacity - enrolled if capacity else 0
+        spaces_left = spaces_left if spaces_left >= 0 else 0
+
+        schedule_parts = []
+        try:
+            schedule_parts.append(lesson.get_day_of_week_display())
+        except Exception:
+            pass
+        if getattr(lesson, 'start_time', None):
+            schedule_parts.append(lesson.start_time.strftime('%H:%M'))
+        if getattr(lesson, 'end_time', None):
+            schedule_parts.append(f"- {lesson.end_time.strftime('%H:%M')}")
+        schedule = ' '.join(schedule_parts).strip()
+
+        rows.append({
+            'name': lesson.name,
+            'category': lesson.category.name if lesson.category else '—',
+            'school': getattr(lesson.school, 'name', 'Unassigned'),
+            'schedule': schedule,
+            'enrollments': enrolled,
+            'capacity': capacity,
+            'spaces_left': spaces_left,
+        })
+
+        total_capacity += capacity
+        total_enrollments += enrolled
+
+    rows.sort(key=lambda r: (r['enrollments'], r['capacity']), reverse=True)
+
+    summary = {
+        "total_programs": len(lessons),
+        "total_enrollments": total_enrollments,
+        "total_capacity": total_capacity,
+        "utilization": round((total_enrollments / total_capacity) * 100, 1) if total_capacity else 0,
+    }
+    return rows, summary
+
+
+def school_enrollment_report(request):
+    schools = ScoSchool.objects.filter(school_lessons__isnull=False).distinct().order_by('name')
+    day_choices = sorted({
+        (lesson.day_of_week, lesson.get_day_of_week_display())
+        for lesson in ScoLessons.objects.filter(active=True)
+    })
+
+    term_options_data = [
+        ('current', "Active School Terms"),
+        ('next', "Upcoming School Term"),
+        ('previous', "Most Recent School Term"),
+    ]
+    options = []
+    default_key = None
+    for key, fallback in term_options_data:
+        terms = _get_school_terms_for_filter(key, None)
+        label = _school_term_label(terms, fallback)
+        has_terms = bool(terms)
+        options.append({
+            'key': key,
+            'label': label,
+            'disabled': not has_terms,
+        })
+        if not default_key and has_terms:
+            default_key = key
+    if default_key is None:
+        default_key = 'current'
+
+    context = {
+        'term_options': options,
+        'default_term': default_key,
+        'schools': schools,
+        'default_school': '',
+        'day_choices': day_choices,
+        'default_day': '',
+    }
+    return render(request, 'reports/school_enrollment_report.html', context)
+
+
+def school_enrollment_report_data(request):
+    term_filter = request.GET.get('term_filter', 'current')
+    school_id = request.GET.get('school_id', '').strip()
+    if not school_id:
+        school_id = None
+    else:
+        try:
+            school_id = int(school_id)
+        except (TypeError, ValueError):
+            school_id = None
+    filters = ['previous', 'current', 'next']
+    term_sets = {key: _get_school_terms_for_filter(key, school_id) for key in filters}
+
+    selected_terms = term_sets.get(term_filter, [])
+    data, selected_summary = _build_school_enrollment_rows(selected_terms, school_id)
+
+    summary = {}
+    for key, terms in term_sets.items():
+        _, sum_stats = _build_school_enrollment_rows(terms, school_id)
+        summary[key] = sum_stats
+
+    return JsonResponse({
+        'data': data,
+        'summary': summary,
     })
 
 

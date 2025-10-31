@@ -1,0 +1,61 @@
+{% extends "base/_base.html" %}
+{% load static %}
+
+{% block content %}
+<section class="py-8">
+  <div class="max-w-4xl mx-auto bg-white/50 rounded-lg shadow-lg p-6">
+    <div class="text-center mb-6 bg-white/80 rounded-xl p-4">
+      <p class="text-sm text-yellow-600 uppercase tracking-wide">{{ school.name }}</p>
+      <h2 class="text-3xl font-bold text-yellow-700 mt-1">
+        {% if lesson %}{{ lesson.name }}{% else %}No Lesson Selected{% endif %}
+      </h2>
+      <p class="text-sm text-gray-600 mt-2">
+        Term {{ term.id }}{% if term.start_date %} • {{ term.start_date|date:"M j, Y" }} → {{ term.end_date|date:"M j, Y" }}{% endif %}
+      </p>
+    </div>
+
+    <p class="text-right font-semibold text-white mb-4">
+      Total Swimlings: {{ swimlings|length }}
+    </p>
+
+    <div id="printableArea">
+      <div class="overflow-x-auto rounded-xl">
+        <table class="min-w-full border border-gray-300 divide-y divide-gray-200 rounded-xl overflow-hidden">
+          <thead class="bg-yellow-600">
+            <tr>
+              <th class="px-4 py-2 text-left font-semibold text-white border">Swimling Name</th>
+              <th class="px-4 py-2 text-left font-semibold text-white border">Guardian</th>
+              <th class="px-4 py-2 text-left font-semibold text-white border">Notes</th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-yellow-300">
+            {% for swimling in swimlings %}
+            <tr>
+              <td class="px-4 py-2 border">{{ swimling }}</td>
+              <td class="px-4 py-2 border">{{ swimling.guardian }}</td>
+              <td class="px-4 py-2 border">{{ swimling.notes }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="3" class="px-4 py-6 text-center text-gray-500">No swimlings enrolled for this lesson.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="text-center mt-6">
+      <button class="inline-block text-white bg-yellow-600 hover:bg-yellow-700 rounded-xl font-medium px-6 py-2 shadow transition"
+              onclick="printDiv('printableArea')">
+        <i class="fa-solid fa-print mr-2"></i>
+        Print
+      </button>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+  <script src="{% static 'js/print_class_list.js' %}"></script>
+{% endblock %}

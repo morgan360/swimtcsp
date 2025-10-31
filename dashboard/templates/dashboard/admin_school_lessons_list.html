@@ -1,0 +1,91 @@
+{% extends "dashboard/base_dashboard.html" %}
+
+{% block title %}School Lessons List - TCSP Admin{% endblock %}
+
+{% block content %}
+<div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+  <div class="bg-gradient-to-r from-yellow-500 to-yellow-600 px-6 py-4">
+    <h2 class="text-2xl font-bold text-white flex items-center gap-2">
+      <i class="fas fa-school mr-1"></i> School Lessons List
+    </h2>
+  </div>
+
+  <div class="px-6 py-8">
+    <div class="text-center">
+      <div class="flex flex-col items-center gap-4 mb-6">
+        <div class="bg-yellow-100 p-4 rounded-full">
+          <i class="fas fa-school text-4xl text-yellow-600"></i>
+        </div>
+        <h3 class="text-xl font-semibold text-gray-900">School Programs Overview</h3>
+        <p class="text-gray-600 max-w-md">
+          Browse every school swim program, filter by school, category, or schedule, and keep track of capacity.
+        </p>
+      </div>
+
+      <form method="GET"
+            hx-get="{% url 'dashboard:admin_school_lessons_list' %}"
+            hx-trigger="submit"
+            hx-target="#school-lessons-list"
+            hx-swap="innerHTML"
+            hx-push-url="true"
+            id="school-lessons-filter-form"
+            class="mb-6 text-left">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 gap-3">
+          <select name="school" class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 text-sm">
+            <option value="">All Schools</option>
+            {% for s in schools %}
+            <option value="{{ s.id }}" {% if selected_school|default:'' == s.id|stringformat:'s' %}selected{% endif %}>{{ s.name }}</option>
+            {% endfor %}
+          </select>
+
+          <select name="category" class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 text-sm">
+            <option value="">All Categories</option>
+            {% for c in categories %}
+            <option value="{{ c.id }}" {% if selected_category|default:'' == c.id|stringformat:'s' %}selected{% endif %}>{{ c.name }}</option>
+            {% endfor %}
+          </select>
+
+          <select name="day" class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 text-sm">
+            <option value="">All Days</option>
+            {% for value,label in days %}
+            <option value="{{ value }}" {% if selected_day|default:'' == value|stringformat:'s' %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+
+          <select name="time" class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 text-sm">
+            <option value="">All Times</option>
+            {% for t in times %}
+            <option value="{{ t }}" {% if selected_time|default:'' == t %}selected{% endif %}>{{ t }}</option>
+            {% endfor %}
+          </select>
+
+          <select name="availability" class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 text-sm">
+            <option value="" {% if not selected_availability %}selected{% endif %}>All Availability</option>
+            <option value="available" {% if selected_availability == 'available' %}selected{% endif %}>Available</option>
+            <option value="full" {% if selected_availability == 'full' %}selected{% endif %}>Full</option>
+          </select>
+
+          <select name="sort" id="school-lessons-sort-select" class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 text-sm">
+            <option value="" {% if not selected_sort %}selected{% endif %}>Default Order</option>
+            <option value="availability_desc" {% if selected_sort == 'availability_desc' %}selected{% endif %}>Most Spaces First</option>
+            <option value="availability_asc" {% if selected_sort == 'availability_asc' %}selected{% endif %}>Least Spaces First</option>
+          </select>
+
+          <div class="flex space-x-2">
+            <button type="submit" class="flex-1 px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors text-sm">
+              <i class="fas fa-filter mr-1"></i>Filter
+            </button>
+            <a href="{% url 'dashboard:admin_school_lessons_list' %}" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 text-sm">
+              <i class="fas fa-times"></i>
+            </a>
+          </div>
+        </div>
+      </form>
+
+      <div id="school-lessons-list" hx-boost="true" hx-target="#school-lessons-list" class="mt-8">
+        {% include "dashboard/_admin_school_lessons_list_content.html" %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

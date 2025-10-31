@@ -1,0 +1,38 @@
+{% for lesson_info in page_obj %}
+<div class="p-4 border border-yellow-200 mt-2 rounded-lg bg-white shadow-sm">
+  <div class="flex items-start gap-3">
+    <div class="flex-1 min-w-0">
+      <div class="text-white bg-gradient-to-r from-yellow-400 to-amber-500 rounded-lg px-3 py-2 flex flex-col items-center text-center">
+        <i class="fas fa-school text-white mb-1"></i>
+        <h4 class="text-base font-semibold text-white">{{ lesson_info.lesson.name }}</h4>
+        <p class="text-xs text-white/80">{{ lesson_info.lesson.get_day_of_week_display }} · {{ lesson_info.lesson.start_time|time:"H:i" }} - {{ lesson_info.lesson.end_time|time:"H:i" }}</p>
+      </div>
+      <div class="mt-2 text-sm text-gray-600">
+        <span class="font-medium">School:</span> {{ lesson_info.lesson.school|default:"—" }}
+      </div>
+      <div class="mt-1 text-sm text-gray-600">Capacity: <span class="font-medium">{{ lesson_info.num_places }}</span></div>
+      <div class="mt-1">
+        {% if lesson_info.is_full %}
+        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+          <i class="fas fa-times-circle mr-1"></i>Full
+        </span>
+        {% elif lesson_info.remaining_spaces <= 3 %}
+        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+          <i class="fas fa-exclamation-triangle mr-1"></i>{{ lesson_info.remaining_spaces }} left
+        </span>
+        {% else %}
+        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+          <i class="fas fa-check-circle mr-1"></i>{{ lesson_info.remaining_spaces }} available
+        </span>
+        {% endif %}
+      </div>
+      <div class="mt-3 flex flex-wrap gap-2">
+        <a href="{% url 'dashboard:admin_school_lesson_detail' lesson_info.lesson.pk %}"
+           class="inline-flex items-center px-3 py-1.5 bg-yellow-500 text-white text-xs font-medium rounded-lg hover:bg-yellow-600 transition-colors">
+          <i class="fas fa-eye mr-1"></i>View Lesson
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endfor %}

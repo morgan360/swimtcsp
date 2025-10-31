@@ -18,6 +18,8 @@ urlpatterns = [
     path("join-schools/", join_schools_program, name="join_schools_program"),
     path("swimlings/", views.swimlings_list, name="swimlings_list"),
     path("swimlings/rows/", views.swimlings_list_rows, name="swimlings_list_rows"),
+    path("swimlings/schools/", views.school_swimlings_list, name="school_swimlings_list"),
+    path("swimlings/schools/rows/", views.school_swimlings_list_rows, name="school_swimlings_list_rows"),
 
     path("my-bookings/", my_bookings, name="my_bookings"),
 

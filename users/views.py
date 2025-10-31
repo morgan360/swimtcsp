@@ -18,7 +18,6 @@ from django.urls import reverse
 from django.utils import timezone
 
 from schools_bookings.models import ScoEnrollment
-from schools_bookings.utils.swimling_utils import get_latest_active_school_term
 from utils.context_processors import get_term_info
 from lessons_bookings.models import LessonEnrollment
 from lessons_orders.models import Order as LessonOrder
@@ -133,6 +132,184 @@ def build_current_public_classes(swimlings, term_info):
             public_map[swimling.id] = classes
 
     return public_map
+
+
+def _get_swimlings_queryset(search, school_only=False):
+    qs = (
+        Swimling.objects
+        .select_related("guardian")
+        .annotate(
+            full_name=Concat(
+                Coalesce("first_name", Value("")),
+                Value(" "),
+                Coalesce("last_name", Value("")),
+            ),
+            guardian_full_name=Concat(
+                Coalesce("guardian__first_name", Value("")),
+                Value(" "),
+                Coalesce("guardian__last_name", Value("")),
+            ),
+        )
+        .order_by("first_name", "last_name")
+    )
+    if school_only:
+        qs = qs.exclude(
+            Q(sco_role_num__isnull=True) | Q(sco_role_num__exact="")
+        )
+    if search:
+        qs = qs.filter(
+            Q(first_name__icontains=search)
+            | Q(last_name__icontains=search)
+            | Q(guardian__email__icontains=search)
+            | Q(guardian__first_name__icontains=search)
+            | Q(guardian__last_name__icontains=search)
+            | Q(full_name__icontains=search)
+            | Q(guardian_full_name__icontains=search)
+        )
+    return qs
+
+
+def _build_school_enrollment_snapshot(swimlings):
+    """Return mapping swimling_id -> {'current': [...], 'previous': [...]} for school enrollments."""
+    swimlings = list(swimlings)
+    if not swimlings:
+        return {}
+
+    enrollments = (
+        ScoEnrollment.objects
+        .filter(swimling__in=swimlings)
+        .select_related("lesson", "lesson__school", "term")
+        .order_by("-term__start_date", "-term_id", "-created")
+    )
+
+    grouped = defaultdict(lambda: defaultdict(list))
+    for enrollment in enrollments:
+        term = getattr(enrollment, "term", None)
+        term_id = getattr(term, "id", None)
+        grouped[enrollment.swimling_id][term_id].append(enrollment)
+
+    today = timezone.localdate()
+
+    def term_sort_key(term):
+        if not term:
+            return (date.min, 0)
+        start = getattr(term, "start_date", None) or date.min
+        return (start, getattr(term, "id", 0))
+
+    def is_current_term(term):
+        if not term:
+            return False
+        start = getattr(term, "start_date", None)
+        end = getattr(term, "end_date", None)
+        if getattr(term, "is_active", False):
+            return True
+        if start and end and start <= today <= end:
+            return True
+        return False
+
+    def admin_link_for(enrollment):
+        try:
+            return reverse("schoolsadmin:schools_bookings_scoenrollment_change", args=[enrollment.id])
+        except Exception:
+            return f"/schoolsadmin/schools_bookings/scoenrollment/{enrollment.id}/change/"
+
+    snapshot = {}
+    for swimling_id, term_map in grouped.items():
+        entries = []
+        for term_id, enrol_list in term_map.items():
+            term = getattr(enrol_list[0], "term", None)
+            entries.append({
+                "term": term,
+                "enrollments": enrol_list,
+            })
+        # Sort newest term first
+        entries.sort(key=lambda entry: term_sort_key(entry["term"]), reverse=True)
+
+        current_entry = next((entry for entry in entries if is_current_term(entry["term"])), None)
+        if current_entry is None and entries:
+            current_entry = entries[0]
+
+        previous_entries = [entry for entry in entries if entry is not current_entry]
+
+        current_classes = []
+        if current_entry:
+            for enrollment in current_entry["enrollments"]:
+                lesson = getattr(enrollment, "lesson", None)
+                if not lesson:
+                    continue
+                current_classes.append({
+                    "name": lesson.name or "",
+                    "enrollment_id": enrollment.id,
+                    "admin_url": admin_link_for(enrollment),
+                })
+
+        previous = []
+        for entry in previous_entries:
+            term = entry["term"]
+            if term:
+                if getattr(term, "start_date", None) and getattr(term, "end_date", None):
+                    term_label = f"Term {term.id} ({term.start_date:%b %d, %Y} – {term.end_date:%b %d, %Y})"
+                else:
+                    term_label = f"Term {term.id}"
+            else:
+                term_label = "Unknown Term"
+            for enrollment in entry["enrollments"]:
+                lesson = getattr(enrollment, "lesson", None)
+                if not lesson:
+                    continue
+                previous.append({
+                    "level": lesson.name or "",
+                    "day": lesson.get_day_of_week_display() if hasattr(lesson, "get_day_of_week_display") else "",
+                    "time": lesson.start_time.strftime("%H:%M") if getattr(lesson, "start_time", None) else "",
+                    "term": term_label,
+                })
+
+        snapshot[swimling_id] = {
+            "current": current_classes,
+            "previous": previous,
+        }
+
+    return snapshot
+
+
+def _hydrate_swimlings(swimlings, term_info, include_public=True, include_history=True):
+    """Attach current classes and optional history metadata to each swimling."""
+    if not swimlings:
+        return
+
+    public_by_swimling = build_current_public_classes(swimlings, term_info) if include_public else {}
+    school_snapshot = _build_school_enrollment_snapshot(swimlings)
+
+    for s in swimlings:
+        classes = list(public_by_swimling.get(s.id, [])) if include_public else []
+        school_data = school_snapshot.get(s.id, {})
+        classes.extend(school_data.get("current", []))
+        seen = set()
+        deduped = []
+        for item in classes:
+            nm = item.get("name")
+            key = (nm, item.get("enrollment_id"))
+            if key in seen:
+                continue
+            seen.add(key)
+            deduped.append(item)
+        setattr(s, "current_classes", deduped)
+
+    history_map = collect_previous_lessons(swimlings, term_info.get("current_term_id")) if include_history else {}
+    for s in swimlings:
+        school_prev = school_snapshot.get(s.id, {}).get("previous", [])
+        previous = list(history_map.get(s.id, [])) if include_history else []
+        previous.extend(school_prev)
+        setattr(s, "previous_terms", previous)
+
+
+def _paginate_swimlings(request, qs, include_public=True, include_history=True):
+    paginator = Paginator(qs, 25)
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
+    term_info = get_term_info(request)
+    _hydrate_swimlings(page_obj.object_list, term_info, include_public=include_public, include_history=include_history)
+    return page_obj, paginator.count
 
 
 # ✅ User Profile Update View
@@ -254,91 +431,17 @@ def swimlings_list(request):
     """Dashboard-facing view to browse and manage swimlings (search, paginate) and show current classes (public + school) with per-enrollment Move links."""
     search = request.GET.get("search", "").strip()
 
-    qs = (
-        Swimling.objects
-        .select_related("guardian")
-        .annotate(
-            full_name=Concat(
-                Coalesce("first_name", Value("")),
-                Value(" "),
-                Coalesce("last_name", Value("")),
-            ),
-            guardian_full_name=Concat(
-                Coalesce("guardian__first_name", Value("")),
-                Value(" "),
-                Coalesce("guardian__last_name", Value("")),
-            ),
-        )
-        .order_by("first_name", "last_name")
-    )
-
-    if search:
-        qs = qs.filter(
-            Q(first_name__icontains=search)
-            | Q(last_name__icontains=search)
-            | Q(guardian__email__icontains=search)
-            | Q(guardian__first_name__icontains=search)
-            | Q(guardian__last_name__icontains=search)
-            | Q(full_name__icontains=search)
-            | Q(guardian_full_name__icontains=search)
-        )
-
-    paginator = Paginator(qs, 25)  # 25 per page
-    page_number = request.GET.get("page")
-    page_obj = paginator.get_page(page_number)
-
-    # === Build current classes per swimling (Public + School) ===
-    term_info = get_term_info(request)
-    current_term_id = term_info.get("current_term_id")
-    public_by_swimling = build_current_public_classes(page_obj.object_list, term_info)
-
-    # Attach combined classes to each swimling on the current page
-    for s in page_obj.object_list:
-        classes = list(public_by_swimling.get(s.id, []))
-        # School: use latest active school term for this swimling
-        try:
-            if getattr(s, "sco_role_num", None):
-                st = get_latest_active_school_term(s.sco_role_num)
-                if st:
-                    school_qs = (
-                        ScoEnrollment.objects
-                        .filter(swimling=s, term=st)
-                        .select_related("lesson")
-                    )
-                    for se in school_qs:
-                        if getattr(se, "lesson", None) and getattr(se.lesson, "name", None):
-                            try:
-                                se_admin_url = reverse("schoolsadmin:schools_bookings_scoenrollment_change", args=[se.id])
-                            except Exception:
-                                se_admin_url = f"/schoolsadmin/schools_bookings/scoenrollment/{se.id}/change/"
-                            classes.append({
-                                "name": se.lesson.name,
-                                "enrollment_id": se.id,
-                                "admin_url": se_admin_url,
-                            })
-        except Exception:
-            logger.exception("swimlings_list: failed building school enrollments for swimling=%s", getattr(s, 'id', '?'))
-        # Optional: dedupe by name while preserving order (handles duplicate same-named classes)
-        seen = set()
-        deduped = []
-        for item in classes:
-            nm = item.get("name")
-            key = (nm, item.get("enrollment_id"))
-            if key in seen:
-                continue
-            seen.add(key)
-            deduped.append(item)
-        setattr(s, "current_classes", deduped)
-
-    history_map = collect_previous_lessons(page_obj.object_list, current_term_id)
-    for s in page_obj.object_list:
-        setattr(s, "previous_terms", history_map.get(s.id, []))
+    qs = _get_swimlings_queryset(search, school_only=False)
+    page_obj, total = _paginate_swimlings(request, qs)
 
     context = {
         "search": search,
         "page_obj": page_obj,
         "swimlings": page_obj.object_list,
-        "total": paginator.count,
+        "total": total,
+        "rows_url": reverse("users:swimlings_list_rows"),
+        "header_title": "Swimlings",
+        "header_subtitle": "Browse and manage swimling personal details.",
     }
     return render(request, "users/swimlings_list.html", context)
 
@@ -351,81 +454,54 @@ def swimlings_list_rows(request):
     search = request.GET.get("search", "").strip()
     page_number = request.GET.get("page")
 
-    qs = (
-        Swimling.objects
-        .select_related("guardian")
-        .annotate(
-            full_name=Concat(
-                Coalesce("first_name", Value("")),
-                Value(" "),
-                Coalesce("last_name", Value("")),
-            ),
-            guardian_full_name=Concat(
-                Coalesce("guardian__first_name", Value("")),
-                Value(" "),
-                Coalesce("guardian__last_name", Value("")),
-            ),
-        )
-        .order_by("first_name", "last_name")
-    )
-
-    if search:
-        qs = qs.filter(
-            Q(first_name__icontains=search)
-            | Q(last_name__icontains=search)
-            | Q(guardian__email__icontains=search)
-            | Q(guardian__first_name__icontains=search)
-            | Q(guardian__last_name__icontains=search)
-            | Q(full_name__icontains=search)
-            | Q(guardian_full_name__icontains=search)
-        )
-
+    qs = _get_swimlings_queryset(search, school_only=False)
     paginator = Paginator(qs, 25)
     page_obj = paginator.get_page(page_number)
-
-    # Build current classes like the main view
     term_info = get_term_info(request)
-    current_term_id = term_info.get("current_term_id")
-    public_by_swimling = build_current_public_classes(page_obj.object_list, term_info)
+    _hydrate_swimlings(page_obj.object_list, term_info)
 
-    for s in page_obj.object_list:
-        classes = list(public_by_swimling.get(s.id, []))
-        try:
-            if getattr(s, "sco_role_num", None):
-                st = get_latest_active_school_term(s.sco_role_num)
-                if st:
-                    school_qs = (
-                        ScoEnrollment.objects
-                        .filter(swimling=s, term=st)
-                        .select_related("lesson")
-                    )
-                    for se in school_qs:
-                        if getattr(se, "lesson", None) and getattr(se.lesson, "name", None):
-                            try:
-                                se_admin_url = reverse("schoolsadmin:schools_bookings_scoenrollment_change", args=[se.id])
-                            except Exception:
-                                se_admin_url = f"/schoolsadmin/schools_bookings/scoenrollment/{se.id}/change/"
-                            classes.append({
-                                "name": se.lesson.name,
-                                "enrollment_id": se.id,
-                                "admin_url": se_admin_url,
-                            })
-        except Exception:
-            logger.exception("swimlings_list_rows: failed building school enrollments for swimling=%s", getattr(s, 'id', '?'))
-        seen = set()
-        deduped = []
-        for item in classes:
-            nm = item.get("name")
-            key = (nm, item.get("enrollment_id"))
-            if key in seen:
-                continue
-            seen.add(key)
-            deduped.append(item)
-        setattr(s, "current_classes", deduped)
+    variant = request.GET.get('variant', 'desktop')
+    template_name = 'users/_swimling_rows.html' if variant == 'desktop' else 'users/_swimling_cards.html'
+    html = render(request, template_name, {
+        'swimlings': page_obj.object_list,
+    }).content.decode('utf-8')
 
-    history_map = collect_previous_lessons(page_obj.object_list, current_term_id)
-    for s in page_obj.object_list:
-        setattr(s, "previous_terms", history_map.get(s.id, []))
+    data = {
+        'html': html,
+        'next_page': page_obj.next_page_number() if page_obj.has_next() else None,
+        'count_this_page': len(page_obj.object_list),
+    }
+    return JsonResponse(data)
+
+
+@staff_member_required
+def school_swimlings_list(request):
+    """List swimlings that have a school role number."""
+    search = request.GET.get("search", "").strip()
+    qs = _get_swimlings_queryset(search, school_only=True)
+    page_obj, total = _paginate_swimlings(request, qs, include_public=False, include_history=False)
+
+    context = {
+        "search": search,
+        "page_obj": page_obj,
+        "swimlings": page_obj.object_list,
+        "total": total,
+        "rows_url": reverse("users:school_swimlings_list_rows"),
+        "header_title": "School Swimlings",
+        "header_subtitle": "Swimlings linked to school programmes.",
+    }
+    return render(request, "users/swimlings_list.html", context)
+
+
+@staff_member_required
+def school_swimlings_list_rows(request):
+    search = request.GET.get("search", "").strip()
+    page_number = request.GET.get("page")
+    qs = _get_swimlings_queryset(search, school_only=True)
+    paginator = Paginator(qs, 25)
+    page_obj = paginator.get_page(page_number)
+    term_info = get_term_info(request)
+    _hydrate_swimlings(page_obj.object_list, term_info, include_public=False, include_history=False)
 
     variant = request.GET.get('variant', 'desktop')
     template_name = 'users/_swimling_rows.html' if variant == 'desktop' else 'users/_swimling_cards.html'

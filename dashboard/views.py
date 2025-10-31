@@ -1,3 +1,4 @@
+from collections import defaultdict
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
@@ -7,9 +8,8 @@ from lessons_orders.models import Order as LessonOrder
 from schools_orders.models import Order as SchoolOrder
 from lessons.models import Program, Product
 from schools.models import ScoLessons, ScoCategory, ScoSchool
-from lessons_bookings.models import LessonEnrollment
+from lessons_bookings.models import LessonEnrollment, LessonAssignment, Term
 from instructors.models import InstructorAssignment
-from lessons_bookings.models import LessonAssignment
 from django.contrib.auth import get_user_model
 from datetime import datetime, date, timedelta, time as dt_time
 from django.contrib.auth.models import Group, Permission
@@ -174,6 +174,147 @@ def public_swims_attendance(request):
 @user_passes_test(is_staff)
 def lessons(request):
     return render(request, 'dashboard/lessons.html')
+
+
+@login_required
+@user_passes_test(is_staff)
+def swimling_stagnation(request):
+    current_term = Term.get_current_term() or Term.objects.order_by('-start_date', '-id').first()
+
+    if not current_term:
+        context = {
+            'current_term': None,
+            'levels_data': [],
+            'total_swimlings': 0,
+        }
+        return render(request, 'dashboard/swimling_stagnation.html', context)
+
+    current_enrollments = list(
+        LessonEnrollment.objects.filter(term=current_term)
+        .select_related('swimling__guardian', 'lesson__category', 'lesson')
+        .order_by('swimling_id')
+    )
+
+    current_entries = {}
+    swimling_ids = set()
+
+    for enrollment in current_enrollments:
+        lesson = enrollment.lesson
+        swimling = enrollment.swimling
+        category = getattr(lesson, 'category', None)
+        if not lesson or not swimling or not category:
+            continue
+
+        key = (swimling.id, category.id)
+        if key in current_entries:
+            continue
+
+        current_entries[key] = enrollment
+        swimling_ids.add(swimling.id)
+
+    if not current_entries:
+        context = {
+            'current_term': current_term,
+            'levels_data': [],
+            'total_swimlings': 0,
+        }
+        return render(request, 'dashboard/swimling_stagnation.html', context)
+
+    history_by_swimling = defaultdict(list)
+    history_enrollments = list(
+        LessonEnrollment.objects.filter(swimling_id__in=swimling_ids)
+        .select_related('lesson__category', 'term')
+        .order_by('-term__start_date', '-term_id', '-created')
+    )
+
+    for enrollment in history_enrollments:
+        history_by_swimling[enrollment.swimling_id].append(enrollment)
+
+    levels_map = {}
+    total_swimlings = 0
+
+    for (swimling_id, category_id), current_enrollment in current_entries.items():
+        history_entries = history_by_swimling.get(swimling_id, [])
+        if not history_entries:
+            continue
+
+        consecutive_enrollments = []
+        seen_terms = set()
+        count_started = False
+
+        for enrollment in history_entries:
+            term_id = enrollment.term_id
+            if term_id in seen_terms:
+                continue
+            seen_terms.add(term_id)
+
+            enrollment_category = getattr(enrollment.lesson, 'category', None)
+            if not enrollment_category:
+                continue
+
+            if enrollment_category.id == category_id:
+                count_started = True
+                consecutive_enrollments.append(enrollment)
+            elif count_started:
+                break
+
+        if len(consecutive_enrollments) < 4:
+            continue
+
+        category = current_enrollment.lesson.category
+        swimling = current_enrollment.swimling
+        lesson = current_enrollment.lesson
+
+        day_display = ''
+        try:
+            day_display = lesson.get_day_of_week_display()
+        except Exception:
+            pass
+
+        def format_time(time_value):
+            return time_value.strftime("%H:%M") if time_value else ''
+
+        time_label = " - ".join(filter(None, [format_time(lesson.start_time), format_time(lesson.end_time)]))
+
+        terms = [
+            {
+                'term_label': getattr(enrollment.term, 'label', str(enrollment.term)),
+                'term_id': enrollment.term_id,
+            }
+            for enrollment in consecutive_enrollments
+        ]
+
+        level_data = levels_map.setdefault(category_id, {
+            'category': category,
+            'swimlings': []
+        })
+
+        level_data['swimlings'].append({
+            'swimling': swimling,
+            'guardian': getattr(swimling, 'guardian', None),
+            'consecutive_terms': len(consecutive_enrollments),
+            'term_history': terms,
+            'current_lesson': lesson,
+            'day_display': day_display,
+            'time_label': time_label,
+        })
+
+        total_swimlings += 1
+
+    levels_data = []
+    for data in levels_map.values():
+        data['swimlings'].sort(key=lambda entry: entry['consecutive_terms'], reverse=True)
+        levels_data.append(data)
+
+    levels_data.sort(key=lambda item: (-len(item['swimlings']), item['category'].name))
+
+    context = {
+        'current_term': current_term,
+        'levels_data': levels_data,
+        'total_swimlings': total_swimlings,
+    }
+
+    return render(request, 'dashboard/swimling_stagnation.html', context)
 
 
 @login_required

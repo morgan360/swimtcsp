@@ -1,0 +1,109 @@
+{% extends "dashboard/base_dashboard.html" %}
+
+{% block content %}
+<section class="max-w-7xl mx-auto">
+  <div class="bg-white shadow-xl rounded-lg overflow-hidden">
+    <header class="bg-gradient-to-r from-slate-700 via-slate-800 to-slate-900 px-6 py-5">
+      <h1 class="text-2xl font-semibold text-white flex items-center gap-3">
+        <i class="fa-solid fa-circle-pause text-amber-300"></i>
+        Swimling Stagnation Overview
+      </h1>
+      <p class="text-sm text-slate-200 mt-1">
+        Identify swimlings who remain in the same level for four or more terms to help prioritise assessments and support.
+      </p>
+    </header>
+
+    <div class="px-6 py-6 space-y-6">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="p-4 border border-slate-200 rounded-lg bg-slate-50">
+          <p class="text-xs uppercase tracking-wide text-slate-500">Current Term</p>
+          <p class="mt-1 text-lg font-semibold text-slate-800">
+            {% if current_term %}
+              {{ current_term.label }}
+            {% else %}
+              Not available
+            {% endif %}
+          </p>
+        </div>
+        <div class="p-4 border border-green-200 rounded-lg bg-green-50">
+          <p class="text-xs uppercase tracking-wide text-green-600">Flagged Swimlings</p>
+          <p class="mt-1 text-lg font-semibold text-green-800">{{ total_swimlings }}</p>
+        </div>
+        <div class="p-4 border border-amber-200 rounded-lg bg-amber-50">
+          <p class="text-xs uppercase tracking-wide text-amber-600">Levels Impacted</p>
+          <p class="mt-1 text-lg font-semibold text-amber-800">{{ levels_data|length }}</p>
+        </div>
+      </div>
+
+      {% if not levels_data %}
+        <div class="border border-green-200 bg-green-50 rounded-lg px-6 py-8 text-center">
+          <p class="text-lg font-medium text-green-800">No stagnation detected for the current term.</p>
+          <p class="text-sm text-green-700 mt-2">
+            Keep monitoring previous enrolments and return here to review long-term progression flags.
+          </p>
+        </div>
+      {% else %}
+        <div class="space-y-8">
+          {% for level in levels_data %}
+            <div class="border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+              <div class="bg-slate-100 px-5 py-4 flex flex-col sm:flex-row sm:items-center gap-3">
+                <div class="flex-1">
+                  <h2 class="text-xl font-semibold text-slate-800">
+                    {{ level.category.name }}
+                    {% if level.category.short_name %}
+                      <span class="text-sm font-medium text-slate-500">({{ level.category.short_name }})</span>
+                    {% endif %}
+                  </h2>
+                  {% if level.category.program %}
+                    <p class="text-sm text-slate-500">Program: {{ level.category.program.name }}</p>
+                  {% endif %}
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="inline-flex items-center px-3 py-1 rounded-full bg-amber-100 text-amber-700 text-xs font-semibold uppercase tracking-wide">
+                    {{ level.swimlings|length }} flagged
+                  </span>
+                </div>
+              </div>
+
+              <div class="divide-y divide-slate-200 bg-white">
+                {% for entry in level.swimlings %}
+                  <div class="px-5 py-4 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                    <div>
+                      <p class="text-lg font-semibold text-slate-900">
+                        {{ entry.swimling.first_name }} {{ entry.swimling.last_name }}
+                      </p>
+                      {% if entry.guardian %}
+                        <p class="text-sm text-slate-500">
+                          Guardian: {{ entry.guardian.get_full_name|default:entry.guardian.email }}
+                        </p>
+                      {% endif %}
+                      <p class="text-sm text-slate-500">
+                        Current Class: {{ entry.day_display|default:"Day TBC" }}
+                        {% if entry.time_label %}
+                          • {{ entry.time_label }}
+                        {% endif %}
+                      </p>
+                    </div>
+                    <div class="flex flex-col sm:flex-row sm:items-center gap-3">
+                      <div class="bg-amber-50 border border-amber-200 text-amber-800 px-4 py-2 rounded-lg text-sm font-semibold text-center">
+                        {{ entry.consecutive_terms }} consecutive terms
+                      </div>
+                      <div class="flex flex-wrap gap-2">
+                        {% for term in entry.term_history %}
+                          <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200">
+                            {{ term.term_label }}
+                          </span>
+                        {% endfor %}
+                      </div>
+                    </div>
+                  </div>
+                {% endfor %}
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</section>
+{% endblock %}

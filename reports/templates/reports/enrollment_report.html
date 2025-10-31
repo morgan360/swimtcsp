@@ -1,14 +1,14 @@
 {% extends 'reports/base_report.html' %}
 {% load static %}
 
-{% block report_title %}<h1 class="text-4xl font-bold text-white">Enrollment Report</h1>{% endblock %}
+{% block report_title %}<h2 class="text-4xl font-bold text-white">Enrolment Stats</h2>{% endblock %}
 
 {% block report_filters %}
 <!-- Filters Section -->
 <div class="flex justify-center mb-8">
     <div class="bg-white shadow-lg rounded-lg overflow-hidden w-full max-w-2xl">
         <div class="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4">
-            <h3 class="text-lg font-semibold text-white text-center">Report Filters</h3>
+            <h3 class="text-lg font-semibold text-white text-center">Filters</h3>
         </div>
         <div class="p-6">
             <div class="flex items-center justify-center gap-4">
@@ -38,7 +38,7 @@
         <div class="text-2xl font-bold text-gray-900 mt-2" id="totalPrograms">-</div>
     </div>
     <div class="bg-white rounded-lg shadow-md p-6 text-center">
-        <div class="text-sm font-medium text-gray-500 uppercase tracking-wide">Total Enrollments</div>
+        <div class="text-sm font-medium text-gray-500 uppercase tracking-wide">Total Enrolments</div>
         <div class="text-2xl font-bold text-blue-600 mt-2" id="totalEnrollments">-</div>
     </div>
     <div class="bg-white rounded-lg shadow-md p-6 text-center">
@@ -54,16 +54,37 @@
 
 {% block report_content %}
 <!-- Enrollment Table -->
+<style>
+    /* Gives table body rows comfortable vertical spacing */
+    #enrollmentTable tbody td,
+    #enrollmentTableTablet tbody td {
+        padding-top: 0.75rem;
+        padding-bottom: 0.75rem;
+    }
+    #enrollmentTable th:nth-child(3),
+    #enrollmentTable td:nth-child(3) {
+        max-width: 8rem;
+        white-space: normal;
+        word-break: break-word;
+    }
+    #enrollmentTable th:nth-child(4),
+    #enrollmentTable td:nth-child(4) {
+        max-width: 12rem;
+        white-space: normal;
+        word-break: break-word;
+    }
+</style>
+
 <div class="bg-white shadow-lg rounded-lg overflow-hidden">
     <div class="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4 border-b border-gray-200">
-        <h3 class="text-lg font-semibold text-white text-center">Enrollment Details</h3>
+        <h3 class="text-lg font-semibold text-white text-center">Enrolment Details</h3>
     </div>
     
     <!-- Mobile Card View (Visible on sm and below) -->
     <div class="block md:hidden" id="mobileCards">
         <div class="p-4 space-y-4">
             <div class="text-center text-gray-500 text-sm">
-                Loading enrollment data...
+                Loading enrolment data...
             </div>
         </div>
     </div>
@@ -75,6 +96,7 @@
                 <thead class="bg-gradient-to-r from-blue-50 to-indigo-50">
                 <tr>
                     <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-blue-700 uppercase tracking-wider">Program</th>
+                    <th scope="col" class="px-4 py-3 text-center text-xs font-medium text-blue-700 uppercase tracking-wider">Day</th>
                     <th scope="col" class="px-4 py-3 text-center text-xs font-medium text-green-700 uppercase tracking-wider">Enrolled</th>
                     <th scope="col" class="px-4 py-3 text-center text-xs font-medium text-orange-700 uppercase tracking-wider">Capacity</th>
                     <th scope="col" class="px-4 py-3 text-center text-xs font-medium text-red-700 uppercase tracking-wider">Available</th>
@@ -94,6 +116,7 @@
             <tr>
                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-blue-700 uppercase tracking-wider bg-blue-50">Program</th>
                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-indigo-700 uppercase tracking-wider bg-indigo-50">Category</th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-blue-700 uppercase tracking-wider bg-blue-50">Day</th>
                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-purple-700 uppercase tracking-wider bg-purple-50">Instructor</th>
                 <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-green-700 uppercase tracking-wider bg-green-50">Enrollments</th>
                 <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-orange-700 uppercase tracking-wider bg-orange-50">Capacity</th>
@@ -101,23 +124,40 @@
             </tr>
             <tr class="bg-white border-b border-gray-200">
                 <th class="px-6 py-3">
-                    <input type="text" placeholder="Filter program" 
+                    <input type="text" placeholder="Filter by program" 
                            class="block w-full px-3 py-1 text-sm border border-blue-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 column-filter bg-blue-50" 
                            data-index="0" onkeydown="event.stopPropagation();">
                 </th>
                 <th class="px-6 py-3">
-                    <input type="text" placeholder="Filter category" 
+                    <input type="text" placeholder="Search by category" 
                            class="block w-full px-3 py-1 text-sm border border-indigo-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 column-filter bg-indigo-50" 
-                           data-index="1" onkeydown="event.stopPropagation();">
+                            data-index="1" onkeydown="event.stopPropagation();">
                 </th>
                 <th class="px-6 py-3">
-                    <input type="text" placeholder="Filter instructor" 
-                           class="block w-full px-3 py-1 text-sm border border-purple-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 column-filter bg-purple-50" 
+                    <input type="text" placeholder="Filter day" 
+                           class="block w-full px-3 py-1 text-sm border border-blue-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 column-filter bg-blue-50" 
                            data-index="2" onkeydown="event.stopPropagation();">
                 </th>
-                <th class="px-6 py-3"></th>
-                <th class="px-6 py-3"></th>
-                <th class="px-6 py-3"></th>
+                <th class="px-6 py-3">
+                    <input type="text" placeholder="Search by instructor" 
+                           class="block w-full px-3 py-1 text-sm border border-purple-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 column-filter bg-purple-50" 
+                           data-index="3" onkeydown="event.stopPropagation();">
+                </th>
+                <th class="px-6 py-3">
+                    <div class="block w-full px-3 py-1 text-sm border border-green-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 column-filter bg-green-50 text-center">
+                        Sort<i class="fa-solid fa-sort ml-2"></i>
+                    </div>
+                </th>
+                <th class="px-6 py-3">
+                    <div class="block w-full px-3 py-1 text-sm border border-orange-700 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 column-filter bg-orange-50 text-center">
+                        Sort<i class="fa-solid fa-sort ml-2"></i>
+                    </div>
+                </th>
+                <th class="px-6 py-3">
+                    <div class="block w-full px-3 py-1 text-sm border border-red-700 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 column-filter bg-red-50 text-center text-red-800">
+                        Sort<i class="fa-solid fa-sort ml-2"></i>
+                    </div>
+                </th>
             </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
@@ -129,180 +169,5 @@
 {% endblock %}
 
 {% block report_js %}
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            let enrollmentData = [];
-            
-            // Function to create mobile cards
-            function createMobileCards(data) {
-                const mobileContainer = document.getElementById('mobileCards');
-                if (!data || data.length === 0) {
-                    mobileContainer.innerHTML = '<div class="p-4 text-center text-gray-500">No enrollment data available</div>';
-                    return;
-                }
-                
-                const cardsHtml = data.map(item => `
-                    <div class="bg-gradient-to-r from-white to-gray-50 border border-gray-200 rounded-lg p-4 shadow-sm">
-                        <div class="flex justify-between items-start mb-3">
-                            <h4 class="font-semibold text-gray-900 text-lg">${item.name}</h4>
-                            <span class="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">${item.category}</span>
-                        </div>
-                        
-                        <div class="space-y-2 mb-3">
-                            <div class="flex items-center">
-                                <span class="w-2 h-2 bg-purple-500 rounded-full mr-2"></span>
-                                <span class="text-sm text-gray-600">Instructor: <span class="font-medium text-gray-900">${item.instructor}</span></span>
-                            </div>
-                        </div>
-                        
-                        <div class="grid grid-cols-3 gap-3">
-                            <div class="text-center p-2 bg-green-50 rounded-lg border border-green-200">
-                                <div class="text-lg font-bold text-green-700">${item.enrollments}</div>
-                                <div class="text-xs text-green-600 uppercase tracking-wide">Enrolled</div>
-                            </div>
-                            <div class="text-center p-2 bg-orange-50 rounded-lg border border-orange-200">
-                                <div class="text-lg font-bold text-orange-700">${item.capacity}</div>
-                                <div class="text-xs text-orange-600 uppercase tracking-wide">Capacity</div>
-                            </div>
-                            <div class="text-center p-2 bg-red-50 rounded-lg border border-red-200">
-                                <div class="text-lg font-bold text-red-700">${item.spaces_left}</div>
-                                <div class="text-xs text-red-600 uppercase tracking-wide">Available</div>
-                            </div>
-                        </div>
-                    </div>
-                `).join('');
-                
-                mobileContainer.innerHTML = `<div class="space-y-4">${cardsHtml}</div>`;
-            }
-            
-            // Function to create tablet table
-            function createTabletTable(data) {
-                const tabletTable = document.getElementById('enrollmentTableTablet');
-                if (!tabletTable) return;
-                
-                const tbody = tabletTable.querySelector('tbody');
-                if (!data || data.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="4" class="px-4 py-3 text-center text-gray-500">No enrollment data available</td></tr>';
-                    return;
-                }
-                
-                const rowsHtml = data.map(item => `
-                    <tr class="hover:bg-blue-50 transition-colors duration-150">
-                        <td class="px-4 py-3 whitespace-nowrap">
-                            <div class="font-medium text-gray-900">${item.name}</div>
-                            <div class="text-sm text-gray-500">${item.category}</div>
-                            <div class="text-xs text-purple-600">${item.instructor}</div>
-                        </td>
-                        <td class="px-4 py-3 whitespace-nowrap text-center">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                ${item.enrollments}
-                            </span>
-                        </td>
-                        <td class="px-4 py-3 whitespace-nowrap text-center">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
-                                ${item.capacity}
-                            </span>
-                        </td>
-                        <td class="px-4 py-3 whitespace-nowrap text-center">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${item.spaces_left <= 5 ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}">
-                                ${item.spaces_left}
-                            </span>
-                        </td>
-                    </tr>
-                `).join('');
-                
-                tbody.innerHTML = rowsHtml;
-            }
-            
-            // Main DataTable for desktop
-            const table = $('#enrollmentTable').DataTable({
-                ajax: {
-                    url: '/reports/enrollment/data/',
-                    data: function (d) {
-                        d.term_filter = $('#termFilter').val();
-                    },
-                    dataSrc: function (json) {
-                        const sel = $('#termFilter').val() || 'current';
-                        const sum = (json.summary && json.summary[sel]) ? json.summary[sel] : {};
-                        $('#totalPrograms').text(sum.total_programs ?? 0);
-                        $('#totalEnrollments').text(sum.total_enrollments ?? 0);
-                        $('#totalCapacity').text(sum.total_capacity ?? 0);
-                        $('#overallUtilization').text(((sum.utilization ?? 0)) + '%');
-                        
-                        // Store data for mobile/tablet views
-                        enrollmentData = json.data;
-                        createMobileCards(enrollmentData);
-                        createTabletTable(enrollmentData);
-                        
-                        return json.data;
-                    }
-                },
-                columns: [
-                    {data: 'name', className: 'px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900'},
-                    {data: 'category', className: 'px-6 py-4 whitespace-nowrap text-sm text-indigo-600 font-medium'},
-                    {data: 'instructor', className: 'px-6 py-4 whitespace-nowrap text-sm text-purple-600 font-medium'},
-                    {
-                        data: 'enrollments', 
-                        className: 'px-6 py-4 whitespace-nowrap text-sm text-center font-bold text-green-700',
-                        render: function(data, type, row) {
-                            return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">${data}</span>`;
-                        }
-                    },
-                    {
-                        data: 'capacity', 
-                        className: 'px-6 py-4 whitespace-nowrap text-sm text-center font-bold text-orange-700',
-                        render: function(data, type, row) {
-                            return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">${data}</span>`;
-                        }
-                    },
-                    {
-                        data: 'spaces_left', 
-                        className: 'px-6 py-4 whitespace-nowrap text-sm text-center font-bold',
-                        render: function(data, type, row) {
-                            const colorClass = data <= 5 ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800';
-                            return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${colorClass}">${data}</span>`;
-                        }
-                    }
-                ],
-                order: [[3, 'desc']],
-                pageLength: 25,
-                responsive: false, // We're handling responsiveness manually
-                pagingType: 'simple_numbers',
-                dom: "<'flex flex-col sm:flex-row sm:items-center sm:justify-between mt-4 px-6 py-3'<'text-sm text-gray-700'i><'mt-2 sm:mt-0'p>>t",
-                language: {
-                    info: "Showing _START_ to _END_ of _TOTAL_ entries",
-                    paginate: {
-                        previous: "‹ Previous",
-                        next: "Next ›"
-                    }
-                },
-                drawCallback: function () {
-                    // Style pagination with Tailwind classes
-                    $('.dataTables_paginate').addClass('flex justify-center space-x-1');
-                    $('.dataTables_paginate a').addClass('px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 hover:text-gray-700 transition-colors duration-150');
-                    $('.dataTables_paginate .current').addClass('bg-blue-600 text-white border-blue-600 hover:bg-blue-700');
-                    
-                    // Add hover effects to table rows
-                    $('#enrollmentTable tbody tr').addClass('hover:bg-blue-50 transition-colors duration-150');
-                },
-                initComplete: function () {
-                    const api = this.api();
-                    api.columns([0, 1, 2]).every(function (index) {
-                        const column = this;
-                        const input = $(`.column-filter[data-index="${index}"]`);
-                        input.off('keyup change clear');
-                        input.on('keyup change clear', function () {
-                            if (column.search() !== this.value) {
-                                column.search(this.value).draw();
-                            }
-                        });
-                    });
-                }
-            });
-
-            $('#termFilter').on('change', function () {
-                table.ajax.reload();
-            });
-        });
-    </script>
+    <script src="{% static 'js/reports/enrollment_report.js' %}"></script>
 {% endblock %}

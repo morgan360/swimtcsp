@@ -8,6 +8,10 @@
         {% csrf_token %}
         {{ form.non_field_errors }}
 
+        <div class="text-md text-blue-900 mb-4">
+            <p><span class="font-bold">Important:</span> Our lessons are only suitable for those 4 years of age and older.</p>
+        </div>
+
         <div>
             <label class="block text-blue-900 text-lg font-semibold mb-2">First Name</label>
             {{ form.first_name|add_class:"w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500" }}

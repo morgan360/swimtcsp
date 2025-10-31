@@ -1,5 +1,6 @@
 from collections import defaultdict
-from users.models import  User, Swimling
+from django.utils import timezone
+from users.models import User, Swimling
 from lessons_bookings.models import LessonEnrollment, Term
 from schools_bookings.models import ScoEnrollment, ScoTerm
 from schools.models import ScoSchool
@@ -7,6 +8,7 @@ from django.urls import reverse
 from waiting_list.models import WaitingList
 from lessons.models import Product
 from django.utils.timezone import now
+from anseo.models import AttendanceEntry
 
 def fetch_swimling_management_data(user):
     """
@@ -247,11 +249,141 @@ def collect_previous_lessons(swimlings, current_term_id=None):
             time_parts.append(end_time.strftime("%H:%M"))
         time_label = " - ".join(time_parts)
 
-        history[enrollment.swimling_id].append({
+        entry = {
             "level": level,
             "day": day_display,
             "time": time_label,
             "term": getattr(term, "label", str(term)),
+            "term_id": getattr(term, "id", None),
+            "lesson_id": getattr(lesson, "id", None),
+            "lesson_name": getattr(lesson, "name", ""),
+            "attendance_entries": [],
+            "attendance_summary": {},
+            "attendance_status_lookup": dict(AttendanceEntry.STATUS_CHOICES),
+            "attendance_badges": {
+                AttendanceEntry.PRESENT: "bg-green-100 text-green-700 border border-green-200",
+                AttendanceEntry.ABSENT: "bg-red-100 text-red-700 border border-red-200",
+                AttendanceEntry.LATE: "bg-yellow-100 text-yellow-700 border border-yellow-200",
+                AttendanceEntry.EXCUSED: "bg-blue-100 text-blue-700 border border-blue-200",
+                AttendanceEntry.UNKNOWN: "bg-slate-100 text-slate-600 border border-slate-200",
+            },
+        }
+        history[enrollment.swimling_id].append(entry)
+
+    if not history:
+        return history
+
+    swimling_ids = [s.id for s in swimlings if getattr(s, "id", None) is not None]
+    if not swimling_ids:
+        return history
+
+    # Create quick lookup for entries keyed by (swimling_id, term_id, lesson_id)
+    entry_map = {}
+    for swimling_id, entries in history.items():
+        for entry in entries:
+            key = (swimling_id, entry.get("term_id"), entry.get("lesson_id"))
+            entry_map[key] = entry
+            # initialize summary counts to zero for known statuses
+            lookup = entry["attendance_status_lookup"]
+            entry["attendance_summary"] = {code: 0 for code in lookup.keys()}
+
+    attendance_qs = (
+        AttendanceEntry.objects
+        .filter(
+            swimling_id__in=swimling_ids,
+            roll__product__isnull=False,
+            roll__term__isnull=False,
+        )
+        .select_related("roll__product__category", "roll__term", "marked_by")
+        .order_by("-roll__window_start", "-marked_at")
+    )
+
+    status_lookup = dict(AttendanceEntry.STATUS_CHOICES)
+
+    for att in attendance_qs:
+        term = getattr(att.roll, "term", None)
+        product = getattr(att.roll, "product", None)
+        swimling_id = getattr(att, "swimling_id", None)
+        term_id = getattr(term, "id", None)
+        lesson_id = getattr(product, "id", None)
+        if not swimling_id or not term_id or not product:
+            continue
+
+        key = (swimling_id, term_id, lesson_id)
+        entry = entry_map.get(key)
+
+        if entry is None:
+            # Create a synthetic entry if attendance exists but enrollment snapshot missing (e.g. moved mid-term)
+            category = getattr(product, "category", None)
+            level = (
+                getattr(category, "short_name", None)
+                or getattr(category, "name", None)
+                or getattr(product, "name", "")
+            )
+            try:
+                day_display = product.get_day_of_week_display()
+            except Exception:
+                day_display = ""
+            start_time = getattr(product, "start_time", None)
+            end_time = getattr(product, "end_time", None)
+            time_parts = []
+            if start_time:
+                time_parts.append(start_time.strftime("%H:%M"))
+            if end_time:
+                time_parts.append(end_time.strftime("%H:%M"))
+            time_label = " - ".join(time_parts)
+
+            entry = {
+                "level": level,
+                "day": day_display,
+                "time": time_label,
+                "term": getattr(term, "label", str(term)),
+                "term_id": term_id,
+                "lesson_id": lesson_id,
+                "lesson_name": getattr(product, "name", ""),
+                "attendance_entries": [],
+                "attendance_status_lookup": status_lookup,
+                "attendance_summary": {code: 0 for code in status_lookup.keys()},
+                "attendance_badges": {
+                    AttendanceEntry.PRESENT: "bg-green-100 text-green-700 border border-green-200",
+                    AttendanceEntry.ABSENT: "bg-red-100 text-red-700 border border-red-200",
+                    AttendanceEntry.LATE: "bg-yellow-100 text-yellow-700 border border-yellow-200",
+                    AttendanceEntry.EXCUSED: "bg-blue-100 text-blue-700 border border-blue-200",
+                    AttendanceEntry.UNKNOWN: "bg-slate-100 text-slate-600 border border-slate-200",
+                },
+            }
+            history[swimling_id].append(entry)
+            entry_map[key] = entry
+
+        status_code = att.status
+        entry["attendance_summary"][status_code] = entry["attendance_summary"].get(status_code, 0) + 1
+
+        marked_by = getattr(att, "marked_by", None)
+        if marked_by:
+            marked_by_label = getattr(marked_by, "get_full_name", lambda: "")() or getattr(marked_by, "email", str(marked_by))
+        else:
+            marked_by_label = ""
+
+        window_start = getattr(att.roll, "window_start", None)
+        window_end = getattr(att.roll, "window_end", None)
+
+        entry["attendance_entries"].append({
+            "status": status_code,
+            "status_label": status_lookup.get(status_code, status_code.title()),
+            "note": att.note or "",
+            "marked_at": timezone.localtime(att.marked_at) if att.marked_at else None,
+            "marked_by": marked_by_label,
+            "window_start": timezone.localtime(window_start) if window_start else None,
+            "window_end": timezone.localtime(window_end) if window_end else None,
+            "lesson_name": getattr(product, "name", ""),
         })
+
+    # Sort entries chronologically ascending per lesson
+    now_ts = timezone.now()
+    for entries in history.values():
+        for entry in entries:
+            entry["attendance_entries"].sort(
+                key=lambda e: e["window_start"] or e["marked_at"] or now_ts
+            )
 
     return history

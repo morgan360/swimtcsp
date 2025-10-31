@@ -1,0 +1,93 @@
+{% load static %}
+
+<section>
+  <h3 class="text-xl font-semibold text-gray-900 mb-5 flex items-center gap-2">
+    <i class="fa-solid {{ icon }} {{ icon_color|default:'text-orange-500' }}"></i>
+    {{ title }}
+  </h3>
+
+  {% if cards %}
+    <div class="grid md:grid-cols-2 gap-6">
+      {% for item in cards %}
+        <div class="rounded-2xl shadow-xl border border-slate-200 bg-white/90 overflow-hidden">
+          <header class="px-6 py-5 bg-gradient-to-r {{ color_class }} text-white space-y-3">
+            <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+              <div>
+                <p class="text-sm uppercase tracking-wide text-white/70">Term</p>
+                <h4 class="text-2xl font-semibold">{{ item.term }}</h4>
+                <p class="text-xs text-white/70 mt-1">
+                  {{ item.term.start_date|date:"M j, Y" }} → {{ item.term.end_date|date:"M j, Y" }}
+                </p>
+              </div>
+              <div class="flex flex-col items-start lg:items-end gap-2 text-sm text-center">
+                <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20">
+                  <i class="fa-solid fa-chalkboard-user"></i>
+                  {% if item.instructor %}
+                    {% if item.instructor.first_name or item.instructor.last_name %}
+                      {{ item.instructor.first_name }} {{ item.instructor.last_name }}
+                    {% else %}
+                      {{ item.instructor.email|default:item.instructor }}
+                    {% endif %}
+                  {% else %}
+                    <em>Unassigned</em>
+                  {% endif %}
+                </span>
+                {% if item.term %}
+                  <a href="{% url 'anseo:attendance_history' product_id=lesson.id term_id=item.term.id %}"
+                     class="inline-flex items-center gap-2 px-3 py-1.5 text-xs font-semibold rounded-md bg-white/20 hover:bg-white/30 transition">
+                    <i class="fa-solid fa-clipboard-check"></i>
+                    Attendance History
+                  </a>
+                {% endif %}
+              </div>
+            </div>
+          </header>
+
+          <div class="px-6 py-6 space-y-6">
+            <div class="flex flex-wrap items-center gap-3">
+              <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-700">
+                <i class="fa-solid fa-users"></i> {{ item.roster|length }} enrolled
+              </span>
+              {% if item.capacity %}
+                <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700">
+                  <i class="fa-regular fa-square-check"></i> Capacity: {{ item.capacity }}
+                </span>
+              {% endif %}
+              {% if item.remaining is not None %}
+                {% if item.is_full %}
+                  <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-700">
+                    <i class="fa-solid fa-circle-exclamation"></i> Full
+                  </span>
+                {% else %}
+                  <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">
+                    <i class="fa-regular fa-circle-check"></i> {{ item.remaining }} remaining
+                  </span>
+                {% endif %}
+              {% endif %}
+            </div>
+
+            <div class="rounded-xl border border-amber-100 bg-amber-50/70 p-4">
+              <div class="flex items-center justify-between gap-2 mb-3">
+                <h5 class="text-sm font-semibold text-amber-900 uppercase tracking-wide">Class List</h5>
+                <span class="inline-flex items-center gap-1 text-xs text-amber-700">
+                  <i class="fa-solid fa-people-group"></i> {{ item.roster|length }}
+                </span>
+              </div>
+              {% if item.roster %}
+                <ul class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-amber-900">
+                  {% for swimling in item.roster %}
+                    <li class="px-3 py-2 rounded-lg bg-white/75 border border-amber-100">{{ swimling }}</li>
+                  {% endfor %}
+                </ul>
+              {% else %}
+                <p class="text-sm text-amber-700">No enrollments for this term.</p>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="text-sm text-gray-500">{{ empty_text }}</p>
+  {% endif %}
+</section>

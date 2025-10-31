@@ -4,6 +4,10 @@ import json
 import os
 import time
 from pathlib import Path
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # ✅ Use OpenAI's v1 client
 client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
@@ -23,7 +27,7 @@ def get_embedding(text):
     time.sleep(1)
     response = client.embeddings.create(
         input=[text],
-        model="text-embedding-ada-002"
+        model="text-embedding-3-small"
     )
     return response.data[0].embedding
 
@@ -41,7 +45,32 @@ def save_to_json(faqs, path=FAQ_JSON_PATH):
     print(f"✅ Saved to {path}")
 
 if __name__ == "__main__":
-    faqs = load_faqs()
+    import sys
+
+    # Check if user wants to embed from database instead of YAML
+    if len(sys.argv) > 1 and sys.argv[1] == "--from-db":
+        print("📊 Loading FAQs from database...")
+        import django
+        os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.local_settings')
+        django.setup()
+        from chatbot.models import FAQEntry
+
+        db_faqs = FAQEntry.objects.all()
+        faqs = []
+        for faq in db_faqs:
+            faq_dict = {
+                'question': faq.question,
+                'answer': faq.answer,
+            }
+            if faq.lessons_only:
+                faq_dict['lessons_only'] = True
+            faqs.append(faq_dict)
+        print(f"✅ Loaded {len(faqs)} FAQs from database")
+    else:
+        print("📖 Loading FAQs from YAML file...")
+        faqs = load_faqs()
+        print(f"✅ Loaded {len(faqs)} FAQs from YAML")
+
     faqs = embed_faqs(faqs)
     save_to_json(faqs)
     print("✅ All FAQs embedded and saved.")

@@ -43,7 +43,7 @@
             <div class="flex items-center justify-between">
               <div>
                 <p class="text-xs uppercase text-blue-600 font-semibold">Total Orders</p>
-                <p class="text-xs text-blue-600 mt-1 italic">All orders (paid + unpaid) this month</p>
+                <p class="text-xs text-blue-600 mt-1 italic">All orders (paid + failed) this month</p>
                 <p class="text-2xl font-bold text-gray-900 mt-1">{{ order_stats.total_orders }}</p>
               </div>
               <i class="fas fa-receipt text-blue-600 text-xl"></i>
@@ -94,14 +94,14 @@
             <div class="flex items-center justify-between">
               <div>
                 <p class="text-xs uppercase text-purple-600 font-semibold">Total Revenue</p>
-                <p class="text-xs text-purple-600 mt-1 italic">Paid + unpaid revenue combined</p>
+                <p class="text-xs text-purple-600 mt-1 italic">Paid + failed revenue combined</p>
                 <p class="text-2xl font-bold text-gray-900 mt-1">€{{ order_stats.revenue_total|floatformat:2 }}</p>
               </div>
               <i class="fas fa-euro-sign text-purple-600 text-xl"></i>
             </div>
           </div>
 
-          <!-- Paid vs Unpaid Revenue -->
+          <!-- Paid vs Failed Revenue -->
           <div class="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
             <div class="flex items-center justify-between">
               <div>
@@ -112,14 +112,15 @@
               <i class="fas fa-money-bill text-indigo-700 text-lg"></i>
             </div>
           </div>
-          <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+          <div class="bg-red-50 border border-red-200 rounded-lg p-4">
             <div class="flex items-center justify-between">
               <div>
-                <p class="text-xs uppercase text-yellow-700 font-semibold">Unpaid Revenue</p>
+                <p class="text-xs uppercase text-red-700 font-semibold">Unpaid Revenue</p>
+                <p class="text-xs text-red-700 mt-1 italic">(Failed or Abandoned Payments)</p>
                 <p class="text-xl font-bold text-gray-900 mt-1">€{{ order_stats.revenue_unpaid_total|floatformat:2 }}</p>
-                <p class="text-xs text-yellow-700 mt-1">Unpaid Orders: {{ order_stats.unpaid_orders }}</p>
+                <p class="text-xs text-red-700 mt-1">Failed or Abandoned Orders: {{ order_stats.unpaid_orders }}</p>
               </div>
-              <i class="fas fa-hourglass-half text-yellow-700 text-lg"></i>
+              <i class="fas fa-hourglass-half text-red-700 text-lg"></i>
             </div>
           </div>
         </div>
@@ -134,7 +135,7 @@
         <select name="status" class="border rounded-md px-3 py-2 text-sm">
           <option value="">All statuses</option>
           <option value="paid" {% if status == 'paid' %}selected{% endif %}>Paid</option>
-          <option value="unpaid" {% if status == 'unpaid' %}selected{% endif %}>Unpaid</option>
+          <option value="unpaid" {% if status == 'unpaid' %}selected{% endif %}>Failed</option>
         </select>
 
         <select name="category" class="border rounded-md px-3 py-2 text-sm">
@@ -188,7 +189,7 @@
                 {% if order.paid %}
                   <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">Paid</span>
                 {% else %}
-                  <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">Unpaid</span>
+                  <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">Failed</span>
                 {% endif %}
               </td>
               <td class="px-4 py-2 text-xs text-gray-600 truncate max-w-[12rem]" title="{{ order.txId }}">{{ order.txId }}</td>

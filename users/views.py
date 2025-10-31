@@ -1,34 +1,139 @@
-from django.shortcuts import render, redirect
-from django.urls import reverse
-from django.db import transaction
-from django.contrib.auth.decorators import login_required
-from django.contrib import messages
-from django.contrib.auth import get_user_model
-from django.contrib.auth.models import Group
-from users.utils.roles import is_guardian
-from .forms import UserForm, GuardianOptInForm, JoinSchoolsForm
-from django.shortcuts import render, redirect
+from collections import defaultdict
+from datetime import date
+import logging
+
 from allauth.account.views import SignupView
-from schools_bookings.utils.swimling_utils import get_latest_active_school_term
-from schools_bookings.models import ScoEnrollment
-from utils.context_processors import get_term_info
-from lessons_bookings.models import LessonEnrollment, Term
+from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
+from django.contrib.auth import get_user_model
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import Group
+from django.core.paginator import Paginator
+from django.db import transaction
 from django.db.models import Q, Value
 from django.db.models.functions import Concat, Coalesce
-from django.core.paginator import Paginator
-import logging
-from .models import Swimling
+from django.http import JsonResponse
+from django.shortcuts import render, redirect
+from django.urls import reverse
+from django.utils import timezone
+
+from schools_bookings.models import ScoEnrollment
+from schools_bookings.utils.swimling_utils import get_latest_active_school_term
+from utils.context_processors import get_term_info
+from lessons_bookings.models import LessonEnrollment
 from lessons_orders.models import Order as LessonOrder
 from swims_orders.models import Order as SwimOrder
 from schools_orders.models import Order as SchoolOrder
-from django.http import JsonResponse
 from users.helpers import collect_previous_lessons
+from users.utils.roles import is_guardian
+from .forms import UserForm, GuardianOptInForm, JoinSchoolsForm
+from .models import Swimling
 
 
 # Get the custom user model
 user = get_user_model()
 logger = logging.getLogger(__name__)
+
+
+def build_current_public_classes(swimlings, term_info):
+    """Return swimling_id -> list of active or upcoming public classes."""
+    swimlings = list(swimlings)
+    if not swimlings:
+        return {}
+
+    today = timezone.localdate()
+    current_term_id = term_info.get("current_term_id")
+    next_term_id = term_info.get("next_term_id")
+
+    buckets = defaultdict(lambda: {"active": {}, "future": {}})
+    enrollments = (
+        LessonEnrollment.objects
+        .filter(swimling__in=swimlings)
+        .select_related("lesson", "term")
+    )
+
+    for enrollment in enrollments:
+        term = getattr(enrollment, "term", None)
+        lesson = getattr(enrollment, "lesson", None)
+        if not term or not lesson:
+            continue
+
+        start = term.start_date
+        end = term.end_date
+        bucket = None
+        if start and end:
+            if start <= today <= end:
+                bucket = "active"
+            elif start > today:
+                bucket = "future"
+        elif current_term_id and term.id == current_term_id:
+            bucket = "active"
+        elif next_term_id and term.id == next_term_id:
+            bucket = "future"
+        if bucket is None:
+            if not start and not end and not current_term_id:
+                bucket = "active"
+            else:
+                continue
+
+        entry = buckets[enrollment.swimling_id][bucket].setdefault(
+            term.id,
+            {"term": term, "enrollments": []},
+        )
+        entry["enrollments"].append(enrollment)
+
+    public_map = {}
+    for swimling in swimlings:
+        data = buckets.get(swimling.id)
+        if not data:
+            continue
+
+        selected_terms = []
+        if data["active"]:
+            selected_terms = sorted(
+                data["active"].items(),
+                key=lambda item: (
+                    item[1]["term"].start_date or date.max,
+                    item[0],
+                ),
+            )
+        elif data["future"]:
+            future_terms = sorted(
+                data["future"].items(),
+                key=lambda item: (
+                    item[1]["term"].start_date or date.max,
+                    item[0],
+                ),
+            )
+            if future_terms:
+                selected_terms = [future_terms[0]]
+
+        classes = []
+        for _, entry in selected_terms:
+            for enrollment in entry["enrollments"]:
+                lesson = enrollment.lesson
+                if not lesson:
+                    continue
+                try:
+                    admin_url = reverse(
+                        "lessonsadmin:lessons_bookings_lessonenrollment_change",
+                        args=[enrollment.id],
+                    )
+                except Exception:
+                    admin_url = (
+                        f"/lessonsadmin/lessons_bookings/lessonenrollment/{enrollment.id}/change/"
+                    )
+                classes.append({
+                    "name": lesson.name or "",
+                    "enrollment_id": enrollment.id,
+                    "admin_url": admin_url,
+                })
+
+        if classes:
+            public_map[swimling.id] = classes
+
+    return public_map
+
 
 # ✅ User Profile Update View
 @login_required
@@ -184,38 +289,8 @@ def swimlings_list(request):
 
     # === Build current classes per swimling (Public + School) ===
     term_info = get_term_info(request)
-    current_term_id = Term.get_current_term_id() or term_info.get("current_term_id")
-
-    # Public enrollments grouped by swimling id: [{ name, enrollment_id, admin_url }]
-    public_by_swimling = {}
-    if current_term_id:
-        try:
-            public_enrollments = (
-                LessonEnrollment.objects
-                .filter(
-                    term_id=current_term_id,
-                    swimling__in=page_obj.object_list,
-                )
-                .select_related("lesson")
-            )
-            for enrollment in public_enrollments:
-                lesson = getattr(enrollment, "lesson", None)
-                try:
-                    admin_url = reverse(
-                        "lessonsadmin:lessons_bookings_lessonenrollment_change",
-                        args=[enrollment.id],
-                    )
-                except Exception:
-                    admin_url = f"/lessonsadmin/lessons_bookings/lessonenrollment/{enrollment.id}/change/"
-
-                public_by_swimling.setdefault(enrollment.swimling_id, []).append({
-                    "name": getattr(lesson, "name", ""),
-                    "enrollment_id": enrollment.id,
-                    "admin_url": admin_url,
-                })
-        except Exception:
-            logger.exception("swimlings_list: failed building public enrollments")
-            public_by_swimling = {}
+    current_term_id = term_info.get("current_term_id")
+    public_by_swimling = build_current_public_classes(page_obj.object_list, term_info)
 
     # Attach combined classes to each swimling on the current page
     for s in page_obj.object_list:
@@ -311,36 +386,7 @@ def swimlings_list_rows(request):
     # Build current classes like the main view
     term_info = get_term_info(request)
     current_term_id = term_info.get("current_term_id")
-
-    public_by_swimling = {}
-    if current_term_id:
-        try:
-            public_enrollments = (
-                LessonEnrollment.objects
-                .filter(
-                    term_id=current_term_id,
-                    swimling__in=page_obj.object_list,
-                )
-                .select_related("lesson")
-            )
-            for enrollment in public_enrollments:
-                lesson = getattr(enrollment, "lesson", None)
-                try:
-                    admin_url = reverse(
-                        "lessonsadmin:lessons_bookings_lessonenrollment_change",
-                        args=[enrollment.id],
-                    )
-                except Exception:
-                    admin_url = f"/lessonsadmin/lessons_bookings/lessonenrollment/{enrollment.id}/change/"
-
-                public_by_swimling.setdefault(enrollment.swimling_id, []).append({
-                    "name": getattr(lesson, "name", ""),
-                    "enrollment_id": enrollment.id,
-                    "admin_url": admin_url,
-                })
-        except Exception:
-            logger.exception("swimlings_list_rows: failed building public enrollments")
-            public_by_swimling = {}
+    public_by_swimling = build_current_public_classes(page_obj.object_list, term_info)
 
     for s in page_obj.object_list:
         classes = list(public_by_swimling.get(s.id, []))

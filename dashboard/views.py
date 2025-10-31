@@ -550,8 +550,6 @@ def orders_history(request):
     def match_category(item):
         if not category:
             return True
-        if category == 'lessons':
-            return item.get('category') in ('lessons', 'schools')
         return item.get('category') == category
 
     filtered = [i for i in combined if match_status(i) and match_dates(i) and match_query(i) and match_category(i)]

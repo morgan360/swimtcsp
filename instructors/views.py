@@ -1,40 +1,175 @@
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, get_object_or_404, redirect
+from types import SimpleNamespace
+from datetime import date as dt_date, time as dt_time
 from instructors.models import InstructorAssignment
 from utils.terms_utils import get_term_context_data
 from lessons.models import Product, Category
-from lessons_bookings.models import Term, LessonEnrollment
+from lessons_bookings.models import Term, LessonEnrollment, LessonAssignment
 from progress.models import SkillAssessment, InstructorNote, CategorySkill, Skill, CoreAquaticSkill
 from users.models import Swimling
 import weasyprint
 from django.template.loader import render_to_string
 from django.http import HttpResponse
-from collections import defaultdict
-from lessons_bookings.models import Term
-from lessons_bookings.models import LessonEnrollment
+from collections import defaultdict, OrderedDict
+from django.db.models import Count, Prefetch
 from django.views.decorators.http import require_POST
 from .forms import AssessmentFormSet, InstructorNoteForm
 from django.db import transaction
 from django.contrib import messages
 
 
+DEFAULT_LEVEL_ORDER = 100
+
+
+def normalise_category_name(name: str) -> str:
+    if not name:
+        return ''
+    return ''.join(ch for ch in name.lower() if ch.isalnum())
+
+
+def level_order_for(category_name: str) -> int:
+    normalised = normalise_category_name(category_name)
+    if not normalised:
+        return DEFAULT_LEVEL_ORDER
+
+    if normalised.startswith('beginners') or normalised.startswith('beginner'):
+        return 1 if '2' in normalised else 0
+
+    if normalised.startswith('improvers') or normalised.startswith('improver'):
+        return 3 if '2' in normalised else 2
+
+    if normalised.startswith('advanced'):
+        return 4
+
+    if normalised.startswith('ll'):
+        if '3' in normalised:
+            return 7
+        if '2' in normalised:
+            return 6
+        return 5
+
+    return DEFAULT_LEVEL_ORDER
+
+
 #### START ####
 @login_required
 def instructor_dashboard(request):
     term_data = get_term_context_data()
-    terms = [term_data.get('previous_term'), term_data.get('current_term'), term_data.get('next_term')]
+    current_term = term_data.get('current_term')
+    terms = [term_data.get('previous_term'), current_term, term_data.get('next_term')]
     terms = [term for term in terms if term]
 
-    assignments = (
+    direct_assignments_qs = (
         InstructorAssignment.objects
         .filter(instructor=request.user, term__in=terms)
-        .select_related('lesson', 'term')
-        .order_by('-term__start_date', 'lesson__name')
+        .select_related('lesson__category', 'term')
     )
+
+    assignments = list(direct_assignments_qs)
+    seen_pairs = {(assignment.lesson_id, assignment.term_id) for assignment in assignments}
+
+    lesson_assignments = (
+        LessonAssignment.objects
+        .filter(instructor=request.user, term__in=terms)
+        .select_related('term', 'instructor')
+        .prefetch_related(
+            Prefetch('lessons', queryset=Product.objects.select_related('category'))
+        )
+    )
+
+    for assignment in lesson_assignments:
+        for lesson in assignment.lessons.all():
+            lesson_id = getattr(lesson, 'id', None)
+            term_id = assignment.term_id
+            if not lesson_id or (lesson_id, term_id) in seen_pairs:
+                continue
+            assignments.append(SimpleNamespace(
+                id=None,
+                lesson=lesson,
+                lesson_id=lesson_id,
+                term=assignment.term,
+                term_id=term_id,
+                instructor=assignment.instructor,
+                source='lesson_assignment'
+            ))
+            seen_pairs.add((lesson_id, term_id))
+
+    assignments.sort(
+        key=lambda a: getattr(a.term, 'start_date', dt_date.min),
+        reverse=True
+    )
+
+    lesson_ids = {a.lesson_id for a in assignments if getattr(a, 'lesson_id', None)}
+    term_ids = {a.term_id for a in assignments if getattr(a, 'term_id', None)}
+
+    total_students = 0
+    enrollment_counts = {}
+    if lesson_ids and term_ids:
+        enrollment_rows = (
+            LessonEnrollment.objects
+            .filter(
+                lesson_id__in=lesson_ids,
+                term_id__in=term_ids
+            )
+            .values('lesson_id', 'term_id')
+            .annotate(total=Count('id'))
+        )
+        enrollment_counts = {
+            (row['lesson_id'], row['term_id']): row['total']
+            for row in enrollment_rows
+        }
+        total_students = sum(enrollment_counts.values())
+    for assignment in assignments:
+        assignment.enrolled_count = enrollment_counts.get(
+            (getattr(assignment, 'lesson_id', None), getattr(assignment, 'term_id', None)),
+            0
+        )
+        category_name = ''
+        lesson_obj = getattr(assignment, 'lesson', None)
+        if lesson_obj is not None:
+            category_obj = getattr(lesson_obj, 'category', None)
+            category_name = getattr(category_obj, 'name', '')
+        assignment.level_order = level_order_for(category_name)
+
+    grouped = OrderedDict()
+    for assignment in assignments:
+        term = getattr(assignment, 'term', None)
+        key = f"term-{getattr(term, 'id', 'unassigned')}" if term else 'unassigned'
+        if key not in grouped:
+            grouped[key] = {
+                "term": term,
+                "assignments": []
+            }
+        grouped[key]["assignments"].append(assignment)
+    assignment_groups = list(grouped.values())
+
+    assignment_groups.sort(
+        key=lambda grp: getattr(grp.get('term'), 'start_date', dt_date.min),
+        reverse=True
+    )
+
+    for group in assignment_groups:
+        def assignment_sort_key(assignment):
+            lesson = getattr(assignment, 'lesson', None)
+            day = getattr(lesson, 'day_of_week', None)
+            day_value = day if day is not None else 99
+            start_time = getattr(lesson, 'start_time', None) or dt_time.max
+            level_value = getattr(assignment, 'level_order', DEFAULT_LEVEL_ORDER)
+            name_value = getattr(lesson, 'name', '')
+            return (day_value, start_time, level_value, name_value)
+
+        group['assignments'].sort(key=assignment_sort_key)
+
+    current_term_id = getattr(current_term, 'id', None)
+    lessons_this_week = sum(1 for a in assignments if getattr(a, 'term_id', None) == current_term_id)
 
     return render(request, "instructors/dashboard.html", {
         "assignments": assignments,
+        "assignment_groups": assignment_groups,
         "terms": terms,
+        "total_students": total_students,
+        "lessons_this_week": lessons_this_week,
     })
 
 def stage_key(label: str):

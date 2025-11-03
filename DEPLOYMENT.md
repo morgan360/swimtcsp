@@ -131,6 +131,53 @@ Check your `.env` file settings match the PythonAnywhere MySQL configuration:
 python manage.py diffsettings | grep DATABASE
 ```
 
+## Version Tagging
+
+The site uses git-based version numbering. The version is automatically displayed in the footer and updates based on git tags.
+
+### Creating a New Version
+
+When you're ready to release a new version:
+
+```bash
+# Create a new version tag (use semantic versioning)
+git tag -a v2.1.0 -m "Release v2.1.0 - Description of changes"
+
+# Push the tag to GitHub
+git push origin v2.1.0
+
+# Deploy to dev
+./deploy-to-dev.sh
+```
+
+### Version Format
+
+The version is automatically generated using `git describe`:
+
+- **On tagged commit:** `v2.0.0`
+- **After commits:** `v2.0.0-5-g1a2b3c4` (5 commits after tag, commit hash)
+- **With uncommitted changes:** `v2.0.0-dirty`
+
+### Semantic Versioning Guidelines
+
+Use semantic versioning (MAJOR.MINOR.PATCH):
+
+- **MAJOR** (v3.0.0): Breaking changes or major feature releases
+- **MINOR** (v2.1.0): New features, backwards compatible
+- **PATCH** (v2.0.1): Bug fixes, backwards compatible
+
+Examples:
+```bash
+# Bug fix release
+git tag -a v2.0.1 -m "Fix payment processing timeout issue"
+
+# New feature release
+git tag -a v2.1.0 -m "Add school attendance reporting"
+
+# Major release with breaking changes
+git tag -a v3.0.0 -m "Upgrade to Django 6.0, breaking API changes"
+```
+
 ## Pre-Deployment Checklist
 
 Before deploying to production, ensure:
@@ -139,6 +186,7 @@ Before deploying to production, ensure:
 - [ ] New migrations are created: `python manage.py makemigrations --check`
 - [ ] Static files build successfully: `npm run build`
 - [ ] Code has been pushed to GitHub
+- [ ] Version tag created if this is a release
 - [ ] No sensitive data in committed files
 - [ ] Dependencies updated in `requirements.txt` if needed
 

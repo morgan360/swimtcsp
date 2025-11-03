@@ -121,7 +121,10 @@ def get_term_info(request: HttpRequest) -> Dict[str, str]:
     }
 
 def footer_message(request):
-    return {'FOOTER_MESSAGE': settings.FOOTER_MESSAGE}
+    return {
+        'FOOTER_MESSAGE': settings.FOOTER_MESSAGE,
+        'VERSION': settings.VERSION,
+    }
 
 
 def term_status_for_active_schools(request):

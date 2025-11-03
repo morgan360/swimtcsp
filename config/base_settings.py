@@ -2,6 +2,7 @@
 BASE SETTINGS
 """
 import os
+import subprocess
 from pathlib import Path
 from decouple import config
 
@@ -11,6 +12,26 @@ DB_PASSWORD = config('DB_PASSWORD')  # no need for str(), config returns string
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Get version from git tags
+def get_git_version():
+    """
+    Get version from git describe.
+    Returns tag if on a tagged commit, otherwise tag + commit hash.
+    Example: 'v1.0.0' or 'v1.0.0-5-g1a2b3c4'
+    """
+    try:
+        version = subprocess.check_output(
+            ['git', 'describe', '--tags', '--always', '--dirty'],
+            cwd=BASE_DIR,
+            stderr=subprocess.DEVNULL
+        ).decode('utf-8').strip()
+        return version
+    except:
+        # Fallback if git not available or no tags exist
+        return 'unknown'
+
+VERSION = get_git_version()
 
 # Set the URL prefix for static files
 STATIC_URL = '/static/'

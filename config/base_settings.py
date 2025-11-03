@@ -258,6 +258,8 @@ ACCOUNT_LOGOUT_ON_GET = True
 SOCIALACCOUNT_LOGIN_ON_GET = True
 ACCOUNT_USER_MODEL_USERNAME_FIELD = None
 
+# Disable Sites framework requirement for allauth
+ALLAUTH_USESITES = False
 
 #  Allauth social accounts
 SOCIALACCOUNT_PROVIDERS = {

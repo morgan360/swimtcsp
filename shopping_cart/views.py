@@ -60,8 +60,17 @@ def cart_add(request, product_id, type):  # type could be 'lesson' or 'school'
         swimling = form.cleaned_data['swimling']
         swimling_id = swimling.id
 
-        # Call the add method with the correct parameters including type
-        cart.add(product=product, type=type, swimling_id=swimling_id)
+        # Determine the appropriate term for pricing
+        term = None
+        if type == 'lesson':
+            from utils.terms_utils import get_term_context_data
+            term_data = get_term_context_data()
+            phase = term_data.get('current_phase_id')
+            # Use next term if in RB or BN phase, otherwise current term
+            term = term_data.get('next_term') if phase in ['RB', 'BN'] else term_data.get('current_term')
+
+        # Call the add method with the correct parameters including type and term
+        cart.add(product=product, type=type, swimling_id=swimling_id, term=term)
 
         messages.success(request, "Item successfully added to cart.")
         return redirect('shopping_cart:cart_detail')
@@ -330,13 +339,15 @@ def direct_rebooking(request, swimling_id, product_id):
         return redirect('swimling_dashboard:guardian_dashboard')
 
     if request.method == 'POST':
-        total_price = lesson.price
         next_term = get_next_term()
         print('term', next_term)
 
         if next_term is None:
             messages.error(request, "We couldn't determine the upcoming term for this rebooking. Please try again later.")
             return redirect('swimling_dashboard:guardian_dashboard')
+
+        # Use prorated price if term has started, otherwise full price
+        total_price = lesson.get_prorated_price(next_term)
 
         # Create the main order
         order = LessonOrder.objects.create(
@@ -385,13 +396,15 @@ def confirm_waiting_list_booking(request, swimling_id, product_id):
     lesson = get_object_or_404(Product, id=product_id)
 
     if request.method == 'POST':
-        total_price = lesson.price
         current_term = get_current_term()
         print('term', current_term)
 
         if current_term is None:
             messages.error(request, "We couldn't find an active term for this booking. Please try again later.")
             return redirect('shopping_cart:review_waiting_list_booking', swimling_id=swimling_id, product_id=product_id)
+
+        # Use prorated price if term has started, otherwise full price
+        total_price = lesson.get_prorated_price(current_term)
 
         # Create the main order
         order = LessonOrder.objects.create(

@@ -138,6 +138,54 @@ class Product(models.Model):
     def is_full(self, term):
         return self.remaining_spaces(term) == 0
 
+    def get_prorated_price(self, term):
+        """
+        Calculate the prorated price based on weeks remaining in the term.
+
+        Args:
+            term: Term object to calculate pricing for
+
+        Returns:
+            Decimal: Prorated price if term has started, full price otherwise
+
+        Logic:
+            - If term hasn't started yet: return full price
+            - If term has started: return (weeks_remaining / total_weeks) * full_price
+            - Minimum charge is always price for 1 week
+        """
+        from decimal import Decimal
+        from django.utils import timezone
+
+        if not term or not self.price or not self.num_weeks:
+            return self.price
+
+        today = timezone.now().date()
+
+        # If term hasn't started yet, charge full price
+        if today < term.start_date:
+            return self.price
+
+        # If term has ended, return 0 (or you could return full price)
+        if today > term.end_date:
+            return Decimal('0.00')
+
+        # Calculate weeks remaining
+        days_remaining = (term.end_date - today).days
+        weeks_remaining = (days_remaining / 7)  # Can be fractional
+
+        # Calculate prorated price
+        if weeks_remaining <= 0:
+            return Decimal('0.00')
+
+        # Calculate price per week
+        price_per_week = self.price / Decimal(str(self.num_weeks))
+        prorated_price = price_per_week * Decimal(str(weeks_remaining))
+
+        # Ensure minimum of 1 week's price
+        min_price = price_per_week
+
+        return max(prorated_price, min_price).quantize(Decimal('0.01'))
+
 
 # update name everytime fields are changed
 @receiver(pre_save, sender=Product)

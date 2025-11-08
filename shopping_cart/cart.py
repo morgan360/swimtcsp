@@ -13,10 +13,11 @@ class Cart:
         self.cart = self.session.get(settings.CART_SESSION_ID, {})
         self.type = self.session.get(f"{settings.CART_SESSION_ID}_type", None)
 
-    def add(self, product, type, swimling_id, quantity=1):
+    def add(self, product, type, swimling_id, quantity=1, term=None):
         """
         Add a product to the cart or update its quantity.
         If the product type differs from the cart type, clear the cart first.
+        Uses prorated pricing if term is provided and term has started.
         """
 
         # Validate product type first
@@ -33,10 +34,16 @@ class Cart:
         product_id = str(product.id)
         cart_key = f"{type}_{product_id}_{swimling_id}"
 
+        # Calculate the appropriate price
+        if type == 'lesson' and term and hasattr(product, 'get_prorated_price'):
+            price = product.get_prorated_price(term)
+        else:
+            price = product.price
+
         # Add or update the cart item
         self.cart[cart_key] = {
             'quantity': quantity,
-            'price': str(product.price),
+            'price': str(price),
             'product_id': product_id,
             'swimling_id': swimling_id,
             'type': type

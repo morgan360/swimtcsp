@@ -60,6 +60,14 @@ python manage.py show_urls  # Requires django_extensions
 python manage.py dbshell
 ```
 
+### Deployment
+See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed deployment instructions to PythonAnywhere.
+
+Quick deploy to dev server:
+```bash
+./deploy-to-dev.sh
+```
+
 ## Architecture Overview
 
 ### Multi-Environment Settings

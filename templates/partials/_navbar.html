@@ -3,139 +3,153 @@
 {% load navigation_tags %}
 {% drawer_menu as drawer_menus %}
 
-<nav class="bg-gradient-to-r from-blue-50 to-blue-100 backdrop-blur-sm border-b border-blue-200/50 shadow-lg px-4 py-3 z-[1000] relative"
-     x-data="{ mobileOpen: false, showLogoutModal: false }">
+<nav class="bg-blue-900/80 backdrop-blur-sm border-b border-blue-200/50 shadow-lg px-4 py-3 z-[1000] relative"
+     x-data="{ mobileOpen: false, showLogoutModal: false }"
+     style="background-image: url('/static/img/logo.png'); background-repeat: no-repeat; background-size: cover; background-position: center;">
 
-    <!-- Centered Logo (Desktop Only) -->
-    <div class="hidden lg:flex flex-col items-center justify-center mb-6 relative">
-        <!-- User Section - Top Right -->
-        <div class="absolute top-0 right-0 flex items-center gap-2 text-blue-900 font-semibold">
-            {% if user.is_authenticated %}
-                <div x-data="{ open: false }" class="relative font-bold text-lg text-blue-900 z-[1200]"
-                     @click.away="open = false">
-                    <button @click="open = !open"
-                            class="py-2 px-4 flex items-center gap-2 outline-none transition-all duration-200 focus:outline-none bg-white/80 backdrop-blur-sm rounded-xl hover:bg-white hover:shadow-lg border border-blue-200/50"
-                            aria-haspopup="true" :aria-expanded="open.toString()">
-                        <div class="flex items-center gap-2">
-                            <i class="fas fa-user-circle text-xl text-blue-600"></i>
-                            <span class="xl:inline text-blue-800 text-sm">{{ user.first_name|default:"Profile" }}</span>
-                        </div>
-                        <i class="fas fa-caret-down text-xs transition-transform duration-200"
-                           :class="{'rotate-180': open}"></i>
-                    </button>
-
-                    <!-- User Dropdown box -->
-                    <ul x-show="open" x-cloak x-transition
-                        class="absolute right-0 top-full mt-2 p-4 bg-white shadow-xl rounded-2xl w-80 text-blue-900 z-[1300] border-2 border-blue-200"
-                        style="position: absolute !important;">
-
-                        <!-- User header -->
-                        <div class="hidden sm:block font-medium text-blue-900 px-4 py-6 text-center w-full bg-blue-50/50 rounded-xl mb-4">
-                            <div class="flex items-center justify-center gap-2 mb-2">
-                                <i class="fas fa-user-circle text-3xl text-blue-600"></i>
-                            </div>
-                            <strong class="text-lg">Hello, {{ user.first_name }}!</strong>
-                            <p class="text-sm text-blue-600 mt-1">{{ user.email }}</p>
-                        </div>
-
-                        <!-- About -->
-                        <li>
-                            <a href="{% url 'info' %}"
-                               class="block px-4 py-3 hover:bg-blue-50 rounded-xl transition-colors">
-                                <i class="fas fa-info-circle mr-3 text-blue-600 w-5"></i>
-                                About
-                            </a>
-                        </li>
-
-                        <!-- My Profile -->
-                        <li>
-                            <a href="{% url 'users:profile' %}"
-                               class="block px-4 py-3 hover:bg-blue-50 rounded-xl transition-colors">
-                                <i class="fas fa-user-circle mr-3 text-blue-600 w-5"></i>
-                                My Profile
-                            </a>
-                        </li>
-
-                        <!-- Guardian dashboard -->
-                        {% if user|is_guardian_user %}
-                            <li>
-                                <a href="{% url 'swimling_dashboard:guardian_dashboard' %}"
-                                   class="block px-4 py-3 hover:bg-blue-50 rounded-xl transition-colors">
-                                    <i class="fas fa-children mr-3 text-blue-600 w-5"></i>
-                                    Swimling Dashboard
-                                </a>
-                            </li>
-                        {% endif %}
-
-                        <!-- My Bookings -->
-                        <li>
-                            <a href="{% url 'users:my_bookings' %}"
-                               class="block px-4 py-3 hover:bg-blue-50 rounded-xl transition-all duration-200 hover:translate-x-1">
-                                <i class="fas fa-history mr-3 text-blue-600 w-5"></i>
-                                My Bookings
-                            </a>
-                        </li>
-
-                        <!-- School dashboard -->
-                        {% if user|is_school_user %}
-                            <li>
-                                <a href="/schools/school_dashboard/"
-                                   class="block px-4 py-3 hover:bg-blue-50 rounded-xl transition-colors">
-                                    <i class="fas fa-school mr-3 text-blue-600 w-5"></i>
-                                    School Dashboard
-                                </a>
-                            </li>
-                        {% endif %}
-
-                        <!-- Change Password -->
-                        <li>
-                            <a href="/accounts/password/change/"
-                               class="block px-4 py-3 hover:bg-blue-50 rounded-xl transition-colors">
-                                <i class="fas fa-key mr-3 text-blue-600 w-5"></i>
-                                Change Password
-                            </a>
-                        </li>
-
-                        <!-- Logout -->
-                        <li>
-                            <button @click="$dispatch('show-logout-modal')"
-                                    class="block w-full text-left px-4 py-3 text-red-600 hover:bg-red-50 rounded-xl transition-all duration-200 hover:translate-x-1">
-                                <i class="fas fa-sign-out-alt mr-3 w-5"></i>
-                                Logout
-                            </button>
-                        </li>
-                    </ul>
-                </div>
-            {% else %}
-                <div class="flex gap-2">
-                    <a href="{% url 'info' %}"
-                       class="px-3 py-2 text-xs font-semibold text-white focus:outline-none bg-gradient-to-r from-red-600 to-red-700 rounded-lg hover:from-red-700 hover:to-red-800 transition-all duration-200 shadow-md hover:shadow-lg">
-                        <i class="fas fa-info-circle mr-1"></i>
-                        About
-                    </a>
-                    <a href="{% url 'account_signup' %}"
-                       class="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-3 py-2 rounded-lg text-xs font-semibold hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-md hover:shadow-lg">
-                        <i class="fas fa-user-plus mr-1"></i>
-                        Sign up
-                    </a>
-                    <a href="{% url 'account_login' %}"
-                       class="px-3 py-2 text-xs font-semibold text-blue-900 focus:outline-none bg-white/80 backdrop-blur-sm rounded-lg hover:bg-white transition-all duration-200 shadow-md hover:shadow-lg border border-blue-200/50">
-                        <i class="fas fa-sign-in-alt mr-1"></i>
-                        Login
-                    </a>
-                </div>
-            {% endif %}
-
-        </div>
-
-        <a href="{% url 'home' %}" class="flex flex-col items-center group transition-transform hover:scale-105">
-            <div class="bg-white/70 backdrop-blur-sm rounded-2xl p-4 shadow-md group-hover:shadow-lg transition-all duration-300">
-                <img src="{% static 'img/full-logo-transparent.png' %}" alt="Templeogue College Swim Pool Logo"
-                     width="180"
-                     height="180" class="m-2">
+    <!-- Desktop Shell -->
+    <div class="hidden lg:flex w-full flex-col gap-6 px-8 py-6 mt-10 mb-10 max-w-screen-2xl mx-auto overflow-visible bg-blue-100/80 rounded-3xl border border-white/40">
+        <!-- Brand + Account -->
+        <div class="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-6 relative z-10 w-full">
+            <div class="hidden xl:flex justify-self-start">
+                <a href="{% url 'home' %}" class="group rounded-2xl bg-white/90 backdrop-blur-sm shadow-lg hover:shadow-xl transition-all">
+                    <img src="{% static 'img/full-logo-transparent.png' %}" alt="Templeogue College Swim Pool Logo"
+                         width="140" height="140" class="p-4">
+                </a>
             </div>
-        </a>
-        <h1 class="hidden text-blue-800">Templeogue College Swim Pool</h1>
+            <div class="flex flex-col items-center text-center justify-self-center w-full">
+                <h1 class="text-4xl font-semibold text-blue-800 tracking-tight">Templeogue College Swim Pool</h1>
+                <p class="text-sm text-blue-900 mt-1">Lessons, public swims, and school bookings in one place.</p>
+            </div>
+            <div class="flex items-center gap-3 justify-self-end justify-end">
+                <a href="{% url 'info' %}"
+                   class="inline-flex items-center justify-center rounded-xl border border-red-900 px-4 py-2 text-sm font-semibold text-white bg-red-800 hover:bg-red-800/80 hover:border-red-900/50 transition-all duration-200 shadow-sm">
+                    <i class="fas fa-info-circle mr-2 text-white"></i>
+                    About
+                </a>
+                {% if user.is_authenticated %}
+                    <div x-data="{ open: false }" class="relative font-semibold text-blue-900"
+                         @click.away="open = false">
+                        <button @click="open = !open"
+                                class="py-3 px-4 flex items-center gap-2 bg-white/80 backdrop-blur-sm rounded-xl border border-blue-200/50 hover:bg-white hover:shadow-lg transition-all duration-200"
+                                aria-haspopup="true" :aria-expanded="open.toString()">
+                            <i class="fas fa-user-circle text-xl text-blue-600"></i>
+                            <span class="text-sm">{{ user.first_name|default:"Profile" }}</span>
+                            <i class="fas fa-caret-down text-xs transition-transform duration-200"
+                               :class="{'rotate-180': open}"></i>
+                        </button>
+    
+                        <ul x-show="open" x-cloak x-transition
+                            class="absolute right-0 top-full mt-2 p-4 bg-white shadow-2xl rounded-2xl w-80 text-blue-900 z-[1300] border border-blue-100"
+                            style="position: absolute !important;">
+                            <div class="hidden sm:block font-medium text-blue-900 px-4 py-6 text-center w-full bg-blue-50/50 rounded-xl mb-4">
+                                <div class="flex items-center justify-center gap-2 mb-2">
+                                    <i class="fas fa-user-circle text-3xl text-blue-600"></i>
+                                </div>
+                                <strong class="text-lg">Hello, {{ user.first_name }}!</strong>
+                                <p class="text-sm text-blue-600 mt-1">{{ user.email }}</p>
+                            </div>
+    
+                            <li>
+                                <a href="{% url 'info' %}"
+                                   class="block px-4 py-3 hover:bg-blue-50 rounded-xl transition-colors">
+                                    <i class="fas fa-info-circle mr-3 text-blue-600 w-5"></i>
+                                    About
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{% url 'users:profile' %}"
+                                   class="block px-4 py-3 hover:bg-blue-50 rounded-xl transition-colors">
+                                    <i class="fas fa-user-circle mr-3 text-blue-600 w-5"></i>
+                                    My Profile
+                                </a>
+                            </li>
+                            {% if user|is_guardian_user %}
+                                <li>
+                                    <a href="{% url 'swimling_dashboard:guardian_dashboard' %}"
+                                       class="block px-4 py-3 hover:bg-blue-50 rounded-xl transition-colors">
+                                        <i class="fas fa-children mr-3 text-blue-600 w-5"></i>
+                                        Swimling Dashboard
+                                    </a>
+                                </li>
+                            {% endif %}
+                            <li>
+                                <a href="{% url 'users:my_bookings' %}"
+                                   class="block px-4 py-3 hover:bg-blue-50 rounded-xl transition-all duration-200 hover:translate-x-1">
+                                    <i class="fas fa-history mr-3 text-blue-600 w-5"></i>
+                                    My Bookings
+                                </a>
+                            </li>
+                            {% if user|is_school_user %}
+                                <li>
+                                    <a href="/schools/school_dashboard/"
+                                       class="block px-4 py-3 hover:bg-blue-50 rounded-xl transition-colors">
+                                        <i class="fas fa-school mr-3 text-blue-600 w-5"></i>
+                                        School Dashboard
+                                    </a>
+                                </li>
+                            {% endif %}
+                            <li>
+                                <a href="{% url 'account_change_password' %}"
+                                   class="block px-4 py-3 hover:bg-blue-50 rounded-xl transition-colors">
+                                    <i class="fas fa-unlock-alt mr-3 text-blue-600 w-5"></i>
+                                    Change Password
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#"
+                                   @click.prevent="showLogoutModal = true; open = false"
+                                   class="block px-4 py-3 rounded-xl transition-all duration-200 bg-gradient-to-r from-red-50 to-pink-50 text-red-600 hover:from-red-100 hover:to-pink-100 hover:text-red-700 border border-red-100 font-semibold text-center">
+                                    <i class="fas fa-sign-out-alt mr-3"></i>
+                                    Logout
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                {% else %}
+                    <div class="flex items-center gap-3">
+                        <a href="{% url 'account_login' %}"
+                           class="inline-flex items-center justify-center rounded-xl border border-blue-200 px-5 py-3 font-semibold text-blue-800 bg-white/80 hover:bg-white hover:border-blue-300 transition-all duration-200 shadow-sm">
+                            <i class="fas fa-sign-in-alt mr-2 text-blue-500"></i>
+                            Login
+                        </a>
+                        <a href="{% url 'account_signup' %}"
+                           class="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 px-5 py-3 text-white font-semibold shadow-lg shadow-blue-500/30 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200">
+                            <i class="fas fa-user-plus mr-2 text-white/80"></i>
+                            Sign up
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    
+        <!-- Navigation Rail -->
+        <div class="flex items-end justify-between border-t border-slate-200 pt-4 relative z-10">
+            <ul class="flex items-center gap-1 text-sm font-semibold text-slate-600 tracking-wide">
+                {% for group, items in drawer_menus.items %}
+                    <li x-data="{ open: false }" class="relative">
+                        <button @click="open = !open"
+                                class="px-4 py-3 rounded-xl hover:bg-slate-100 hover:text-blue-700 transition flex items-center gap-2">
+                            <span>{{ group }}</span>
+                            <i class="fas fa-chevron-down text-[10px] transition-transform duration-200"
+                               :class="{'rotate-180 text-blue-600': open}"></i>
+                        </button>
+                        <div x-show="open" x-cloak @click.away="open = false" x-transition
+                             class="absolute left-0 top-full mt-2 w-72 rounded-2xl border border-slate-200 bg-white shadow-2xl p-3">
+                            {% for item in items %}
+                                <a href="{{ item.resolve_url }}"
+                                   class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-blue-50 transition text-slate-600">
+                                    {% if item.icon_class %}
+                                        <i class="{{ item.icon_class }} text-blue-500"></i>
+                                    {% endif %}
+                                    <span>{{ item.label }}</span>
+                                </a>
+                            {% endfor %}
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
     </div>
 
     <!-- Top Row: Mobile Logo & Burger -->
@@ -152,41 +166,6 @@
             <i x-show="!mobileOpen" x-cloak class="fas fa-bars transition-transform duration-200"></i>
             <i x-show="mobileOpen" x-cloak class="fas fa-times transition-transform duration-200"></i>
         </button>
-    </div>
-
-    <!-- Desktop Nav Row -->
-    <div class="hidden lg:flex w-full items-center justify-center mt-10 mb-4 relative">
-
-        <!-- Center Nav Links -->
-        <div class="absolute left-1/2 transform -translate-x-1/2 z-[1100]">
-            <ul class="flex items-center gap-6 xl:gap-8 text-blue-900 font-semibold text-lg">
-                {% for group, items in drawer_menus.items %}
-                    <li x-data="{ open: false }" class="relative" style="z-index: 1200;">
-                        <button @click="open = !open; console.log('Dropdown clicked, open:', !open)"
-                                :class="{'text-red-700 bg-red-50': open}"
-                                class="px-3 xl:px-4 py-3 rounded-xl transition-all duration-200 flex items-center gap-2 focus:outline-none hover:bg-blue-50 hover:text-blue-700 hover:shadow-sm relative z-[1150] whitespace-nowrap xl:whitespace-normal min-w-max">
-                            <span class="text-center leading-tight lg:whitespace-nowrap xl:whitespace-normal">{{ group }}</span>
-                            <i class="fas fa-caret-down text-sm transition-transform duration-200 flex-shrink-0"
-                               :class="{'rotate-180': open}"></i>
-                        </button>
-                        <ul x-show="open" x-cloak @click.away="open = false" x-transition
-                            class="absolute left-0 top-full mt-3 p-3 bg-white shadow-2xl rounded-2xl w-72 text-left text-blue-900 z-[1200] border-2 border-blue-200"
-                            style="position: absolute !important;">
-                            {% for item in items %}
-                                <li>
-                                    <a href="{{ item.resolve_url }}"
-                                       class="block px-4 py-3 hover:bg-blue-50 rounded-xl flex items-center gap-3 transition-all duration-200 hover:translate-x-1">
-                                        {% if item.icon_class %}
-                                            <i class="{{ item.icon_class }} w-5 text-blue-600"></i>{% endif %}
-                                        {{ item.label }}
-                                    </a>
-                                </li>
-                            {% endfor %}
-                        </ul>
-                    </li>
-                {% endfor %}
-            </ul>
-        </div>
     </div>
 
     <!-- Mobile Menu -->

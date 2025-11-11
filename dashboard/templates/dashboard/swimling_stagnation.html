@@ -128,11 +128,11 @@
                         </p>
                         {% if entry.guardian %}
                           <p class="text-sm text-slate-500">
-                            Guardian: {{ entry.guardian.get_full_name|default:entry.guardian.email }}
+                            <span class="font-bold">Guardian:</span> {{ entry.guardian.get_full_name|default:entry.guardian.email }}
                           </p>
                         {% endif %}
                         <p class="text-sm text-slate-500">
-                          Current Class: {{ entry.day_display|default:"Day TBC" }}
+                          <span class="font-bold">Current Class:</span> {{ entry.day_display|default:"Day TBC" }}
                           {% if entry.time_label %}
                             • {{ entry.time_label }}
                           {% endif %}

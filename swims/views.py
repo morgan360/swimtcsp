@@ -6,6 +6,7 @@ from datetime import timedelta
 from utils.date_utils import get_next_occurrence
 from django.urls import reverse
 from django.contrib.auth.decorators import login_required
+from django.http import HttpResponse
 import time
 from .forms import ParticipantQuantityForm
 # Assume a function to create BOIPA payment session, replace with your actual function
@@ -150,3 +151,87 @@ def calculate_total(request):
             except PriceVariant.DoesNotExist:
                 continue
     return render(request, 'swims/partials/total_price.html', {'total': total})
+
+
+@login_required
+def validate_coupon(request):
+    """HTMX endpoint to validate coupon for swims and return discount preview"""
+    from django.views.decorators.http import require_POST
+    from coupons.services import CouponService
+    from django.core.exceptions import ValidationError
+    from decimal import Decimal
+
+    if request.method != 'POST':
+        return HttpResponse("Method not allowed", status=405)
+
+    coupon_code = request.POST.get("code", "").strip()
+
+    # Calculate cart total from form quantities
+    total_price = Decimal('0.00')
+    for key, value in request.POST.items():
+        if key.startswith('quantity_'):
+            variant_id = key.split('_')[1]
+            quantity = int(value) if value else 0
+            try:
+                variant = PriceVariant.objects.get(id=variant_id)
+                total_price += variant.price * quantity
+            except PriceVariant.DoesNotExist:
+                continue
+
+    # Default values
+    discount_amount = Decimal('0.00')
+    error_message = None
+    success = False
+
+    if not coupon_code:
+        error_message = "Please enter a coupon code"
+    elif total_price == 0:
+        error_message = "Please select at least one ticket before applying a coupon"
+    else:
+        try:
+            coupon = Coupon.objects.get(code=coupon_code)
+            service = CouponService(coupon)
+
+            # Validate without applying (dry run)
+            service.validate(user=request.user, amount=total_price)
+
+            # Calculate discount
+            if coupon.discount_type == 'fixed':
+                discount_amount = min(total_price, coupon.balance_remaining)
+            elif coupon.discount_type == 'percent':
+                discount_amount = total_price * (coupon.discount_value / 100)
+                discount_amount = min(discount_amount, coupon.balance_remaining)
+
+            # Store in session for later use
+            request.session['applied_coupon'] = coupon_code
+            request.session['swim_coupon_discount'] = str(discount_amount)
+            success = True
+
+        except Coupon.DoesNotExist:
+            error_message = "Invalid coupon code"
+        except ValidationError as e:
+            error_message = str(e)
+
+    final_price = max(total_price - discount_amount, Decimal('0.00'))
+
+    # Return HTML fragment for HTMX
+    return render(request, 'swims/partials/_coupon_result.html', {
+        'success': success,
+        'error_message': error_message,
+        'coupon_code': coupon_code if success else None,
+        'discount_amount': discount_amount,
+        'total_price': total_price,
+        'final_price': final_price,
+    })
+
+
+@login_required
+def remove_coupon(request):
+    """Remove coupon from session"""
+    if request.method == 'POST':
+        if 'applied_coupon' in request.session:
+            del request.session['applied_coupon']
+        if 'swim_coupon_discount' in request.session:
+            del request.session['swim_coupon_discount']
+
+    return redirect(request.META.get('HTTP_REFERER', 'swims:product_list'))

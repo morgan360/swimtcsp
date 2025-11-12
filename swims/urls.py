@@ -5,11 +5,11 @@ app_name = 'swims'
 
 urlpatterns = [
     path('calculate_total/', views.calculate_total, name='calculate_total'),
+    path('validate-coupon/', views.validate_coupon, name='validate_coupon'),
+    path('remove-coupon/', views.remove_coupon, name='remove_coupon'),
     path('', views.product_list, name='product_list'),
     path('<slug:category_slug>/', views.product_list, name='product_list_by_category'),
     path('<int:id>/<slug:slug>/', views.product_detail,  name='product_detail'),
     path('product/<int:id>/<slug:slug>/', views.product_detail, name='product_detail'),
-
-
 ]
 

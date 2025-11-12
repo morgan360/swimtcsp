@@ -117,15 +117,26 @@
                                     <i class="fas fa-percentage mr-2 text-green-500"></i>Coupon Code
                                 </h3>
                                 <div class="bg-gray-50 rounded-lg p-4">
-                                    <input type="text" name="coupon_code" placeholder="Enter coupon code (optional)"
-                                        value="{{ entered_coupon|default:'' }}"
-                                        class="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                    <!-- Separate form for coupon validation -->
+                                    <div class="flex gap-2" id="couponFormContainer">
+                                        <input type="text"
+                                               name="coupon_code"
+                                               id="couponCodeInput"
+                                               placeholder="Enter coupon code"
+                                               value="{{ entered_coupon|default:'' }}"
+                                               class="flex-1 border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                        <button type="button"
+                                                id="applyCouponBtn"
+                                                class="px-6 py-3 bg-green-500 text-white font-medium rounded-lg hover:bg-green-600 transition-colors">
+                                            Apply
+                                        </button>
+                                    </div>
                                     <p class="text-xs text-gray-500 mt-2">Have a discount code? Enter it above to save on your booking.</p>
                                 </div>
                             </div>
 
-                            <!-- Total -->
-                            <div class="mb-6">
+                            <!-- Total / Coupon Result (HTMX target) -->
+                            <div class="mb-6" id="coupon-result">
                                 <div class="bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg p-4">
                                     <div class="flex items-center justify-between">
                                         <span class="text-lg font-semibold text-gray-900">Total Amount:</span>
@@ -178,10 +189,13 @@ document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('bookingForm');
     const warningMessage = document.getElementById('warningMessage');
     const quantitySelects = document.querySelectorAll('.quantity-select');
+    const applyCouponBtn = document.getElementById('applyCouponBtn');
+    const couponCodeInput = document.getElementById('couponCodeInput');
 
+    // Handle form submission
     form.addEventListener('submit', function(e) {
         let hasQuantity = false;
-        
+
         // Check if any quantity is selected (greater than 0)
         quantitySelects.forEach(select => {
             if (parseInt(select.value) > 0) {
@@ -204,6 +218,27 @@ document.addEventListener('DOMContentLoaded', function() {
     quantitySelects.forEach(select => {
         select.addEventListener('change', function() {
             warningMessage.classList.add('hidden');
+        });
+    });
+
+    // Handle coupon Apply button
+    applyCouponBtn.addEventListener('click', function() {
+        const formData = new FormData(form);
+        formData.set('code', couponCodeInput.value);
+
+        fetch('{% url "swims:validate_coupon" %}', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.text())
+        .then(html => {
+            document.getElementById('coupon-result').innerHTML = html;
+        })
+        .catch(error => {
+            console.error('Error validating coupon:', error);
         });
     });
 });

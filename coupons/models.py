@@ -75,9 +75,10 @@ class Coupon(models.Model):
 
     # Usage context restriction
     USAGE_CONTEXT_CHOICES = [
-        ('any', 'Any (Lessons, Schools, Admin)'),
+        ('any', 'Any (Lessons, Schools, Swims, Admin)'),
         ('lessons', 'Lessons Only'),
         ('schools', 'Schools Only'),
+        ('swims', 'Public Swims Only'),
         ('admin', 'Admin Use Only'),
     ]
     usage_context = models.CharField(

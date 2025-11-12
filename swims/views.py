@@ -192,8 +192,8 @@ def validate_coupon(request):
             coupon = Coupon.objects.get(code=coupon_code)
             service = CouponService(coupon)
 
-            # Validate without applying (dry run)
-            service.validate(user=request.user, amount=total_price)
+            # Validate without applying (dry run) - specify swims context
+            service.validate(user=request.user, amount=total_price, context='swims')
 
             # Calculate discount
             if coupon.discount_type == 'fixed':

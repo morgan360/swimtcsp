@@ -45,7 +45,12 @@ class CouponService:
         # Check usage context
         if self.coupon.usage_context != 'any' and context != 'any':
             if self.coupon.usage_context != context:
-                context_names = {'lessons': 'lesson bookings', 'schools': 'school bookings', 'admin': 'admin use'}
+                context_names = {
+                    'lessons': 'lesson bookings',
+                    'schools': 'school bookings',
+                    'swims': 'public swim bookings',
+                    'admin': 'admin use'
+                }
                 raise ValidationError(
                     f"This coupon can only be used for {context_names.get(self.coupon.usage_context, 'specific purposes')}."
                 )

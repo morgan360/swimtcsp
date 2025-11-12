@@ -139,25 +139,81 @@
                     {% endfor %}
                 </div>
 
-                <!-- Total -->
-                <div class="mt-6 bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg p-4">
-                    <div class="flex items-center justify-between">
-                        <span class="text-lg font-semibold text-gray-900">Total Amount:</span>
-                        <div class="text-2xl font-bold text-green-600">€{{ total_price }}</div>
-                    </div>
-                </div>
-
                 <!-- Coupon Section -->
                 <div class="mt-6">
                     <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                         <i class="fas fa-percentage mr-2 text-green-500"></i>Coupon Code
                     </h3>
                     <div class="bg-gray-50 rounded-lg p-4">
-                        <input type="text" name="code" id="id_code" placeholder="Enter coupon code (optional)"
-                            class="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            maxlength="20">
+                        <form hx-post="{% url 'shopping_cart:validate_coupon' %}"
+                              hx-target="#coupon-result"
+                              hx-swap="innerHTML">
+                            {% csrf_token %}
+                            <div class="flex gap-2">
+                                <input type="text"
+                                       name="code"
+                                       id="id_code"
+                                       placeholder="Enter coupon code"
+                                       value="{{ coupon_code|default:'' }}"
+                                       class="flex-1 border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                       maxlength="20">
+                                <button type="submit"
+                                        class="px-6 py-3 bg-green-500 text-white font-medium rounded-lg hover:bg-green-600 transition-colors">
+                                    Apply
+                                </button>
+                            </div>
+                        </form>
                         <p class="text-xs text-gray-500 mt-2">Have a discount code? Enter it above to save on your order.</p>
                     </div>
+                </div>
+
+                <!-- Coupon Result / Total (HTMX target) -->
+                <div id="coupon-result" class="mt-6">
+                    {% if coupon_code and discount_amount %}
+                    <!-- Show applied coupon -->
+                    <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="flex items-center">
+                                <i class="fas fa-check-circle text-green-500 mr-2"></i>
+                                <span class="text-green-800 font-semibold">Coupon "{{ coupon_code }}" applied!</span>
+                            </div>
+                            <form method="post" action="{% url 'shopping_cart:remove_coupon' %}">
+                                {% csrf_token %}
+                                <button type="submit" class="text-red-600 hover:text-red-700 text-sm">
+                                    <i class="fas fa-times-circle mr-1"></i>Remove
+                                </button>
+                            </form>
+                        </div>
+                        <p class="text-green-700 text-sm">You're saving €{{ discount_amount|floatformat:2 }} on this order!</p>
+                    </div>
+
+                    <!-- Price breakdown with discount -->
+                    <div class="bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg p-4">
+                        <div class="space-y-2">
+                            <div class="flex items-center justify-between text-sm text-gray-600">
+                                <span>Subtotal:</span>
+                                <span>€{{ total_price|floatformat:2 }}</span>
+                            </div>
+                            <div class="flex items-center justify-between text-sm text-green-600 font-semibold">
+                                <span>Discount:</span>
+                                <span>-€{{ discount_amount|floatformat:2 }}</span>
+                            </div>
+                            <div class="h-px bg-gray-300"></div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-lg font-semibold text-gray-900">Total Amount:</span>
+                                <div class="text-2xl font-bold text-green-600">€{{ final_price|floatformat:2 }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <!-- No coupon applied - show regular total -->
+                    <div class="bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg p-4">
+                        <div class="flex items-center justify-between">
+                            <span class="text-lg font-semibold text-gray-900">Total Amount:</span>
+                            <div class="text-2xl font-bold text-green-600">€{{ total_price|floatformat:2 }}</div>
+                        </div>
+                    </div>
+                    {% endif %}
                 </div>
 
                 <!-- Action Buttons -->

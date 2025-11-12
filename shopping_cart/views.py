@@ -126,13 +126,94 @@ def cart_detail(request):
     # Include the coupon form
     coupon_form = CouponApplyForm()
 
+    # Check if there's a validated coupon in the session
+    discount_amount = Decimal('0.00')
+    coupon_code = None
+    final_price = total_price
+
+    if 'coupon_code' in request.session and 'coupon_discount' in request.session:
+        coupon_code = request.session['coupon_code']
+        discount_amount = Decimal(str(request.session['coupon_discount']))
+        final_price = max(total_price - discount_amount, Decimal('0.00'))
+
     return render(request, 'shopping_cart/detail.html', {
         'cart_items': cart_items,
         'total_price': total_price,
         'coupon_form': coupon_form,
+        'coupon_code': coupon_code,
+        'discount_amount': discount_amount,
+        'final_price': final_price,
     })
 
-    # return render(request, 'shopping_cart/detail.html', {'cart_items': cart_items, 'total_price': total_price})
+
+@login_required
+@require_POST
+def validate_coupon(request):
+    """HTMX endpoint to validate coupon and return discount preview"""
+    cart = Cart(request)
+    coupon_code = request.POST.get("code", "").strip()
+
+    # Calculate cart total
+    total_price = Decimal('0.00')
+    for item_key, item_data in cart.cart.items():
+        item_total = Decimal(item_data['price']) * item_data['quantity']
+        total_price += item_total
+
+    # Default values
+    discount_amount = Decimal('0.00')
+    error_message = None
+    success = False
+
+    if not coupon_code:
+        error_message = "Please enter a coupon code"
+    else:
+        try:
+            coupon = Coupon.objects.get(code=coupon_code)
+            service = CouponService(coupon)
+
+            # Validate without applying (dry run)
+            service.validate(user=request.user, amount=total_price)
+
+            # Calculate discount
+            if coupon.discount_type == 'fixed':
+                discount_amount = min(total_price, coupon.balance_remaining)
+            elif coupon.discount_type == 'percent':
+                discount_amount = total_price * (coupon.discount_value / 100)
+                discount_amount = min(discount_amount, coupon.balance_remaining)
+
+            # Store in session for later use
+            request.session['coupon_code'] = coupon_code
+            request.session['coupon_discount'] = str(discount_amount)
+            success = True
+
+        except Coupon.DoesNotExist:
+            error_message = "Invalid coupon code"
+        except ValidationError as e:
+            error_message = str(e)
+
+    final_price = max(total_price - discount_amount, Decimal('0.00'))
+
+    # Return HTML fragment for HTMX
+    return render(request, 'shopping_cart/_coupon_result.html', {
+        'success': success,
+        'error_message': error_message,
+        'coupon_code': coupon_code if success else None,
+        'discount_amount': discount_amount,
+        'total_price': total_price,
+        'final_price': final_price,
+    })
+
+
+@login_required
+@require_POST
+def remove_coupon(request):
+    """Remove coupon from session"""
+    if 'coupon_code' in request.session:
+        del request.session['coupon_code']
+    if 'coupon_discount' in request.session:
+        del request.session['coupon_discount']
+
+    return redirect('shopping_cart:cart_detail')
 
 
 ###################### Payment Process ###################
@@ -189,8 +270,8 @@ def payment_process(request):
     else:
         return HttpResponse("Invalid product type in cart.", status=400)
 
-    # Step 2: Handle coupon if present
-    coupon_code = request.POST.get("code", "").strip()
+    # Step 2: Handle coupon if present (from session)
+    coupon_code = request.session.get('coupon_code')
     if coupon_code:
         try:
             coupon = Coupon.objects.get(code=coupon_code)
@@ -202,11 +283,15 @@ def payment_process(request):
             order.coupon = coupon
             order.discount_amount = discount
 
-            print(f"[Coupon] Applied {coupon_code} for €{discount}")
+            # Clear coupon from session after applying
+            del request.session['coupon_code']
+            del request.session['coupon_discount']
+
+            logger.info(f"[Coupon] Applied {coupon_code} for €{discount} to order {order.id}")
         except Coupon.DoesNotExist:
-            print(f"[Coupon] Invalid code: {coupon_code}")
+            logger.error(f"[Coupon] Invalid code: {coupon_code}")
         except ValidationError as e:
-            print(f"[Coupon] Error: {str(e)}")
+            logger.error(f"[Coupon] Error: {str(e)}")
 
     # Step 3: Save the final amount and clear cart
     order.amount = total_price

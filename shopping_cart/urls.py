@@ -15,6 +15,7 @@ urlpatterns = [
          name='review_waiting_list_booking'),
     path('confirm_waiting_list_booking/<int:swimling_id>/<int:product_id>/', views.confirm_waiting_list_booking,
          name='confirm_waiting_list_booking'),
-    # shopping_cart/urls.py
     path('rebook/<int:swimling_id>/<int:product_id>/', views.direct_rebooking, name='direct_rebooking'),
+    path('validate-coupon/', views.validate_coupon, name='validate_coupon'),
+    path('remove-coupon/', views.remove_coupon, name='remove_coupon'),
 ]

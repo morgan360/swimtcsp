@@ -111,7 +111,13 @@ class Coupon(models.Model):
     def is_valid(self):
         now = timezone.now()
         is_time_valid = self.active and self.valid_from <= now <= self.valid_to
-        has_balance = self.balance_remaining > 0
+
+        # Only check balance for single-use coupons
+        # Multi-use coupons keep their balance and don't deplete it
+        if self.multi_use:
+            has_balance = True  # Multi-use coupons always have balance
+        else:
+            has_balance = self.balance_remaining > 0
 
         # Check multi-use limits
         if self.multi_use and self.max_uses is not None:

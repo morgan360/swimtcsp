@@ -24,7 +24,8 @@ class CouponService:
         if self.coupon.assigned_to and user and self.coupon.assigned_to != user:
             raise ValidationError("This coupon is not assigned to you.")
 
-        if amount is not None and self.coupon.balance_remaining <= Decimal('0.00'):
+        # Only check balance for single-use coupons (multi-use coupons keep their balance)
+        if not self.coupon.multi_use and amount is not None and self.coupon.balance_remaining <= Decimal('0.00'):
             raise ValidationError("Coupon has no remaining balance.")
 
         # Check if single-use coupon has already been used globally
@@ -64,20 +65,30 @@ class CouponService:
     def apply(self, *, purchase_obj, amount: Decimal, user=None, product=None, context='any') -> Decimal:
         self.validate(user=user, amount=amount, product=product, context=context)
         if self.coupon.discount_type == 'fixed':
-            discount = min(amount, self.coupon.balance_remaining)
+            if self.coupon.multi_use:
+                # Multi-use coupons: apply discount_value each time without depleting balance
+                discount = min(amount, self.coupon.discount_value)
+            else:
+                # Single-use coupons: deplete from remaining balance
+                discount = min(amount, self.coupon.balance_remaining)
         elif self.coupon.discount_type == 'percent':
             discount = amount * (self.coupon.discount_value / 100)
-            discount = min(discount, self.coupon.balance_remaining)
+            if not self.coupon.multi_use:
+                discount = min(discount, self.coupon.balance_remaining)
         else:
             raise ValidationError("Unknown discount type.")
 
-        # Deduct balance and increment usage counter
-        self.coupon.balance_remaining -= discount
+        # For single-use coupons, deduct balance
+        # For multi-use coupons, don't touch balance (it stays at discount_value)
+        if not self.coupon.multi_use:
+            self.coupon.balance_remaining -= discount
+
+        # Increment usage counter for all coupons
         self.coupon.times_used += 1
         self.coupon.save()
 
-        # Track which user used this coupon
-        if user:
+        # Track which user used this coupon (only for single-use to prevent reuse)
+        if user and not self.coupon.multi_use:
             self.coupon.used_by_users.add(user)
 
         # Log redemption

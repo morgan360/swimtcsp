@@ -94,7 +94,20 @@ class Product(models.Model):
     day_of_week = models.PositiveSmallIntegerField(choices=DAY_CHOICES)
     num_places = models.IntegerField(null=True)
     num_weeks = models.IntegerField(null=True)
-    price = models.DecimalField(max_digits=10, decimal_places=2, null=True, )
+    price = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        help_text='Full term price (auto-calculated as weekly_price × num_weeks). Leave blank - will be set automatically.'
+    )
+    weekly_price = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        help_text='Price per lesson (weekly). Full term price is calculated as weekly_price × num_weeks.'
+    )
     active = models.BooleanField(default=False)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
@@ -102,6 +115,11 @@ class Product(models.Model):
                               default='images/default_image.jpg')
 
     def save(self, *args, **kwargs):
+        # Auto-calculate full term price from weekly_price
+        if self.weekly_price and self.num_weeks:
+            from decimal import Decimal
+            self.price = (self.weekly_price * Decimal(str(self.num_weeks))).quantize(Decimal('0.01'))
+
         # Create the name by combining other fields
         self.name = self.generate_name()
         super().save(*args, **kwargs)
@@ -138,53 +156,121 @@ class Product(models.Model):
     def is_full(self, term):
         return self.remaining_spaces(term) == 0
 
+    def get_full_term_price(self):
+        """
+        Calculate the full term price from weekly_price × num_weeks.
+        Falls back to legacy 'price' field if weekly_price is not set.
+
+        Returns:
+            Decimal: Full term price
+        """
+        from decimal import Decimal
+
+        if self.weekly_price and self.num_weeks:
+            return (self.weekly_price * Decimal(str(self.num_weeks))).quantize(Decimal('0.01'))
+
+        # Fallback to legacy price field
+        return self.price or Decimal('0.00')
+
+    def count_lessons_remaining(self, term, from_date=None):
+        """
+        Count how many lessons remain from the next occurrence of this class day
+        until the end of the term.
+
+        Args:
+            term: Term object
+            from_date: Date to count from (defaults to today)
+
+        Returns:
+            int: Number of lessons remaining
+        """
+        from django.utils import timezone
+
+        if not term:
+            return 0
+
+        if from_date is None:
+            from_date = timezone.now().date()
+
+        # If term hasn't started yet, return total weeks
+        if from_date < term.start_date:
+            return self.num_weeks or 0
+
+        # If term has ended, return 0
+        if from_date > term.end_date:
+            return 0
+
+        # Find the next occurrence of this class day
+        days_until_class_day = (self.day_of_week - from_date.weekday()) % 7
+        if days_until_class_day == 0:
+            # Today is the class day - check if we should include today or start from next week
+            # Include today's class
+            next_class_date = from_date
+        else:
+            next_class_date = from_date + timedelta(days=days_until_class_day)
+
+        # Count occurrences of this day from next_class_date to term end
+        lessons_count = 0
+        current_date = next_class_date
+
+        while current_date <= term.end_date:
+            lessons_count += 1
+            current_date += timedelta(days=7)  # Move to next week
+
+        return lessons_count
+
     def get_prorated_price(self, term):
         """
-        Calculate the prorated price based on weeks remaining in the term.
+        Calculate the prorated price based on lessons remaining in the term.
 
         Args:
             term: Term object to calculate pricing for
 
         Returns:
-            Decimal: Prorated price if term has started, full price otherwise
+            Decimal: Prorated price based on lessons remaining
 
         Logic:
-            - If term hasn't started yet: return full price
-            - If term has started: return (weeks_remaining / total_weeks) * full_price
-            - Minimum charge is always price for 1 week
+            - If term hasn't started yet: return full term price
+            - If term has started: count lessons remaining from next class date
+            - Return weekly_price × lessons_remaining
+            - Minimum charge is always 1 lesson
         """
         from decimal import Decimal
         from django.utils import timezone
 
-        if not term or not self.price or not self.num_weeks:
-            return self.price
+        if not term:
+            return self.get_full_term_price()
+
+        # Use weekly_price if available, otherwise fall back to calculating from price
+        if self.weekly_price:
+            price_per_lesson = self.weekly_price
+        elif self.price and self.num_weeks:
+            # Legacy: calculate from full price
+            price_per_lesson = self.price / Decimal(str(self.num_weeks))
+        else:
+            return Decimal('0.00')
 
         today = timezone.now().date()
 
-        # If term hasn't started yet, charge full price
+        # If term hasn't started yet, charge full term price
         if today < term.start_date:
-            return self.price
+            return self.get_full_term_price()
 
-        # If term has ended, return 0 (or you could return full price)
+        # If term has ended, return 0
         if today > term.end_date:
             return Decimal('0.00')
 
-        # Calculate weeks remaining
-        days_remaining = (term.end_date - today).days
-        weeks_remaining = (days_remaining / 7)  # Can be fractional
+        # Count lessons remaining from next occurrence of this class day
+        lessons_remaining = self.count_lessons_remaining(term, from_date=today)
+
+        # Ensure minimum of 1 lesson
+        if lessons_remaining < 1:
+            lessons_remaining = 1
 
         # Calculate prorated price
-        if weeks_remaining <= 0:
-            return Decimal('0.00')
+        prorated_price = price_per_lesson * Decimal(str(lessons_remaining))
 
-        # Calculate price per week
-        price_per_week = self.price / Decimal(str(self.num_weeks))
-        prorated_price = price_per_week * Decimal(str(weeks_remaining))
-
-        # Ensure minimum of 1 week's price
-        min_price = price_per_week
-
-        return max(prorated_price, min_price).quantize(Decimal('0.01'))
+        return prorated_price.quantize(Decimal('0.01'))
 
 
 # update name everytime fields are changed

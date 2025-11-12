@@ -10,16 +10,21 @@ from boipa.models import Refund  # 👈 Import the model
 
 class ProductAdmin(ImportExportMixin, admin.ModelAdmin):
     resource_class = ProductResource
-    list_display = ['name', 'price', 'active', 'created', 'updated']
+    list_display = ['name', 'weekly_price', 'num_weeks', 'calculated_price', 'active', 'created', 'updated']
     list_filter = [
         ('name', DropdownFilter),
         ('category', RelatedDropdownFilter),
         ('day_of_week', ChoiceDropdownFilter),
     ]
-    list_editable = ['price', 'active']
+    list_editable = ['weekly_price', 'num_weeks', 'active']
     search_fields = ('name',)
+    readonly_fields = ['calculated_price']
     fieldsets = (
-        ('Times', {
+        ('Pricing', {
+            'classes': ('grp-collapse grp-open',),
+            'fields': ('weekly_price', 'num_weeks', 'calculated_price')
+        }),
+        ('Schedule & Capacity', {
             'classes': ('grp-collapse grp-open',),
             'fields': ('category', 'day_of_week', 'start_time', 'end_time', 'num_places', 'active')
         }),
@@ -32,6 +37,13 @@ class ProductAdmin(ImportExportMixin, admin.ModelAdmin):
             'fields': ('name', 'slug'),
         }),
     )
+
+    def calculated_price(self, obj):
+        """Display the auto-calculated full term price"""
+        if obj.weekly_price and obj.num_weeks:
+            return f"€{obj.price:.2f}" if obj.price else "€0.00"
+        return "Set weekly_price and num_weeks first"
+    calculated_price.short_description = "Full Term Price (auto-calculated)"
 
 
 class ProgramAdmin(ImportExportMixin, admin.ModelAdmin):

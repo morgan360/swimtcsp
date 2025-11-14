@@ -179,6 +179,9 @@ def lessons(request):
 @login_required
 @user_passes_test(is_staff)
 def swimling_stagnation(request):
+    selected_level = request.GET.get('level', '').strip()
+    selected_day = request.GET.get('day', '').strip()
+
     current_term = Term.get_current_term() or Term.objects.order_by('-start_date', '-id').first()
 
     if not current_term:
@@ -186,6 +189,10 @@ def swimling_stagnation(request):
             'current_term': None,
             'levels_data': [],
             'total_swimlings': 0,
+            'level_choices': [],
+            'day_choices': Product.DAY_CHOICES,
+            'selected_level': selected_level,
+            'selected_day': selected_day,
         }
         return render(request, 'dashboard/swimling_stagnation.html', context)
 
@@ -217,6 +224,10 @@ def swimling_stagnation(request):
             'current_term': current_term,
             'levels_data': [],
             'total_swimlings': 0,
+            'level_choices': [],
+            'day_choices': Product.DAY_CHOICES,
+            'selected_level': selected_level,
+            'selected_day': selected_day,
         }
         return render(request, 'dashboard/swimling_stagnation.html', context)
 
@@ -231,6 +242,7 @@ def swimling_stagnation(request):
         history_by_swimling[enrollment.swimling_id].append(enrollment)
 
     levels_map = {}
+    available_categories = {}
     total_swimlings = 0
 
     for (swimling_id, category_id), current_enrollment in current_entries.items():
@@ -284,6 +296,23 @@ def swimling_stagnation(request):
             for enrollment in consecutive_enrollments
         ]
 
+        available_categories[category_id] = category
+
+        if selected_level:
+            try:
+                if str(category_id) != str(int(selected_level)):
+                    continue
+            except ValueError:
+                continue
+
+        lesson_day_value = getattr(current_enrollment.lesson, 'day_of_week', None)
+        if selected_day:
+            try:
+                if str(lesson_day_value) != str(int(selected_day)):
+                    continue
+            except (TypeError, ValueError):
+                continue
+
         level_data = levels_map.setdefault(category_id, {
             'category': category,
             'swimlings': []
@@ -308,10 +337,19 @@ def swimling_stagnation(request):
 
     levels_data.sort(key=lambda item: (-len(item['swimlings']), item['category'].name))
 
+    level_choices = sorted(
+        [{'id': cid, 'name': cat.name} for cid, cat in available_categories.items()],
+        key=lambda item: item['name']
+    )
+
     context = {
         'current_term': current_term,
         'levels_data': levels_data,
         'total_swimlings': total_swimlings,
+        'level_choices': level_choices,
+        'day_choices': Product.DAY_CHOICES,
+        'selected_level': selected_level,
+        'selected_day': selected_day,
     }
 
     return render(request, 'dashboard/swimling_stagnation.html', context)

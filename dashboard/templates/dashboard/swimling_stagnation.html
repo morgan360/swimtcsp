@@ -25,7 +25,7 @@
             {% endif %}
           </p>
         </div>
-        <div class="p-4 border border-green-200 rounded-lg bg-green-50">
+        <div class="p-6 border border-green-200 rounded-lg bg-green-50">
           <p class="text-xs uppercase tracking-wide text-green-600">Flagged Swimlings</p>
           <p class="mt-1 text-lg font-semibold text-green-800">{{ total_swimlings }}</p>
         </div>
@@ -35,74 +35,129 @@
         </div>
       </div>
 
-      {% if not levels_data %}
-        <div class="border border-green-200 bg-green-50 rounded-lg px-6 py-8 text-center">
-          <p class="text-lg font-medium text-green-800">No stagnation detected for the current term.</p>
-          <p class="text-sm text-green-700 mt-2">
-            Keep monitoring previous enrolments and return here to review long-term progression flags.
-          </p>
+      <form id="stagnation-filter-form"
+            method="get"
+            class="border border-slate-200 rounded-xl bg-slate-50 px-4 py-4"
+            hx-get="{% url 'dashboard:swimling_stagnation' %}"
+            hx-target="#stagnation-results"
+            hx-select="#stagnation-results"
+            hx-swap="outerHTML"
+            hx-push-url="true"
+            hx-indicator="#stagnation-loading">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+          <div>
+            <label for="level" class="block text-sm font-medium text-slate-600 mb-1">Level</label>
+            <select id="level" name="level"
+                    class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 focus:border-slate-500 focus:ring-slate-500">
+              <option value="">All levels</option>
+              {% for option in level_choices %}
+                <option value="{{ option.id }}" {% if selected_level and selected_level|stringformat:"s" == option.id|stringformat:"s" %}selected{% endif %}>
+                  {{ option.name }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+          <div>
+            <label for="day" class="block text-sm font-medium text-slate-600 mb-1">Day</label>
+            <select id="day" name="day"
+                    class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 focus:border-slate-500 focus:ring-slate-500">
+              <option value="">All days</option>
+              {% for value, label in day_choices %}
+                <option value="{{ value }}" {% if selected_day and selected_day|stringformat:"s" == value|stringformat:"s" %}selected{% endif %}>
+                  {{ label }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="flex flex-col sm:flex-row gap-3">
+            <button type="submit"
+                    class="inline-flex justify-center rounded-lg bg-slate-800 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-slate-700 transition">
+              Apply filters
+            </button>
+            {% if selected_level or selected_day %}
+              <a href="{% url 'dashboard:swimling_stagnation' %}"
+                 class="inline-flex justify-center rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-white transition">
+                Reset
+              </a>
+            {% endif %}
+          </div>
         </div>
-      {% else %}
-        <div class="space-y-8">
-          {% for level in levels_data %}
-            <div class="border border-slate-200 rounded-xl shadow-sm overflow-hidden">
-              <div class="bg-slate-100 px-5 py-4 flex flex-col sm:flex-row sm:items-center gap-3">
-                <div class="flex-1">
-                  <h2 class="text-xl font-semibold text-slate-800">
-                    {{ level.category.name }}
-                    {% if level.category.short_name %}
-                      <span class="text-sm font-medium text-slate-500">({{ level.category.short_name }})</span>
-                    {% endif %}
-                  </h2>
-                  {% if level.category.program %}
-                    <p class="text-sm text-slate-500">Program: {{ level.category.program.name }}</p>
-                  {% endif %}
-                </div>
-                <div class="flex items-center gap-2">
-                  <span class="inline-flex items-center px-3 py-1 rounded-full bg-amber-100 text-amber-700 text-xs font-semibold uppercase tracking-wide">
-                    {{ level.swimlings|length }} flagged
-                  </span>
-                </div>
-              </div>
+        <p id="stagnation-loading" class="htmx-indicator text-sm text-slate-500 mt-3 flex items-center gap-2">
+          <i class="fa-solid fa-circle-notch fa-spin"></i>
+          Updating results&hellip;
+        </p>
+      </form>
 
-              <div class="divide-y divide-slate-200 bg-white">
-                {% for entry in level.swimlings %}
-                  <div class="px-5 py-4 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                    <div>
-                      <p class="text-lg font-semibold text-slate-900">
-                        {{ entry.swimling.first_name }} {{ entry.swimling.last_name }}
-                      </p>
-                      {% if entry.guardian %}
-                        <p class="text-sm text-slate-500">
-                          Guardian: {{ entry.guardian.get_full_name|default:entry.guardian.email }}
-                        </p>
+      <div id="stagnation-results">
+        {% if not levels_data %}
+          <div class="border border-green-200 bg-green-50 rounded-lg px-6 py-8 text-center">
+            <p class="text-lg font-medium text-green-800">No stagnation detected for the current term.</p>
+            <p class="text-sm text-green-700 mt-2">
+              Keep monitoring previous enrolments and return here to review long-term progression flags.
+            </p>
+          </div>
+        {% else %}
+          <div class="space-y-8">
+            {% for level in levels_data %}
+              <div class="border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+                <div class="bg-slate-100 px-5 py-4 flex flex-col sm:flex-row sm:items-center gap-3">
+                  <div class="flex-1">
+                    <h2 class="text-xl font-semibold text-slate-800">
+                      {{ level.category.name }}
+                      {% if level.category.short_name %}
+                        <span class="text-sm font-medium text-slate-500">({{ level.category.short_name }})</span>
                       {% endif %}
-                      <p class="text-sm text-slate-500">
-                        Current Class: {{ entry.day_display|default:"Day TBC" }}
-                        {% if entry.time_label %}
-                          • {{ entry.time_label }}
-                        {% endif %}
-                      </p>
-                    </div>
-                    <div class="flex flex-col sm:flex-row sm:items-center gap-3">
-                      <div class="bg-amber-50 border border-amber-200 text-amber-800 px-4 py-2 rounded-lg text-sm font-semibold text-center">
-                        {{ entry.consecutive_terms }} consecutive terms
-                      </div>
-                      <div class="flex flex-wrap gap-2">
-                        {% for term in entry.term_history %}
-                          <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200">
-                            {{ term.term_label }}
-                          </span>
-                        {% endfor %}
-                      </div>
-                    </div>
+                    </h2>
+                    {% if level.category.program %}
+                      <p class="text-sm text-slate-500">Program: {{ level.category.program.name }}</p>
+                    {% endif %}
                   </div>
-                {% endfor %}
+                  <div class="flex items-center gap-2">
+                    <span class="inline-flex items-center px-3 py-1 rounded-full bg-amber-100 text-amber-700 text-xs font-semibold uppercase tracking-wide">
+                      {{ level.swimlings|length }} flagged
+                    </span>
+                  </div>
+                </div>
+
+                <div class="divide-y divide-slate-200 bg-white">
+                  {% for entry in level.swimlings %}
+                    <div class="px-5 py-4 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                      <div>
+                        <p class="text-lg font-semibold text-slate-900">
+                          {{ entry.swimling.first_name }} {{ entry.swimling.last_name }}
+                        </p>
+                        {% if entry.guardian %}
+                          <p class="text-sm text-slate-500">
+                            <span class="font-bold">Guardian:</span> {{ entry.guardian.get_full_name|default:entry.guardian.email }}
+                          </p>
+                        {% endif %}
+                        <p class="text-sm text-slate-500">
+                          <span class="font-bold">Current Class:</span> {{ entry.day_display|default:"Day TBC" }}
+                          {% if entry.time_label %}
+                            • {{ entry.time_label }}
+                          {% endif %}
+                        </p>
+                      </div>
+                      <div class="flex flex-col sm:flex-row sm:items-center gap-3">
+                        <div class="bg-amber-50 border border-amber-200 text-amber-800 px-4 py-2 rounded-lg text-sm font-semibold text-center">
+                          {{ entry.consecutive_terms }} consecutive terms
+                        </div>
+                        <div class="flex flex-wrap gap-2">
+                          {% for term in entry.term_history %}
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200">
+                              {{ term.term_label }}
+                            </span>
+                          {% endfor %}
+                        </div>
+                      </div>
+                    </div>
+                  {% endfor %}
+                </div>
               </div>
-            </div>
-          {% endfor %}
-        </div>
-      {% endif %}
+            {% endfor %}
+          </div>
+        {% endif %}
+      </div>
     </div>
   </div>
 </section>

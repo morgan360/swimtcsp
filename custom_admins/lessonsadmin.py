@@ -200,8 +200,55 @@ class LessonEnrollmentAdmin(admin.ModelAdmin):
 
     export_not_rebooked.short_description = "Export swimmers not rebooked in next term (CSV)"
 
-    # Register the action
-    actions = ['export_not_rebooked']
+    # ✅ Admin action to export selected/filtered enrollments
+    def export_selected_enrollments(self, request, queryset):
+        """Export selected or filtered enrollments as CSV"""
+        # Create CSV response
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="selected_enrollments.csv"'
+
+        writer = csv.writer(response)
+        writer.writerow([
+            'Guardian Email',
+            'Guardian First Name',
+            'Guardian Last Name',
+            'Guardian Mobile',
+            'Swimling First Name',
+            'Swimling Last Name',
+            'Swimling DOB',
+            'Current Lesson',
+            'Lesson Category',
+            'Current Term'
+        ])
+
+        # Use the queryset which includes selected items or filtered results
+        enrollments = queryset.select_related('swimling', 'swimling__guardian', 'lesson', 'lesson__category')
+
+        for enrollment in enrollments:
+            guardian = enrollment.swimling.guardian
+            writer.writerow([
+                guardian.email if guardian else '',
+                guardian.first_name if guardian else '',
+                guardian.last_name if guardian else '',
+                str(guardian.mobile_phone) if guardian and guardian.mobile_phone else '',
+                enrollment.swimling.first_name,
+                enrollment.swimling.last_name,
+                enrollment.swimling.dob.strftime('%Y-%m-%d') if enrollment.swimling.dob else '',
+                enrollment.lesson.name if enrollment.lesson else '',
+                enrollment.lesson.category.name if enrollment.lesson and enrollment.lesson.category else '',
+                f"Term {enrollment.term.id}"
+            ])
+
+        self.message_user(
+            request,
+            f"Exported {enrollments.count()} enrollments."
+        )
+        return response
+
+    export_selected_enrollments.short_description = "Export selected/filtered enrollments (CSV)"
+
+    # Register the actions
+    actions = ['export_not_rebooked', 'export_selected_enrollments']
 
     class Media:
         js = ("js/add_print_button.js",)  # 👈 still adds Print button in admin toolbar

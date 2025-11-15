@@ -48,6 +48,7 @@ EMAIL_USE_TLS       = config('EMAIL_USE_TLS', cast=bool)
 EMAIL_HOST_USER     = config('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
 DEFAULT_FROM_EMAIL  = config('DEFAULT_FROM_EMAIL')
+FROM_EMAIL          = DEFAULT_FROM_EMAIL  # Alias for legacy code
 
 # --- Logging ---
 LOG_BASE = '/home/morganmck/dev-swimtcsp/logs'

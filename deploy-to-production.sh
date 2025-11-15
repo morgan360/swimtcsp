@@ -63,19 +63,22 @@ fi
 echo -e "${GREEN}✅ Git checks passed${NC}"
 echo ""
 
-# Confirmation prompt
+# Confirmation prompt (skipped for automated deployment)
 echo -e "${RED}⚠️  WARNING: You are about to deploy to PRODUCTION${NC}"
 echo -e "${YELLOW}   This will affect live users at www.tcsp.ie${NC}"
 echo ""
 echo "Latest commits to be deployed:"
 git log --oneline -5
 echo ""
-read -p "$(echo -e ${YELLOW}Are you sure you want to continue? [y/N]:${NC} )" -n 1 -r
+echo -e "${YELLOW}Proceeding with automated deployment (no confirmation required)${NC}"
 echo ""
-if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-    echo -e "${BLUE}Deployment cancelled${NC}"
-    exit 0
-fi
+# Confirmation skipped - uncomment below to re-enable interactive confirmation:
+# read -p "$(echo -e ${YELLOW}Are you sure you want to continue? [y/N]:${NC} )" -n 1 -r
+# echo ""
+# if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+#     echo -e "${BLUE}Deployment cancelled${NC}"
+#     exit 0
+# fi
 
 echo ""
 echo -e "${GREEN}🚀 Starting Production Deployment...${NC}"

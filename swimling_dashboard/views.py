@@ -219,8 +219,8 @@ def add_swimling(request):
                 # RB phase: Rebook for enrolled swimlings, Book for non-enrolled swimlings
                 if current_phase == 'RB':
                     if current_lessons.exists():
-                        # Swimling is enrolled → show Rebook button (books into next term)
-                        actions.append({'label': 'Rebook', 'url': f'/rebook/{s.id}/', 'disabled': False})
+                        # Swimling is enrolled → show Rebook button (goes to multi-select rebooking page)
+                        actions.append({'label': 'Rebook', 'url': reverse('shopping_cart:rebooking_page'), 'disabled': False})
                     else:
                         # Swimling NOT enrolled → show Book button (books into current term)
                         book_url = reverse('lessons:lesson_list') + f'?swimling={s.id}'
@@ -316,8 +316,8 @@ def guardian_dashboard(request):
         # RB phase: Rebook for enrolled swimlings, Book for non-enrolled swimlings
         if current_phase == 'RB':
             if current_lessons.exists():
-                # Swimling is enrolled → show Rebook button (books into next term)
-                actions.append({'label': 'Rebook', 'url': f'/rebook/{swimling.id}/', 'disabled': False})
+                # Swimling is enrolled → show Rebook button (goes to multi-select rebooking page)
+                actions.append({'label': 'Rebook', 'url': reverse('shopping_cart:rebooking_page'), 'disabled': False})
             else:
                 # Swimling NOT enrolled → show Book button (books into current term)
                 url = reverse('lessons:lesson_list') + f'?swimling={swimling.id}'

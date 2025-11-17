@@ -11,6 +11,20 @@
       <p class="text-blue-100 text-sm max-w-md mx-auto">
         Manage your children's swimming lessons and track their progress
       </p>
+
+      <!-- Rebook Button (shown if any swimling has Rebook action) -->
+      {% if public_lessons_data %}
+        {% with action=public_lessons_data.0.actions|get_action:'Rebook' %}
+          {% if action and not action.disabled %}
+            <div class="mt-4">
+              <a href="{{ action.url }}"
+                class="inline-flex items-center px-6 py-3 bg-white text-blue-600 font-semibold rounded-lg hover:bg-blue-50 transition-all duration-200 shadow-lg hover:shadow-xl">
+                <i class="fa-solid fa-repeat mr-2"></i>Rebook Lessons
+              </a>
+            </div>
+          {% endif %}
+        {% endwith %}
+      {% endif %}
     </div>
   </div>
 
@@ -90,18 +104,12 @@
                   <!-- Actions -->
                   <div class="flex space-x-2 ml-4">
                     {% with action=item.actions|get_action:'Book' %}
+                    {% if action %}
                     <a href="{{ action.url }}"
                       class="inline-flex items-center px-3 py-2 text-xs font-medium rounded-lg transition-colors {{ action.disabled|yesno:'bg-gray-100 text-gray-400 cursor-not-allowed,bg-green-600 text-white hover:bg-green-700' }}">
                       <i class="fa-solid fa-plus mr-1"></i>Book
                     </a>
-                    {% endwith %}
-                    {% with action=item.actions|get_action:'Rebook' %}
-                      {% if not action.disabled %}
-                      <a href="{% url 'shopping_cart:direct_rebooking' swimling.id lesson.id %}"
-                        class="inline-flex items-center px-3 py-2 text-xs font-medium rounded-lg transition-colors bg-blue-600 text-white hover:bg-blue-700">
-                        <i class="fa-solid fa-repeat mr-1"></i>Rebook
-                      </a>
-                      {% endif %}
+                    {% endif %}
                     {% endwith %}
                     <a href="{% url 'waiting_list:join_waiting_list' swimling.id %}"
                       class="inline-flex items-center px-3 py-2 text-xs font-medium bg-yellow-400 text-yellow-900 hover:bg-yellow-500 rounded-lg transition-colors">
@@ -216,20 +224,13 @@
               </div>
               <div class="flex flex-wrap gap-2 pt-2">
                 {% with action=item.actions|get_action:'Book' %}
+                {% if action %}
                 <a href="{{ action.url }}"
                   class="inline-flex items-center px-3 py-1 text-xs rounded text-center {{ action.disabled|yesno:'bg-gray-300 text-gray-500 cursor-not-allowed,pointer-events-auto bg-green-700 text-white hover:bg-green-800' }}">
                   <i class="fa-solid fa-plus mr-1"></i>
                   Book
                 </a>
-                {% endwith %}
-                {% with action=item.actions|get_action:'Rebook' %}
-                  {% if not action.disabled %}
-                  <a href="{% url 'shopping_cart:direct_rebooking' swimling.id lesson.id %}"
-                    class="inline-flex items-center px-3 py-1 text-xs rounded text-center bg-blue-600 text-white hover:bg-blue-700">
-                    <i class="fa-solid fa-repeat mr-1"></i>
-                    Rebook
-                  </a>
-                  {% endif %}
+                {% endif %}
                 {% endwith %}
                 <a href="{% url 'waiting_list:join_waiting_list' swimling.id %}"
                   class="inline-flex items-center px-3 py-1 text-xs rounded bg-yellow-400 text-black hover:bg-yellow-500 text-center">

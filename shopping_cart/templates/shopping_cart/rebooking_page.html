@@ -1,0 +1,163 @@
+{% extends "base/_base.html" %}
+{% load static %}
+
+{% block title %}Rebook Your Lessons{% endblock %}
+
+{% block content %}
+<section class="min-h-screen bg-gradient-to-br from-blue-500 to-blue-900 py-12">
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+
+    <!-- Header -->
+    <div class="text-center mb-10">
+      <div class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full mb-6 shadow-lg">
+        <i class="fa-solid fa-repeat text-white text-3xl"></i>
+      </div>
+      <h1 class="text-4xl font-bold text-white mb-4">Rebook Your Lessons</h1>
+      <p class="text-lg text-gray-200 max-w-2xl mx-auto">Select the swimlings you'd like to rebook for the next term</p>
+      {% if next_term %}
+      <p class="text-sm text-blue-100 mt-2">
+        Next term: {{ next_term.start_date|date:"d M Y" }} - {{ next_term.end_date|date:"d M Y" }}
+      </p>
+      {% endif %}
+    </div>
+
+    <!-- Rebooking Form -->
+    <div class="bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden">
+      {% if rebookable_items %}
+      <form method="post" action="{% url 'shopping_cart:rebooking_page' %}">
+        {% csrf_token %}
+
+        <!-- Header -->
+        <div class="bg-gradient-to-r from-blue-500 to-cyan-500 px-6 py-5">
+          <div class="flex items-center justify-between text-white">
+            <h2 class="text-xl font-semibold flex items-center">
+              <i class="fas fa-clipboard-list mr-2"></i>Available Lessons to Rebook
+            </h2>
+            <span class="text-sm bg-white/20 px-3 py-1 rounded-full">
+              {{ rebookable_items|length }} lesson{{ rebookable_items|length|pluralize }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Items List -->
+        <div class="p-6">
+          <div class="space-y-4">
+            {% for item in rebookable_items %}
+            <div class="border-2 border-gray-200 rounded-lg p-5 hover:border-blue-400 transition-all duration-200 bg-gray-50 hover:bg-blue-50">
+              <label class="flex items-start cursor-pointer">
+                <div class="flex items-center h-6 mt-1">
+                  <input type="checkbox"
+                         name="selected_items"
+                         value="{{ item.swimling.id }}_{{ item.lesson.id }}"
+                         class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 cursor-pointer">
+                </div>
+                <div class="ml-4 flex-1">
+                  <div class="flex items-start justify-between">
+                    <div class="flex-1">
+                      <!-- Swimling Name -->
+                      <div class="flex items-center space-x-2 mb-2">
+                        <div class="w-8 h-8 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full flex items-center justify-center">
+                          <i class="fas fa-user text-white text-xs"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-900">
+                          {{ item.swimling.first_name }} {{ item.swimling.last_name }}
+                        </h3>
+                      </div>
+
+                      <!-- Current Lesson -->
+                      <div class="ml-10 space-y-1">
+                        <div class="flex items-center space-x-2">
+                          <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                            <i class="fas fa-book mr-1"></i>Current Lesson
+                          </span>
+                          <span class="text-sm font-medium text-gray-700">{{ item.lesson }}</span>
+                        </div>
+
+                        <!-- Price -->
+                        <div class="flex items-center space-x-2 text-sm text-gray-600">
+                          <i class="fas fa-euro-sign text-green-600"></i>
+                          <span class="font-semibold text-gray-900">€{{ item.price }}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </label>
+            </div>
+            {% endfor %}
+          </div>
+
+          <!-- Select All Helper -->
+          <div class="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <label class="flex items-center cursor-pointer">
+              <input type="checkbox"
+                     id="select-all-checkbox"
+                     class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 cursor-pointer"
+                     onclick="toggleAllCheckboxes(this)">
+              <span class="ml-3 text-sm font-medium text-blue-900">
+                <i class="fas fa-check-double mr-1"></i>Select / Deselect All
+              </span>
+            </label>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="mt-8 flex items-center justify-between pt-6 border-t border-gray-200">
+            <a href="{% url 'swimling_dashboard:guardian_dashboard' %}"
+               class="inline-flex items-center px-6 py-3 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition-all duration-200 shadow-sm">
+              <i class="fas fa-arrow-left mr-2"></i>Back to Dashboard
+            </a>
+
+            <button type="submit"
+                    class="inline-flex items-center px-8 py-3 bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-semibold rounded-lg hover:from-blue-600 hover:to-cyan-600 transition-all duration-200 shadow-lg hover:shadow-xl">
+              <i class="fas fa-shopping-cart mr-2"></i>Add to Cart
+            </button>
+          </div>
+        </div>
+      </form>
+      {% else %}
+      <!-- No Rebookable Items -->
+      <div class="p-12 text-center">
+        <div class="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+          <i class="fas fa-info-circle text-gray-400 text-3xl"></i>
+        </div>
+        <h3 class="text-xl font-bold text-gray-900 mb-3">No Lessons Available to Rebook</h3>
+        <p class="text-gray-600 mb-8 max-w-md mx-auto">
+          You don't have any current lesson enrollments that can be rebooked at this time.
+        </p>
+        <a href="{% url 'swimling_dashboard:guardian_dashboard' %}"
+           class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-medium rounded-lg hover:from-blue-600 hover:to-cyan-600 transition-all duration-200 shadow-lg">
+          <i class="fas fa-arrow-left mr-2"></i>Back to Dashboard
+        </a>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Help Text -->
+    {% if rebookable_items %}
+    <div class="mt-6 bg-white/10 backdrop-blur-sm rounded-lg p-4 text-white text-sm">
+      <div class="flex items-start">
+        <i class="fas fa-info-circle text-blue-200 mt-1 mr-3"></i>
+        <div>
+          <p class="font-semibold mb-1">Rebooking Information</p>
+          <ul class="list-disc list-inside space-y-1 text-blue-100">
+            <li>Select one or more swimlings to rebook for the next term</li>
+            <li>All selected lessons will be added to your cart</li>
+            <li>You can apply coupon codes at checkout for multiple bookings</li>
+            <li>Prices shown include any prorated adjustments</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</section>
+
+<script>
+function toggleAllCheckboxes(source) {
+  const checkboxes = document.getElementsByName('selected_items');
+  checkboxes.forEach(checkbox => {
+    checkbox.checked = source.checked;
+  });
+}
+</script>
+{% endblock %}

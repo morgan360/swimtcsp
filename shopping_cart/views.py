@@ -386,6 +386,84 @@ def direct_order(request, swimling_id, school_id, active_term):
 
 
 @login_required
+def rebooking_page(request):
+    """Displays all swimlings with their current lessons, allowing multi-select rebooking."""
+    phase_guard = _ensure_rebooking_open(request)
+    if phase_guard:
+        return phase_guard
+
+    from utils.terms_utils import get_term_context_data
+    from lessons_bookings.models import LessonEnrollment
+
+    term_data = get_term_context_data()
+    current_term = term_data.get('current_term')
+    next_term = term_data.get('next_term')
+
+    if not current_term or not next_term:
+        messages.error(request, "Rebooking is not available at this time.")
+        return redirect('swimling_dashboard:guardian_dashboard')
+
+    # Get all swimlings for the current user
+    swimlings = Swimling.objects.filter(guardian=request.user)
+
+    # Build list of rebookable swimlings with their current lessons
+    rebookable_items = []
+    for swimling in swimlings:
+        # Get current enrollments
+        enrollments = LessonEnrollment.objects.filter(
+            swimling=swimling,
+            term=current_term
+        ).select_related('lesson')
+
+        for enrollment in enrollments:
+            lesson = enrollment.lesson
+            # Get prorated price for next term
+            price = lesson.get_prorated_price(next_term)
+            rebookable_items.append({
+                'swimling': swimling,
+                'lesson': lesson,
+                'price': price,
+            })
+
+    if request.method == 'POST':
+        # Get selected items from checkboxes
+        selected_items = request.POST.getlist('selected_items')
+
+        if not selected_items:
+            messages.warning(request, "Please select at least one swimling to rebook.")
+            return redirect('shopping_cart:rebooking_page')
+
+        # Add each selected item to cart
+        cart = Cart(request)
+        added_count = 0
+
+        for item_key in selected_items:
+            # item_key format: "swimling_id_lesson_id"
+            try:
+                swimling_id, lesson_id = item_key.split('_')
+                swimling = get_object_or_404(Swimling, id=swimling_id, guardian=request.user)
+                lesson = get_object_or_404(Product, id=lesson_id)
+
+                # Add to cart with next term for pricing
+                cart.add(product=lesson, type='lesson', swimling_id=swimling.id, term=next_term)
+                added_count += 1
+            except (ValueError, Swimling.DoesNotExist, Product.DoesNotExist):
+                continue
+
+        if added_count > 0:
+            messages.success(request, f"Successfully added {added_count} lesson(s) to your cart.")
+            return redirect('shopping_cart:cart_detail')
+        else:
+            messages.error(request, "No valid items were added to the cart.")
+            return redirect('shopping_cart:rebooking_page')
+
+    return render(request, 'shopping_cart/rebooking_page.html', {
+        'rebookable_items': rebookable_items,
+        'next_term': next_term,
+    })
+
+
+@login_required
 def review_rebooking(request, swimling_id, product_id):
     phase_guard = _ensure_rebooking_open(request)
     if phase_guard:

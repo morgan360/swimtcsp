@@ -102,7 +102,7 @@ def school_checkout(request, swimling_id, term_id):
 @login_required
 def refresh_school_panel(request):
     swimlings = Swimling.objects.filter(guardian=request.user)
-    current_term = ScoTerm.objects.filter(active=True).first()  # or however you determine the active term
+    current_term = ScoTerm.objects.filter(is_active=True).first()  # Get active term regardless of dates
 
     swimling_panels = []
     for swimling in swimlings:

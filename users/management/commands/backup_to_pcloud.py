@@ -20,7 +20,7 @@ class Command(BaseCommand):
         folder_id = config('PCLOUD_FOLDER_ID', default='0')
 
         # File paths
-        today = datetime.now().strftime('%Y-%m-%d')
+        today = datetime.now().strftime('%d-%b-%Y')
         backup_filename = f'db_backup_{today}.sql'
         backup_path = os.path.join('/tmp', backup_filename)
 

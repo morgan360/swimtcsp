@@ -93,7 +93,7 @@ class ScoEnrollmentAdmin(admin.ModelAdmin):
                 enrollment.swimling.guardian.first_name if enrollment.swimling.guardian else '',
                 enrollment.swimling.guardian.last_name if enrollment.swimling.guardian else '',
                 enrollment.swimling.guardian.email if enrollment.swimling.guardian else '',
-                enrollment.swimling.guardian.phone_number if enrollment.swimling.guardian else '',
+                enrollment.swimling.guardian.mobile_phone if enrollment.swimling.guardian else '',
                 enrollment.lesson.name if enrollment.lesson else '',
                 enrollment.lesson.school.name if enrollment.lesson and enrollment.lesson.school else '',
                 enrollment.term.start_date.strftime('%Y-%m-%d') if enrollment.term else '',

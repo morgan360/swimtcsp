@@ -18,6 +18,9 @@ class Order(models.Model):
     payment_status = models.CharField(max_length=100, blank=True)
     amount = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
     coupon = models.ForeignKey(
+
+
+
         Coupon,
         null=True,
         blank=True,

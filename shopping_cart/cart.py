@@ -46,7 +46,8 @@ class Cart:
             'price': str(price),
             'product_id': product_id,
             'swimling_id': swimling_id,
-            'type': type
+            'type': type,
+            'term_id': term.id if term else None
         }
         self.save()
 

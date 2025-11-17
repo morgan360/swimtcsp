@@ -64,10 +64,30 @@ def cart_add(request, product_id, type):  # type could be 'lesson' or 'school'
         term = None
         if type == 'lesson':
             from utils.terms_utils import get_term_context_data
+            from lessons_bookings.models import LessonEnrollment
             term_data = get_term_context_data()
             phase = term_data.get('current_phase_id')
-            # Use next term if in RB or BN phase, otherwise current term
-            term = term_data.get('next_term') if phase in ['RB', 'BN'] else term_data.get('current_term')
+            current_term = term_data.get('current_term')
+            next_term = term_data.get('next_term')
+
+            # BK phase: Always book into current term
+            if phase == 'BK':
+                term = current_term
+            # BN phase: Always book into next term
+            elif phase == 'BN':
+                term = next_term
+            # RB phase: Check if swimling is currently enrolled
+            elif phase == 'RB':
+                # Check if swimling has enrollment in current term
+                is_enrolled = LessonEnrollment.objects.filter(
+                    swimling_id=swimling_id,
+                    term=current_term
+                ).exists()
+                # If enrolled, book into next term (rebooking), otherwise current term (new booking)
+                term = next_term if is_enrolled else current_term
+            else:
+                # Fallback to current term
+                term = current_term
 
         # Call the add method with the correct parameters including type and term
         cart.add(product=product, type=type, swimling_id=swimling_id, term=term)
@@ -242,18 +262,16 @@ def payment_process(request):
     if cart_type == 'lesson':
         order = LessonOrder.objects.create(user=request.user)
         from utils.terms_utils import get_term_context_data
+        from lessons_bookings.models import LessonEnrollment
 
-        term_data = get_term_context_data()
-        phase = term_data['current_phase_id']
-        term = term_data['next_term'] if phase in ['RB', 'BN'] else term_data['current_term']
-
+        # The term was already determined when adding to cart, so we use the term stored in cart items
+        # This ensures we book into the correct term based on enrollment status checked during cart_add
         try:
-            total_price = process_order_items(
+            total_price = process_order_items_from_cart(
                 cart,
                 LessonOrderItem,
                 order,
-                Product,
-                lambda: term
+                Product
             )
         except ValueError as exc:
             order.delete()
@@ -302,6 +320,38 @@ def payment_process(request):
     order_ref = f"{cart_type}_{order.id}"
 
     return redirect('boipa:initiate_payment_session', order_ref=order_ref, total_price=str(total_price))
+
+
+def process_order_items_from_cart(cart, OrderItemModel, order, ProductModel):
+    """Process order items using term already stored in cart (determined during cart_add)"""
+    total_price = Decimal('0.00')
+    for item_key, item_data in cart.cart.items():
+        product_id = item_data['product_id']
+        product = get_object_or_404(ProductModel, id=product_id)
+        swimling = get_object_or_404(Swimling, id=item_data['swimling_id'])
+        quantity = item_data.get('quantity', 1)
+        price = Decimal(item_data['price'])
+
+        # Get term from cart item data (set during cart_add based on enrollment status)
+        term_id = item_data.get('term_id')
+        if not term_id:
+            raise ValueError("We couldn't determine which term to book for right now. Please try again later.")
+
+        term = get_object_or_404(Term, id=term_id)
+
+        OrderItemModel.objects.create(
+            order=order,
+            product=product,
+            price=price,
+            quantity=quantity,
+            swimling=swimling,
+            term=term,
+        )
+        total_price += price * quantity
+
+    order.amount = total_price
+    order.save()
+    return total_price
 
 
 def process_order_items(cart, OrderItemModel, order, ProductModel, get_term_func):

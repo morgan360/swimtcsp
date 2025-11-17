@@ -211,13 +211,22 @@ def add_swimling(request):
                 ).distinct()
 
                 actions = []
-                if current_phase in ['BK', 'RB']:
+                # BK phase: Allow booking into current term only
+                if current_phase == 'BK':
                     book_url = reverse('lessons:lesson_list') + f'?swimling={s.id}'
                     actions.append({'label': 'Book', 'url': book_url, 'disabled': False})
 
-                if current_phase == 'RB' and current_lessons.exists():
-                    actions.append({'label': 'Rebook', 'url': f'/rebook/{s.id}/', 'disabled': False})
+                # RB phase: Rebook for enrolled swimlings, Book for non-enrolled swimlings
+                if current_phase == 'RB':
+                    if current_lessons.exists():
+                        # Swimling is enrolled → show Rebook button (books into next term)
+                        actions.append({'label': 'Rebook', 'url': f'/rebook/{s.id}/', 'disabled': False})
+                    else:
+                        # Swimling NOT enrolled → show Book button (books into current term)
+                        book_url = reverse('lessons:lesson_list') + f'?swimling={s.id}'
+                        actions.append({'label': 'Book', 'url': book_url, 'disabled': False})
 
+                # BN phase: Allow booking into next term
                 if current_phase == 'BN':
                     book_url = reverse('lessons:lesson_list') + f'?swimling={s.id}'
                     actions.append({'label': 'Book', 'url': book_url, 'disabled': False})
@@ -299,13 +308,22 @@ def guardian_dashboard(request):
             })
 
         actions = []
-        if current_phase in ['BK', 'RB']:
+        # BK phase: Allow booking into current term only
+        if current_phase == 'BK':
             url = reverse('lessons:lesson_list') + f'?swimling={swimling.id}'
             actions.append({'label': 'Book', 'url': url, 'disabled': False})
 
-        if current_phase == 'RB' and current_lessons.exists():
-            actions.append({'label': 'Rebook', 'url': f'/rebook/{swimling.id}/', 'disabled': False})
+        # RB phase: Rebook for enrolled swimlings, Book for non-enrolled swimlings
+        if current_phase == 'RB':
+            if current_lessons.exists():
+                # Swimling is enrolled → show Rebook button (books into next term)
+                actions.append({'label': 'Rebook', 'url': f'/rebook/{swimling.id}/', 'disabled': False})
+            else:
+                # Swimling NOT enrolled → show Book button (books into current term)
+                url = reverse('lessons:lesson_list') + f'?swimling={swimling.id}'
+                actions.append({'label': 'Book', 'url': url, 'disabled': False})
 
+        # BN phase: Allow booking into next term
         if current_phase == 'BN':
             url = reverse('lessons:lesson_list') + f'?swimling={swimling.id}'
             actions.append({'label': 'Book', 'url': url, 'disabled': False})

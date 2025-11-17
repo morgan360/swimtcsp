@@ -139,7 +139,10 @@ def lesson_list(request):
 
     term_data = get_term_context_data()
     phase = term_data['current_phase_id']
-    booking_for_next_term = phase in ['RB', 'BN']
+    # BK: Book current term only
+    # RB: Should not reach here (Rebook button only), but if they do, book current term
+    # BN: Book next term
+    booking_for_next_term = phase == 'BN'
 
     booking_term = term_data['next_term'] if booking_for_next_term else term_data['current_term']
 
@@ -237,7 +240,10 @@ def lesson_list(request):
 def update_lesson_list(request):
     term_data = get_term_context_data()
     phase = term_data['current_phase_id']
-    booking_for_next_term = phase in ['RB', 'BN']
+    # BK: Book current term only
+    # RB: Should not reach here (Rebook button only), but if they do, book current term
+    # BN: Book next term
+    booking_for_next_term = phase == 'BN'
 
     booking_term = term_data['next_term'] if booking_for_next_term else term_data['current_term']
 
@@ -338,7 +344,10 @@ def product_detail(request, id):
 
     term_data = get_term_context_data()
     phase = term_data['current_phase_id']
-    selected_term = term_data['next_term'] if phase in ['RB', 'BN'] else term_data['current_term']
+    # BK: Book current term only
+    # RB: Should not reach here (Rebook button only), but if they do, book current term
+    # BN: Book next term
+    selected_term = term_data['next_term'] if phase == 'BN' else term_data['current_term']
 
     num_sold = product.get_num_sold(selected_term) if selected_term else 0
     num_left = product.get_num_left(selected_term) if selected_term else 0

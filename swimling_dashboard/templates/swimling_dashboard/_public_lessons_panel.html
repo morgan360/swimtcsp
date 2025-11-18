@@ -14,16 +14,19 @@
 
       <!-- Rebook Button (shown if any swimling has Rebook action) -->
       {% if public_lessons_data %}
-        {% with action=public_lessons_data.0.actions|get_action:'Rebook' %}
-          {% if action and not action.disabled %}
-            <div class="mt-4">
-              <a href="{{ action.url }}"
-                class="inline-flex items-center px-6 py-3 bg-white text-blue-600 font-semibold rounded-lg hover:bg-blue-50 transition-all duration-200 shadow-lg hover:shadow-xl">
-                <i class="fa-solid fa-repeat mr-2"></i>Rebook Lessons
-              </a>
-            </div>
-          {% endif %}
-        {% endwith %}
+        {% for item in public_lessons_data %}
+          {% with action=item.actions|get_action:'Rebook' %}
+            {% if action and not action.disabled %}
+              <div class="mt-4">
+                <a href="{{ action.url }}"
+                  class="inline-flex items-center px-6 py-3 bg-white text-blue-600 font-semibold rounded-lg hover:bg-blue-50 transition-all duration-200 shadow-lg hover:shadow-xl">
+                  <i class="fa-solid fa-repeat mr-2"></i>Rebook Lessons
+                </a>
+              </div>
+              {% break %}
+            {% endif %}
+          {% endwith %}
+        {% endfor %}
       {% endif %}
     </div>
   </div>

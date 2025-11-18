@@ -8,6 +8,7 @@ from django.contrib import messages
 from .forms import DirectOrderForm
 from schools.models import ScoSchool,ScoLessons
 from schools_bookings.models import ScoTerm
+from schools_bookings.utils.swimling_utils import get_latest_active_school_term
 from schools_orders.models import Order, OrderItem
 from boipa.views import initiate_boipa_payment_session
 from decimal import Decimal
@@ -29,8 +30,8 @@ def book_lesson(request, swimling_id, term_id):
     swimling = get_object_or_404(Swimling, id=swimling_id)
     school = get_object_or_404(ScoSchool, sco_role_num=swimling.sco_role_num)
 
-    # ✅ Get the current term for this school
-    term = ScoTerm.get_current_term_for_school(school.id)
+    # ✅ Get the active term for this school (not current term - allows advance booking)
+    term = get_latest_active_school_term(swimling.sco_role_num)
     if not term:
         return HttpResponse("No active term available for this school.", status=400)
 

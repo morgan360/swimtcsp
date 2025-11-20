@@ -36,7 +36,7 @@ def info_view(request, section=None):
             subject=f"Contact Us - {subject}",
             body='',
             from_email=settings.FROM_EMAIL,
-            to=[settings.FROM_EMAIL],
+            to=['swimming@tcsp.ie'],
             reply_to=['swimming@tcsp.ie'],
         )
         email_msg.content_subtype = 'html'

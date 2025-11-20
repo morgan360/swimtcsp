@@ -9,6 +9,7 @@ class ChatbotQuery(models.Model):
     session_key = models.CharField(max_length=40, blank=True)
     source = models.CharField(max_length=30)  # e.g. 'public_swim' or 'public_lesson'
     message = models.TextField()
+    response = models.TextField(blank=True, help_text="Bot's response to the query")
     response_type = models.CharField(max_length=20)  # 'FAQ' or 'GPT'
     confidence_score = models.FloatField(null=True, blank=True, help_text="Embedding match confidence (0.0–1.0)")
     timestamp = models.DateTimeField(auto_now_add=True)

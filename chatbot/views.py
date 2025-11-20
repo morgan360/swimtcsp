@@ -49,15 +49,16 @@ def public_lesson_chat_api(request):
 
         if faq_answer:
             logger.info("✅ Responding from FAQ")
+            html_reply = markdown.markdown(faq_answer, extensions=["extra"])
             ChatbotQuery.objects.create(
                 user=request.user if request.user.is_authenticated else None,
                 session_key=request.session.session_key,
                 source="public_lesson",
                 message=user_message,
+                response=faq_answer,
                 response_type="FAQ",
                 confidence_score=confidence
             )
-            html_reply = markdown.markdown(faq_answer, extensions=["extra"])
             return JsonResponse({"reply": html_reply})
 
         terms = get_upcoming_terms()
@@ -85,11 +86,13 @@ def public_lesson_chat_api(request):
         )
 
         html_reply = parse_markdown_reply(response)
+        raw_reply = response.choices[0].message.content
         ChatbotQuery.objects.create(
             user=request.user if request.user.is_authenticated else None,
             session_key=request.session.session_key,
             source="public_lesson",
             message=user_message,
+            response=raw_reply,
             response_type="GPT",
             confidence_score=confidence
         )
@@ -132,15 +135,16 @@ def public_swim_chat(request):
 
         if faq_answer:
             logger.info("✅ Responding from FAQ")
+            html_reply = markdown.markdown(faq_answer, extensions=["extra"])
             ChatbotQuery.objects.create(
                 user=request.user if request.user.is_authenticated else None,
                 session_key=request.session.session_key,
                 source="public_swim",
                 message=user_message,
+                response=faq_answer,
                 response_type="FAQ",
                 confidence_score=confidence
             )
-            html_reply = markdown.markdown(faq_answer, extensions=["extra"])
             return JsonResponse({"reply": html_reply})
 
         swims = get_available_swims()
@@ -192,13 +196,15 @@ Use this info to answer when customers can book, rebook, or plan lessons.
             html_reply = markdown.markdown(raw_reply, extensions=["extra"])
         except Exception as e:
             logger.error("⚠️ Failed to parse GPT reply: %s", e)
-            html_reply = "⚠️ Sorry, I didn’t understand that. Please try again."
+            raw_reply = "⚠️ Sorry, I didn't understand that. Please try again."
+            html_reply = raw_reply
 
         ChatbotQuery.objects.create(
             user=request.user if request.user.is_authenticated else None,
             session_key=request.session.session_key,
             source="public_swim",
             message=user_message,
+            response=raw_reply,
             response_type="GPT",
             confidence_score=confidence
         )

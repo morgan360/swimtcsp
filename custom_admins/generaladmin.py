@@ -164,7 +164,8 @@ EMBED_MODEL = os.getenv(
 )
 
 class ChatbotQueryAdmin(admin.ModelAdmin):
-    list_display = ("source", "timestamp", "short_message", "response_type", "confidence_score")
+    list_display = ("source", "timestamp", "short_message", "short_response", "response_type", "confidence_score")
+    readonly_fields = ("user", "session_key", "source", "message", "response", "response_type", "confidence_score", "timestamp")
 
     def short_message(self, obj):
         if not obj.message:
@@ -172,6 +173,13 @@ class ChatbotQueryAdmin(admin.ModelAdmin):
         return (obj.message[:50] + "...") if len(obj.message) > 50 else obj.message
 
     short_message.short_description = "Message"
+
+    def short_response(self, obj):
+        if not obj.response:
+            return "-"
+        return (obj.response[:50] + "...") if len(obj.response) > 50 else obj.response
+
+    short_response.short_description = "Response"
 
 # Frequently Asked Questions
 

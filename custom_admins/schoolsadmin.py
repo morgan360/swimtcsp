@@ -8,18 +8,26 @@ from .lessonsadmin import LessonEnrollmentAdmin, SwimlingAutocompleteAdmin
 from import_export.admin import ImportExportMixin
 from schools_bookings.resources import TermResource  # adjust if needed
 from django.http import HttpResponse
+from django_admin_listfilter_dropdown.filters import RelatedDropdownFilter
 import csv
 from datetime import datetime
 
 class ScoEnrollmentAdmin(admin.ModelAdmin):
     list_display = ['id', 'swimling_name', 'guardian_name', 'guardian_email', 'lesson', 'term', 'school_name', 'created']
-    list_filter = ['term', 'lesson__school', 'lesson', 'created']
+    list_filter = [
+        ('term', RelatedDropdownFilter),
+        ('lesson__school', RelatedDropdownFilter),
+        ('lesson', RelatedDropdownFilter),
+        'created'
+    ]
+    autocomplete_fields = ['swimling']
     search_fields = [
         'swimling__first_name',
         'swimling__last_name',
         'swimling__guardian__first_name',
         'swimling__guardian__last_name',
         'swimling__guardian__email',
+        'lesson__name',
         'notes'
     ]
     readonly_fields = ['created', 'updated']

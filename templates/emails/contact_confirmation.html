@@ -87,27 +87,27 @@
 
         <!-- Content -->
         <div class="content">
-            <p>Dear John Smith,</p>
+            <p>Dear {{ name }},</p>
             
             <p>Thank you for contacting Templeogue College Swim Pool. We have received your enquiry and one of our team members will get back to you shortly.</p>
 
             <h3 style="color: #1f2937; margin-top: 25px;">Your Enquiry Details:</h3>
             
             <div class="detail-row">
-                <span class="label">Subject:</span> Swimming Lesson Inquiry
+                <span class="label">Subject:</span> {{ subject }}
             </div>
-            
+
             <div class="detail-row">
-                <span class="label">Name:</span> John Smith
+                <span class="label">Name:</span> {{ name }}
             </div>
-            
+
             <div class="detail-row">
-                <span class="label">Email:</span> john.smith@example.com
+                <span class="label">Email:</span> {{ email }}
             </div>
 
             <div class="message-section">
                 <h4 style="margin-top: 0; color: #1f2937;">Your Message:</h4>
-                <p style="margin-bottom: 0;">Hello, I'm interested in enrolling my 8-year-old daughter in swimming lessons. Could you please provide information about beginner classes, schedules, and pricing? We're available on weekends and after 4 PM on weekdays. Thank you!</p>
+                <p style="margin-bottom: 0;">{{ message }}</p>
             </div>
 
             <p style="margin-top: 25px;">We typically respond to enquiries within 1-2 business days. If your enquiry is urgent, please don't hesitate to call us directly.</p>

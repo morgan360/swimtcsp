@@ -34,7 +34,7 @@ def info_view(request, section=None):
             f"Contact Us - {subject}",
             '',
             settings.FROM_EMAIL,
-            [email],
+            [settings.FROM_EMAIL],
             html_message=html_message,
         )
         success = True

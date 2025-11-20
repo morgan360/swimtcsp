@@ -14,7 +14,7 @@ class LessonEnrollmentAdmin(ImportExportMixin, admin.ModelAdmin):
     resource_class = EnrollmentResource
     list_display = ['swimling', 'term', 'lesson', 'order_link']
     list_display_links = ('swimling',)
-    raw_id_fields = ['swimling']
+    raw_id_fields = ['swimling', 'lesson']
     search_fields = (
         'swimling__first_name',
         'swimling__last_name',

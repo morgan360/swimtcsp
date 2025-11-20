@@ -30,13 +30,18 @@ def info_view(request, section=None):
             {'name': name, 'email': email, 'subject': subject, 'message': message}
         )
 
-        send_mail(
-            f"Contact Us - {subject}",
-            '',
-            settings.FROM_EMAIL,
-            [settings.FROM_EMAIL],
-            html_message=html_message,
+        from django.core.mail import EmailMessage
+
+        email_msg = EmailMessage(
+            subject=f"Contact Us - {subject}",
+            body='',
+            from_email=settings.FROM_EMAIL,
+            to=[settings.FROM_EMAIL],
+            reply_to=['swimming@tcsp.ie'],
         )
+        email_msg.content_subtype = 'html'
+        email_msg.body = html_message
+        email_msg.send()
         success = True
 
     if section in ['about', 'contact', 'both']:

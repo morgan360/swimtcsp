@@ -1,0 +1,100 @@
+Subject: Information Required for New Payment Gateway Migration
+
+Dear BOIPA Team,
+
+We have received notification that you are migrating to a new payment gateway. To ensure a smooth transition for our integration, we need the following information about the new gateway:
+
+1. API ENDPOINTS
+   - New token generation endpoint URL (currently: https://api.boipapaymentgateway.com/token)
+   - New payment processing endpoint URL (currently: https://api.boipapaymentgateway.com/payments)
+   - New hosted payment page URL (currently: https://cashierui-api.boipapaymentgateway.com)
+   - New sandbox/UAT endpoint URLs for testing
+
+2. AUTHENTICATION & CREDENTIALS
+   - Will our existing Merchant ID remain the same or will we receive a new one?
+   - What is the new authentication method? (API keys, OAuth, JWT tokens, password, etc.)
+   - Are IP whitelisting requirements still in place? If so, what is the configuration process?
+
+3. API REQUEST FORMAT
+   - What is the request/response format? (JSON, XML, form-urlencoded)
+   - What is the authentication header format or body parameter structure?
+   - Does the two-step token process remain? (session token request → payment action)
+   - Please provide complete API request parameter mapping from the old gateway to the new gateway
+
+4. WEBHOOK/NOTIFICATION SYSTEM
+   We currently use merchantNotificationUrl for server-to-server payment notifications. For the new gateway:
+   - What are the webhook endpoint requirements?
+   - What is the webhook payload format and what fields will be included?
+   - What authentication/verification mechanism is used for webhooks? (signatures, tokens, etc.)
+   - What is the retry logic and timeout specification?
+
+5. TRANSACTION LIFECYCLE & FIELD MAPPING
+   We currently track: txId, merchantTxId, status, result, amount, auth_code, acquirer, paymentSolutionId
+   - What are the new transaction identifier field names?
+   - What are the updated status/result value mappings?
+   - What fields in payment notifications will change?
+   - Please provide a complete field mapping document
+
+6. PAYMENT FLOW PARAMETERS
+   We currently send: action, amount, currency, country, channel, userDevice, customerIPAddress, 3DS parameters, customer address fields
+   - What parameters are required vs optional in the new system?
+   - Have 3DS 2.0/SCA parameters changed?
+   - Are there any new mandatory fields?
+   - Which fields from our current implementation are deprecated?
+
+7. REFUND/VOID OPERATIONS
+   - What is the new refund API endpoint and parameter structure?
+   - Have void/cancel operations changed?
+   - Is partial refund support still available? If so, what are the specifications?
+
+8. INTEGRATION MODE
+   We currently support both standalone redirect and iFrame integration modes:
+   - Are both modes still supported in the new gateway?
+   - Are there any new integration options available?
+   - Have there been any changes to the JavaScript SDK (if applicable)?
+
+9. TESTING ENVIRONMENT
+   - Sandbox credentials and endpoints
+   - Test card numbers for the new gateway
+   - Expected test scenarios and certification requirements
+   - What is the migration testing period/timeline?
+
+10. MIGRATION SUPPORT & TIMELINE
+    - What is the migration timeline and cutoff date for the old gateway?
+    - Will there be a parallel running period where both gateways operate?
+    - How should we handle transaction reconciliation during migration?
+    - What support is available for technical integration questions?
+    - Who is our technical contact for the migration?
+
+11. BACKWARD COMPATIBILITY
+    - Can old transaction IDs be referenced in the new system?
+    - How do we access historical transaction data?
+    - Can we perform refund/void operations on old transactions after migration?
+
+12. RECURRING PAYMENTS & STORED CREDENTIALS
+    - How will existing recurring payment plans be migrated?
+    - How will stored card tokens/credentials be handled in the transition?
+
+DOCUMENTATION REQUESTED:
+Please provide the following documentation:
+1. Complete API Specification Document for the new gateway
+2. Migration Guide with field/parameter mapping from old to new gateway
+3. Webhook/Notification Specification
+4. Error Code Reference
+5. Testing Guide with test credentials and scenarios
+6. Security/Compliance requirements documentation
+7. Code samples or SDKs if available
+
+ADDITIONAL QUESTIONS:
+- Will existing pending transactions be automatically migrated or must they be completed before the cutoff date?
+- What happens to transactions in progress during the migration?
+- Is there a certification/testing process we must complete before going live on the new gateway?
+- What is the support escalation process if we encounter issues during migration?
+
+We would appreciate a response at your earliest convenience so we can plan our development timeline accordingly. Please let us know if you need any information about our current integration to facilitate this transition.
+
+Thank you for your assistance.
+
+Best regards,
+[Your Name]
+TCSP (Templeogue College Swimming Pool)

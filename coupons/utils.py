@@ -21,7 +21,7 @@ def apply_coupon(code, total):
             discount = min(coupon.discount_value, coupon.balance_remaining, total)
         elif coupon.discount_type == 'percent':
             discount = total * coupon.discount_value / 100
-            discount = min(discount, coupon.balance_remaining)
+            # For percentage coupons, balance_remaining doesn't apply
         else:
             discount = 0
 

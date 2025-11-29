@@ -74,7 +74,8 @@ def order_create(request):
                 if coupon.discount_type == 'fixed':
                     discount_amount = min(coupon.discount_value, coupon.balance_remaining, total)
                 elif coupon.discount_type == 'percent':
-                    discount_amount = min((total * coupon.discount_value / 100), coupon.balance_remaining)
+                    discount_amount = total * coupon.discount_value / 100
+                    # For percentage coupons, balance_remaining doesn't apply
                 print(f">>> DEBUG: Valid coupon applied: {coupon.code}, Discount: €{discount_amount:.2f}")
             else:
                 print(f">>> DEBUG: Coupon invalid or expired: {coupon_code}")

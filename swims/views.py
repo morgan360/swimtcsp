@@ -81,7 +81,8 @@ def product_detail(request, id, slug):
                     if coupon.discount_type == 'fixed':
                         discount_amount = min(coupon.discount_value, coupon.balance_remaining, total_amount)
                     elif coupon.discount_type == 'percent':
-                        discount_amount = min(total_amount * coupon.discount_value / 100, coupon.balance_remaining)
+                        discount_amount = total_amount * coupon.discount_value / 100
+                        # For percentage coupons, balance_remaining doesn't apply
 
                     coupon.balance_remaining -= discount_amount
                     coupon.save()
@@ -200,7 +201,7 @@ def validate_coupon(request):
                 discount_amount = min(total_price, coupon.balance_remaining)
             elif coupon.discount_type == 'percent':
                 discount_amount = total_price * (coupon.discount_value / 100)
-                discount_amount = min(discount_amount, coupon.balance_remaining)
+                # For percentage coupons, balance_remaining doesn't apply
 
             # Store in session for later use
             request.session['applied_coupon'] = coupon_code

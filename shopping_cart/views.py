@@ -199,7 +199,7 @@ def validate_coupon(request):
                 discount_amount = min(total_price, coupon.balance_remaining)
             elif coupon.discount_type == 'percent':
                 discount_amount = total_price * (coupon.discount_value / 100)
-                discount_amount = min(discount_amount, coupon.balance_remaining)
+                # For percentage coupons, balance_remaining doesn't apply
 
             # Store in session for later use
             request.session['coupon_code'] = coupon_code

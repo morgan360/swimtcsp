@@ -25,9 +25,9 @@ python manage.py migrate
 # Run development server
 python manage.py runserver
 
-# Frontend build (Tailwind CSS with watch mode)
+# Frontend build (Tailwind CSS)
 npm install
-npm run build  # Watches ./static/src/input.css -> ./static/css/styles.css
+npm run build  # Watches ./static/src/input.css and rebuilds on changes (continuous)
 
 # Collect static files (for production)
 python manage.py collectstatic
@@ -43,6 +43,15 @@ python manage.py test lessons_bookings
 
 # Run specific test case
 python manage.py test lessons_bookings.tests.TestTermPhases
+
+# Run specific test method
+python manage.py test lessons_bookings.tests.TestTermPhases.test_specific_method
+
+# Run with verbose output
+python manage.py test --verbosity=2
+
+# Keep test database for inspection
+python manage.py test --keepdb
 ```
 
 ### Useful Management Commands
@@ -215,6 +224,11 @@ Common patterns:
 - Lightweight reactive components
 - Manages UI state (drawers, modals, dropdowns)
 - No heavy JavaScript framework required
+
+### DataTables Integration
+- Interactive tables with Bootstrap 5 styling
+- Responsive design with export buttons (CSV, Excel, PDF)
+- Used for admin reports and data-heavy views
 
 ### Template Inheritance
 - Base template: `/templates/base/_base.html`

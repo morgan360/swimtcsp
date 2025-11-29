@@ -73,8 +73,8 @@ class CouponService:
                 discount = min(amount, self.coupon.balance_remaining)
         elif self.coupon.discount_type == 'percent':
             discount = amount * (self.coupon.discount_value / 100)
-            if not self.coupon.multi_use:
-                discount = min(discount, self.coupon.balance_remaining)
+            # For percentage coupons, balance_remaining doesn't apply
+            # The percentage is always calculated from the order amount
         else:
             raise ValidationError("Unknown discount type.")
 

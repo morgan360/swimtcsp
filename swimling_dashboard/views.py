@@ -84,9 +84,24 @@ def school_checkout(request, swimling_id, term_id):
                 html_message=html
             )
 
-            # ✅ Send to BOIPA
-            order_ref = f"school_{order.id}"
-            return initiate_boipa_payment_session(request, order_ref, order.amount)
+            # Check if payment is needed
+            if order.amount > 0:
+                # Standard flow: send to BOIPA
+                order_ref = f"school_{order.id}"
+                return initiate_boipa_payment_session(request, order_ref, order.amount)
+            else:
+                # Zero-balance flow: order fully paid (free or fully discounted)
+                from schools_bookings.utils.enrollment import handle_schools_enrollment
+                from schools_orders.tasks import send_school_order_email
+                order.paid = True
+                order.save()
+                handle_schools_enrollment(order)
+                send_school_order_email(order.id)
+
+                return render(request, 'schools_orders/order/created.html', {
+                    'order': order,
+                    'order_items': order.items.all(),
+                })
 
     else:
         form = DirectOrderForm(lessons=lessons)

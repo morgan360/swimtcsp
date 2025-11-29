@@ -319,7 +319,37 @@ def payment_process(request):
     request.session['order_id'] = order.id
     order_ref = f"{cart_type}_{order.id}"
 
-    return redirect('boipa:initiate_payment_session', order_ref=order_ref, total_price=str(total_price))
+    # Step 4: Check if payment is needed or if order is fully covered by coupon
+    if total_price > 0:
+        # Standard flow: redirect to BOIPA payment gateway
+        return redirect('boipa:initiate_payment_session', order_ref=order_ref, total_price=str(total_price))
+    else:
+        # Zero-balance flow: order fully paid by coupon
+        order.paid = True
+        order.save()
+
+        # Handle enrollment based on order type
+        if cart_type == 'lesson':
+            from lessons_orders.tasks import send_lesson_order_email
+            handle_lessons_enrollment(order)
+            send_lesson_order_email(order.id)
+
+            return render(request, 'lessons_orders/order/created.html', {
+                'order': order,
+                'order_items': order.items.all(),
+            })
+        elif cart_type == 'school':
+            from schools_bookings.utils.enrollment import handle_schools_enrollment
+            from schools_orders.tasks import send_school_order_email
+            handle_schools_enrollment(order)
+            send_school_order_email(order.id)
+
+            return render(request, 'schools_orders/order/created.html', {
+                'order': order,
+                'order_items': order.items.all(),
+            })
+        else:
+            return HttpResponse("Invalid cart type", status=400)
 
 
 def process_order_items_from_cart(cart, OrderItemModel, order, ProductModel):
@@ -420,10 +450,24 @@ def direct_order(request, swimling_id, school_id, active_term):
                 term=term
             )
 
-            order_ref = f"school_{order.id}"
+            # Check if payment is needed
+            if total_price > 0:
+                # Standard flow: redirect to BOIPA payment gateway
+                order_ref = f"school_{order.id}"
+                return redirect('boipa:initiate_payment_session', order_ref=order_ref, total_price=str(total_price))
+            else:
+                # Zero-balance flow: order fully paid (free or fully discounted)
+                from schools_bookings.utils.enrollment import handle_schools_enrollment
+                from schools_orders.tasks import send_school_order_email
+                order.paid = True
+                order.save()
+                handle_schools_enrollment(order)
+                send_school_order_email(order.id)
 
-            # Redirect to initiate payment session with the total price and order reference
-            return redirect('boipa:initiate_payment_session', order_ref=order_ref, total_price=str(total_price))
+                return render(request, 'schools_orders/order/created.html', {
+                    'order': order,
+                    'order_items': order.items.all(),
+                })
     else:
         form = DirectOrderForm(school_id=school_id)
 
@@ -578,10 +622,23 @@ def direct_rebooking(request, swimling_id, product_id):
             term=next_term
         )
 
-        order_ref = f"lesson_{order.id}"
+        # Check if payment is needed
+        if total_price > 0:
+            # Standard flow: redirect to BOIPA payment gateway
+            order_ref = f"lesson_{order.id}"
+            return redirect('boipa:initiate_payment_session', order_ref=order_ref, total_price=str(total_price))
+        else:
+            # Zero-balance flow: order fully paid (free or fully discounted)
+            from lessons_orders.tasks import send_lesson_order_email
+            order.paid = True
+            order.save()
+            handle_lessons_enrollment(order)
+            send_lesson_order_email(order.id)
 
-        # Redirect to initiate payment session with the total price and order reference
-        return redirect('boipa:initiate_payment_session', order_ref=order_ref, total_price=str(total_price))
+            return render(request, 'lessons_orders/order/created.html', {
+                'order': order,
+                'order_items': order.items.all(),
+            })
 
     # Optionally handle GET requests or any other logic
     return redirect('shopping_cart:review_rebooking', swimling_id=swimling_id, product_id=product_id)
@@ -635,10 +692,23 @@ def confirm_waiting_list_booking(request, swimling_id, product_id):
             term=current_term  # Use current term for waiting list bookings
         )
 
-        order_ref = f"lesson_{order.id}"
+        # Check if payment is needed
+        if total_price > 0:
+            # Standard flow: redirect to BOIPA payment gateway
+            order_ref = f"lesson_{order.id}"
+            return redirect('boipa:initiate_payment_session', order_ref=order_ref, total_price=str(total_price))
+        else:
+            # Zero-balance flow: order fully paid (free or fully discounted)
+            from lessons_orders.tasks import send_lesson_order_email
+            order.paid = True
+            order.save()
+            handle_lessons_enrollment(order)
+            send_lesson_order_email(order.id)
 
-        # Redirect to initiate payment session with the total price and order reference
-        return redirect('boipa:initiate_payment_session', order_ref=order_ref, total_price=str(total_price))
+            return render(request, 'lessons_orders/order/created.html', {
+                'order': order,
+                'order_items': order.items.all(),
+            })
 
     # Optionally handle GET requests or any other logic
     return redirect('shopping_cart:review_waiting_list_booking', swimling_id=swimling_id, product_id=product_id)

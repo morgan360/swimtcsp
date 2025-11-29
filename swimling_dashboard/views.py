@@ -98,7 +98,7 @@ def school_checkout(request, swimling_id, term_id):
                 handle_schools_enrollment(order)
                 send_school_order_email(order.id)
 
-                return render(request, 'schools_orders/order/created.html', {
+                return render(request, 'orders/order/created.html', {
                     'order': order,
                     'order_items': order.items.all(),
                 })

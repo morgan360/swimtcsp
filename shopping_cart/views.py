@@ -334,7 +334,7 @@ def payment_process(request):
             handle_lessons_enrollment(order)
             send_lesson_order_email(order.id)
 
-            return render(request, 'lessons_orders/order/created.html', {
+            return render(request, 'orders/order/created.html', {
                 'order': order,
                 'order_items': order.items.all(),
             })
@@ -344,7 +344,7 @@ def payment_process(request):
             handle_schools_enrollment(order)
             send_school_order_email(order.id)
 
-            return render(request, 'schools_orders/order/created.html', {
+            return render(request, 'orders/order/created.html', {
                 'order': order,
                 'order_items': order.items.all(),
             })
@@ -464,7 +464,7 @@ def direct_order(request, swimling_id, school_id, active_term):
                 handle_schools_enrollment(order)
                 send_school_order_email(order.id)
 
-                return render(request, 'schools_orders/order/created.html', {
+                return render(request, 'orders/order/created.html', {
                     'order': order,
                     'order_items': order.items.all(),
                 })
@@ -635,7 +635,7 @@ def direct_rebooking(request, swimling_id, product_id):
             handle_lessons_enrollment(order)
             send_lesson_order_email(order.id)
 
-            return render(request, 'lessons_orders/order/created.html', {
+            return render(request, 'orders/order/created.html', {
                 'order': order,
                 'order_items': order.items.all(),
             })
@@ -705,7 +705,7 @@ def confirm_waiting_list_booking(request, swimling_id, product_id):
             handle_lessons_enrollment(order)
             send_lesson_order_email(order.id)
 
-            return render(request, 'lessons_orders/order/created.html', {
+            return render(request, 'orders/order/created.html', {
                 'order': order,
                 'order_items': order.items.all(),
             })

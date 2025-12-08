@@ -5,128 +5,136 @@
 {% endblock %}
 
 {% block content %}
-<div class="container mx-auto px-4 py-8 max-w-4xl">
-  <!-- Success Message -->
-  <div class="alert alert-success shadow-lg mb-6">
-    <div>
-      <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current flex-shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-      <div>
-        <h3 class="font-bold">Order Confirmed!</h3>
-        <div class="text-xs">Your booking has been successfully completed.</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Order Details Card -->
-  <div class="card bg-base-100 shadow-xl mb-6">
-    <div class="card-body">
-      <h2 class="card-title text-2xl mb-4">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-        </svg>
-        Order Details
-      </h2>
-
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <p class="text-sm text-gray-500">Order ID</p>
-          <p class="font-semibold text-lg">#{{ order.id }}</p>
-        </div>
-        <div>
-          <p class="text-sm text-gray-500">Status</p>
-          <div class="badge badge-success gap-2">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="inline-block w-4 h-4 stroke-current"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-            PAID
+<section class="min-h-screen bg-gradient-to-br from-blue-600 via-cyan-600 to-blue-900 py-12">
+  <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="bg-white/10 backdrop-blur-xl rounded-3xl border border-white/20 shadow-2xl overflow-hidden">
+      <!-- Header -->
+      <div class="bg-gradient-to-r from-blue-500 to-cyan-500 px-8 py-6 flex items-center justify-between">
+        <div class="flex items-center space-x-4">
+          <div class="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center text-white">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <div>
+            <p class="text-white/80 text-sm">Order confirmed</p>
+            <h2 class="text-2xl font-bold text-white">Lesson Order Receipt</h1>
           </div>
         </div>
-        {% if request.user %}
-        <div>
-          <p class="text-sm text-gray-500">Customer</p>
-          <p class="font-semibold">{{ request.user.get_full_name|default:request.user.email }}</p>
+        <span class="px-4 py-2 rounded-full bg-white text-blue-700 text-sm font-semibold shadow-sm">
+          Order #{{ order.id }}
+        </span>
+      </div>
+
+      <!-- Order overview -->
+      <div class="bg-white px-8 py-6 space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="p-4 rounded-2xl border border-gray-100 shadow-sm bg-gray-50">
+            <p class="text-xs uppercase tracking-wide text-gray-500">Status</p>
+            <div class="mt-2 inline-flex items-center px-3 py-1 rounded-full bg-green-100 text-green-700 text-sm font-semibold">
+              <span class="w-2 h-2 rounded-full bg-green-500 mr-2"></span>
+              Paid
+            </div>
+          </div>
+          <div class="p-4 rounded-2xl border border-gray-100 shadow-sm bg-gray-50">
+            <p class="text-xs uppercase tracking-wide text-gray-500">Customer</p>
+            <p class="mt-2 font-semibold text-gray-900">
+              {% if request.user %}{{ request.user.get_full_name|default:request.user.email }}{% endif %}
+            </p>
+          </div>
+          <div class="p-4 rounded-2xl border border-gray-100 shadow-sm bg-gray-50">
+            <p class="text-xs uppercase tracking-wide text-gray-500">Order Total</p>
+            <p class="mt-2 font-semibold text-2xl text-gray-900">€{{ order.amount|floatformat:2 }}</p>
+          </div>
+        </div>
+
+        <!-- Order items -->
+        <div class="rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+          <div class="px-6 py-4 bg-gray-900 text-white flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5m1.6 8l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+              <h2 class="text-lg font-semibold">Enrolled Classes</h2>
+            </div>
+            <span class="text-sm text-gray-200">{{ order_items|length }} item{{ order_items|length|pluralize }}</span>
+          </div>
+
+          <div class="divide-y divide-gray-100 bg-white">
+            {% for item in order_items %}
+            <div class="p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between">
+              <div class="space-y-2">
+                <h3 class="text-lg font-semibold text-gray-900">{{ item.product }}</h3>
+                <div class="flex flex-wrap gap-3 text-sm text-gray-600">
+                  {% if item.swimling %}
+                  <span class="inline-flex items-center px-3 py-1 rounded-full bg-blue-50 text-blue-800 font-medium">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A10.97 10.97 0 0112 15c2.03 0 3.923.552 5.535 1.513M15 11a3 3 0 10-6 0 3 3 0 006 0z" />
+                    </svg>
+                    {{ item.swimling.first_name }} {{ item.swimling.last_name }}
+                  </span>
+                  {% endif %}
+                  {% if item.term %}
+                  <span class="inline-flex items-center px-3 py-1 rounded-full bg-amber-50 text-amber-800 font-medium">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    {{ item.term }}
+                  </span>
+                  {% endif %}
+                </div>
+              </div>
+              <div class="mt-4 sm:mt-0 text-right">
+                <p class="text-xl font-bold text-gray-900">€{{ item.price|floatformat:2 }}</p>
+                <p class="text-sm text-gray-500">Qty {{ item.quantity }}</p>
+              </div>
+            </div>
+            {% empty %}
+            <div class="p-5 text-sm text-gray-500">No items found in this order.</div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- Coupon -->
+        {% if order.coupon %}
+        <div class="rounded-2xl border border-amber-200 bg-amber-50 p-5 shadow-sm">
+          <div class="flex items-start space-x-3">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 14l6-6m0 0H9m6 0v6" />
+            </svg>
+            <div>
+              <p class="text-sm font-semibold text-amber-800">Discount Applied</p>
+              <p class="text-sm text-amber-700 mt-1">
+                Coupon <span class="font-mono font-semibold">{{ order.coupon.code }}</span> saved you €{{ order.discount_amount|floatformat:2 }}
+              </p>
+            </div>
+          </div>
         </div>
         {% endif %}
-        <div>
-          <p class="text-sm text-gray-500">Order Total</p>
-          <p class="font-semibold text-lg">€{{ order.amount|floatformat:2 }}</p>
-        </div>
-      </div>
-    </div>
-  </div>
 
-  <!-- Order Items Card -->
-  <div class="card bg-base-100 shadow-xl mb-6">
-    <div class="card-body">
-      <h2 class="card-title text-xl mb-4">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-        </svg>
-        Enrolled Classes
-      </h2>
-
-      {% for item in order_items %}
-        <div class="p-4 bg-base-200 rounded-lg mb-3">
-          <div class="flex justify-between items-start">
-            <div class="flex-1">
-              <h3 class="font-semibold text-lg">{{ item.product }}</h3>
-              {% if item.swimling %}
-                <p class="text-sm text-gray-600 mt-1">
-                  <span class="font-medium">Swimmer:</span> {{ item.swimling.first_name }} {{ item.swimling.last_name }}
-                </p>
-              {% endif %}
-              {% if item.term %}
-                <p class="text-sm text-gray-600">
-                  <span class="font-medium">Term:</span> {{ item.term }}
-                </p>
-              {% endif %}
-            </div>
-            <div class="text-right">
-              <p class="font-bold text-lg">€{{ item.price|floatformat:2 }}</p>
-              <p class="text-sm text-gray-500">Qty: {{ item.quantity }}</p>
-            </div>
+        <!-- Actions -->
+        <div class="flex flex-wrap gap-4 items-center justify-between">
+          <div class="text-sm text-gray-600">
+            A confirmation email has been sent to
+            <span class="font-semibold text-gray-900">{{ request.user.email }}</span>.
           </div>
-        </div>
-      {% empty %}
-        <p class="text-gray-500">No items found in this order.</p>
-      {% endfor %}
-    </div>
-  </div>
-
-  <!-- Coupon Info (if applicable) -->
-  {% if order.coupon %}
-    <div class="alert alert-warning shadow-lg mb-6">
-      <div>
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current flex-shrink-0 w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-        <div>
-          <h3 class="font-bold">Discount Applied</h3>
-          <div class="text-sm">
-            Coupon <span class="font-mono font-semibold">{{ order.coupon.code }}</span> saved you €{{ order.discount_amount|floatformat:2 }}
+          <div class="flex flex-wrap gap-3">
+            <a href="{% url 'home' %}" class="inline-flex items-center px-5 py-3 rounded-xl bg-gray-100 text-gray-900 font-semibold shadow-sm hover:bg-gray-200 transition">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+              </svg>
+              Return to Home
+            </a>
+            <a href="{% url 'swimling_dashboard:guardian_dashboard' %}" class="inline-flex items-center px-5 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-semibold shadow-lg hover:from-blue-700 hover:to-cyan-600 transition">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+              View Dashboard
+            </a>
           </div>
         </div>
       </div>
     </div>
-  {% endif %}
-
-  <!-- Action Buttons -->
-  <div class="flex flex-wrap gap-4 justify-center mt-8">
-    <a href="{% url 'home' %}" class="btn btn-primary btn-lg gap-2">
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-      </svg>
-      Return to Home
-    </a>
-    <a href="{% url 'swimling_dashboard:guardian_dashboard' %}" class="btn btn-outline btn-lg gap-2">
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-      </svg>
-      View Dashboard
-    </a>
   </div>
-
-  <!-- Email Confirmation Notice -->
-  <div class="text-center mt-8 p-4 bg-base-200 rounded-lg">
-    <p class="text-sm text-gray-600">
-      📧 A confirmation email has been sent to <span class="font-semibold">{{ request.user.email }}</span>
-    </p>
-  </div>
-</div>
+</section>
 {% endblock %}

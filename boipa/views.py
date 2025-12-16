@@ -64,6 +64,12 @@ def payment_response(request):
     boipa_logger = logging.getLogger("boipa")
     import json
 
+    # Disable session modification to avoid SessionInterrupted errors from BOIPA
+    try:
+        request.session.modified = False
+    except AttributeError:
+        pass  # Session might not exist when called from external gateway
+
     boipa_logger.debug(f"Payment response - Method: {request.method}")
 
     # NEW BOIPA API sends JSON in the body

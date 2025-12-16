@@ -93,25 +93,50 @@ class PaymentGatewaySessionMiddleware:
                     f"SessionInterrupted on payment callback: {request.path} - "
                     "This is expected for external gateway callbacks from BOIPA"
                 )
-                # Return a simple HTML response
+                # Return a simple HTML response matching payment_response view
                 # The payment was already processed before the session error occurred
-                html = """
+                # Extract order ref from request if available
+                order_ref = "your order"
+                try:
+                    import json
+                    body = request.body.decode('utf-8')
+                    data = json.loads(body)
+                    ref = data.get('reference', '')
+                    if '_' in ref:
+                        order_ref = ref.split('_')[1]
+                except:
+                    pass
+
+                # Build redirect URL (fallback to home if request.build_absolute_uri fails)
+                try:
+                    from django.urls import reverse
+                    redirect_url = request.scheme + '://' + request.get_host() + reverse('home')
+                except:
+                    redirect_url = '/'
+
+                html = f"""
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Payment Processed</title>
+    <meta http-equiv="refresh" content="2;url={redirect_url}">
+    <title>Payment Successful</title>
     <style>
-        body { font-family: Arial, sans-serif; text-align: center; padding: 50px; background: #f0f9ff; }
-        .container { background: white; padding: 40px; border-radius: 10px; max-width: 500px; margin: 0 auto; }
-        h1 { color: #16a34a; }
+        body {{ font-family: Arial, sans-serif; text-align: center; padding: 50px; background: #f0f9ff; }}
+        .container {{ background: white; padding: 40px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-width: 500px; margin: 0 auto; }}
+        h1 {{ color: #16a34a; }}
+        .spinner {{ border: 4px solid #f3f3f3; border-top: 4px solid #16a34a; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 20px auto; }}
+        @keyframes spin {{ 0% {{ transform: rotate(0deg); }} 100% {{ transform: rotate(360deg); }} }}
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>✅ Payment Processed</h1>
-        <p>Your payment has been received and is being processed.</p>
-        <p>You may close this window.</p>
+        <h1>✅ Payment Successful!</h1>
+        <p>Your payment has been processed successfully.</p>
+        <p><strong>Order ID:</strong> {order_ref}</p>
+        <div class="spinner"></div>
+        <p>Redirecting you back to the site...</p>
+        <p><a href="{redirect_url}">Click here if not redirected automatically</a></p>
     </div>
 </body>
 </html>

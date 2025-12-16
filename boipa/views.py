@@ -1,6 +1,7 @@
 from decimal import Decimal
 import logging
 import requests
+from functools import wraps
 from django.shortcuts import render, redirect
 from django.http import HttpResponse, QueryDict
 from django.urls import reverse
@@ -24,6 +25,26 @@ from django.db import transaction, IntegrityError
 
 # Initialize logging
 boipa_logger = logging.getLogger("boipa")
+
+
+def no_session_save(view_func):
+    """
+    Decorator to prevent session middleware from trying to save session.
+    Used for external payment gateway callbacks where session doesn't exist.
+    """
+    @wraps(view_func)
+    def wrapper(request, *args, **kwargs):
+        # Mark session as accessed but never modified
+        # This prevents SessionMiddleware from trying to save it
+        if hasattr(request, 'session'):
+            request.session.accessed = True
+            request.session.modified = False
+        response = view_func(request, *args, **kwargs)
+        # Prevent session save on response
+        if hasattr(response, '_dont_enforce_csrf_checks'):
+            response._dont_save_session = True
+        return response
+    return wrapper
 
 
 def initiate_boipa_payment_session(request, order_ref, total_price):

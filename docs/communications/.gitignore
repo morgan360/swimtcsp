@@ -1,0 +1,10 @@
+# Ignore sensitive email attachments
+*.eml
+
+# But allow PDFs and text files (after redacting sensitive info)
+# !*.pdf
+# !*.txt
+# !*.md
+
+# Uncomment above if you want to track emails in git
+# Otherwise, keep emails local only

@@ -1,0 +1,1694 @@
+<!DOCTYPE html>
+	<html lang="en"><head id="j_idt4"><link type="text/css" rel="stylesheet" href="/securereader/javax.faces.resource/theme.css.jsf?ln=primefaces-aristo" /><script type="text/javascript" src="/securereader/javax.faces.resource/jquery/jquery.js.jsf?ln=primefaces&amp;v=7.0.17"></script><script type="text/javascript" src="/securereader/javax.faces.resource/jquery/jquery-plugins.js.jsf?ln=primefaces&amp;v=7.0.17"></script><script type="text/javascript" src="/securereader/javax.faces.resource/core.js.jsf?ln=primefaces&amp;v=7.0.17"></script><link type="text/css" rel="stylesheet" href="/securereader/javax.faces.resource/components.css.jsf?ln=primefaces&amp;v=7.0.17" /><script type="text/javascript" src="/securereader/javax.faces.resource/components.js.jsf?ln=primefaces&amp;v=7.0.17"></script><link type="text/css" rel="stylesheet" href="/securereader/javax.faces.resource/fileupload/fileupload.css.jsf?ln=primefaces&amp;v=7.0.17" /><script type="text/javascript" src="/securereader/javax.faces.resource/fileupload/fileupload.js.jsf?ln=primefaces&amp;v=7.0.17"></script><script type="text/javascript" src="/securereader/javax.faces.resource/primefaces-extensions.js.jsf?ln=primefaces-extensions&amp;v=7.0"></script><script type="text/javascript">if(window.PrimeFaces){PrimeFaces.settings.locale='en';}</script>
+	                <meta name="robots" content="noarchive, noindex" />
+			<title>Inbox</title><style type="text/css">
+@font-face {
+	font-family: sourceSansPro;
+	src: url("fonts/sourcesanspro-regular.ttf.woff");
+}
+
+html, body
+{
+	font-family: sourceSansPro,sans-serif !important;
+	font-size: 1em !important;
+	background-color:#ffffff;
+	padding: 0;
+	margin: 0;
+	border: 0;
+	min-height: 100%;
+	min-width: fit-content;
+	position: relative;
+}
+
+.textExportIcon {
+    background-image: url(images/TextExport.png) !important;
+    size: 16px 16px;
+}
+
+.zipExportIcon {
+    background-image: url(images/ZipExport.png) !important;
+    size: 16px 16px;
+}
+
+.emlExportIcon {
+    background-image: url(images/EMLExport.png) !important;
+    size: 16px 16px;
+}
+
+.refreshBtnIcon {
+    background-image: url(images/refresh1.gif) !important;
+    size: 16px 16px;
+}
+
+.refreshBtnIconDisabled {
+    background-image: url(images/refresh2.gif) !important;
+    size: 16px 16px;
+}
+
+form { margin: 0; }
+a:link { text-decoration: none; }
+a:visited { text-decoration: none; }
+a:hover { text-decoration: underline; }
+.errorMessage { color: #AB052F;	}
+div#helpPanelContainer { text-align: left; }
+/***********************************************************************
+*
+* HEADER
+*
+************************************************************************/
+
+.header img
+{
+	border:0;
+	padding:0;
+	margin:0;
+}
+
+
+/***********************************************************************
+*
+* FOOTER
+*
+************************************************************************/
+
+.footer
+{
+	margin-top: 20px;
+	height: 50px;
+	bottom: 0px;
+	left: 0px;
+	right: 0px;
+	font-size: 85%;
+	text-align: center;
+	border:0;
+	border-top: 2px solid black;
+}
+
+/* COMPOSE */
+
+body.compose div.headerFields {
+    box-sizing: border-box;
+}
+
+div.headerFields *, div.headerFields *:before, div.headerFields *:after {
+    box-sizing: inherit;
+}
+
+.ql-editor {
+    background-color:white;
+}
+
+body.compose { background-color: #F2F2F2; }
+body.compose div.composeHeader { background-color: #ffffff; }
+body.compose div.composeContainer { height: 100%; padding: 0 12px; margin: 0px; }
+body.compose div.headerFields { margin: 10px 12px 0 12px; font-weight: normal; background-color: white; border: #CCCCCC 1px solid; }
+body.compose div.headerFields table.headerFields tr td { vertical-align: text-top; padding-top:0.5ex; }
+body.compose div.headerFields table.headerFields tr td.headerField { width: 100%; padding-right: 5px; }
+body.compose td.headerField { width: 100%; background-image: none; background-color: #ffffff; border-left: 1px #CCCCCC solid; border-bottom: 1px #CCCCCC solid; }
+body.compose td.header-field-label { background-image: none; background-color: #ffffff; padding-left: 2px; border-bottom: 1px #CCCCCC solid; line-height: 2em; }
+body.compose input.header-field-input { width: 100%; background-image: none; padding-left: 2px; margin: 0 0 0 0; border:none; height: 2em; }
+body.compose input.header-field-input:disabled { background-color: #DDDDDD; color: #333333; }
+body.compose input.header-field-input[readonly] { background-color: #F5F5F5; color: rgba(0,0,0,0.87); cursor: default; }
+body.compose .uploadPanel { top:100px; left:100px; }
+body.compose .headerFields table tr td div.rich-panel-body { padding:0; }
+body.compose .composeEditor { padding:0; margin:0; }
+body.compose .errorMessage { margin-top: 5px;}
+div label.cke_dialog_ui_labeled_label { font-size: 0.88em; }
+div.cke_dialog_ui_input_text input.cke_dialog_ui_input_text { height: 1.25em; }
+div.rf-fu-hdr { background-image: none; border-color: #CCCCCC; background-color: #F2F2F2; margin: 0 0 0 0;}
+span.rf-fu-btn-clr, span.rf-fu-btn-add, span.rf-fu-btn-upl {
+	color: #FFFFFF;
+	background-color: #15428B;
+    background-image: none;
+	border-radius: 5px;
+	border: 0;
+}
+span.rf-fu-btn-clr:hover, span.rf-fu-btn-add:hover, span.rf-fu-btn-upl:hover { background-color: ; }
+span.rf-fu-btn-cnt-add, span.rf-fu-btn-cnt-upl, span.rf-fu-btn-cnt-clr {
+	color: #FFFFFF;
+}
+span.cke_skin_richfaces span.cke_ltr, span.cke_skin_richfaces span.cke_rtl {
+    background-image: none;
+    background-color: #F2F2F2;
+}
+
+.header-subject-field {
+    font-size: 1.5em;
+    font-weight: 700;
+    text-align: left;
+    padding-bottom: 10px;
+    max-width: 8em;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.header-table {
+    padding: 0 15px;
+    color: #333333;
+    width:75%;
+}
+
+
+
+.read .fieldtable tr td { vertical-align: text-top; }
+table.read-table { width: 100%; margin: 0; }
+td.read-toolbar { padding: 0; margin: 0; }
+tr.read-content, td.read-content { height: 100%; }
+.sent-date { white-space: nowrap; }
+div.read-footer { padding-top: 5px; text-align: center; }
+.header-field-label { white-space:nowrap; padding-right: 15px; padding-bottom: 4px; font-size: 0.88em;}
+.header-field-value { font-family: sourceSansPro,sans-serif; white-space:nowrap; padding-bottom: 4px; width: 100%; font-size: 0.88em;}
+td.read-content { vertical-align: top; }
+.header-overflow-field { white-space: normal; }
+body.read div.read-content pre { word-wrap: break-word; }
+
+ul.ui-datascroller-list > li.ui-datascroller-item { border-bottom: 1px solid black; }
+div.ui-datascroller > div.ui-datascroller-content { padding: 0;}
+div.ui-tabs-panels > div.ui-tabs-panel { padding: 0;}
+div.ui-panel > div.ui-panel-content { padding: 0; }
+
+.inboxSelectCol {
+    width: 23em;
+    padding: 0;
+    vertical-align: top;
+}
+.inboxMessageCol { padding: 0; vertical-align: top; background-color: #F2F2F2; }
+
+span.rf-msg span.rf-msg-err, span.rf-msgs span.rf-msgs-err
+{
+    background-position: left center;
+    padding-left: 20px;
+}
+
+.inboxSenderName
+{
+    text-align: left;
+    max-width: 13em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+	color: rgba(0,0,0,6);
+	font-size: 1.0em;
+	padding-bottom: 10px;
+	font-family: sourceSansPro,sans-serif;
+}
+
+.inboxSubject {
+    font-weight: bold;
+    font-size: .88em;
+    text-overflow: ellipsis;
+    max-width: 24em;
+    color: rgba(0,0,0,6);
+    font-family: sourceSansPro,sans-serif;
+    display: inline-block;
+    overflow: hidden;
+    padding-top: 10px;
+}
+
+.inboxDate
+{
+    text-align: right;
+    min-width: 5em;
+    max-width: 16em;
+	padding-top: 4px;
+	color: rgba(0,0,0,6);
+	font-size: .88em;
+	font-family: sourceSansPro,sans-serif;
+	vertical-align: top;
+	padding-right: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+#inbox\:ibxsentmessage\:ibxsentmessage.rf-msg-inf { padding: 5px; background-image: none; font-weight: bolder; box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);border-radius:10px;}
+#inbox\:ibxsentmessage {width: 110px;margin-left: auto;margin-right: auto;left: 0;right: 0;top: 47px; position: absolute; background-color: #FAE6B0; border: 1px solid #E5973E; border-radius:10px;}
+
+td.inboxListItemCol {
+    padding: 0;
+    border-bottom: 1px solid #cccccc;
+    border-right: none;
+}
+
+.inboxFeedbackMessage {
+    position: absolute;
+    background-color: #FAE6B0;
+    border: 1px solid #E5973E;
+    padding: .5em;
+}
+
+.inboxMessage {
+	padding:4px;
+}
+
+.inboxLoadedMessage
+{
+    background-color: #F2F2F2;
+	padding:4px;
+}
+
+.unread { font-weight: 900 !important; color: #414141;}
+
+.inboxUserInfoContainer {
+    float: right;
+    margin: 5px;
+}
+
+#inbox\:folderSelector\:sentListTable, #inbox\:folderSelector\:inboxListTable {
+    height: 100%;
+    border-right:1px solid black;
+}
+
+#inbox\:folderSelector\:sentListTable > .ui-datascroller-content, #inbox\:folderSelector\:inboxListTable > .ui-datascroller-content {
+    border:none;
+}
+
+a.inboxMessageListLink:link { text-decoration: none; !important;}
+a.inboxMessageListLink:hover { text-decoration: underline !important;}
+
+.inboxUserInfoElement {
+    display: inline-block;
+    margin: 5px;
+    text-overflow: ellipsis;
+    max-width: 20em;
+    overflow: hidden;
+    white-space: nowrap;
+    vertical-align: top;
+}
+
+@media screen
+{
+	body { overflow: auto; }
+	div.read-headers, td.read-content, td.read-footer, div.read-footer, div.read-container
+	{ background-color: #F2F2F2; border-color: #CCCCCC; border-style: solid; border-width: 0px; }
+	div.read-headers {
+		position: relative;
+	}
+	div.read-container {
+        margin: 0; padding: 10px 0 0 0; height: 100%;
+    }
+	div.read-content 
+	{ 
+		padding: 10px; background-color: #ffffff; margin: 0px 13px;
+		height: 100%; border-style: solid; border-color: #CCCCCC;
+		border-width: 1px; overflow: auto;
+		min-height: 100px;
+	}
+
+	td.read-footer { height: 50px; }
+	div.read-footer { height: 50px; border-top-width: 1px; position: fixed; bottom: 0px; left: 10px; right: 10px;  }
+
+	.header-overflow-field { max-height: 10ex; overflow: auto; }
+	.header-attachment-field { position:relative; }
+	.header-attachment-item {
+		display: inline-block;
+		padding-right: 0.5em;
+		border: 1px solid #CCCCCC;
+		background: white;
+		margin-right: 4px;
+	}
+
+	.header-attachment-item a:focus-visible {
+		outline: solid 2px #55C6FE;
+		/* Parent of element has overflow auto, so we need to offset the outline to make it visible on all sides. */
+		outline-offset: -2px;
+	}
+	.header-attachment-item a:hover, .header-attachment-item a:focus {
+		color: #707070;
+	}
+
+	span.header-attachment-item > a {
+		color: black;
+		text-decoration: none;
+    }
+
+    .dsig-panel {
+		border: 1px #CCCCCC solid;
+		padding:4px 15px; color: #2E784E;
+		background: white;
+		position: absolute;
+		right: 15px;
+		font-style: italic;
+		font-weight: 500;
+		line-height: 2em;
+		vertical-align: middle;
+    }
+}
+
+@media print
+{
+    div.header { display:none; }
+    .messageToolbar { display:none; }
+    .dsig-panel { display: none; }
+    .watermark { display:none; }
+    .header-subject-field { font-family: arial, serif; font-size: 14px;}
+    .header-field-label { font-family: arial, serif; font-size: 12px;}
+    .header-field-value { font-family: arial, serif; font-size: 12px;}
+    div.read-content {
+        height: 100%!important; 
+        font-family: arial, serif;
+        font-size: 12px;
+        border: 1px;
+        border-style: solid none none none;
+        padding-top: 10px;
+        padding-left: 15px;
+    }
+    .inboxSelectCol { display: none; }
+    .inboxUserInfoElement { display: none; }
+}
+
+.expirationWarning {
+	background-color: #FAE6B0;
+	border: 1px solid #CCCCCC;
+	padding: 5px;
+	text-align: left;
+	margin: 5px 10px 0;
+}
+.read-headers .expirationWarning {
+	background-color: #FAE6B0;
+	border: 1px solid #E5973E;
+	padding: 5px;
+	text-align: left;
+	margin: 5px 10px 0;
+}
+.hiddentext { position:absolute; left:0px; top:-500px; width:1px; height:1px; overflow:hidden; }
+
+.composeCol .headerFields {
+	background-color: white;
+	margin-top: 10px;
+	border: 1px #CCCCCC solid;
+}
+
+.composeToInputsPanel {
+	width:100%;
+}
+
+.composeToInputsPanel > tbody > tr > td:first-child {
+	width: 65px;
+}
+
+.composeToInputsPanel > tbody > tr > td {
+	border-left: 1px #CCCCCC solid;
+	border-bottom: 1px #CCCCCC solid;
+}
+
+.composeToInputsPanel > tbody > tr > td > input  {
+	width: 100%;
+	box-sizing: border-box;
+	background-image: none;
+	padding-left: 2px;
+	margin: 0 0 0 0;
+	border:none;
+	height: 2em;
+}
+
+.composeColBody {
+	padding-left: 10px;
+	border-top: none;
+	border-left: none;
+	border-bottom: none;
+	background-color: #F2F2F2;
+	height: 100%;
+}
+
+.composeCol {
+	border-top: none;
+	border-left: none;
+    padding: 0;
+}
+
+.inboxMessageCol >  .composeCol {
+	padding-top: 0;
+	border-top: none;
+	border-left: none;
+	border-bottom: none;
+}
+
+.inboxTabCommandLink:hover, .inboxTabCommandLink:link {
+	text-decoration: none;
+}
+
+.read-content-text > pre {
+	font-family: sourceSansPro;
+	font-size: .88em;
+}
+
+.newMessageLinkSent:visited,  .newMessageLinkSent:link {
+	background-color:transparent ;
+	color:#15428b !important;
+	margin-left: 215px ;
+	text-decoration:underline !important;
+	font-size: .88em;
+}
+
+
+.newMessageLinkInbox:visited,  .newMessageLinkInbox:link {
+	background-color:transparent ;
+	color:#15428b !important;
+	margin-left: 207px ;
+	text-decoration:underline !important;
+	font-size: .88em;
+}
+
+.itemLeftCol {
+    text-align: left;
+    min-width: 18em;
+    max-width: 18em;
+    overflow: hidden;
+    text-overflow: ellipsis;    
+}
+
+.itemRightCol {
+    text-align: right;
+    min-width: 6em;
+    max-width: 6em;
+}
+
+.inbox-Sent {
+	font-size: 1.1em;
+	padding-right: 0;
+	font-family: sourceSansPro;
+	font-weight: 600;
+	color: #15428B;
+	margin-right: 5px;
+}
+
+.read-content-text > pre {
+         white-space: pre-wrap;
+         word-wrap: break-word;
+}
+
+.header-table-inbox {
+    color: #333333;
+    width:85%;
+}
+
+table.composeToInputsPanel input.header-field-input[readonly] { background-color: #F5F5F5; color: rgba(0,0,0,6); cursor: default; }
+
+.noData {
+    text-align: center;
+}
+
+.inbox-Sent-Panel {
+	background-color: #d9d9d9 !important;
+	border: 1px solid darkgray;
+	padding: 2px 2px 2px 7px !important;
+	margin-right: 10px !important;
+	border-radius: 4px !important;
+}
+
+.refreshButtonPanel {
+	height: 6px;
+	border: 1px solid darkgray;
+	background: #d9d9d9 !important;
+	margin: auto;
+	width: 50%;
+	padding: 5px 8px 15px 12px !important;
+	border-radius: 4px !important;
+}
+
+.composeInboxButton {
+	margin-left: 147px;
+}
+
+.composeSentButton	 {
+	margin-left: 155px;
+}
+.ui-tabs-outline:focus {
+    outline: solid 3px #55C6FE;
+}
+.ui-datascroller-item:focus {
+    outline: none;
+}
+.focusedFolderItem {
+    border: solid 2px #55C6FE;
+}
+.ui-messages-error, .ui-message-error {
+    color: #a90300 !important;
+    border: 1px solid #ffcdd2 !important;
+    border-width: 0 0 0 4px !important;
+}
+.ui-messages-info, .ui-message-info {
+    color: #02496b !important;
+    background: #ccffcc !important;
+    border: 1px solid #ccffcc !important;
+    border-width: 0 0 0 4px !important;
+}
+</style><style type="text/css">
+
+.secondaryButton {
+	background-color: #7F7E7A !important;
+    background-image: none;
+    padding: 0.4em 8px;
+    color: #FFFFFF;
+    font-weight: 600;
+    font-size: 0.88em;
+    border-radius: 5px;
+    vertical-align: middle;
+    text-decoration:none;
+}
+
+.secondaryButton:hover, .secondaryButton:focus {
+	opacity: 0.7;
+}
+.secondaryButton:focus {
+    outline: solid 1px #55C6FE;
+    outline-offset: 1px;
+}
+.secondaryButton:focus:not(:focus-visible) {
+    outline: none;
+    outline-offset: 0px;
+}
+
+/* SPECIAL TOOLBAR STYLES */
+div.messageToolbar {
+    background-color: #D1D2D4;
+    border-top: 2px solid #A1A2A4;
+    background-image: none;
+}
+
+ul.ui-menu-list > li.ui-menuitem {
+    padding-right: .5em;
+}
+#inbox\:inboxToolbar > ul > li:nth-child(2) {
+    float: right;
+}
+
+ul.ui-menu-list > li.ui-menuitem:last-child {
+    float:right;
+}
+
+.messageToolbar .toolbarButton, .messageToolbar a.toolbarButton, .messageToolbar a.toolbarButton:visited, li.ui-menu-parent > a.ui-menuitem-link, .messageToolbar .dropdownButton .ui-button {
+    background-image: none;
+    padding: 0.4em 8px;
+    color: #FFFFFF;
+    background-color: #3CA0DF;
+    font-weight: 600;
+    font-size: 0.88em;
+    border-radius: 5px;
+    vertical-align: middle;
+    text-decoration:none;
+    -webkit-user-drag: none;
+}
+.messageToolbar .dropdownButton .ui-button .ui-button-text {
+    padding: 0 1.5rem 0 0;
+}
+.messageToolbar .ui-button .ui-button-text {
+    line-height: 16px;
+}
+
+.messageToolbar .toolbarButton .ui-button-text {
+    padding: 0 !important;
+}
+.messageToolbar .ui-toolbar-group-left {
+    gap: 0.5em;
+}
+
+body .ui-toolbar {
+    padding: 0.3rem;
+}
+
+.messageToolbar .toolbarButtonDisabled{
+    cursor: default;
+    pointer-events: none;
+    opacity: 0.5;
+}
+
+/* primefaces menuitem component adds a hidden div to handle accessibility, this selector applies to elements that are siblings of that hidden div */
+.messageToolbar > .ui-helper-hidden-accessible:focus ~ .ui-menu-list > li.ui-menuitem > a.ui-menuitem-link.ui-state-hover {
+    background-color: #55C6FE;
+}
+.messageToolbar > .ui-helper-hidden-accessible:focus ~ .ui-menu-list > li.ui-menuitem > a.ui-menuitem-link.ui-state-hover {
+    outline: solid 1px #55C6FE;
+    outline-offset: 1px;
+}
+/* Browsers that support focus-visible will hide the focus styling on click */
+.messageToolbar > .ui-helper-hidden-accessible:focus:not(:focus-visible) ~ .ui-menu-list > li.ui-menuitem > a.ui-menuitem-link.ui-state-hover {
+    outline: none;
+    outline-offset: 0px;
+}
+
+.messageToolbar .toolbarButton:hover, .messageToolbar li.ui-menu-parent > a.ui-menuitem-link:hover {
+    background-color: #55C6FE;
+    background-image: none;
+}
+
+.toolbarContainer div.rich-panel-body { padding: 0; }
+
+.messageToolbar td.rf-tb-itm div.rf-ddm-unsel,
+.messageToolbar td.rf-tb-itm div.rf-ddm-sel
+{
+    color: #FFFFFF;
+    background-color: #3CA0DF;
+    background-image: none;
+    height: 1.75em;
+    line-height: 1.75em;
+    border: 0;
+    border-radius: 5px;
+    vertical-align: middle;
+    padding: 2px 5px;
+    font-size: 0.88em;
+}
+
+.messageToolbar td.rf-tb-itm div.rf-ddm-unsel:hover,
+.messageToolbar td.rf-tb-itm div.rf-ddm-sel:hover
+{
+    background-color: #55C6FE;
+}
+.messageToolbar ul {
+    min-width: max-content;
+}
+
+div.rf-ddm-lst-bg {
+	background-image: none;
+	background-color: white;
+	border-color: ;
+}
+
+div.rf-ddm-itm-sel {
+	border-color: ;
+    background-color: ;
+    background-image: none;
+}
+
+.rf-ddm-lst-bg .rf-ddm-itm,
+.rf-ddm-lst-bg .rf-ddm-itm .rf-ddm-itm-sel
+{
+        color: #FFFFFF;
+        font-weight: normal;
+        text-decoration:none;
+}
+
+.messageToolbar td.rf-tb-itm
+{
+	padding: 0 0px;
+}
+
+td.rf-tb-itm:first-child
+{
+	padding-left:12px;
+}
+
+td.rf-tb-itm:last-child
+{
+	padding-right:12px;
+}
+
+a.attachButtonLink {
+	border-radius: 5px;
+    border: 0;
+    padding: 5px 5px 5px 5px;
+	color: #FFFFFF;
+	background-color: #3CA0DF;
+	background-image: none;
+    font-weight: 600;
+    display: inline-block;
+    margin: 5px 0;
+    -webkit-user-drag: none;
+}
+
+a.attachButtonLink:hover, a.attachButtonLink:focus {
+    background-color: #55C6FE;
+    color: #FFFFFF;
+    text-decoration: none;
+}
+
+a.attachButtonLink.secondaryButton:hover, a.attachButtonLink.secondaryButton:focus {
+    /* the 'cancel' button is not styled like other secondary buttons, avoid reducing opacity on hover/focus */
+    opacity: 1;
+}
+
+a.attachButtonLink:focus {
+    outline: solid 1px #55C6FE;
+    outline-offset: 1px;
+}
+a.attachButtonLink:focus:not(:focus-visible) {
+    outline: none;
+    outline-offset: 0px;
+}
+
+a.attachButtonLink:visited {
+	color: #FFFFFF;
+}
+
+span.cke_rcombo span.cke_off a {
+	height: 1.2em;
+}
+
+a span span.cke_inline_label {
+    font-size: 10pt;
+}
+
+.space-between-button {
+    margin-right: 8px;
+}
+.removeAttachmentButton:hover, .removeAttachmentButton:focus {
+    font-weight: bold;
+}
+body .ui-menu .ui-menu-list .dropdownButton .ui-menu-list .ui-menuitem-link .ui-menuitem-text, body .ui-menu .ui-menu-list .ui-menuitem .ui-menuitem-link .ui-menuitem-text {
+    color: #4f4f4f !important;
+}
+body .ui-menu .ui-menu-list .ui-menuitem .ui-menuitem-link .ui-menuitem-text {
+    color: #FFFFFF;
+}
+body .ui-menu .ui-menu-list .ui-menuitem.ui-menuitem-active>.ui-menuitem-link {
+    background-color: #55C6FE;
+}
+body .ui-menu .ui-menu-list .ui-menuitem.ui-menuitem-active>.ui-menuitem-link .ui-menuitem-text {
+    color: #ffffff !important;
+}
+body .ui-tabs .ui-tabs-nav li.ui-tabs-header.ui-state-active a {
+    color: #3CA0DF;
+}
+body .ui-menu.ui-menubar {
+    padding: 0.3rem;
+}
+body .ui-menu .ui-menu-list .ui-menuitem .ui-menuitem-link .ui-menuitem-text {
+    vertical-align: unset !important;
+}
+html .ui-state-loading.ui-button-text-only .ui-icon-loading + .ui-button-text {
+    opacity: inherit;
+}
+html .ui-state-loading .ui-icon-loading {
+    display: none;
+}
+html .ui-state-loading .ui-icon:not(.ui-icon-loading) {
+    display: inherit;
+}
+</style>
+    <script type="text/javascript">
+        //<![CDATA[
+var pfptTimeout = {
+    dialogTimeoutLimit: 20000,
+    dialogTimeoutTimer: undefined,
+    focusedItem: undefined,
+    lastFocusedInDialog: undefined,
+    timeoutTimer: undefined,
+    updateDialogInterval: undefined
+};
+
+function setTimeoutTimer() {
+    if (window.location.href.endsWith) {
+        if (!window.location.href.endsWith("timeout.jsf")) {
+            var time = 1800000 + 5000;
+            pfptTimeout.timeoutTimer = window.setTimeout(timeoutCallback, time);
+            // show timeout dialog 20 seconds before session timeout
+            var dialogTime = time - pfptTimeout.dialogTimeoutLimit - 5000;
+            pfptTimeout.dialogTimeoutTimer = window.setTimeout(dialogTimeoutCallback, dialogTime);
+        }
+    } else {
+        // Support browsers prior to ECMA6
+        var loc = window.location.href.substring(window.location.href.lastIndexOf("/")+1);
+        if (loc !== "timeout.jsf") {
+            var timeout = 1800000 + 5000;
+            pfptTimeout.timeoutTimer = window.setTimeout(timeoutCallback, timeout);
+            // show timeout dialog 20 seconds before session timeout
+            var dialogTime = timeout - pfptTimeout.dialogTimeoutLimit - 5000;
+            pfptTimeout.dialogTimeoutTimer = window.setTimeout(dialogTimeoutCallback, dialogTime);
+        }
+    }
+}
+function timeoutCallback() {
+    redirectToTimeoutPage();
+}
+
+function dialogTimeoutCallback() {
+    // store previously focused item so it can be used if session continued
+    pfptTimeout.focusedItem = document.activeElement;
+    showTimeoutModal();
+    setTimeoutMessageInterval();
+}
+
+function setTimeoutMessageInterval() {
+    var remainingTime = pfptTimeout.dialogTimeoutLimit / 1000;
+    updateTimeoutMessageTime(remainingTime);
+    pfptTimeout.updateDialogInterval = window.setInterval(function() {
+        if (remainingTime === 1) {
+            window.clearInterval(pfptTimeout.updateDialogInterval);
+            return;
+        }
+        updateTimeoutMessageTime(--remainingTime);
+    }, 1000);
+}
+
+function updateTimeoutMessageTime(timeRemaining) {
+    document.getElementById('sessionTimeoutWarningCountdown').innerText =
+        (timeRemaining !== 1)
+            ? 'You will be logged out in {0} seconds.'.replace('{0}', timeRemaining)
+            : 'You will be logged out in {0} second.'.replace('{0}', timeRemaining);
+}
+
+function showTimeoutModal() {
+    // position modal in middle of screen
+    var timeoutModal = document.getElementById("sessionTimeOutWarning");
+    timeoutModal.style.display = 'block';
+    var timeoutModalContent = document.getElementById("sessionTimeOutWarningContent");
+    timeoutModalContent.style.top = ((window.innerHeight - timeoutModalContent.clientHeight) / 2) + "px";
+    timeoutModalContent.style.left = ((window.innerWidth - timeoutModalContent.clientWidth) / 2) + "px";
+    timeoutModalContent.style.width = timeoutModalContent.offsetWidth + 'px';
+    document.getElementById('pfptContinueSessionBtn').focus();
+    document.addEventListener('keydown', keepFocusInModal);
+}
+
+function endSession() {
+    $.post('/securereader/managesession');
+    redirectToTimeoutPage();
+}
+
+function redirectToTimeoutPage() {
+    window.location.href = "timeout.jsf";
+}
+
+function continueSession() {
+    $.get('/securereader/managesession');
+    resetTimeoutTimer();
+    closeTimeoutModal();
+}
+
+function closeTimeoutModal() {
+    document.getElementById('sessionTimeOutWarning').style.display = 'none';
+    document.removeEventListener('keydown', keepFocusInModal);
+    var timeoutModalContent = document.getElementById("sessionTimeOutWarningContent");
+    // reset width of modal
+    timeoutModalContent.style.width = '';
+    // restore focus to last item focused before modal was opened
+    if (pfptTimeout.focusedItem) {
+        pfptTimeout.focusedItem.focus();
+    }
+}
+
+function clearTimeoutTimers() {
+    if(pfptTimeout.timeoutTimer) {
+        window.clearTimeout(pfptTimeout.timeoutTimer);
+    }
+    if (pfptTimeout.dialogTimeoutTimer) {
+        window.clearTimeout(pfptTimeout.dialogTimeoutTimer);
+    }
+    if (pfptTimeout.updateDialogInterval){
+        window.clearInterval(pfptTimeout.updateDialogInterval);
+    }
+}
+
+function resetTimeoutTimer() {
+    clearTimeoutTimers();
+    setTimeoutTimer();
+}
+
+// keep keyboard navigation limited to modal
+function keepFocusInModal(event) {
+    var tabPressed = event.key === 'Tab' || event.keyCode === 9;
+    if (!tabPressed) {
+        return;
+    }
+    if (document.getElementById('sessionTimeOutWarning').contains(event.target)) {
+        if (event.shiftKey) {
+            if (event.target.id === 'pfptEndSessionBtn') {
+                document.getElementById('pfptEndSessionBtn').focus();
+                event.preventDefault();
+            }
+        } else {
+            if (event.target.id === 'pfptContinueSessionBtn') {
+                document.getElementById('pfptContinueSessionBtn').focus();
+                event.preventDefault();
+            }
+        }
+        pfptTimeout.lastFocusedInDialog = document.activeElement;
+    } else if (pfptTimeout.lastFocusedInDialog) {
+        pfptTimeout.lastFocusedInDialog.focus();
+        event.preventDefault();
+    } else {
+        document.getElementById('pfptEndSessionBtn').focus();
+        event.preventDefault();
+    }
+    if (document.getElementById('sessionTimeOutWarning').contains(event.target)) {
+        if (event.shiftKey) {
+            if (event.target.id === 'pfptEndSessionBtn') {
+                document.getElementById('pfptEndSessionBtn').focus();
+                event.preventDefault();
+            }
+        } else {
+            if (event.target.id === 'pfptContinueSessionBtn') {
+                document.getElementById('pfptContinueSessionBtn').focus();
+                event.preventDefault();
+            }
+        }
+        pfptTimeout.lastFocusedInDialog = document.activeElement;
+    } else if (pfptTimeout.lastFocusedInDialog) {
+        pfptTimeout.lastFocusedInDialog.focus();
+        event.preventDefault();
+    } else {
+        document.getElementById('pfptEndSessionBtn').focus();
+        event.preventDefault();
+    }
+}
+        //]]>
+    </script><style type="text/css">
+/******************************************************************************
+Styling for a modal to appear on screen
+******************************************************************************/
+
+.pfptModal {
+    position: fixed;
+    display: none; /* modal hidden by default */
+    width: 100%;
+    height: 100%;
+    z-index: 1005;
+    border: none;
+    overflow: hidden;
+    background-color: rgb(0,0,0); /* Fallback if opacity not supported */
+    background-color: rgba(0,0,0,0.4);
+}
+.pfptModal .pfptModalContent {
+    background-color: #ffffff;
+    padding: 1em 2em;
+    font-family:sourceSansPro,sans-serif !important;
+    font-size: 1em;
+    color: #000000;
+    position: absolute;
+    text-align:center;
+}
+.pfptModalButtonsContainer input[type="submit"] {
+    background-color: #3CA0DF;
+    border-radius: 0;
+    border: 0;
+    color: #FFFFFF;
+    font-size: 1.13em;
+    font-weight: bold;
+    margin-top: 1em;
+    padding: 10px;
+    vertical-align: baseline;
+}
+.pfptModalButtonsContainer .continueSessionBtn:hover, .pfptModalButtonsContainer .continueSessionBtn:focus {
+    background-color: #55C6FE;
+}
+.pfptModalButtonsContainer input[type="submit"].endSessionBtn {
+    background-color: #7F7E7A;
+}
+.pfptModalButtonsContainer input[type="submit"].endSessionBtn:hover, .pfptModalButtonsContainer input[type="submit"].endSessionBtn:focus
+{
+    opacity: 0.5;
+}
+</style>
+    <div id="sessionTimeOutWarning" class="pfptModal ui-shadow">
+        <div id="sessionTimeOutWarningContent" class="pfptModalContent" role="alertdialog" aria-describedby="sessionTimeoutWarningMessage sessionTimeoutWarningCountdown" aria-modal="true">
+            <div class="pfptModalMessageContainer" style="margin: 1em 0em">
+                <div id="sessionTimeoutWarningMessageContainer" style="margin: 0 3em 0 3em;">
+                    <div id="sessionTimeoutWarningMessage">Your session is about to expire.</div>
+                    <div id="sessionTimeoutWarningCountdown">You will be logged out in {0} seconds.</div>
+                </div>
+            </div>
+            <div class="pfptModalButtonsContainer"><input id="pfptEndSessionBtn" type="submit" name="pfptEndSessionBtn" value="Log Out" style="margin-right: 1em;" class="endSessionBtn" onclick="endSession()" /><input id="pfptContinueSessionBtn" type="submit" name="pfptContinueSessionBtn" value="Continue" class="continueSessionBtn" onclick="continueSession()" />
+            </div>
+        </div>
+    </div>
+            
+
+<script type="text/javascript">
+//<![CDATA[
+
+var previousHeight = 0;
+
+var inboxListTableScrollPosition = 0;
+var sentListTableScrollPosition = 0;
+
+var previousTotalItemFromInboxList = 0;
+var previousTotalItemFromSentList = 0;
+var currentlyUpdatingMessageViewPanelAfterAutoUpdateForInboxList = false;
+var currentlyUpdatingMessageViewPanelAfterAutoUpdateForSentList = false;
+
+function openFileUploader()
+{
+	document.getElementById('inbox:attachments').style.display='block';
+	document.getElementById('inbox:addnew').style.display='none';
+	document.getElementById('inbox:cancelnew').style.display='inline-block';
+	previousHeight = 0;
+	doEditorResize(true);
+}
+function closeFileUploader()
+{
+	document.getElementById('inbox:attachments').style.display='none';
+	document.getElementById('inbox:addnew').style.display='inline-block';
+	document.getElementById('inbox:cancelnew').style.display='none';
+	previousHeight = 0;
+	doEditorResize(true);
+    document.getElementById('inbox:addnew').focus();
+}
+
+function submitUpload() {
+	var upload = PF('upload');
+	if(upload && upload.files && upload.files.length) {
+		upload.upload();
+	}
+}
+
+function uploadStart() {
+    // remove previous file upload status
+    var statusElement = $("#uploadstatus");
+    if(statusElement.length) {
+        statusElement.remove();
+    }
+    // add accessibility to file upload cancel button
+    var uploadElement = document.getElementById('inbox:upload')
+    if (uploadElement == null) {
+        return;
+    }
+    var fileUploadCancelButtons = uploadElement.getElementsByClassName('ui-fileupload-cancel');
+    for (var uploadCancelButtonIndex = 0; uploadCancelButtonIndex < fileUploadCancelButtons.length; uploadCancelButtonIndex++ ) {
+        var cancelButtonTextElement = fileUploadCancelButtons[uploadCancelButtonIndex].getElementsByClassName('ui-button-text')[0];
+        // setting overflow hidden on the text here resolves an issue in Firefox where the focus outline stretches across entire screen due to text-indent: -9999999px
+        cancelButtonTextElement.setAttribute('style', 'overflow:hidden');
+        cancelButtonTextElement.innerText = "Cancel Upload";
+
+        fileUploadCancelButtons[uploadCancelButtonIndex].onclick = function () {
+            $("<p id='uploadstatus' class='hiddentext' role='alert'>Upload Canceled</p>").insertAfter("#attachinst");
+            // setting a global variable to indicate some state for when the upload component calls oncomplete after the cancellation
+            window.secureReaderAttachmentUploadCanceled = true;
+        };
+        fileUploadCancelButtons[uploadCancelButtonIndex].onkeydown = function(event) { keyDownFunctionForButtonAccessibility(event, this); };
+    }
+    // move focus to cancel button of uploading attachment
+    if (fileUploadCancelButtons.length > 0) {
+        fileUploadCancelButtons[0].focus();
+    }
+}
+
+function uploadDone()
+{
+    closeFileUploader();
+    if (window.secureReaderAttachmentUploadCanceled) {
+        // user cancelled an upload, text to indicate status will already be on the page so no need to add complete message.
+        // Also clear the state so that next upload isn't impacted.
+        window.secureReaderAttachmentUploadCanceled = false;
+    } else {
+        var statusElement = $("#uploadstatus");
+        if (statusElement.length) {
+            statusElement.remove();
+        }
+        $("<p id='uploadstatus' class='hiddentext' role='alert'>Upload done</p>").insertAfter("#attachinst");
+    }
+}
+
+function getWindowHeight() {
+    var windowHeight = 0;
+    if(document.innerHeight)
+    {
+        windowHeight = parseInt(document.innerHeight);
+    }
+    else if(document.documentElement.clientHeight && document.documentElement.clientHeight > 0)
+    {
+        windowHeight = parseInt(document.documentElement.clientHeight);
+    }
+    else
+    {
+        windowHeight = parseInt(document.body.clientHeight);
+    }
+    return windowHeight;
+}
+
+function doResize() {
+    doEditorResize();
+    doResizeReadPanel(document.getElementById("inbox:messagepanel"));
+    resizeScrollPanel();
+}
+
+function hideProgress() {
+    try {
+        PF('sendProgressPanel').hide();
+    } catch (err) {}
+}
+
+function doEditorResize() {doEditorResize(false);}
+
+function doEditorResize(forceResize)
+{
+    var editor = document.getElementById('cke_inbox:editor');
+    if(editor)
+    {
+        var windowHeight = getWindowHeight();
+
+        if(windowHeight !== previousHeight || forceResize)
+        {
+            previousHeight = windowHeight;
+            var height = (windowHeight - (editor.offsetTop+40)-100) + "px";
+            try {
+                document.getElementsByClassName('cke_contents')[0].style.height = height;
+            } catch(err) {}
+
+        }
+    }
+}
+
+function doResizeReadPanel(panel)
+{
+	if(panel)
+	{
+		var windowHeight = getWindowHeight();
+		var frameTop,difference,divheight;
+
+		frameTop = getTop(panel);
+		divheight=document.getElementById("powered").offsetHeight;
+		difference = frameTop + 32 + divheight;
+		panel.style.height = Math.max((windowHeight-difference),20)+"px";
+	}
+}
+
+function localDateString(d) {
+    var dnum = parseInt(d,10);
+    if(!isNaN(dnum)) {
+        var date = new Date(dnum);
+        if(window.Intl && Intl.DateTimeFormat) {
+            var options = { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" };
+            var format = new Intl.DateTimeFormat(navigator.languages, options);
+            return format.format(date);
+        } else {
+            return date.toLocaleDateString() + " " + date.toLocaleTimeString();
+        }
+    } else {
+        return d;
+    }
+}
+
+function getTop(obj)
+{
+	var objTop = 0;
+	if(obj !== null)
+	{
+		if(obj.offsetParent)
+		{
+			do
+			{
+				objTop = objTop + obj.offsetTop;
+			}
+			while(obj = obj.offsetParent);
+		}
+	}
+	return objTop;
+}
+
+
+function showNoMessagesYet() {
+    unloadMessage();
+}
+
+function inboxListTableLoadPreviouslySelectedRow() {
+    var inboxListTableLoadPreviouslySelectedRow = document.getElementById("inbox:inboxListTableLoadPreviouslySelectedRow");
+    if(inboxListTableLoadPreviouslySelectedRow != null) {
+        inboxListTableLoadPreviouslySelectedRow.click();
+    }
+}
+
+
+
+function sentListTableLoadPreviouslySelectedRow() {
+    var sentListTableLoadPreviouslySelectedRow = document.getElementById("inbox:sentListTableLoadPreviouslySelectedRow");
+    if (sentListTableLoadPreviouslySelectedRow != null) {
+        sentListTableLoadPreviouslySelectedRow.click();
+    }
+}
+
+function restoreInboxListTableScrollPositionByCalculation() {
+    document.getElementById("inbox:inboxListTable:b").scrollTop = inboxListTableScrollPosition;
+}
+
+function restoreSentListTableScrollPositionByCalculation() {
+    document.getElementById("inbox:sentListTable:b").scrollTop = sentListTableScrollPosition;
+}
+
+function storeInboxListTableScrollPosition() {
+    inboxListTableScrollPosition = document.getElementById("inbox:inboxListTable:b").scrollTop;
+}
+
+function storeSentListTableScrollPosition() {
+    sentListTableScrollPosition = document.getElementById("inbox:sentListTable:b").scrollTop;
+}
+
+
+function resizeScrollPanel() {
+    var panel = document.getElementById('inbox:folderSelector:inboxListScroller');
+    if(panel) {
+        panel.style.maxHeight = (document.documentElement.clientHeight - getTop(panel)) + "px";
+        panel.style.height = (document.documentElement.clientHeight - getTop(panel)) + "px";
+    }
+    panel = document.getElementById('inbox:folderSelector:sentListScroller');
+    if(panel) {
+        panel.style.maxHeight = (document.documentElement.clientHeight - getTop(panel)) + "px";
+        panel.style.height = (document.documentElement.clientHeight - getTop(panel)) + "px";
+    }
+}
+
+function sentMessageNotification() {
+	$("#inbox\\:ibxsentmessage").delay(5000).fadeOut(2000);
+}
+
+function updateReadMessageDate()
+{
+	var el = $("#inbox\\:readMessageDate");
+    if(el.text().trim().length > 0) {
+		var d = new Date(Date.parse(el.text()));
+		el.replaceWith(d.toLocaleDateString() + " " + d.toLocaleTimeString());
+	}
+}
+
+function hideIbxSentMessageOnRefresh() {
+    var ibxSentMessageEle = document.getElementById("inbox:ibxsentmessage");
+    if(ibxSentMessageEle != null ) {
+        if(ibxSentMessageEle.textContent === '') {
+             ibxSentMessageEle.style.display = 'none';
+        } else {
+            ibxSentMessageEle.style.display = 'block';            
+        }
+    }
+}
+
+function resetHideIbxSentMessageOnRefresh() {
+    setTimeout(hideIbxSentMessageOnRefresh, 2);
+}
+
+ function updateMessageViewPanelAfterAutoUpdateForInboxList() {
+     if(currentlyUpdatingMessageViewPanelAfterAutoUpdateForInboxList===true) return ;
+     currentlyUpdatingMessageViewPanelAfterAutoUpdateForInboxList = true;
+     var totalItemFromInbox = Number(document.getElementById("inbox:messageListHeadersSizeHiddenField").value);
+     if(previousTotalItemFromInboxList == 0 && totalItemFromInbox > 0 ) {
+         document.getElementById("inbox:inboxListTable:0:n").click();
+     }
+
+     previousTotalItemFromInboxList = totalItemFromInbox;
+     showNoMessagesYet();
+     currentlyUpdatingMessageViewPanelAfterAutoUpdateForInboxList = false;
+ }
+
+ function updateMessageViewPanelAfterAutoUpdateForSentList() {
+     if(currentlyUpdatingMessageViewPanelAfterAutoUpdateForSentList === true) return ;
+     currentlyUpdatingMessageViewPanelAfterAutoUpdateForSentList = true;
+     var totalItemFromSent = Number(document.getElementById("inbox:sentListHeadersSizeHiddenField").value);
+     if(previousTotalItemFromSentList == 0 && totalItemFromSent > 0 ) {
+        document.getElementById("inbox:sentListTable:0:n").click();
+
+     }
+
+     previousTotalItemFromSentList = totalItemFromSent;
+     showNoMessagesYet();
+     currentlyUpdatingMessageViewPanelAfterAutoUpdateForSentList = false;
+ }
+
+ function updateMessageViewPanelAfterAutoUpdate() {
+
+     if(document.getElementById("inbox:inbox-Sent-Text").innerHTML === "Inbox") {
+         updateMessageViewPanelAfterAutoUpdateForInboxList();
+     } else if(document.getElementById("inbox:inbox-Sent-Text").innerHTML === "Sent"){
+         updateMessageViewPanelAfterAutoUpdateForSentList();
+     }
+     showNoMessagesYet();
+ }
+
+function inboxSendButtonAjaxCallback(data) {
+    var status = data.status; // Can be "begin", "complete" or "success".
+
+    switch (status) {
+        case "success": // After update of HTML DOM based on ajax response..
+            showNoMessagesYet();
+            break;
+    }
+
+}
+
+ function selectionChanged(name, i) {
+    var count = document.getElementById("inbox:folderSelector:" + name + "ListTable").children[0].children[0].childElementCount;
+    if (count < 1) {
+        return;
+    }
+    for(var x=0; x<count; x++) {
+        document.getElementById("inbox:folderSelector:" + name + "ListTable:" + x +":" + name + "ItemDetails").style.backgroundColor="";
+        document.getElementById("inbox:folderSelector:" + name + "ListTable:" + x +":" + name + "Item").parentElement.setAttribute("aria-selected", "false");
+        document.getElementById("inbox:folderSelector:" + name + "ListTable:" + x +":" + name + "Item").parentElement.setAttribute("tabindex", "-1");
+    }
+    var selectedItem = document.getElementById("inbox:folderSelector:" + name + "ListTable:" + i +":" + name + "ItemDetails");
+    selectedItem.style.backgroundColor="#BCD6FF";
+    selectedItem.classList.remove("unread");
+    // should not apply focus styling when item is highlighted as selected after click
+    selectedItem.classList.remove("focusedFolderItem");
+    document.getElementById("inbox:folderSelector:" + name + "ListTable:" + i +":" + name + "Item").parentElement.setAttribute("aria-selected", "true");
+    document.getElementById("inbox:folderSelector:" + name + "ListTable:" + i +":" + name + "Item").parentElement.setAttribute("tabindex", "0");
+ }
+
+/**
+ * Handles up/down key presses in message list view to move selection between items.
+ * @param event
+ * @param name
+ * @param itemIndex
+ */
+ function messageListSelectionKeyPress(event, name, itemIndex) {
+     switch (event.keyCode) {
+         case 38: // up arrow
+             var previousIndex = itemIndex - 1;
+             if (previousIndex < 0) {
+                 return;
+             }
+             var itemToSelect = document.getElementById("inbox:folderSelector:" + name + "ListTable:" + previousIndex +":" + name + "Item");
+             if(itemToSelect !== null) {
+                 // remove tab index from item key was pressed on
+                 var currentlySelectedItem = document.getElementById("inbox:folderSelector:" + name + "ListTable:" + itemIndex +":" + name + "Item").parentElement;
+                 currentlySelectedItem.setAttribute('tabindex', '-1');
+                 // set tab index on new item (focus method fails otherwise on li)
+                 itemToSelect.parentElement.setAttribute('tabindex', '0');
+                 itemToSelect.parentElement.focus();
+             }
+             break;
+         case 40: // down arrow
+
+             var nextIndex = itemIndex + 1;
+             var itemToSelect = document.getElementById("inbox:folderSelector:" + name + "ListTable:" + nextIndex +":" + name + "Item");
+             if(itemToSelect !== null) {
+                 // remove tab index from item key was pressed on
+                 var currentlySelectedItem = document.getElementById("inbox:folderSelector:" + name + "ListTable:" + itemIndex +":" + name + "Item").parentElement;
+                 currentlySelectedItem.setAttribute('tabindex', '-1');
+                 // set tab index on new item (focus method fails otherwise on li)
+                 itemToSelect.parentElement.setAttribute('tabindex', '0');
+                 itemToSelect.parentElement.focus();
+             }
+             break;
+         case 32: // space
+         case 13: //enter
+             var itemToSelect = document.getElementById("inbox:folderSelector:" + name + "ListTable:" + itemIndex +":" + name + "Item");
+             if(itemToSelect !== null) {
+                 itemToSelect.click();
+             }
+             break;
+         default:
+             return;
+     }
+ }
+
+ function folderItemFocusReceived(name, focusedEntryNumber) {
+     document.getElementById("inbox:folderSelector:" + name + "ListTable:" + focusedEntryNumber +":" + name + "ItemDetails").classList.add("focusedFolderItem");
+ }
+
+ function folderItemFocusLost(name, entryNumber) {
+     document.getElementById("inbox:folderSelector:" + name + "ListTable:" + entryNumber +":" + name + "ItemDetails").classList.remove("focusedFolderItem");
+ }
+
+function initTextArea() {
+	var editor = document.getElementById('inbox:editor');
+	if (editor) { 
+		editor.style.backgroundImage = "url('images/loading.gif')"; 
+		editor.style.height="100%";
+		editor.style.width="100%"
+		editor.style.backgroundSize = "60px 60px"; 
+		editor.style.backgroundPosition = "center";
+		editor.style.backgroundRepeat = "no-repeat"; 
+	}
+}
+
+ function tabChanged(i) {
+    var count = 0;
+    switch(i) {
+        case 0:
+            var firstInboxItem = document.getElementById("inbox:folderSelector:inboxListTable:0:inboxItem");
+            if (firstInboxItem !== null) {
+                firstInboxItem.click();
+            } else {
+                showNoMessagesYet();
+            }
+            break;
+        case 1:
+            var firstSentItem = document.getElementById("inbox:folderSelector:sentListTable:0:sentItem");
+            if (firstSentItem !== null) {
+                firstSentItem.click();
+            } else {
+                showNoMessagesYet();
+            }
+            break;
+    }
+ }
+
+function confirmDisplayVisible() {
+    document.body.style.display="block";
+    document.body.style.height="100%";
+    document.body.style.width="100%";
+}
+
+function addAccessibilityAttributesToInboxToolbar() {
+    document.getElementById('inbox:inboxToolbar').setAttribute("aria-label", "Inbox Actions");
+
+    var refreshButtonElement = document.getElementById('inbox:refreshButton').getElementsByTagName('span')[0];
+    refreshButtonElement.setAttribute("aria-label", "Refresh");
+    refreshButtonElement.setAttribute("role", "img");
+}
+
+function disableNewMessageAnchor(tag) {
+    tag.classList.add("toolbarButtonDisabled");
+    tag.parentElement.setAttribute('aria-disabled', true);
+    //aria-disabled set on tag itself to avoid "unavailable" announced twice with NVDA
+    tag.setAttribute('aria-disabled', false);
+}
+
+function enableNewMessageAnchor(tag) {
+    tag.classList.remove("toolbarButtonDisabled");
+    tag.parentElement.setAttribute("aria-disabled", false);
+}
+
+/*
+    Updates message list elements with accessibility components.
+    @param name Either Inbox or Sent depending on the list.
+ */
+function addAccessibilityAttributesToMessageList(name, listLength) {
+    if (listLength < 1) {
+        return;
+    }
+    //mark containing ul as role listbox
+    document.getElementById('inbox:folderSelector:' + name + 'ListTable').getElementsByClassName('ui-datascroller-list')[0].setAttribute('role', 'listbox');
+
+    for(var listIndex = 0; listIndex < listLength; listIndex++) {
+        // convert date to correct locale format
+        var dateSelector = (name === 'inbox') ? 'messageHeaderDate' : 'sentMessageHeaderDate';
+        var convertedDate = localDateString(document.getElementById('inbox:folderSelector:' + name + 'ListTable:' + listIndex +':' + dateSelector).innerText);
+        document.getElementById('inbox:folderSelector:' + name + 'ListTable:' + listIndex +':' + dateSelector).innerText = convertedDate;
+
+        // set label for message item
+        var itemSubject =
+            document.getElementById('inbox:folderSelector:' + name + 'ListTable:' + listIndex +':' + name +'MessageSubject').innerText;
+        var itemSender =
+            document.getElementById('inbox:folderSelector:' + name + 'ListTable:' + listIndex +':' + name +'MessageSender').innerText;
+        var updatedAriaLabel =
+            "From: " + itemSender + " Sent: " +
+            convertedDate + " Subject: " + itemSubject;
+        var messageItem = document.getElementById('inbox:folderSelector:' + name + 'ListTable:' + listIndex +':' + name + 'Item');
+        messageItem.setAttribute("aria-label", updatedAriaLabel);
+        messageItem.parentElement.setAttribute("aria-label", updatedAriaLabel);
+        // if this is the selected message then mark it as tabbable and selected
+        if (messageItem.classList.contains('loadedMessageItem')) {
+            messageItem.parentElement.setAttribute('tabindex', '0');
+            messageItem.parentElement.setAttribute('aria-selected', 'true');
+        } else {
+            messageItem.parentElement.setAttribute('tabindex', '-1');
+            messageItem.parentElement.setAttribute('aria-selected', 'false');
+        }
+        messageItem.parentElement.setAttribute('role', 'option');
+        messageItem.parentElement.setAttribute('onkeydown', 'messageListSelectionKeyPress(event, \'' + name +'\', ' + listIndex + ');');
+        messageItem.parentElement.addEventListener('blur', function(name, currentListIndex) {
+            folderItemFocusLost(name, currentListIndex);
+        }.bind(this, name, listIndex));
+        messageItem.parentElement.addEventListener('focus', function(name, currentListIndex) {
+            folderItemFocusReceived(name, currentListIndex);
+        }.bind(this, name, listIndex));
+    }
+}
+
+function addAccessibilityAttributesToReadToolbar() {
+    document.getElementById('inbox:readToolBar').setAttribute("aria-label", "Message Actions");
+}
+// Called when the ckeditor ready event is fired.
+function editorReady() {
+    var inboxEditorBodyElement = CKEDITOR.instances['inbox:editor'].document.getBody();
+    // Add aria attributes to improve accessibility
+    inboxEditorBodyElement.setAttribute('aria-label', "Message Content Editor. Press ALT + 0 for help.");
+    inboxEditorBodyElement.setAttribute('aria-multiline', 'true');
+    inboxEditorBodyElement.setAttribute('role', 'textbox');
+    // Determine where to set focus on the page based on the action used to trigger editor
+    switch (window.editorLaunchAction) {
+        case 'REPLY':
+        case 'REPLYALL':
+            // focus on message content editable area
+            CKEDITOR.instances['inbox:editor'].focus();
+            window.editorLaunchAction = null;
+            break;
+        default:
+            // focus will have already been set to appropriate field by other actions that don't need to wait on editor.
+            break;
+    }
+}
+function addAccessibilityAttributesToMenuButton() {
+    document.getElementById('inbox:downloadmenu_button').setAttribute("aria-haspopup", "listbox");
+}
+
+function focusChooseAttachment() {
+    var uploadElement = document.getElementById('inbox:upload')
+    if (uploadElement == null) {
+        return;
+    }
+    uploadElement.getElementsByClassName('ui-fileupload-choose')[0].focus();
+}
+// will wire the click event of an element to the keydown of enter or space keys on that same element. Matching accessibility
+// requirements for an element with a role of 'button'.
+// @param event
+// @param element A HTML element to add the event listener to.
+function keyDownFunctionForButtonAccessibility(event, element) {
+    if(event.code == 13 || event.code == 32 || event.keyCode == 13 || event.keyCode == 32) {
+        element.click();
+        event.preventDefault();
+        event.stopPropagation();
+    }
+}
+            //]]>
+            </script></head><body onload="setTimeoutTimer(); window.addEventListener('resize', doResize); doResizeReadPanel(document.getElementById('inbox:messagepanel')); doEditorResize(true); resizeScrollPanel(); updateReadMessageDate();initTextArea();confirmDisplayVisible();">
+<form id="inbox" name="inbox" method="post" action="/securereader/inbox.jsf" enctype="application/x-www-form-urlencoded" onkeypress="if (event.keyCode ==  13) { return false; }">
+<input type="hidden" name="inbox" value="inbox" />
+<script id="inbox:j_idt14" type="text/javascript">unloadMessage = function() {PrimeFaces.ab({s:"inbox:j_idt14",f:"inbox",u:"inbox:contentCol",pa:arguments[0]});}</script><div id="inbox:forcePwdChange" class="ui-dialog ui-widget ui-widget-content ui-corner-all ui-shadow ui-hidden-container"><div class="ui-dialog-titlebar ui-widget-header ui-helper-clearfix ui-corner-top"><span id="inbox:forcePwdChange_title" class="ui-dialog-title"></span></div><div class="ui-dialog-content ui-widget-content" id="inbox:forcePwdChange_content"><table>
+<tbody>
+<tr>
+<td>Your password has expired or is expiring soon.</td>
+</tr>
+<tr>
+<td><input type="submit" name="inbox:j_idt17" value="Continue" /></td>
+</tr>
+</tbody>
+</table>
+</div></div><script id="inbox:forcePwdChange_s" type="text/javascript">$(function(){PrimeFaces.cw("Dialog","widget_inbox_forcePwdChange",{id:"inbox:forcePwdChange",resizable:false,modal:true});});</script><div class="composeHeader"><img src="Image?i=3" alt="Proofpoint" />
+                    <div class="inboxUserInfoContainer">
+                        <span id="authUser" class="inboxUserInfoElement">morganmcknight@gmail.com</span><input id="inbox:logoutButton" type="submit" name="inbox:logoutButton" value="Logout" style="right: 13px;" class="toolbarButton secondaryButton inboxUserInfoElement" />
+                    </div></div><table style="width: 100%; border-collapse: collapse;" role="presentation">
+<tbody role="presentation">
+<tr role="presentation">
+<td class="inboxSelectCol" role="presentation"><div id="inbox:selectionCol" class="ui-panel ui-widget ui-widget-content ui-corner-all" style="border:none; padding:0;" data-widget="widget_inbox_selectionCol"><div id="inbox:selectionCol_content" class="ui-panel-content ui-widget-content"><div id="inbox:inboxToolbar" class="ui-toolbar ui-widget ui-widget-header ui-corner-all ui-helper-clearfix messageToolbar" role="toolbar" style="border-radius: 0; border-left: none; border-right: none;"><div class="ui-toolbar-group-left"><button id="inbox:refreshButton" name="inbox:refreshButton" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only toolbarButton refreshButton" onclick="PrimeFaces.ab({s:&quot;inbox:refreshButton&quot;,f:&quot;inbox&quot;,u:&quot;inbox:folderSelector&quot;,onst:function(cfg){PF('refreshProgressPanel').show();;},onco:function(xhr,status,args){resetTimeoutTimer(); doResize();PF('refreshProgressPanel').hide();;}});return false;" style="font-size: 1.2em; font-weight: 200; padding: .25em;" type="submit"><span class="ui-button-text ui-c">↻</span></button><script id="inbox:refreshButton_s" type="text/javascript">$(function(){PrimeFaces.cw("CommandButton","widget_inbox_refreshButton",{id:"inbox:refreshButton"});});</script><button id="inbox:refreshProgressButton" name="inbox:refreshProgressButton" type="button" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only" style="visibility: hidden; width: 0; margin: 0;" onclick="window.open('\/securereader\/inbox.jsf','_self')"><span class="ui-button-text ui-c"></span></button><script id="inbox:refreshProgressButton_s" type="text/javascript">$(function(){PrimeFaces.cw("Button","widget_inbox_refreshProgressButton",{id:"inbox:refreshProgressButton"});});</script></div><div class="ui-toolbar-group-right"><button id="inbox:composeButton" name="inbox:composeButton" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only toolbarButton composeInboxButton" onclick="PrimeFaces.bcn(this,event,[function(event){if (this.classList.contains('toolbarButtonDisabled') === true) {return false;};resetTimeoutTimer();PF('folderBlock').show();disableNewMessageAnchor(this);},function(event){PrimeFaces.ab({s:&quot;inbox:composeButton&quot;,f:&quot;inbox&quot;,u:&quot;inbox:contentCol&quot;,onco:function(xhr,status,args){doEditorResize(true);document.getElementById('inbox:composeTo').focus();;}});return false;}]);" style="float:right;" type="submit"><span class="ui-button-text ui-c">New Message</span></button><script id="inbox:composeButton_s" type="text/javascript">$(function(){PrimeFaces.cw("CommandButton","widget_inbox_composeButton",{id:"inbox:composeButton"});});</script></div></div>
+                        <script>
+                            if(false){
+                                disableNewMessageAnchor(document.getElementById('inbox:composeButton'));
+                            }
+                            addAccessibilityAttributesToInboxToolbar();
+                        </script><div id="inbox:j_idt28" class="ui-overlaypanel ui-widget ui-widget-content ui-overlay-hidden ui-corner-all ui-shadow"><div class="ui-overlaypanel-content"><div id="inbox:refreshProgress" class="ui-progressbar ui-widget ui-widget-content ui-corner-all ui-progressbar-indeterminate" style="height:15px; width:300px;"><div class="ui-progressbar-value ui-widget-header ui-corner-all"></div><div class="ui-progressbar-label"></div></div><script id="inbox:refreshProgress_s" type="text/javascript">$(function(){PrimeFaces.cw("ProgressBar","refreshProgress",{id:"inbox:refreshProgress",initialValue:0,ajax:false,animationDuration:500});});</script></div></div><script id="inbox:j_idt28_s" type="text/javascript">$(function(){PrimeFaces.cw("OverlayPanel","refreshProgressPanel",{id:"inbox:j_idt28",target:"inbox:refreshProgressButton",modal:true});});</script><div id="inbox:folderBlock" class="ui-blockui-content ui-widget ui-widget-content ui-corner-all ui-helper-hidden ui-shadow"></div><script id="inbox:folderBlock_s" type="text/javascript">$(function(){PrimeFaces.cw("BlockUI","folderBlock",{id:"inbox:folderBlock",block:"inbox:folderSelector"});});</script><div id="inbox:folderSelector" class="ui-tabs ui-widget ui-widget-content ui-corner-all ui-hidden-container ui-tabs-top" style="padding:0; border-top:none; border-bottom:none; min-width:26em;" data-widget="widget_inbox_folderSelector"><ul class="ui-tabs-nav ui-helper-reset ui-widget-header ui-corner-all" role="tablist"><li class="ui-tabs-header ui-state-default ui-tabs-selected ui-state-active ui-corner-top" role="tab" aria-expanded="true" aria-selected="true" data-index="0"><a href="#inbox:folderSelector:inboxTab" tabindex="-1">Inbox</a></li></ul><div class="ui-tabs-panels"><div id="inbox:folderSelector:inboxTab" class="ui-tabs-panel ui-widget-content ui-corner-bottom" role="tabpanel" aria-hidden="false" data-index="0"><div id="inbox:folderSelector:inboxListScroller" style="overflow-y: scroll;" tabindex="-1" aria-label="Inbox"><div id="inbox:folderSelector:inboxListTable" class="ui-datascroller ui-widget"><div class="ui-datascroller-content ui-widget-content ui-corner-all"><ul class="ui-datascroller-list"><li class="ui-datascroller-item"><a id="inbox:folderSelector:inboxListTable:0:inboxItem" href="#" class="ui-commandlink ui-widget inboxMessageListLink loadedMessageItem" onclick="PrimeFaces.ab({s:&quot;inbox:folderSelector:inboxListTable:0:inboxItem&quot;,f:&quot;inbox&quot;,u:&quot;inbox:contentCol&quot;,onco:function(xhr,status,args){updateReadMessageDate();selectionChanged('inbox',0); doResizeReadPanel(document.getElementById('inbox:messagepanel'));;}});return false;" onblur="folderItemFocusLost('inbox',0);" onfocus="folderItemFocusReceived('inbox',0);" tabindex="-1"><table id="inbox:folderSelector:inboxListTable:0:inboxItemDetails" class="" role="presentation" style="background-color:#BCD6FF; width:100%">
+<tbody>
+<tr>
+<td class="itemLeftCol"><span id="inbox:folderSelector:inboxListTable:0:inboxMessageSender" class="inboxSenderName">ecommerce@boipa.com</span></td>
+<td class="itemRightCol"><span id="inbox:folderSelector:inboxListTable:0:messageHeaderDate" class="inboxDate">1765208466000</span></td>
+</tr>
+<tr>
+<td class="itemLeftCol"><span id="inbox:folderSelector:inboxListTable:0:inboxMessageSubject" class="inboxSubject">Request commented # BOIPA-6789:[Secure] BOIPA  Migration Referal.  Ticket:-</span></td>
+</tr>
+</tbody>
+</table>
+</a></li><li class="ui-datascroller-item"><a id="inbox:folderSelector:inboxListTable:1:inboxItem" href="#" class="ui-commandlink ui-widget inboxMessageListLink " onclick="PrimeFaces.ab({s:&quot;inbox:folderSelector:inboxListTable:1:inboxItem&quot;,f:&quot;inbox&quot;,u:&quot;inbox:contentCol&quot;,onco:function(xhr,status,args){updateReadMessageDate();selectionChanged('inbox',1); doResizeReadPanel(document.getElementById('inbox:messagepanel'));;}});return false;" onblur="folderItemFocusLost('inbox',1);" onfocus="folderItemFocusReceived('inbox',1);" tabindex="-1"><table id="inbox:folderSelector:inboxListTable:1:inboxItemDetails" class="" role="presentation" style="width:100%;">
+<tbody>
+<tr>
+<td class="itemLeftCol"><span id="inbox:folderSelector:inboxListTable:1:inboxMessageSender" class="inboxSenderName">ecommerce@boipa.com</span></td>
+<td class="itemRightCol"><span id="inbox:folderSelector:inboxListTable:1:messageHeaderDate" class="inboxDate">1765208414000</span></td>
+</tr>
+<tr>
+<td class="itemLeftCol"><span id="inbox:folderSelector:inboxListTable:1:inboxMessageSubject" class="inboxSubject">Request commented # BOIPA-6789:[Secure] BOIPA  Migration Referal.  Ticket:-</span></td>
+</tr>
+</tbody>
+</table>
+</a></li></ul><div class="ui-datascroller-loader"></div></div></div><script id="inbox:folderSelector:inboxListTable_s" type="text/javascript">$(function(){PrimeFaces.cw("DataScroller","inboxMessageHeaders",{id:"inbox:folderSelector:inboxListTable",chunkSize:2,totalSize:2,loadEvent:"scroll",buffer:10,virtualScroll:false,startAtBottom:false});});</script></div>
+            <script type="text/javascript">
+                addAccessibilityAttributesToMessageList('inbox', 2);
+            </script></div></div><input type="hidden" id="inbox:folderSelector_activeIndex" name="inbox:folderSelector_activeIndex" value="0" autocomplete="off" /></div><script id="inbox:folderSelector_s" type="text/javascript">$(function(){PrimeFaces.cw("TabView","widget_inbox_folderSelector",{id:"inbox:folderSelector",onTabChange:function(index){tabChanged(index)},effectDuration:"normal",scrollable:false});});</script></div></div><script id="inbox:selectionCol_s" type="text/javascript">$(function(){PrimeFaces.cw("Panel","widget_inbox_selectionCol",{id:"inbox:selectionCol"});});</script></td>
+<td class=" inboxMessageCol" role="presentation"><div id="inbox:contentCol" class="ui-panel ui-widget ui-widget-content ui-corner-all" style="border: none; padding: 0;" data-widget="widget_inbox_contentCol"><div id="inbox:contentCol_content" class="ui-panel-content ui-widget-content"><div id="inbox:messageViewCol" class="ui-panel ui-widget ui-widget-content ui-corner-all" style="border: none; padding: 0;" data-widget="widget_inbox_messageViewCol"><div id="inbox:messageViewCol_content" class="ui-panel-content ui-widget-content"><div id="inbox:j_idt33" class="ui-confirm-dialog ui-dialog ui-widget ui-widget-content ui-corner-all ui-shadow ui-hidden-container"><div class="ui-dialog-titlebar ui-widget-header ui-helper-clearfix ui-corner-top"><span id="inbox:j_idt33_title" class="ui-dialog-title"></span><a href="#" class="ui-dialog-titlebar-icon ui-dialog-titlebar-close ui-corner-all" aria-label="primefaces.dialog.aria.CLOSE"><span class="ui-icon ui-icon-closethick"></span></a></div><div class="ui-dialog-content ui-widget-content" id="inbox:j_idt33_content"><span class="ui-icon ui-confirm-dialog-severity"></span><span class="ui-confirm-dialog-message"></span></div><div class="ui-dialog-buttonpane ui-dialog-footer ui-widget-content ui-helper-clearfix"><button id="inbox:j_idt34" name="inbox:j_idt34" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-text-icon-left ui-confirmdialog-yes" type="button"><span class="ui-button-icon-left ui-icon ui-c pi pi-check"></span><span class="ui-button-text ui-c">Delete</span></button><script id="inbox:j_idt34_s" type="text/javascript">$(function(){PrimeFaces.cw("CommandButton","widget_inbox_j_idt34",{id:"inbox:j_idt34"});});</script><button id="inbox:j_idt35" name="inbox:j_idt35" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-text-icon-left ui-confirmdialog-no" type="button"><span class="ui-button-icon-left ui-icon ui-c pi pi-times"></span><span class="ui-button-text ui-c">Cancel</span></button><script id="inbox:j_idt35_s" type="text/javascript">$(function(){PrimeFaces.cw("CommandButton","widget_inbox_j_idt35",{id:"inbox:j_idt35"});});</script></div></div><script id="inbox:j_idt33_s" type="text/javascript">$(function(){PrimeFaces.cw("ConfirmDialog","widget_inbox_j_idt33",{id:"inbox:j_idt33",showEffect:"fade",hideEffect:"fade",global:true});});</script><div id="inbox:readToolBar" class="ui-toolbar ui-widget ui-widget-header ui-corner-all ui-helper-clearfix messageToolbar" role="toolbar" style="border-radius: 0; border-left: none; border-right: none;"><div class="ui-toolbar-group-left"><button id="inbox:replyButton" name="inbox:replyButton" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only toolbarButton" onclick="PrimeFaces.bcn(this,event,[function(event){resetTimeoutTimer();PF('folderBlock').show();window.editorLaunchAction = 'REPLY';},function(event){PrimeFaces.ab({s:&quot;inbox:replyButton&quot;,f:&quot;inbox&quot;,u:&quot;inbox:contentCol&quot;,onco:function(xhr,status,args){doEditorResize(true);}});return false;}]);" type="submit"><span class="ui-button-text ui-c">Reply</span></button><script id="inbox:replyButton_s" type="text/javascript">$(function(){PrimeFaces.cw("CommandButton","widget_inbox_replyButton",{id:"inbox:replyButton"});});</script><button id="inbox:replyAllButton" name="inbox:replyAllButton" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only toolbarButton" onclick="PrimeFaces.bcn(this,event,[function(event){resetTimeoutTimer();PF('folderBlock').show();window.editorLaunchAction = 'REPLYALL';},function(event){PrimeFaces.ab({s:&quot;inbox:replyAllButton&quot;,f:&quot;inbox&quot;,u:&quot;inbox:contentCol&quot;,onco:function(xhr,status,args){doEditorResize(true);}});return false;}]);" type="submit"><span class="ui-button-text ui-c">Reply All</span></button><script id="inbox:replyAllButton_s" type="text/javascript">$(function(){PrimeFaces.cw("CommandButton","widget_inbox_replyAllButton",{id:"inbox:replyAllButton"});});</script><button id="inbox:forwardButton" name="inbox:forwardButton" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only toolbarButton" onclick="PrimeFaces.bcn(this,event,[function(event){resetTimeoutTimer();PF('folderBlock').show();},function(event){PrimeFaces.ab({s:&quot;inbox:forwardButton&quot;,f:&quot;inbox&quot;,u:&quot;inbox:contentCol&quot;,onco:function(xhr,status,args){doEditorResize(true);document.getElementById('inbox:composeTo').focus();;}});return false;}]);" type="submit"><span class="ui-button-text ui-c">Forward</span></button><script id="inbox:forwardButton_s" type="text/javascript">$(function(){PrimeFaces.cw("CommandButton","widget_inbox_forwardButton",{id:"inbox:forwardButton"});});</script></div><div class="ui-toolbar-group-right"><span id="inbox:messageViewHelpButton" class="ui-linkbutton ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only toolbarButton"><a href="/securereader/help.jsf" target="_blank"><span class="ui-button-text ui-c">Help</span></a></span><script id="inbox:messageViewHelpButton_s" type="text/javascript">$(function(){PrimeFaces.cw("LinkButton","widget_inbox_messageViewHelpButton",{id:"inbox:messageViewHelpButton"});});</script></div></div>
+			<script>
+                if(PF && PF('folderBlock')) { PF('folderBlock').hide(); }
+                enableNewMessageAnchor(document.getElementById('inbox:composeButton'));
+                addAccessibilityAttributesToReadToolbar();
+                addAccessibilityAttributesToMenuButton();
+            </script><div id="inbox:readHeader" class="read-headers" style="padding:10px 15px 0px 15px;"><span id="inbox:dsigInbox" class="dsig-panel">Digital Signature is VALID<img src="images/GreenCheck.png" alt="" style="position:relative;top:4px;margin-left:0.5em" title="" /></span><table class="header-table-inbox" cellpadding="0" cellspacing="0" role="presentation">
+<thead>
+<tr><th class="header-subject-field" colspan="2" scope="colgroup">Request commented # BOIPA-6789:[Secure] BOIPA  Migration Referal.  Ticket:-</th></tr>
+</thead>
+<tbody>
+<tr>
+<td class="header-field-label">From:</td>
+<td class=" header-field-value"><span title="ecommerce@boipa.com"> Angelica Miranda (Jira)</span></td>
+</tr>
+<tr>
+<td class="header-field-label">To:</td>
+<td class=" header-field-value"><span title="">morganmcknight@gmail.com</span></td>
+</tr>
+<tr>
+<td class="header-field-label">Cc:</td>
+<td class=" header-field-value"></td>
+</tr>
+<tr>
+<td class="header-field-label">Sent:</td>
+<td class=" header-field-value"><span id="inbox:readMessageDate">Mon, 8 Dec 2025 15:41:00 +0000</span></td>
+</tr>
+</tbody>
+</table>
+<table id="inbox:attachmentPanelGrid" cellpadding="0" cellspacing="0">
+<tbody>
+<tr>
+<td class="header-field-label">Attachments:</td>
+<td class=" header-field-value"><div class="header-overflow-field header-attachment-field"><span class="header-attachment-item"><script type="text/javascript" src="/securereader/javax.faces.resource/jsf.js.jsf?ln=javax.faces"></script><a href="#" style="white-space:nowrap" onclick="mojarra.jsfcljs(document.getElementById('inbox'),{'inbox:j_idt59:0:j_idt61':'inbox:j_idt59:0:j_idt61'},'_blank');return false"><img src="images/fileicons/pdf.gif" alt="" style="position:relative;top:0.47ex;padding-right:0.5em;border:0" title="" />Templeogue College Swim Pool - credential part 2.pdf</a></span><span class="header-attachment-item"><a href="#" style="white-space:nowrap" onclick="mojarra.jsfcljs(document.getElementById('inbox'),{'inbox:j_idt59:1:j_idt61':'inbox:j_idt59:1:j_idt61'},'_blank');return false"><img src="images/fileicons/pdf.gif" alt="" style="position:relative;top:0.47ex;padding-right:0.5em;border:0" title="" />Templeogue College Swim Pool - credential part 1.pdf</a></span></div></td>
+</tr>
+</tbody>
+</table>
+</div><div id="inbox:messageContents" class="read-container"><div id="inbox:messagepanel" class="read-content"><span class="read-content-text" role="main" aria-live="polite" aria-label="Message content"><html><head></head><body><table border="0" cellpadding="0" cellspacing="0" style="width: 100%; font-family: sans-serif;">
+<tbody>
+<tr>
+<td>
+<div>
+<p><span style="font-weight: 400;">A comment has been added to the request shared with you:<strong> [Secure] BOIPA  Migration Referal.  Ticket:-.</strong></span></p>
+<p><span style="font-weight: 400;">This ticket number - <strong>BOIPA-6789</strong> - is unique to your request. Please reply to this email for further communications and</span><strong> do not change the subject line</strong><span style="font-weight: 400;">. </span></p>
+</div>
+<p>----- Comment Starts -----</p>
+
+<p>            </p><table style="border:0px; width: 500px">
+                                <tbody><tr valign="top">
+                <td style="padding:0 0 10px 0;width:100%;">
+                    <div style="border-bottom: 1px solid #DDD;">
+                        <p style="font-weight: bold">        <a target="_blank" href="https://servicemanagement.rxpdev.com/secure/ViewProfile.jspa?name=AngelicaMiranda">Angelica Miranda</a>   -   08/Dec/25 3:40 PM
+</p>
+                        <p>  </p><p><span class="nobr"><a target="_blank" href="https://servicemanagement.rxpdev.com/servicedesk/customershim/secure/attachment/525964/525964_Templeogue+College+Swim+Pool+-+credential+part+2.pdf?fromIssue=289386">Templeogue College Swim Pool - credential part 2.pdf<img class="rendericon" src="https://servicemanagement.rxpdev.com/images/icons/link_attachment_7.gif" style="max-width: 100%"><sup></sup></a></span></p>
+                    </div>
+                </td>
+            </tr>
+                                            <tr valign="top">
+                <td style="padding:0 0 10px 0;width:100%;">
+                    <div style="border-bottom: 1px solid #DDD;">
+                        <p style="font-weight: bold">        <a target="_blank" href="https://servicemanagement.rxpdev.com/secure/ViewProfile.jspa?name=AngelicaMiranda">Angelica Miranda</a>   -   08/Dec/25 3:39 PM
+</p>
+                        <p>  </p><p><span class="nobr"><a target="_blank" href="https://servicemanagement.rxpdev.com/servicedesk/customershim/secure/attachment/525960/525960_Templeogue+College+Swim+Pool+-+credential+part+1.pdf?fromIssue=289386">Templeogue College Swim Pool - credential part 1.pdf<img class="rendericon" src="https://servicemanagement.rxpdev.com/images/icons/link_attachment_7.gif" style="max-width: 100%"><sup></sup></a></span></p>
+                    </div>
+                </td>
+            </tr>
+                                            <tr valign="top">
+                <td style="padding:0 0 10px 0;width:100%;">
+                    <div style="border-bottom: 1px solid #DDD;">
+                        <p style="font-weight: bold">        <a target="_blank" href="https://servicemanagement.rxpdev.com/secure/ViewProfile.jspa?name=AngelicaMiranda">Angelica Miranda</a>   -   08/Dec/25 3:39 PM
+</p>
+                        <p>  </p><p>Hi Morgan, good afternoon.</p><p>The current payment gateway system you are using, the Intelligent Payment Gateway (IPG / Turnkey) has reached end-of-life, for that reason it will be discontinued and will no longer accept online payments.&nbsp;A previous email informing the changes was sent to you on <b>24th of April</b>.</p><p>The email that you will receive today from <span class="nobr"><a target="_blank" href="mailto:register@boipa.com">register@boipa.com<img class="rendericon" src="https://servicemanagement.rxpdev.com/images/icons/mail_small.gif" style="max-width: 100%"><sup></sup></a></span> is the registration link for the BOI Payment Acceptance (BOIPA) as it will be the new getaway system provided by us. Please ensure to check your junk/spam.</p><p>To register, please do the following:</p><ul>
+ <li>Create a Username that is not your email address (some websites/systems tend to use email & username interchangeably which causes confusion).</li>
+ <li>Create a Password that must consist of: at least 10 characters, uppercase & lowercase letters, numbers, symbols.</li>
+ <li>Input your First Name and Surname.</li>
+ <li>Select the correct Mobile Country prefix, respective of the country you're based in, i.e. +353 for Ireland.</li>
+ <li>Add your phone number in the Mobile Number field.</li>
+ <li>After register you will receive another email with you CLIENT ID, make sure to keep this information.</li>
+ <li>Once registered, you can access : <a target="_blank" href="https://portal.boipagateway.com/#/login">https://portal.boipagateway.com/#/login</a>&nbsp; &nbsp;</li>
+</ul><p>Here are some extra information that will help you to navigate in your new virtual terminal: <a target="_blank" href="https://www.boipa.com/en-ie/online-in-app-phone-payments-support">https://www.boipa.com/en-ie/online-in-app-phone-payments-support</a>&nbsp;<br>
+How to create new users - <a target="_blank" href="https://www.boipa.com/en-ie/user-management">https://www.boipa.com/en-ie/user-management</a>&nbsp;</p><p><b>Shortly you will receive two secured emails with the live credentials for your website, please make sure to update it.</b></p><p>If there is anything else I can help you with, let me know.</p><p>Kind regards,<br>
+Angelica</p>
+                    </div>
+                </td>
+            </tr>
+                        </tbody></table>
+<p>----- Comment Ends -----</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p></p><br>
+<span style="letter-spacing:0.09375px;white-space:pre-wrap;background-color:white"><font face="Arial" size="2">NOTICE: This email message is for the sole use of the addressee(s) named above and may contain confidential and privileged information. Any unauthorized review, use, disclosure or distribution of this message or any attachments is expressly prohibited. If you are not the intended recipient, please contact the sender by reply email and destroy all copies and backups of the original message. </font></span></body></html></span></div></div></div></div><script id="inbox:messageViewCol_s" type="text/javascript">$(function(){PrimeFaces.cw("Panel","widget_inbox_messageViewCol",{id:"inbox:messageViewCol"});});</script></div></div><script id="inbox:contentCol_s" type="text/javascript">$(function(){PrimeFaces.cw("Panel","widget_inbox_contentCol",{id:"inbox:contentCol"});});</script></td>
+</tr>
+</tbody>
+</table>
+<input type="hidden" name="javax.faces.ViewState" id="j_id1:javax.faces.ViewState:0" value="-9023910902253411844:-2367382525386506390" autocomplete="off" />
+</form>
+	<div style="color: #706e6e;position:absolute;z-index:100;right:10px;bottom:10px" id="powered" class="powered watermark">Powered by Proofpoint Encryption&#x2122;
+	</div></body>
+    </html>

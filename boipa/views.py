@@ -11,7 +11,7 @@ from .models import (
     SwimOrder, LessonOrder, SchoolOrder)
 from lessons_bookings.utils.enrollment import handle_lessons_enrollment
 from schools_bookings.utils.enrollment import handle_schools_enrollment
-from .payment_functions import get_boipa_session_token  # External function
+from .payment_functions import create_hpp_payment_link  # NEW BOIPA API function
 from swims_orders.tasks import send_order_email
 from lessons_orders.tasks import send_lesson_order_email
 from schools_orders.tasks import send_school_order_email
@@ -27,37 +27,72 @@ boipa_logger = logging.getLogger("boipa")
 
 
 def initiate_boipa_payment_session(request, order_ref, total_price):
+    """
+    NEW BOIPA API: Create HPP link and redirect user to payment page.
+
+    The new API uses OAuth2 access tokens and creates a complete HPP link
+    via API call (no more manual token generation).
+    """
     total_price = Decimal(total_price)
 
-    # 🔁 Allow switching between 'Iframe' and 'Standalone' via query param
-    integration_mode = request.GET.get('mode', 'Standalone').capitalize()
-    if integration_mode not in ['Standalone', 'Iframe']:
-        integration_mode = 'Standalone'
+    # Optional: Extract payer information from request (user, session, etc.)
+    payer_info = None
+    if request.user.is_authenticated:
+        payer_info = {
+            'name': f"{request.user.first_name} {request.user.last_name}".strip() or request.user.email,
+            'email': request.user.email,
+        }
 
-    token = get_boipa_session_token(request, order_ref, total_price)
-    if token is None:
-        payments_logger.error(f"Failed to obtain session token for order_ref {order_ref}")
-        return render(request, 'boipa/error.html', {'error': 'Unable to obtain session token.'})
+    # Create HPP link via new BOIPA API
+    link_data = create_hpp_payment_link(request, order_ref, total_price, payer_info)
 
-    hpp_url = (
-        f"{settings.HPP_FORM}?token={token}"
-        f"&merchantId={settings.BOIPA_MERCHANT_ID}"
-        f"&integrationMode={integration_mode}"
-    )
+    if link_data is None or 'url' not in link_data:
+        boipa_logger.error(f"Failed to create HPP link for order_ref {order_ref}")
+        return render(request, 'boipa/error.html', {
+            'error': 'Unable to create payment link. Please try again or contact support.'
+        })
 
-    # Render iframe page or redirect based on mode
-    if integration_mode == 'Iframe':
-        return render(request, 'boipa/payment_form.html', {'hpp_url': hpp_url})
-    else:
-        return redirect(hpp_url)
+    hpp_url = link_data['url']
+    boipa_logger.info(f"Redirecting to HPP: {hpp_url}")
+
+    # Redirect user to BOIPA Hosted Payment Page
+    return redirect(hpp_url)
 
 
+@csrf_exempt
 def payment_response(request):
     boipa_logger = logging.getLogger("boipa")
-    boipa_logger.debug(f"Received payment response: {request.GET.dict()}")
+    import json
 
-    result = request.GET.get("result")
-    merchantTxId = request.GET.get("merchantTxId")
+    boipa_logger.debug(f"Payment response - Method: {request.method}")
+
+    # NEW BOIPA API sends JSON in the body
+    data = {}
+    if request.method == "POST":
+        try:
+            raw_body = request.body.decode('utf-8')
+            if raw_body:
+                data = json.loads(raw_body)
+                boipa_logger.debug(f"Payment response - Parsed JSON: {data}")
+        except json.JSONDecodeError as e:
+            boipa_logger.error(f"Failed to parse JSON body: {e}")
+            # Fallback to form-encoded POST data
+            data = request.POST.dict()
+    else:
+        # GET request - use query params
+        data = request.GET.dict()
+
+    # Extract relevant fields from new API format
+    # New API sends: {"id": "TRN_xxx", "status": "CAPTURED", "reference": "lesson_342", ...}
+    status = data.get("status", "")
+    reference = data.get("reference", "")  # This is our order reference (e.g., "lesson_342")
+    txId = data.get("id", "")  # Transaction ID from BOIPA
+
+    boipa_logger.debug(f"Extracted - status: {status}, reference: {reference}, txId: {txId}")
+
+    # Use reference as merchantTxId for compatibility
+    merchantTxId = reference
+    result = "success" if status == "CAPTURED" else "failure"
 
     order_ref = None
     if merchantTxId:
@@ -68,43 +103,136 @@ def payment_response(request):
             except ValueError:
                 order_ref = merchantTxId  # fallback to raw if parsing fails
 
-    context = {
-        "order_ref": order_ref,
-        "merchantTxId": merchantTxId,  # optional, for debugging/logging
-        "message": result,
-    }
+    # Process payment if successful (NEW BOIPA API sends full data to return_url)
+    if result == "success" and order_ref and txId:
+        try:
+            from lessons_orders.models import Order
+            order = Order.objects.get(id=order_ref)
+
+            # Mark order as paid if not already
+            if not order.paid:
+                order.paid = True
+                order.txId = txId
+                order.save(update_fields=["paid", "txId"])
+                boipa_logger.info(f"✅ Order {order_ref} marked paid via payment_response")
+
+                # Create enrollments
+                try:
+                    handle_lessons_enrollment(order)
+                    boipa_logger.info(f"📚 Enrollments created for order {order_ref}")
+                except Exception as e:
+                    boipa_logger.error(f"❌ Enrollment failed: {e}")
+
+                # Send email
+                try:
+                    send_lesson_order_email(order.id)
+                    boipa_logger.info(f"📧 Email sent for order {order_ref}")
+                except Exception as e:
+                    boipa_logger.error(f"❌ Email failed: {e}")
+        except Exception as e:
+            boipa_logger.error(f"❌ Error processing payment in payment_response: {e}")
+
+    # Return a simple redirect page since BOIPA will display this on their domain
+    # The actual success page will be shown after redirect
+    from django.http import HttpResponse
 
     if result == "success":
-        return render(request, "boipa/payment_success.html", context)
+        # Build the redirect URL
+        redirect_url = request.build_absolute_uri(reverse('home'))
+
+        # Return simple HTML with auto-redirect
+        html = f"""
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="refresh" content="2;url={redirect_url}">
+    <title>Payment Successful</title>
+    <style>
+        body {{ font-family: Arial, sans-serif; text-align: center; padding: 50px; background: #f0f9ff; }}
+        .container {{ background: white; padding: 40px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-width: 500px; margin: 0 auto; }}
+        h1 {{ color: #16a34a; }}
+        .spinner {{ border: 4px solid #f3f3f3; border-top: 4px solid #16a34a; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 20px auto; }}
+        @keyframes spin {{ 0% {{ transform: rotate(0deg); }} 100% {{ transform: rotate(360deg); }} }}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>✅ Payment Successful!</h1>
+        <p>Your payment has been processed successfully.</p>
+        <p><strong>Order ID:</strong> {order_ref}</p>
+        <div class="spinner"></div>
+        <p>Redirecting you back to the site...</p>
+        <p><a href="{redirect_url}">Click here if not redirected automatically</a></p>
+    </div>
+</body>
+</html>
+"""
+        return HttpResponse(html)
     elif result == "failure":
-        return render(request, "boipa/payment_failure.html", context)
-    return render(request, "boipa/error.html", {"error_message": "Unknown payment response."})
+        redirect_url = request.build_absolute_uri(reverse('home'))
+        html = f"""
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="refresh" content="5;url={redirect_url}">
+    <title>Payment Failed</title>
+    <style>
+        body {{ font-family: Arial, sans-serif; text-align: center; padding: 50px; background: #fef2f2; }}
+        .container {{ background: white; padding: 40px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-width: 500px; margin: 0 auto; }}
+        h1 {{ color: #dc2626; }}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>❌ Payment Failed</h1>
+        <p>Your payment could not be processed.</p>
+        <p>Redirecting you back to try again...</p>
+        <p><a href="{redirect_url}">Click here to return</a></p>
+    </div>
+</body>
+</html>
+"""
+        return HttpResponse(html)
+
+    # Unknown response
+    return HttpResponse("<h1>Unknown payment response</h1>", status=400)
 
 
 
 
 @csrf_exempt
 def payment_notification(request):
-    boipa_logger.debug("📥 payment_notification view triggered")
-    boipa_logger.debug(f"🔎 RAW PATH: {request.get_full_path()}")
-    boipa_logger.debug(f"🔎 QUERY STRING: {request.META.get('QUERY_STRING')}")
-    boipa_logger.debug(f"🔎 HEADERS: {dict(request.headers)}")
+    import json
 
-    try:
-        raw_body = request.body.decode("utf-8")
-    except Exception:
-        raw_body = "<unable to decode>"
-    boipa_logger.debug(f"🔎 RAW BODY: {raw_body}")
+    boipa_logger.debug("📥 payment_notification view triggered")
+    boipa_logger.debug(f"🔎 Method: {request.method}")
+    boipa_logger.debug(f"🔎 Content-Type: {request.headers.get('Content-Type', 'N/A')}")
 
     # --- Parse incoming data ---
+    data = {}
     if request.method == "POST":
-        data = request.POST.dict()
-        if not data and raw_body and raw_body != "<unable to decode>":
-            try:
-                parsed = parse_qs(raw_body)
-                data = {k: v[0] for k, v in parsed.items()}
-            except Exception as e:
-                boipa_logger.error(f"❌ Failed to parse raw body manually: {e}")
+        try:
+            raw_body = request.body.decode("utf-8")
+            boipa_logger.debug(f"🔎 RAW BODY: {raw_body[:500]}...")  # First 500 chars
+
+            # Try JSON first (new BOIPA API)
+            if raw_body:
+                try:
+                    data = json.loads(raw_body)
+                    boipa_logger.debug(f"✅ Parsed as JSON")
+                except json.JSONDecodeError:
+                    # Fallback to form-encoded
+                    boipa_logger.debug(f"⚠️ Not JSON, trying form-encoded")
+                    data = request.POST.dict()
+                    if not data:
+                        # Try URL-encoded in body
+                        parsed = parse_qs(raw_body)
+                        data = {k: v[0] for k, v in parsed.items()}
+        except Exception as e:
+            boipa_logger.error(f"❌ Failed to parse body: {e}")
+            return HttpResponse("Failed to parse request", status=400)
     elif request.method == "GET":
         data = request.GET.dict()
     else:
@@ -112,9 +240,11 @@ def payment_notification(request):
 
     boipa_logger.debug(f"📦 Parsed notification data: {data}")
 
-    merchantTxId = data.get("merchantTxId")
+    # Extract merchantTxId from new API format
+    # New API sends: {"reference": "lesson_342", ...} instead of {"merchantTxId": "lesson_342"}
+    merchantTxId = data.get("merchantTxId") or data.get("reference")
     if not merchantTxId:
-        boipa_logger.error("❌ merchantTxId missing from payload")
+        boipa_logger.error(f"❌ merchantTxId/reference missing from payload")
         return HttpResponse("Missing merchantTxId", status=400)
 
     parts = merchantTxId.split("_")
@@ -140,13 +270,14 @@ def payment_notification(request):
 
     OrderModel, NotificationModel, email_func, enrollment_func = model_map[source_prefix]
 
-    # Normalize useful fields
-    tx_id = data.get("txId", "")
+    # Normalize useful fields for new API
+    # New API sends "id" instead of "txId", and "status" instead of "result"
+    tx_id = data.get("id") or data.get("txId", "")  # Try new format first
     result = data.get("result", "")
     status = data.get("status", "")
 
     # Quick success gate (BOIPA sends both 'status' and/or 'result')
-    is_success = (result.lower() == "success") or (status.upper() == "CAPTURED")
+    is_success = (result.lower() == "success") if result else (status.upper() == "CAPTURED")
 
     try:
         order = OrderModel.objects.get(id=order_id)

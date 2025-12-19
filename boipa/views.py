@@ -138,12 +138,12 @@ def payment_response(request):
             order_type = None
 
             if merchantTxId.startswith("swims_"):
-                from swims_orders.models import SwimOrder
+                from swims_orders.models import Order as SwimOrder
                 order = SwimOrder.objects.get(id=order_ref)
                 order_type = "swim"
                 boipa_logger.info(f"Found SwimOrder {order_ref}")
             elif merchantTxId.startswith("school_"):
-                from schools_orders.models import SchoolOrder
+                from schools_orders.models import Order as SchoolOrder
                 order = SchoolOrder.objects.get(id=order_ref)
                 order_type = "school"
                 boipa_logger.info(f"Found SchoolOrder {order_ref}")

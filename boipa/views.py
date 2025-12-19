@@ -80,6 +80,23 @@ def initiate_boipa_payment_session(request, order_ref, total_price):
     return redirect(hpp_url)
 
 
+def payment_success(request):
+    """
+    Display payment success page after successful payment.
+    Shows order details and confirmation message.
+    """
+    order_ref = request.GET.get('order')
+    order_type = request.GET.get('type', 'order')
+    message = request.GET.get('message', 'Payment successful')
+
+    context = {
+        'order_ref': order_ref,
+        'order_type': order_type,
+        'message': message,
+    }
+    return render(request, 'boipa/payment_success.html', context)
+
+
 @csrf_exempt
 def payment_response(request):
     boipa_logger = logging.getLogger("boipa")
@@ -191,71 +208,18 @@ def payment_response(request):
         except Exception as e:
             boipa_logger.error(f"❌ Error processing payment in payment_response: {e}")
 
-    # Return a simple redirect page since BOIPA will display this on their domain
-    # The actual success page will be shown after redirect
-    from django.http import HttpResponse
-
+    # Redirect to success or failure page
     if result == "success":
-        # Build the redirect URL
-        redirect_url = request.build_absolute_uri(reverse('home'))
-
-        # Return simple HTML with auto-redirect
-        html = f"""
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="refresh" content="2;url={redirect_url}">
-    <title>Payment Successful</title>
-    <style>
-        body {{ font-family: Arial, sans-serif; text-align: center; padding: 50px; background: #f0f9ff; }}
-        .container {{ background: white; padding: 40px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-width: 500px; margin: 0 auto; }}
-        h1 {{ color: #16a34a; }}
-        .spinner {{ border: 4px solid #f3f3f3; border-top: 4px solid #16a34a; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 20px auto; }}
-        @keyframes spin {{ 0% {{ transform: rotate(0deg); }} 100% {{ transform: rotate(360deg); }} }}
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>✅ Payment Successful!</h1>
-        <p>Your payment has been processed successfully.</p>
-        <p><strong>Order ID:</strong> {order_ref}</p>
-        <div class="spinner"></div>
-        <p>Redirecting you back to the site...</p>
-        <p><a href="{redirect_url}">Click here if not redirected automatically</a></p>
-    </div>
-</body>
-</html>
-"""
-        return HttpResponse(html)
+        # Redirect to payment success page with order info
+        success_url = reverse('boipa:payment_success')
+        params = f"?order={order_ref}&type={order_type if 'order_type' in locals() else 'order'}&message=Payment+processed+successfully"
+        return redirect(f"{success_url}{params}")
     elif result == "failure":
-        redirect_url = request.build_absolute_uri(reverse('home'))
-        html = f"""
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="refresh" content="5;url={redirect_url}">
-    <title>Payment Failed</title>
-    <style>
-        body {{ font-family: Arial, sans-serif; text-align: center; padding: 50px; background: #fef2f2; }}
-        .container {{ background: white; padding: 40px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-width: 500px; margin: 0 auto; }}
-        h1 {{ color: #dc2626; }}
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>❌ Payment Failed</h1>
-        <p>Your payment could not be processed.</p>
-        <p>Redirecting you back to try again...</p>
-        <p><a href="{redirect_url}">Click here to return</a></p>
-    </div>
-</body>
-</html>
-"""
-        return HttpResponse(html)
+        # Redirect to home on failure
+        return redirect(reverse('home'))
 
     # Unknown response
+    from django.http import HttpResponse
     return HttpResponse("<h1>Unknown payment response</h1>", status=400)
 
 

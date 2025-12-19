@@ -177,15 +177,13 @@ def payment_response(request):
 
                 elif order_type == "swim":
                     try:
-                        from swims_orders.emails import send_swim_order_email
-                        send_swim_order_email(order.id)
+                        send_order_email(order.id)
                         boipa_logger.info(f"📧 Email sent for swim order {order_ref}")
                     except Exception as e:
                         boipa_logger.error(f"❌ Email failed: {e}")
 
                 elif order_type == "school":
                     try:
-                        from schools_orders.emails import send_school_order_email
                         send_school_order_email(order.id)
                         boipa_logger.info(f"📧 Email sent for school order {order_ref}")
                     except Exception as e:

@@ -48,25 +48,86 @@ Account ID: TRA_ef38c091212340a5b4731856b71038b2
 
 ---
 
-## ✅ FINAL WORKING SOLUTION - Orders 344, 345, 346
+## ✅ FINAL WORKING SOLUTION - Local Testing (Orders 344, 345, 346)
 
-### Successful Test Transactions:
+### Successful Test Transactions (Local with ngrok):
 - **Order 344:** ✅ COMPLETE - Paid, enrolled, email sent
 - **Order 345:** ✅ COMPLETE - Paid, enrolled, email sent
 - **Order 346:** ✅ COMPLETE - Paid, enrolled, auto-redirect working
 
-### Key Issues Resolved:
+### Key Issues Resolved (Local):
 1. **CSRF Protection:** Added `@csrf_exempt` to payment endpoints
 2. **JSON Parsing:** New API sends JSON, not form-encoded data
 3. **Field Mapping:** Mapped `id` → `txId`, `reference` → `merchantTxId`, `status: CAPTURED` → success
 4. **User Redirect:** Created standalone HTML with auto-redirect to handle BOIPA's domain display
 
-### Final Working Flow:
+### Final Working Flow (Local):
 1. User completes payment on BOIPA HPP
 2. BOIPA POSTs JSON data to `return_url` (payment_response)
 3. Backend processes payment (marks paid, creates enrollment, sends email)
 4. Returns simple HTML page with 2-second auto-redirect
 5. User redirected back to merchant site
+
+---
+
+## ✅ DEV SERVER TESTING (PythonAnywhere) - December 16, 2025
+
+### Critical Issue Discovered: SessionInterrupted Error
+
+**Problem:**
+- Local testing with ngrok worked perfectly
+- Dev server (PythonAnywhere) showed blank page after payment
+- Logs showed `SessionInterrupted` exception
+- Payment was processing successfully, but response couldn't be rendered
+
+**Root Cause:**
+- **Local:** User's browser maintains session throughout BOIPA redirect
+- **PythonAnywhere:** BOIPA makes server-to-server POST without session cookie
+- Django's SessionMiddleware tried to save non-existent session and raised exception
+
+**Solution Implemented:**
+Created `PaymentGatewaySessionMiddleware` in `utils/middleware.py`:
+- Catches `SessionInterrupted` exceptions on BOIPA callback endpoints
+- Extracts order ID from payment data
+- Returns standalone HTML success page with auto-redirect
+- Placed after `SessionMiddleware` in middleware stack
+
+### Missing Configuration Issue
+
+**Problem:**
+- BOIPA wasn't calling back to payment_response endpoint at all
+- No logs showing payment response being received
+
+**Root Cause:**
+- `NGROK` environment variable not set in dev `.env`
+- Code was using default value: `http://localhost:4040`
+- BOIPA was trying to call localhost instead of PythonAnywhere URL
+
+**Solution:**
+Added to dev `.env`:
+```bash
+NGROK=https://dev-morganmck.eu.pythonanywhere.com
+```
+
+### Dev Server Test Results:
+
+**Environment:** dev-morganmck.eu.pythonanywhere.com
+**Date:** December 16, 2025
+
+✅ **All tests passing:**
+- OAuth2 token generation working
+- HPP link creation successful
+- Payment processing complete
+- Orders marked paid
+- Enrollments created
+- Emails sent
+- Success page displays correctly
+- Auto-redirect to home page working (2 seconds)
+
+**Test Orders:**
+- Multiple successful test payments completed
+- Session error handling working correctly
+- User experience smooth
 
 ---
 

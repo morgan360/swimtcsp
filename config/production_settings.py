@@ -15,14 +15,34 @@ OPENAI_CHAT_MODEL  = config("OPENAI_CHAT_MODEL", default="gpt-4o")
 OPENAI_EMBED_MODEL = config("OPENAI_EMBED_MODEL", default="text-embedding-3-small")
 OPENAI_PROJECT     = config("OPENAI_PROJECT", default="")
 
-# --- BOIPA ---
-BOIPA_MERCHANT_ID  = config('BOIPA_MERCHANT_ID')
-BOIPA_PASSWORD     = config('BOIPA_PASSWORD')
-BOIPA_TOKEN_URL    = config('BOIPA_TOKEN_URL')
-HPP_FORM           = config('HPP_FORM')
-NGROK              = config('NGROK', default='http://localhost:4040').rstrip('/')
-BRAND_ID           = config('BRAND_ID')
-BOIPA_PAYMENT_URL  = config('BOIPA_PAYMENT_URL')
+# --- BOIPA Configuration ---
+# =============================================================================
+# NEW API (OAuth2) - Active as of Dec 2025
+# =============================================================================
+BOIPA_CLIENT_ID        = config('BOIPA_CLIENT_ID')
+BOIPA_MERCHANT_ID      = config('BOIPA_CLIENT_ID')  # Alias for compatibility
+BOIPA_ACCOUNT_NAME     = config('BOIPA_ACCOUNT_NAME')
+BOIPA_ACCOUNT_ID       = config('BOIPA_ACCOUNT_ID')
+BOIPA_APP_ID           = config('BOIPA_APP_ID')
+BOIPA_APP_KEY          = config('BOIPA_APP_KEY')
+BOIPA_API_BASE_URL     = config('BOIPA_API_BASE_URL')
+BOIPA_ACCESS_TOKEN_URL = config('BOIPA_ACCESS_TOKEN_URL')
+BOIPA_HPP_LINKS_URL    = config('BOIPA_HPP_LINKS_URL')
+BOIPA_TRANSACTIONS_URL = config('BOIPA_TRANSACTIONS_URL')
+BOIPA_API_VERSION      = config('BOIPA_API_VERSION', default='2021-03-22')
+NGROK                  = config('NGROK', default='https://www.tcsp.ie').rstrip('/')
+
+# =============================================================================
+# OLD API (Legacy) - ROLLBACK ONLY
+# To rollback to old API, comment out NEW API section above and uncomment below:
+# =============================================================================
+# BOIPA_MERCHANT_ID  = config('BOIPA_MERCHANT_ID')
+# BOIPA_PASSWORD     = config('BOIPA_PASSWORD')
+# BOIPA_TOKEN_URL    = config('BOIPA_TOKEN_URL')
+# HPP_FORM           = config('HPP_FORM')
+# NGROK              = config('NGROK', default='http://localhost:4040').rstrip('/')
+# BRAND_ID           = config('BRAND_ID')
+# BOIPA_PAYMENT_URL  = config('BOIPA_PAYMENT_URL')
 
 CART_SESSION_ID = 'cart'
 

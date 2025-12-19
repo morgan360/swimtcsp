@@ -133,29 +133,63 @@ def payment_response(request):
     # Process payment if successful (NEW BOIPA API sends full data to return_url)
     if result == "success" and order_ref and txId:
         try:
-            from lessons_orders.models import Order
-            order = Order.objects.get(id=order_ref)
+            # Determine order type from merchantTxId prefix
+            order = None
+            order_type = None
+
+            if merchantTxId.startswith("swims_"):
+                from swims_orders.models import SwimOrder
+                order = SwimOrder.objects.get(id=order_ref)
+                order_type = "swim"
+                boipa_logger.info(f"Found SwimOrder {order_ref}")
+            elif merchantTxId.startswith("school_"):
+                from schools_orders.models import SchoolOrder
+                order = SchoolOrder.objects.get(id=order_ref)
+                order_type = "school"
+                boipa_logger.info(f"Found SchoolOrder {order_ref}")
+            else:
+                # Default to lesson order (backwards compatibility)
+                from lessons_orders.models import Order
+                order = Order.objects.get(id=order_ref)
+                order_type = "lesson"
+                boipa_logger.info(f"Found LessonOrder {order_ref}")
 
             # Mark order as paid if not already
             if not order.paid:
                 order.paid = True
                 order.txId = txId
                 order.save(update_fields=["paid", "txId"])
-                boipa_logger.info(f"✅ Order {order_ref} marked paid via payment_response")
+                boipa_logger.info(f"✅ Order {order_ref} ({order_type}) marked paid via payment_response")
 
-                # Create enrollments
-                try:
-                    handle_lessons_enrollment(order)
-                    boipa_logger.info(f"📚 Enrollments created for order {order_ref}")
-                except Exception as e:
-                    boipa_logger.error(f"❌ Enrollment failed: {e}")
+                # Create enrollments and send emails based on order type
+                if order_type == "lesson":
+                    try:
+                        handle_lessons_enrollment(order)
+                        boipa_logger.info(f"📚 Enrollments created for lesson order {order_ref}")
+                    except Exception as e:
+                        boipa_logger.error(f"❌ Enrollment failed: {e}")
 
-                # Send email
-                try:
-                    send_lesson_order_email(order.id)
-                    boipa_logger.info(f"📧 Email sent for order {order_ref}")
-                except Exception as e:
-                    boipa_logger.error(f"❌ Email failed: {e}")
+                    try:
+                        send_lesson_order_email(order.id)
+                        boipa_logger.info(f"📧 Email sent for lesson order {order_ref}")
+                    except Exception as e:
+                        boipa_logger.error(f"❌ Email failed: {e}")
+
+                elif order_type == "swim":
+                    try:
+                        from swims_orders.emails import send_swim_order_email
+                        send_swim_order_email(order.id)
+                        boipa_logger.info(f"📧 Email sent for swim order {order_ref}")
+                    except Exception as e:
+                        boipa_logger.error(f"❌ Email failed: {e}")
+
+                elif order_type == "school":
+                    try:
+                        from schools_orders.emails import send_school_order_email
+                        send_school_order_email(order.id)
+                        boipa_logger.info(f"📧 Email sent for school order {order_ref}")
+                    except Exception as e:
+                        boipa_logger.error(f"❌ Email failed: {e}")
         except Exception as e:
             boipa_logger.error(f"❌ Error processing payment in payment_response: {e}")
 

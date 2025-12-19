@@ -71,6 +71,7 @@ MAINTENANCE_MODE_IGNORE_URLS = (
     r'^/accounts/signup/?$',
     r'^/users/login/?$',
     r'^/users/logout/?$',
+    r'^/boipa/payment-response/?$',  # Allow BOIPA callbacks during maintenance
 )
 
 # --- Email (M365) ---

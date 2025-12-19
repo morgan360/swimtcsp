@@ -208,18 +208,53 @@ def payment_response(request):
         except Exception as e:
             boipa_logger.error(f"❌ Error processing payment in payment_response: {e}")
 
-    # Redirect to success or failure page
+    # Return HTML with meta refresh redirect to success page
+    # We can't use redirect() because BOIPA displays this in their window
+    from django.http import HttpResponse
+
     if result == "success":
-        # Redirect to payment success page with order info
-        success_url = reverse('boipa:payment_success')
-        params = f"?order={order_ref}&type={order_type if 'order_type' in locals() else 'order'}&message=Payment+processed+successfully"
-        return redirect(f"{success_url}{params}")
+        # Build success page URL with parameters
+        success_url = request.build_absolute_uri(
+            reverse('boipa:payment_success')
+        )
+        order_type_str = order_type if 'order_type' in locals() else 'order'
+        redirect_url = f"{success_url}?order={order_ref}&type={order_type_str}&message=Payment+processed+successfully"
+
+        # Return HTML with immediate redirect
+        html = f"""
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="refresh" content="0;url={redirect_url}">
+    <title>Payment Successful</title>
+</head>
+<body>
+    <p>Payment successful. Redirecting...</p>
+    <script>window.location.href = "{redirect_url}";</script>
+</body>
+</html>
+"""
+        return HttpResponse(html)
     elif result == "failure":
-        # Redirect to home on failure
-        return redirect(reverse('home'))
+        home_url = request.build_absolute_uri(reverse('home'))
+        html = f"""
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="refresh" content="0;url={home_url}">
+    <title>Payment Failed</title>
+</head>
+<body>
+    <p>Payment failed. Redirecting...</p>
+    <script>window.location.href = "{home_url}";</script>
+</body>
+</html>
+"""
+        return HttpResponse(html)
 
     # Unknown response
-    from django.http import HttpResponse
     return HttpResponse("<h1>Unknown payment response</h1>", status=400)
 
 

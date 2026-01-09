@@ -201,6 +201,12 @@ def payment_response(request):
 
                 elif order_type == "school":
                     try:
+                        handle_schools_enrollment(order)
+                        boipa_logger.info(f"📚 Enrollments created for school order {order_ref}")
+                    except Exception as e:
+                        boipa_logger.error(f"❌ Enrollment failed: {e}")
+
+                    try:
                         send_school_order_email(order.id)
                         boipa_logger.info(f"📧 Email sent for school order {order_ref}")
                     except Exception as e:

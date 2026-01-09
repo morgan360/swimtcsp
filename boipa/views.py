@@ -109,6 +109,8 @@ def payment_response(request):
         pass  # Session might not exist when called from external gateway
 
     boipa_logger.debug(f"Payment response - Method: {request.method}")
+    boipa_logger.debug(f"Payment response - GET params: {request.GET.dict()}")
+    boipa_logger.debug(f"Payment response - POST params: {request.POST.dict()}")
 
     # NEW BOIPA API sends JSON in the body
     data = {}
@@ -132,7 +134,8 @@ def payment_response(request):
     reference = data.get("reference", "")  # This is our order reference (e.g., "lesson_342")
     txId = data.get("id", "")  # Transaction ID from BOIPA
 
-    boipa_logger.debug(f"Extracted - status: {status}, reference: {reference}, txId: {txId}")
+    boipa_logger.info(f"📥 Payment response received - status: {status}, reference: {reference}, txId: {txId}")
+    boipa_logger.debug(f"📦 Full payment data: {data}")
 
     # Use reference as merchantTxId for compatibility
     merchantTxId = reference

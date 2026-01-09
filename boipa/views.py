@@ -102,15 +102,28 @@ def payment_response(request):
     boipa_logger = logging.getLogger("boipa")
     import json
 
+    # === AGGRESSIVE LOGGING FOR DEBUGGING ===
+    boipa_logger.info("="*60)
+    boipa_logger.info("🔔 PAYMENT_RESPONSE ENDPOINT CALLED")
+    boipa_logger.info("="*60)
+
     # Disable session modification to avoid SessionInterrupted errors from BOIPA
     try:
         request.session.modified = False
     except AttributeError:
         pass  # Session might not exist when called from external gateway
 
-    boipa_logger.debug(f"Payment response - Method: {request.method}")
-    boipa_logger.debug(f"Payment response - GET params: {request.GET.dict()}")
-    boipa_logger.debug(f"Payment response - POST params: {request.POST.dict()}")
+    boipa_logger.info(f"📋 Method: {request.method}")
+    boipa_logger.info(f"📋 Path: {request.path}")
+    boipa_logger.info(f"📋 GET params: {request.GET.dict()}")
+    boipa_logger.info(f"📋 POST params: {request.POST.dict()}")
+    boipa_logger.info(f"📋 Headers: {dict(request.headers)}")
+
+    try:
+        raw_body = request.body.decode('utf-8')
+        boipa_logger.info(f"📋 Raw body (first 500 chars): {raw_body[:500]}")
+    except:
+        boipa_logger.info(f"📋 Could not read raw body")
 
     # NEW BOIPA API sends JSON in the body
     data = {}

@@ -100,70 +100,85 @@ Now BOIPA can reach: `https://abc123.ngrok.io/boipa/payment-notification/`
 
 ## BOIPA Test Cards
 
-All test card numbers are stored in: `/boipa/test_cards.py`
+**IMPORTANT:** You MUST use the official test cards from the BOIPA Developer Portal. These test cards are updated as of January 2026.
 
-### Quick Reference
+Source: https://developer.globalpay.com → Getting Started → Test Cards
 
-| Scenario | Card Number | CVV | PIN | Expected Result |
-|----------|-------------|-----|-----|-----------------|
-| **Success (Frictionless)** | 4539797605519795 | 123 | N/A | ✅ Payment succeeds |
-| **Success (Challenge)** | 4111111111111111 | 123 | 1234 | ✅ Payment succeeds after PIN |
-| **Decline (Authentication)** | 4923842962410313 | 123 | N/A | ❌ Authentication rejected |
-| **Fail (Wrong PIN)** | 4111111111111111 | 123 | 1111 | ❌ Challenge failed |
+### Quick Reference - Official BOIPA Sandbox Test Cards
+
+| Card Type | Card Number | Expiry | CVV | Expected Result |
+|-----------|-------------|--------|-----|-----------------|
+| **Visa** | 4263970000005262 | 05/39 | 123 | ✅ Successful transaction |
+| **Visa** | 4024007134364842 | 05/39 | 123 | ✅ Successful transaction |
+| **Mastercard** | 2223000010005780 | 05/39 | 900 | ✅ Successful transaction |
+| **Mastercard** | 5425230000004415 | 05/39 | 123 | ✅ Successful transaction |
+| **American Express** | 374101000000608 | 05/39 | 1234 | ✅ Successful transaction |
+| **Diners Club** | 36256000000725 | 05/39 | 1234 | ✅ Successful transaction |
+| **Discover** | 6011000000000087 | 05/39 | 599 | ✅ Successful transaction |
+| **JCB** | 3566000000000000 | 05/39 | 599 | ✅ Successful transaction |
+
+**Note:** All test cards use expiry `05/39` in the BOIPA sandbox. Do NOT use random test card numbers - they will be declined.
 
 ### Detailed Test Cards
 
-#### ✅ Successful Payment - Frictionless Flow
+#### ✅ Successful Payment - Visa (Recommended for Quick Testing)
 
-**Visa:**
-- Card: `4539797605519795`
+**Primary Visa Card:**
+- Card: `4263970000005262`
 - CVV: `123`
-- Expiry: Any future date (e.g., 12/2025)
-- **Flow:** No 3DS challenge, instant auth
-- **Best for:** Quick success testing
+- Expiry: `05/39`
+- **Flow:** Instant approval
+- **Best for:** Quick success testing, most commonly used
 
-**Mastercard:**
-- Card: `5307808167635130`
+**Alternative Visa Card:**
+- Card: `4024007134364842`
 - CVV: `123`
-- Expiry: 12/2025
+- Expiry: `05/39`
 
-#### ✅ Successful Payment - Challenge Flow (3DS 2.1)
+#### ✅ Successful Payment - Mastercard
 
-**Visa:**
-- Card: `4111111111111111`
+**Primary Mastercard:**
+- Card: `2223000010005780`
+- CVV: `900`
+- Expiry: `05/39`
+- **Flow:** Instant approval
+
+**Alternative Mastercard:**
+- Card: `5425230000004415`
 - CVV: `123`
-- Expiry: 12/2025
-- **PIN:** `1234` (enter this in 3DS challenge)
-- **Flow:** 3DS challenge appears, enter PIN 1234
-- **Best for:** Testing 3D Secure flow
+- Expiry: `05/39`
 
-**Mastercard:**
-- Card: `5454545454545454`
-- CVV: `123`
-- PIN: `1234`
+#### ✅ Successful Payment - American Express
 
-#### ❌ Failed Payment - Authentication Rejected
+**American Express:**
+- Card: `374101000000608`
+- CVV: `1234`
+- Expiry: `05/39`
+- **Note:** Amex uses 4-digit CVV
 
-**Visa:**
-- Card: `4923842962410313`
-- CVV: `123`
-- Expiry: 12/2025
-- **Flow:** Frictionless but authentication rejected by bank
-- **Best for:** Testing payment decline handling
+#### ✅ Successful Payment - Other Cards
 
-**Mastercard:**
-- Card: `5498925716675612`
-- CVV: `123`
+**Diners Club:**
+- Card: `36256000000725`
+- CVV: `1234`
+- Expiry: `05/39`
 
-#### ❌ Failed Payment - Wrong PIN
+**Discover:**
+- Card: `6011000000000087`
+- CVV: `599`
+- Expiry: `05/39`
 
-**Visa:**
-- Card: `4111111111111111` (same as challenge success)
-- CVV: `123`
-- **PIN:** `1111` (WRONG - this triggers failure)
-- Correct PIN would be `1234`
-- **Flow:** 3DS challenge appears, enter wrong PIN 1111
-- **Best for:** Testing authentication failure
+**JCB:**
+- Card: `3566000000000000`
+- CVV: `599`
+- Expiry: `05/39`
+
+#### ⚠️ Testing Declined Payments
+
+For testing declined payments, check the BOIPA Developer Portal for current test cases:
+- https://developer.globalpay.com → Getting Started → Test Cases
+
+The test cases may include specific amount-based testing or response code testing.
 
 ## Complete Test Workflow
 
@@ -187,9 +202,9 @@ All test card numbers are stored in: `/boipa/test_cards.py`
 3. **Payment Page**
    - You'll be redirected to BOIPA Hosted Payment Page
    - **Enter test card:**
-     - Card: `4539797605519795`
+     - Card: `4263970000005262`
      - CVV: `123`
-     - Expiry: `12/2025`
+     - Expiry: `05/39`
      - Name: Any name
    - Click "Pay"
 
@@ -223,19 +238,15 @@ All test card numbers are stored in: `/boipa/test_cards.py`
    - Proceed to checkout
 
 2. **Payment**
-   - **Use challenge flow card to test 3DS:**
-     - Card: `4111111111111111`
+   - **Use standard test card:**
+     - Card: `4263970000005262`
      - CVV: `123`
-     - Expiry: `12/2025`
+     - Expiry: `05/39`
    - Click "Pay"
 
-3. **3DS Challenge**
-   - 3D Secure page appears
-   - **Enter PIN:** `1234`
-   - Submit
+   **Note:** For 3DS challenge testing, check BOIPA Developer Portal for current 3DS test cards.
 
-4. **Expected Flow:**
-   - ✅ 3DS authentication successful
+3. **Expected Flow:**
    - ✅ Payment processed
    - ✅ Redirected to confirmation
    - ✅ Webhook fires
@@ -243,7 +254,7 @@ All test card numbers are stored in: `/boipa/test_cards.py`
    - ✅ **LessonEnrollment created** ⭐
    - ✅ Email sent
 
-5. **Verification:**
+4. **Verification:**
    - Check Lesson Orders in admin
    - **Most Important:** Check Lesson Enrollments
    - Verify enrollment exists:
@@ -263,11 +274,9 @@ All test card numbers are stored in: `/boipa/test_cards.py`
    - Proceed to checkout
 
 2. **Payment with Declined Card**
-   - **Use authentication rejected card:**
-     - Card: `4923842962410313`
-     - CVV: `123`
-     - Expiry: `12/2025`
-   - Click "Pay"
+   - **Note:** Check BOIPA Developer Portal for current decline test cases.
+   - Declined payments may be tested using specific amounts or test cards.
+   - See: https://developer.globalpay.com → Getting Started → Test Cases
 
 3. **Expected Flow:**
    - ❌ Payment declined
@@ -297,8 +306,9 @@ All test card numbers are stored in: `/boipa/test_cards.py`
    - Checkout
 
 3. **Payment**
-   - Use: `5307808167635130` (Mastercard frictionless)
-   - CVV: `123`
+   - Use: `2223000010005780` (Mastercard)
+   - CVV: `900`
+   - Expiry: `05/39`
 
 4. **Expected Flow:**
    - ✅ Payment succeeds
@@ -468,29 +478,30 @@ Before switching to production BOIPA:
 
 ## Quick Test Card Reference
 
-**Copy-paste these for quick testing:**
+**Copy-paste these for quick testing (Updated January 2026):**
 
-### Success (Quick Test)
+### ✅ Success - Visa (RECOMMENDED)
 ```
-Card: 4539797605519795
+Card: 4263970000005262
 CVV: 123
-Expiry: 12/2025
-```
-
-### Success (With 3DS Challenge)
-```
-Card: 4111111111111111
-CVV: 123
-Expiry: 12/2025
-PIN: 1234
+Expiry: 05/39
 ```
 
-### Decline
+### ✅ Success - Mastercard
 ```
-Card: 4923842962410313
-CVV: 123
-Expiry: 12/2025
+Card: 2223000010005780
+CVV: 900
+Expiry: 05/39
 ```
+
+### ✅ Success - American Express
+```
+Card: 374101000000608
+CVV: 1234
+Expiry: 05/39
+```
+
+**Note:** For decline testing and 3DS challenge flows, check the BOIPA Developer Portal for current test cases.
 
 ## Additional Resources
 

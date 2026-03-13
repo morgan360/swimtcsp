@@ -49,6 +49,9 @@ def info_view(request, section=None):
             email_msg.send()
             success = True
 
+    if success:
+        form = ContactForm()  # Reset form after successful submission
+
     if section in ['about', 'contact', 'both']:
         return render(request, 'info.html', {
             'section': section,

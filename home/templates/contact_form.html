@@ -19,8 +19,10 @@
         <div class="box">
           <form method="post">
             {% csrf_token %}
-            
+            {{ form.website }}
+
             {% for field in form %}
+              {% if field.name != "website" %}
               <div class="field">
                 <label class="label" for="{{ field.id_for_label }}">
                   {{ field.label }}
@@ -35,6 +37,7 @@
                   <p class="help is-danger">{{ error }}</p>
                 {% endfor %}
               </div>
+              {% endif %}
             {% endfor %}
 
             <div class="field mt-5">

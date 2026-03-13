@@ -20,29 +20,34 @@ def info_view(request, section=None):
     form = ContactForm(request.POST or None)
     success = False
     if request.method == 'POST' and form.is_valid():
-        name = form.cleaned_data['name']
-        email = form.cleaned_data['email']
-        subject = form.cleaned_data['subject']
-        message = form.cleaned_data['message']
+        # Honeypot check: if the hidden field was filled, silently pretend success
+        # (bots think they succeeded, no email is sent)
+        if form.cleaned_data.get('website'):
+            success = True
+        else:
+            name = form.cleaned_data['name']
+            email = form.cleaned_data['email']
+            subject = form.cleaned_data['subject']
+            message = form.cleaned_data['message']
 
-        html_message = render_to_string(
-            'emails/contact_confirmation.html',
-            {'name': name, 'email': email, 'subject': subject, 'message': message}
-        )
+            html_message = render_to_string(
+                'emails/contact_confirmation.html',
+                {'name': name, 'email': email, 'subject': subject, 'message': message}
+            )
 
-        from django.core.mail import EmailMessage
+            from django.core.mail import EmailMessage
 
-        email_msg = EmailMessage(
-            subject=f"Contact Us - {subject}",
-            body='',
-            from_email=settings.FROM_EMAIL,
-            to=['swimming@tcsp.ie'],
-            reply_to=['swimming@tcsp.ie'],
-        )
-        email_msg.content_subtype = 'html'
-        email_msg.body = html_message
-        email_msg.send()
-        success = True
+            email_msg = EmailMessage(
+                subject=f"Contact Us - {subject}",
+                body='',
+                from_email=settings.FROM_EMAIL,
+                to=['swimming@tcsp.ie'],
+                reply_to=['swimming@tcsp.ie'],
+            )
+            email_msg.content_subtype = 'html'
+            email_msg.body = html_message
+            email_msg.send()
+            success = True
 
     if section in ['about', 'contact', 'both']:
         return render(request, 'info.html', {

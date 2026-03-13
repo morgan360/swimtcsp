@@ -205,8 +205,10 @@
       <!-- Form -->
       <form method="post" class="p-8">
         {% csrf_token %}
+        {{ form.website }}
         <div class="space-y-6">
           {% for field in form %}
+          {% if field.name != "website" %}
           <div>
             <label class="block text-lg font-semibold text-blue-900 mb-3">{{ field.label }}</label>
             {% if field.name == "name" %}
@@ -230,6 +232,7 @@
             </p>
             {% endfor %}
           </div>
+          {% endif %}
           {% endfor %}
         </div>
 

@@ -111,6 +111,7 @@ INSTALLED_APPS = [
     'hijack',
     'hijack.contrib.admin',  # add to admin panel
     'widget_tweaks', # Allows adding css to fields in form templates directly
+    'django_recaptcha',
     'django_browser_reload',  # when debug load automaticaly browser
     'django_extensions', # For Documentation
     'rest_framework',
@@ -394,3 +395,7 @@ MAINTENANCE_MODE_IGNORE_IP_ADDRESSES = [
     "18.194.5.49",   # PythonAnywhere webapp server
     # add your home IP too if needed
 ]
+
+# Google reCAPTCHA v2
+RECAPTCHA_PUBLIC_KEY = config('RECAPTCHA_PUBLIC_KEY')
+RECAPTCHA_PRIVATE_KEY = config('RECAPTCHA_PRIVATE_KEY')

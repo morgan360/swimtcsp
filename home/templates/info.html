@@ -208,7 +208,7 @@
         {{ form.website }}
         <div class="space-y-6">
           {% for field in form %}
-          {% if field.name != "website" %}
+          {% if field.name != "website" and field.name != "captcha" %}
           <div>
             <label class="block text-lg font-semibold text-blue-900 mb-3">{{ field.label }}</label>
             {% if field.name == "name" %}
@@ -233,6 +233,15 @@
             {% endfor %}
           </div>
           {% endif %}
+          {% endfor %}
+        </div>
+
+        <div class="mt-6">
+          {{ form.captcha }}
+          {% for error in form.captcha.errors %}
+          <p class="text-sm text-red-600 mt-2 flex items-center">
+            <i class="fas fa-exclamation-circle mr-1"></i>{{ error }}
+          </p>
           {% endfor %}
         </div>
 

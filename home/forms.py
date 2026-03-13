@@ -2,6 +2,8 @@
 import re
 from django import forms
 from django.core.exceptions import ValidationError
+from django_recaptcha.fields import ReCaptchaField
+from django_recaptcha.widgets import ReCaptchaV2Checkbox
 
 
 class ContactForm(forms.Form):
@@ -9,6 +11,7 @@ class ContactForm(forms.Form):
     email = forms.EmailField()
     subject = forms.CharField(max_length=200)
     message = forms.CharField(widget=forms.Textarea)
+    captcha = ReCaptchaField(widget=ReCaptchaV2Checkbox())
 
     # Honeypot field - hidden from humans, bots will fill it in
     website = forms.CharField(

@@ -7,6 +7,24 @@ This document covers deployment procedures for the TCSP Django application to Py
 - **Dev Server:** https://dev-morganmck.eu.pythonanywhere.com
 - **Production:** https://www.tcsp.ie
 
+## DNS Infrastructure
+
+The production domain `tcsp.ie` uses **Cloudflare** for DNS management.
+
+- **Domain Registrar:** 101domain
+- **DNS Provider:** Cloudflare
+- **Nameservers:** Cloudflare nameservers (assigned by Cloudflare)
+
+### DNS Records Overview
+
+- **Website:** CNAME to `webapp-23139.eu.pythonanywhere.com`
+- **Email:** Microsoft 365 (MX, SPF, DKIM, DMARC records)
+- **Email Marketing:** Mailchimp (authenticated via DKIM)
+
+For complete DNS configuration and migration instructions, see:
+- [DNS Migration to Cloudflare Guide](/docs/DNS_MIGRATION_TO_CLOUDFLARE.md)
+- [DNS Records Reference](/docs/DNS_RECORDS_REFERENCE.md)
+
 ## Quick Deployment
 
 ### Deploy to Dev Server

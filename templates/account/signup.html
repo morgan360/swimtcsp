@@ -43,6 +43,9 @@
 				</div>
 				{% endif %}
 				{% for field in form %}
+				{% if field.name == "captcha" %}
+				{# reCAPTCHA rendered separately below #}
+				{% else %}
 				<div class="mb-5">
 					{% if field.field.widget.input_type == "checkbox" %}
 					{% if field.name == "lessons" %}
@@ -122,7 +125,18 @@
 					</div>
 					{% endfor %}
 				</div>
+				{% endif %}
 				{% endfor %}
+
+				{# Google reCAPTCHA #}
+				<div class="mt-4 mb-2">
+					{{ form.captcha }}
+					{% for error in form.captcha.errors %}
+					<p class="text-sm text-red-600 mt-2 flex items-center">
+						<i class="fas fa-exclamation-circle mr-1"></i>{{ error }}
+					</p>
+					{% endfor %}
+				</div>
 
 				<div class="mt-6">
 					<button type="submit"

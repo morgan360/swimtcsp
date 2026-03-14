@@ -5,6 +5,8 @@ from django.contrib.auth.models import Group
 from django.contrib.auth import get_user_model
 from .models import  Swimling
 from phonenumber_field.formfields import PhoneNumberField
+from django_recaptcha.fields import ReCaptchaField
+from django_recaptcha.widgets import ReCaptchaV2Checkbox
 
 # Get the custom user model
 User = get_user_model()
@@ -16,6 +18,7 @@ class CustomSignupForm(SignupForm):
     lessons = forms.BooleanField(label="I wish to sign up for swimming lessons.",
                                  required=False)
     phone_number = PhoneNumberField(region='IE', required=True, label="Phone Number", help_text="Irish numbers only (e.g. 085..., 01..., or +353 ...)")
+    captcha = ReCaptchaField(widget=ReCaptchaV2Checkbox())
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

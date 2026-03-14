@@ -4,7 +4,7 @@
 {% drawer_menu as drawer_menus %}
 
 <nav class="bg-blue-900/80 backdrop-blur-sm border-b border-blue-200/50 shadow-lg px-4 py-3 z-[1000] relative"
-     x-data="{ mobileOpen: false, showLogoutModal: false }"
+     x-data="{ mobileOpen: false }"
      style="background-image: url('/static/img/logo.png'); background-repeat: no-repeat; background-size: cover; background-position: center;">
 
     <!-- Desktop Shell -->
@@ -98,7 +98,7 @@
                             </li>
                             <li>
                                 <a href="#"
-                                   @click.prevent="showLogoutModal = true; open = false"
+                                   @click.prevent="$dispatch('show-logout-modal'); open = false"
                                    class="block px-4 py-3 rounded-xl transition-all duration-200 bg-gradient-to-r from-red-50 to-pink-50 text-red-600 hover:from-red-100 hover:to-pink-100 hover:text-red-700 border border-red-100 font-semibold text-center">
                                     <i class="fas fa-sign-out-alt mr-3"></i>
                                     Logout

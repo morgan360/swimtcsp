@@ -1,0 +1,72 @@
+{% extends "admin/change_list.html" %}
+
+{% block extrahead %}
+{{ block.super }}
+<style>
+  /* Scrollable table wrapper */
+  #changelist .results {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Top scrollbar container */
+  .top-scroll-wrapper {
+    overflow-x: auto;
+    overflow-y: hidden;
+    height: 20px;
+    margin-bottom: -1px;
+  }
+  .top-scroll-inner {
+    height: 1px;
+  }
+
+  /* Make table cells not wrap */
+  #changelist table#result_list td,
+  #changelist table#result_list th {
+    white-space: nowrap;
+  }
+
+  /* Tooltip styling for truncated text */
+  #changelist table#result_list td span[title] {
+    cursor: help;
+    border-bottom: 1px dotted #999;
+  }
+</style>
+{% endblock %}
+
+{% block result_list %}
+<div class="top-scroll-wrapper" id="topScroll">
+  <div class="top-scroll-inner"></div>
+</div>
+{{ block.super }}
+<script>
+(function() {
+  const topScroll = document.getElementById('topScroll');
+  const bottomScroll = document.querySelector('#changelist .results');
+  if (!topScroll || !bottomScroll) return;
+
+  // Match the inner div width to the table width
+  function syncWidth() {
+    const table = bottomScroll.querySelector('table');
+    if (table) {
+      topScroll.querySelector('.top-scroll-inner').style.width = table.scrollWidth + 'px';
+    }
+  }
+  syncWidth();
+  window.addEventListener('resize', syncWidth);
+
+  // Sync scrolling between top and bottom scrollbars
+  let syncing = false;
+  topScroll.addEventListener('scroll', function() {
+    if (syncing) { syncing = false; return; }
+    syncing = true;
+    bottomScroll.scrollLeft = topScroll.scrollLeft;
+  });
+  bottomScroll.addEventListener('scroll', function() {
+    if (syncing) { syncing = false; return; }
+    syncing = true;
+    topScroll.scrollLeft = bottomScroll.scrollLeft;
+  });
+})();
+</script>
+{% endblock %}

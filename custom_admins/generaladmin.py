@@ -3,6 +3,7 @@ from django.contrib.admin import AdminSite, TabularInline, ModelAdmin
 from navigation.models import MenuGroup, MenuItem
 from waiting_list.models import WaitingList  # ✅ Import your model
 from django.contrib import admin, messages
+from django.utils.html import format_html
 from progress.models import (
     CoreAquaticSkill,
     Skill,
@@ -87,20 +88,54 @@ class HasSiblingEnrolledFilter(SimpleListFilter):
 
         return queryset
 class WaitingListAdmin(admin.ModelAdmin):
+    change_list_template = 'admin/waiting_list/waitinglist/change_list.html'
+
     list_display = (
-        'swimling', 'product', 'get_guardian', 'is_transfer_request', 'notes',
-        'has_enrolled_sibling', 'is_notified', 'assigned_lesson', 'completed', 'created_at'
+        'swimling', 'get_product', 'get_guardian', 'get_guardian_email', 'get_guardian_phone',
+        'is_transfer_request', 'get_notes',
+        'has_enrolled_sibling', 'is_notified', 'assigned_lesson', 'completed', 'get_created_at'
     )
     list_filter = ('is_notified', 'is_transfer_request', 'created_at', HasSiblingEnrolledFilter)
 
     search_fields = (
-        'swimling__first_name', 'swimling__last_name', 'product__name', 'swimling__guardian__username'
+        'swimling__first_name', 'swimling__last_name', 'product__name', 'swimling__guardian__email'
     )
 
     def get_guardian(self, obj):
         return obj.swimling.guardian
     get_guardian.short_description = "Guardian"
     get_guardian.admin_order_field = 'swimling__guardian'
+
+    def get_guardian_email(self, obj):
+        return obj.swimling.guardian.email
+    get_guardian_email.short_description = "Email"
+    get_guardian_email.admin_order_field = 'swimling__guardian__email'
+
+    def get_guardian_phone(self, obj):
+        phone = obj.swimling.guardian.mobile_phone
+        return phone if phone else '-'
+    get_guardian_phone.short_description = "Phone"
+
+    def get_product(self, obj):
+        name = str(obj.product)
+        if len(name) > 50:
+            return format_html('<span title="{}">{}&hellip;</span>', name, name[:50])
+        return name
+    get_product.short_description = "Product"
+    get_product.admin_order_field = 'product'
+
+    def get_notes(self, obj):
+        if not obj.notes:
+            return '-'
+        if len(obj.notes) > 50:
+            return format_html('<span title="{}">{}&hellip;</span>', obj.notes, obj.notes[:50])
+        return obj.notes
+    get_notes.short_description = "Notes"
+
+    def get_created_at(self, obj):
+        return obj.created_at.strftime('%d %b %Y')
+    get_created_at.short_description = "Created"
+    get_created_at.admin_order_field = 'created_at'
 
     def has_enrolled_sibling(self, obj):
         current_term_id = Term.get_current_term_id()
@@ -114,7 +149,7 @@ class WaitingListAdmin(admin.ModelAdmin):
             swimling=obj.swimling
         ).exists()
     has_enrolled_sibling.short_description = "Sibling Enrolled"
-    has_enrolled_sibling.boolean = True  # ✅ shows a tick/cross in the admin
+    has_enrolled_sibling.boolean = True
 
 try:
     general_admin_site.unregister(MenuItem)

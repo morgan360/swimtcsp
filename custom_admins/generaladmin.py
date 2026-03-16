@@ -4,6 +4,8 @@ from navigation.models import MenuGroup, MenuItem
 from waiting_list.models import WaitingList  # ✅ Import your model
 from django.contrib import admin, messages
 from django.utils.html import format_html
+from import_export import resources, fields
+from import_export.admin import ExportActionMixin
 from progress.models import (
     CoreAquaticSkill,
     Skill,
@@ -87,7 +89,58 @@ class HasSiblingEnrolledFilter(SimpleListFilter):
             return queryset.exclude(id__in=swimling_ids_with_sibling)
 
         return queryset
-class WaitingListAdmin(admin.ModelAdmin):
+
+class WaitingListResource(resources.ModelResource):
+    swimling_first_name = fields.Field(column_name='First Name')
+    swimling_last_name = fields.Field(column_name='Last Name')
+    product_name = fields.Field(column_name='Product')
+    guardian_name = fields.Field(column_name='Guardian')
+    guardian_email = fields.Field(column_name='Email')
+    guardian_phone = fields.Field(column_name='Phone')
+    notes = fields.Field(attribute='notes', column_name='Notes')
+    is_transfer_request = fields.Field(attribute='is_transfer_request', column_name='Transfer Request')
+    is_notified = fields.Field(attribute='is_notified', column_name='Notified')
+    assigned_lesson_name = fields.Field(column_name='Assigned Lesson')
+    completed = fields.Field(attribute='completed', column_name='Completed')
+    created_at = fields.Field(column_name='Created')
+
+    class Meta:
+        model = WaitingList
+        fields = (
+            'swimling_first_name', 'swimling_last_name', 'product_name',
+            'guardian_name', 'guardian_email', 'guardian_phone',
+            'is_transfer_request', 'notes', 'is_notified',
+            'assigned_lesson_name', 'completed', 'created_at',
+        )
+        export_order = fields
+
+    def dehydrate_swimling_first_name(self, obj):
+        return obj.swimling.first_name
+
+    def dehydrate_swimling_last_name(self, obj):
+        return obj.swimling.last_name
+
+    def dehydrate_product_name(self, obj):
+        return str(obj.product)
+
+    def dehydrate_guardian_name(self, obj):
+        return str(obj.swimling.guardian)
+
+    def dehydrate_guardian_email(self, obj):
+        return obj.swimling.guardian.email
+
+    def dehydrate_guardian_phone(self, obj):
+        phone = obj.swimling.guardian.mobile_phone
+        return str(phone) if phone else ''
+
+    def dehydrate_assigned_lesson_name(self, obj):
+        return str(obj.assigned_lesson) if obj.assigned_lesson else ''
+
+    def dehydrate_created_at(self, obj):
+        return obj.created_at.strftime('%d %b %Y')
+
+class WaitingListAdmin(ExportActionMixin, admin.ModelAdmin):
+    resource_classes = [WaitingListResource]
     change_list_template = 'admin/waiting_list/waitinglist/change_list.html'
 
     list_display = (

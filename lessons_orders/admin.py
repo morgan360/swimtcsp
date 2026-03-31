@@ -25,6 +25,7 @@ def refund_orders(modeladmin, request, queryset):
 class OrderAdmin(admin.ModelAdmin):
     list_display = ("id", "user", "paid", "payment_status", "amount", "created")
     list_filter = ['paid', 'created', 'updated']
+    search_fields = ['user__email', 'user__first_name', 'user__last_name', 'id']
     actions = [refund_orders]
     inlines = [OrderItemInline]
 

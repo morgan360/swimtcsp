@@ -1,0 +1,64 @@
+<!-- Summary Cards -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6" id="summary-cards">
+  <div class="bg-white shadow rounded-lg p-4">
+    <h3 class="text-sm font-medium text-gray-500">Lessons</h3>
+    <p class="text-2xl font-bold text-blue-600">&euro;{{ summary.lessons_total|floatformat:2 }}</p>
+  </div>
+  <div class="bg-white shadow rounded-lg p-4">
+    <h3 class="text-sm font-medium text-gray-500">Swims</h3>
+    <p class="text-2xl font-bold text-emerald-600">&euro;{{ summary.swims_total|floatformat:2 }}</p>
+  </div>
+  <div class="bg-white shadow rounded-lg p-4">
+    <h3 class="text-sm font-medium text-gray-500">Schools</h3>
+    <p class="text-2xl font-bold text-amber-600">&euro;{{ summary.schools_total|floatformat:2 }}</p>
+  </div>
+  <div class="bg-white shadow rounded-lg p-4 border-2 border-blue-200">
+    <h3 class="text-sm font-medium text-gray-500">Grand Total</h3>
+    <p class="text-2xl font-bold text-gray-900">&euro;{{ summary.grand_total|floatformat:2 }}</p>
+    <p class="text-xs text-gray-400">{{ summary.order_count }} orders</p>
+  </div>
+</div>
+
+<!-- Data Table -->
+<div class="overflow-x-auto bg-white rounded-lg shadow">
+  <table class="w-full text-sm">
+    <thead class="bg-gray-50 border-b">
+      <tr>
+        <th class="px-4 py-3 text-left font-semibold text-gray-600">Period</th>
+        <th class="px-4 py-3 text-right font-semibold text-blue-600">Lessons</th>
+        <th class="px-4 py-3 text-right font-semibold text-emerald-600">Swims</th>
+        <th class="px-4 py-3 text-right font-semibold text-amber-600">Schools</th>
+        <th class="px-4 py-3 text-right font-semibold text-gray-900">Total</th>
+        <th class="px-4 py-3 text-right font-semibold text-gray-600">Orders</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-gray-100">
+      {% for row in rows %}
+      <tr class="hover:bg-gray-50">
+        <td class="px-4 py-2 font-medium text-gray-700">{{ row.label }}</td>
+        <td class="px-4 py-2 text-right text-blue-600">&euro;{{ row.lessons|floatformat:2 }}</td>
+        <td class="px-4 py-2 text-right text-emerald-600">&euro;{{ row.swims|floatformat:2 }}</td>
+        <td class="px-4 py-2 text-right text-amber-600">&euro;{{ row.schools|floatformat:2 }}</td>
+        <td class="px-4 py-2 text-right font-bold text-gray-900">&euro;{{ row.total|floatformat:2 }}</td>
+        <td class="px-4 py-2 text-right text-gray-500">{{ row.count }}</td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="6" class="px-4 py-8 text-center text-gray-400">No paid orders found for this period.</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+    {% if rows %}
+    <tfoot class="bg-gray-50 border-t-2 border-gray-200">
+      <tr class="font-bold">
+        <td class="px-4 py-3 text-gray-700">Totals</td>
+        <td class="px-4 py-3 text-right text-blue-600">&euro;{{ summary.lessons_total|floatformat:2 }}</td>
+        <td class="px-4 py-3 text-right text-emerald-600">&euro;{{ summary.swims_total|floatformat:2 }}</td>
+        <td class="px-4 py-3 text-right text-amber-600">&euro;{{ summary.schools_total|floatformat:2 }}</td>
+        <td class="px-4 py-3 text-right text-gray-900">&euro;{{ summary.grand_total|floatformat:2 }}</td>
+        <td class="px-4 py-3 text-right text-gray-500">{{ summary.order_count }}</td>
+      </tr>
+    </tfoot>
+    {% endif %}
+  </table>
+</div>

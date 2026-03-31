@@ -1,0 +1,173 @@
+{% extends "dashboard/base_dashboard.html" %}
+{% load static %}
+
+{% block title %}Revenue Report - TCSP{% endblock %}
+
+{% block content %}
+<div x-data="revenueReport()" x-init="loadChart()">
+
+  <!-- Header -->
+  <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+    <h1 class="text-2xl font-bold text-gray-800 mb-4 md:mb-0">
+      <i class="fas fa-chart-bar mr-2 text-blue-600"></i>Revenue Report
+    </h1>
+
+    <!-- Export Buttons -->
+    <div class="flex items-center space-x-2">
+      <a :href="csvUrl()" class="inline-flex items-center px-3 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-lg transition">
+        <i class="fas fa-file-csv mr-1.5"></i> Export CSV
+      </a>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="bg-white rounded-lg shadow p-4 mb-6">
+    <div class="flex flex-wrap items-end gap-4">
+
+      <!-- Granularity -->
+      <div>
+        <label class="block text-sm font-medium text-gray-600 mb-1">View by</label>
+        <div class="inline-flex rounded-lg shadow-sm">
+          <template x-for="g in ['day', 'week', 'month', 'year']" :key="g">
+            <button
+              @click="granularity = g; if (g !== 'day') month = ''; reload()"
+              :class="granularity === g
+                ? 'bg-blue-600 text-white'
+                : 'bg-white text-gray-700 hover:bg-gray-50'"
+              class="px-4 py-2 text-sm font-medium border border-gray-300 first:rounded-l-lg last:rounded-r-lg -ml-px first:ml-0 transition"
+              x-text="g.charAt(0).toUpperCase() + g.slice(1)">
+            </button>
+          </template>
+        </div>
+      </div>
+
+      <!-- Year -->
+      <div>
+        <label class="block text-sm font-medium text-gray-600 mb-1">Year</label>
+        <select x-model="year" @change="reload()"
+                class="block w-28 rounded-lg border-gray-300 shadow-sm text-sm focus:ring-blue-500 focus:border-blue-500">
+          {% for y in available_years %}
+          <option value="{{ y }}">{{ y }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- Month (only for day view) -->
+      <div x-show="granularity === 'day'" x-transition>
+        <label class="block text-sm font-medium text-gray-600 mb-1">Month</label>
+        <select x-model="month" @change="reload()"
+                class="block w-40 rounded-lg border-gray-300 shadow-sm text-sm focus:ring-blue-500 focus:border-blue-500">
+          <option value="">All months</option>
+          {% for num, name in months %}
+          <option value="{{ num }}">{{ name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Chart -->
+  <div class="bg-white rounded-lg shadow p-4 mb-6">
+    <canvas id="revenueChart" height="100"></canvas>
+  </div>
+
+  <!-- Table + Summary (HTMX target) -->
+  <div id="revenue-data">
+    {% include "finances/partials/revenue_table.html" %}
+  </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<script>
+function revenueReport() {
+  return {
+    granularity: '{{ granularity }}',
+    year: '{{ year }}',
+    month: '{{ month }}',
+    chart: null,
+
+    params() {
+      let p = `granularity=${this.granularity}&year=${this.year}`;
+      if (this.month) p += `&month=${this.month}`;
+      return p;
+    },
+
+    csvUrl() {
+      return `{% url 'finances:revenue_export_csv' %}?${this.params()}`;
+    },
+
+    reload() {
+      // Update table via HTMX
+      htmx.ajax('GET', `{% url 'finances:revenue_report_table' %}?${this.params()}`, {
+        target: '#revenue-data',
+        swap: 'innerHTML'
+      });
+      // Update chart
+      this.loadChart();
+    },
+
+    async loadChart() {
+      const resp = await fetch(`{% url 'finances:revenue_chart_data' %}?${this.params()}`);
+      const data = await resp.json();
+
+      if (this.chart) this.chart.destroy();
+
+      const ctx = document.getElementById('revenueChart').getContext('2d');
+      this.chart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: data.labels,
+          datasets: [
+            {
+              label: 'Lessons',
+              data: data.datasets.lessons,
+              backgroundColor: 'rgba(37, 99, 235, 0.7)',
+              borderColor: 'rgba(37, 99, 235, 1)',
+              borderWidth: 1,
+            },
+            {
+              label: 'Swims',
+              data: data.datasets.swims,
+              backgroundColor: 'rgba(16, 185, 129, 0.7)',
+              borderColor: 'rgba(16, 185, 129, 1)',
+              borderWidth: 1,
+            },
+            {
+              label: 'Schools',
+              data: data.datasets.schools,
+              backgroundColor: 'rgba(245, 158, 11, 0.7)',
+              borderColor: 'rgba(245, 158, 11, 1)',
+              borderWidth: 1,
+            },
+          ]
+        },
+        options: {
+          responsive: true,
+          interaction: { intersect: false, mode: 'index' },
+          plugins: {
+            legend: { position: 'top' },
+            tooltip: {
+              callbacks: {
+                label: ctx => `${ctx.dataset.label}: \u20AC${ctx.parsed.y.toFixed(2)}`
+              }
+            }
+          },
+          scales: {
+            x: { stacked: true },
+            y: {
+              stacked: true,
+              ticks: { callback: v => '\u20AC' + v.toLocaleString() },
+              beginAtZero: true,
+            }
+          }
+        }
+      });
+    }
+  };
+}
+</script>
+{% endblock %}

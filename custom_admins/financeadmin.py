@@ -74,6 +74,7 @@ class FinanceAdminSite(AdminSite):
     site_header = "Finance Admin"
     site_title = "Finance Admin Portal"
     index_title = "Finance Overview"
+    index_template = "admin/financeadmin/index.html"
 
     def each_context(self, request):
         context = super().each_context(request)

@@ -1,6 +1,7 @@
 from django.contrib.admin import AdminSite
 from django.contrib import admin
 from anseo.models import AttendanceRoll, AttendanceEntry
+from utils.admin_filters import SearchableRelatedDropdownFilter
 
 
 class AttendanceAdminSite(AdminSite):
@@ -14,7 +15,7 @@ attendance_admin_site = AttendanceAdminSite(name='attendanceadmin')
 class AttendanceRollAdmin(admin.ModelAdmin):
     list_display = ('product', 'term', 'window_start', 'window_end', 'created_by', 'created_at')
     search_fields = ('product__name', 'term__label')
-    list_filter = ('product', 'term')
+    list_filter = [('product', SearchableRelatedDropdownFilter), ('term', SearchableRelatedDropdownFilter)]
     readonly_fields = ('created_by', 'created_at')
 
 

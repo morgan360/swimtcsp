@@ -7,7 +7,7 @@ from django_admin_listfilter_dropdown.filters import DropdownFilter, RelatedDrop
 
 class OrderItemInline(admin.TabularInline):
     model = OrderItem
-    raw_id_fields = ['product', 'term']
+    autocomplete_fields = ['product', 'term']
 
 
 @admin.action(description="Refund selected orders via BOIPA")

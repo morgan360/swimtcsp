@@ -75,6 +75,11 @@ class FinanceAdminSite(AdminSite):
     site_title = "Finance Admin Portal"
     index_title = "Finance Overview"
 
+    def each_context(self, request):
+        context = super().each_context(request)
+        context['revenue_report_url'] = '/finances/revenue/'
+        return context
+
 
 finance_admin_site = FinanceAdminSite(name="financeadmin")
 

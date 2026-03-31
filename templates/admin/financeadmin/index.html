@@ -1,0 +1,11 @@
+{% extends "admin/index.html" %}
+
+{% block content %}
+<div style="margin: 0 0 1.5em 0; padding: 1em; background: #e8f4ff; border-radius: 8px; border: 1px solid #b3d7ff;">
+  <a href="{{ revenue_report_url }}" style="font-size: 1.1em; font-weight: bold; color: #1a56db; text-decoration: none;">
+    📊 Combined Revenue Report
+  </a>
+  <span style="color: #555; margin-left: 0.5em;">— View revenue across all order types with charts and filters</span>
+</div>
+{{ block.super }}
+{% endblock %}

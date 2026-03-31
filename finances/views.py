@@ -125,7 +125,7 @@ def _build_revenue_data(granularity, year, month=None):
         combined[row['period']]['schools_count'] = row['count']
 
     rows = []
-    for period in sorted(combined.keys()):
+    for period in sorted(combined.keys(), reverse=True):
         d = combined[period]
         total = d['lessons'] + d['swims'] + d['schools']
         total_count = d['lessons_count'] + d['swims_count'] + d['schools_count']
@@ -230,12 +230,14 @@ def revenue_chart_data(request):
 
     rows, summary = _build_revenue_data(granularity, year, month)
 
-    labels = [_format_period_label(r['period'], granularity) for r in rows]
+    # Chart needs chronological order (oldest first)
+    chart_rows = list(reversed(rows))
+    labels = [_format_period_label(r['period'], granularity) for r in chart_rows]
     datasets = {
-        'lessons': [float(r['lessons']) for r in rows],
-        'swims': [float(r['swims']) for r in rows],
-        'schools': [float(r['schools']) for r in rows],
-        'total': [float(r['total']) for r in rows],
+        'lessons': [float(r['lessons']) for r in chart_rows],
+        'swims': [float(r['swims']) for r in chart_rows],
+        'schools': [float(r['schools']) for r in chart_rows],
+        'total': [float(r['total']) for r in chart_rows],
     }
 
     return JsonResponse({

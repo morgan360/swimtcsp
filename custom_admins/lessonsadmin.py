@@ -37,7 +37,7 @@ lessons_admin_site = LessonsAdminSite(name="lessonsadmin")
 class LessonEnrollmentAdmin(admin.ModelAdmin):
     list_display = ["swimling", "simple_term", "lesson", "order_link"]
     list_display_links = ("swimling",)
-    autocomplete_fields = ["swimling"]
+    autocomplete_fields = ["swimling", "lesson"]
     list_filter = [
         ("term", RelatedDropdownFilter),
         ("lesson", SearchableRelatedDropdownFilter),

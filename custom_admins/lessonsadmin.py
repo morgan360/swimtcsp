@@ -4,6 +4,7 @@ from django.utils.html import format_html
 from django.contrib.admin import AdminSite
 from django.urls import path
 from django_admin_listfilter_dropdown.filters import RelatedDropdownFilter
+from utils.admin_filters import SearchableRelatedDropdownFilter
 
 from lessons_bookings.models import LessonEnrollment, Term
 from users.models import Swimling
@@ -39,8 +40,8 @@ class LessonEnrollmentAdmin(admin.ModelAdmin):
     autocomplete_fields = ["swimling"]
     list_filter = [
         ("term", RelatedDropdownFilter),
-        ("lesson", RelatedDropdownFilter),
-        ("lesson__category", RelatedDropdownFilter),
+        ("lesson", SearchableRelatedDropdownFilter),
+        ("lesson__category", SearchableRelatedDropdownFilter),
     ]
     search_fields = [
         "swimling__first_name",

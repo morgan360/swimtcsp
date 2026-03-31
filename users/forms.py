@@ -104,7 +104,7 @@ class NewSwimlingForm(forms.ModelForm):
         model = Swimling
         fields = ['first_name', 'last_name', 'dob', 'sco_role_num', 'notes']
         widgets = {
-            'dob': forms.DateInput(attrs={'type': 'date'}),
+            'dob': forms.DateInput(attrs={'type': 'date', 'required': True}),
             'notes': forms.Textarea(attrs={'rows': 4}),
         }
         labels = {

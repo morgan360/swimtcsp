@@ -93,6 +93,7 @@ class HasSiblingEnrolledFilter(SimpleListFilter):
 class WaitingListResource(resources.ModelResource):
     swimling_first_name = fields.Field(column_name='First Name')
     swimling_last_name = fields.Field(column_name='Last Name')
+    swimling_dob = fields.Field(column_name='DoB')
     product_name = fields.Field(column_name='Product')
     guardian_name = fields.Field(column_name='Guardian')
     guardian_email = fields.Field(column_name='Email')
@@ -107,7 +108,7 @@ class WaitingListResource(resources.ModelResource):
     class Meta:
         model = WaitingList
         fields = (
-            'swimling_first_name', 'swimling_last_name', 'product_name',
+            'swimling_first_name', 'swimling_last_name', 'swimling_dob', 'product_name',
             'guardian_name', 'guardian_email', 'guardian_phone',
             'is_transfer_request', 'notes', 'is_notified',
             'assigned_lesson_name', 'completed', 'created_at',
@@ -119,6 +120,10 @@ class WaitingListResource(resources.ModelResource):
 
     def dehydrate_swimling_last_name(self, obj):
         return obj.swimling.last_name
+
+    def dehydrate_swimling_dob(self, obj):
+        dob = obj.swimling.dob
+        return dob.strftime('%d %b %Y') if dob else ''
 
     def dehydrate_product_name(self, obj):
         return str(obj.product)
@@ -144,7 +149,7 @@ class WaitingListAdmin(ExportActionMixin, admin.ModelAdmin):
     change_list_template = 'admin/waiting_list/waitinglist/change_list.html'
 
     list_display = (
-        'swimling', 'get_product', 'get_guardian', 'get_guardian_email', 'get_guardian_phone',
+        'swimling', 'get_dob', 'get_product', 'get_guardian', 'get_guardian_email', 'get_guardian_phone',
         'is_transfer_request', 'get_notes',
         'has_enrolled_sibling', 'is_notified', 'assigned_lesson', 'completed', 'get_created_at'
     )
@@ -153,6 +158,12 @@ class WaitingListAdmin(ExportActionMixin, admin.ModelAdmin):
     search_fields = (
         'swimling__first_name', 'swimling__last_name', 'product__name', 'swimling__guardian__email'
     )
+
+    def get_dob(self, obj):
+        dob = obj.swimling.dob
+        return dob.strftime('%d %b %Y') if dob else '-'
+    get_dob.short_description = "DoB"
+    get_dob.admin_order_field = 'swimling__dob'
 
     def get_guardian(self, obj):
         return obj.swimling.guardian

@@ -21,6 +21,8 @@ from django.conf import settings
 
 from users.models import Swimling
 from users.resources import SwimlingResource, UserResource, GroupResource
+from lessons_bookings.models import LessonEnrollment, Term
+from lessons.models import Product
 
 
 
@@ -52,9 +54,19 @@ class SwimlingInline(admin.StackedInline):
     fields = ('first_name', 'last_name', 'dob', 'sco_role_num', 'notes')
 
 
+# 🔹 LessonEnrollment Inline for Swimling detail
+class LessonEnrollmentInline(admin.TabularInline):
+    model = LessonEnrollment
+    extra = 0
+    fields = ('lesson', 'term', 'order', 'created')
+    readonly_fields = ('created',)
+    autocomplete_fields = ['lesson', 'term']
+
+
 # 🔹 Swimling Admin
 class SwimlingAdmin(ImportExportMixin, admin.ModelAdmin):
     resource_class = SwimlingResource
+    inlines = [LessonEnrollmentInline]
     list_display = ['first_name', 'last_name', 'guardian_link']
     list_filter = [
         ('last_name', DropdownFilter),
@@ -171,7 +183,20 @@ try:
 except admin.sites.AlreadyRegistered:
     pass
 
+# 🔹 Autocomplete support for Product and Term (powers autocomplete_fields in inlines)
+class ProductAutocompleteAdmin(admin.ModelAdmin):
+    search_fields = ['name']
+    def has_module_permission(self, request):
+        return False
+
+class TermAutocompleteAdmin(admin.ModelAdmin):
+    search_fields = ['id']
+    def has_module_permission(self, request):
+        return False
+
 # 🔹 Register all
 users_admin_site.register(User, UserAdmin)
 users_admin_site.register(Swimling, SwimlingAdmin)
 users_admin_site.register(Group, GroupAdmin)
+users_admin_site.register(Product, ProductAutocompleteAdmin)
+users_admin_site.register(Term, TermAutocompleteAdmin)

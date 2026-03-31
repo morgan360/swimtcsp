@@ -76,7 +76,7 @@ class Swimling(models.Model):
                                  null=True)
     first_name = models.CharField(max_length=255)
     last_name = models.CharField(max_length=255, blank=True, null=True)
-    dob = models.DateField(null=True, blank=True)
+    dob = models.DateField(null=True, blank=False)
     sco_role_num = models.CharField(max_length=6, blank=True, null=True)
     notes = models.TextField(null=True, blank=True)
     wp_student_id = models.IntegerField(blank=True, null=True)

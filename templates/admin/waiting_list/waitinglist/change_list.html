@@ -3,21 +3,45 @@
 {% block extrahead %}
 {{ block.super }}
 <style>
-  /* Scrollable table wrapper */
+  /* Scrollable table wrapper with always-visible scrollbar */
   #changelist .results {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
+    max-height: 80vh;
+    overflow-y: auto;
   }
 
-  /* Top scrollbar container */
-  .top-scroll-wrapper {
-    overflow-x: auto;
-    overflow-y: hidden;
-    height: 20px;
-    margin-bottom: -1px;
+  /* Make scrollbar always visible (not just on hover) */
+  #changelist .results::-webkit-scrollbar {
+    height: 14px;
+    width: 14px;
   }
-  .top-scroll-inner {
-    height: 1px;
+  #changelist .results::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+  }
+  #changelist .results::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+    border: 2px solid #f1f1f1;
+  }
+  #changelist .results::-webkit-scrollbar-thumb:hover {
+    background: #555;
+  }
+
+  /* Firefox - always show scrollbar */
+  #changelist .results {
+    scrollbar-width: auto;
+    scrollbar-color: #888 #f1f1f1;
+  }
+
+  /* Sticky header so column names stay visible when scrolling vertically */
+  #changelist table#result_list thead th {
+    position: sticky;
+    top: 0;
+    background: var(--header-bg, #417690);
+    color: var(--header-color, #fff);
+    z-index: 1;
   }
 
   /* Make table cells not wrap */
@@ -32,41 +56,4 @@
     border-bottom: 1px dotted #999;
   }
 </style>
-{% endblock %}
-
-{% block result_list %}
-<div class="top-scroll-wrapper" id="topScroll">
-  <div class="top-scroll-inner"></div>
-</div>
-{{ block.super }}
-<script>
-(function() {
-  const topScroll = document.getElementById('topScroll');
-  const bottomScroll = document.querySelector('#changelist .results');
-  if (!topScroll || !bottomScroll) return;
-
-  // Match the inner div width to the table width
-  function syncWidth() {
-    const table = bottomScroll.querySelector('table');
-    if (table) {
-      topScroll.querySelector('.top-scroll-inner').style.width = table.scrollWidth + 'px';
-    }
-  }
-  syncWidth();
-  window.addEventListener('resize', syncWidth);
-
-  // Sync scrolling between top and bottom scrollbars
-  let syncing = false;
-  topScroll.addEventListener('scroll', function() {
-    if (syncing) { syncing = false; return; }
-    syncing = true;
-    bottomScroll.scrollLeft = topScroll.scrollLeft;
-  });
-  bottomScroll.addEventListener('scroll', function() {
-    if (syncing) { syncing = false; return; }
-    syncing = true;
-    topScroll.scrollLeft = bottomScroll.scrollLeft;
-  });
-})();
-</script>
 {% endblock %}

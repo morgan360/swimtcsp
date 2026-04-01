@@ -30,7 +30,7 @@
   <td class="px-3 py-2 text-gray-500 text-xs font-mono truncate max-w-[120px]" title="{{ row.tx_id }}">
     {{ row.tx_id|default:"—" }}
   </td>
-  <td class="px-3 py-2 text-center">
+  <td class="px-3 py-2 text-center space-x-1 whitespace-nowrap">
     {% if row.reconciled %}
       <span class="text-xs text-green-600"><i class="fas fa-check-circle"></i> OK</span>
     {% elif row.verify_error %}
@@ -52,6 +52,18 @@
       <span class="text-xs text-green-500"><i class="fas fa-check"></i></span>
     {% else %}
       <span class="text-gray-300">&mdash;</span>
+    {% endif %}
+    {% if row.notification_count %}
+      <button
+        id="btn-details-{{ row.order_type }}-{{ row.order_id }}"
+        hx-get="{% url 'finances:reconciliation_details' row.order_type row.order_id %}"
+        hx-target="#row-{{ row.order_type }}-{{ row.order_id }}"
+        hx-swap="afterend"
+        hx-on::after-request="this.style.display='none'"
+        class="inline-flex items-center px-2 py-1 text-xs font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded transition"
+        title="{{ row.notification_count }} notification{{ row.notification_count|pluralize }}">
+        <i class="fas fa-info-circle mr-1"></i> Details
+      </button>
     {% endif %}
   </td>
 </tr>

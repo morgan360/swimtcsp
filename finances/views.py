@@ -342,6 +342,7 @@ def _classify_orders(start_date, end_date, order_type_filter='all'):
                 'category': category,
                 'tx_id': tx_id,
                 'reconciled': getattr(order, 'boipa_reconciled', False),
+                'notification_count': len(notifications),
             })
 
     # Sort by date descending
@@ -503,6 +504,31 @@ def reconciliation_verify(request, order_type, order_id):
         'verify_error': verify_error,
     }
     return render(request, 'finances/partials/reconciliation_row.html', {'row': row})
+
+
+def reconciliation_details(request, order_type, order_id):
+    """HTMX partial: return notification details for an order."""
+    if not request.user.is_staff:
+        return HttpResponse('<span class="text-xs text-red-500">Unauthorized</span>', status=403)
+    model_info = ORDER_MODELS.get(order_type)
+    if not model_info:
+        return HttpResponse('Invalid order type', status=400)
+
+    model, type_label = model_info
+    try:
+        order = model.objects.prefetch_related('notifications').get(id=order_id)
+    except model.DoesNotExist:
+        return HttpResponse('Order not found', status=404)
+
+    notifications = list(order.notifications.all().order_by('-id'))
+
+    context = {
+        'order': order,
+        'order_type': order_type,
+        'type_label': type_label,
+        'notifications': notifications,
+    }
+    return render(request, 'finances/partials/reconciliation_details.html', context)
 
 
 @staff_member_required

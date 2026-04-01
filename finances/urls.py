@@ -13,5 +13,6 @@ urlpatterns = [
     path("reconciliation/", views.reconciliation_dashboard, name="reconciliation"),
     path("reconciliation/table/", views.reconciliation_table, name="reconciliation_table"),
     path("reconciliation/verify/<str:order_type>/<int:order_id>/", views.reconciliation_verify, name="reconciliation_verify"),
+    path("reconciliation/details/<str:order_type>/<int:order_id>/", views.reconciliation_details, name="reconciliation_details"),
     path("reconciliation/export/csv/", views.reconciliation_export_csv, name="reconciliation_export_csv"),
 ]

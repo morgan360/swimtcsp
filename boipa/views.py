@@ -222,7 +222,7 @@ def payment_response(request):
                         amount=notif_amount,
                         currency=data.get("currency", "EUR"),
                         status=status or "CAPTURED",
-                        action=data.get("action", "PURCHASE"),
+                        action="PURCHASE",
                         country=data.get("country", ""),
                         auth_code=data.get("auth_code", ""),
                         acquirer=data.get("acquirer", ""),

@@ -1,5 +1,8 @@
+import logging
 from collections import defaultdict
 from decimal import Decimal
+
+logger = logging.getLogger('finances')
 
 from django.db.models import Sum, Count
 from django.db.models.functions import TruncDay, TruncWeek, TruncMonth, TruncYear
@@ -469,6 +472,33 @@ def reconciliation_verify(request, order_type, order_id):
                 boipa_amount = details.get('amount')
                 order.boipa_reconciled = verified
                 order.save(update_fields=['boipa_reconciled'])
+
+                # Save a notification record so the data persists on reload
+                if boipa_amount is not None:
+                    from boipa.models import (
+                        SwimOrderPaymentNotification,
+                        LessonOrderPaymentNotification,
+                        SchoolOrderPaymentNotification,
+                    )
+                    notif_model_map = {
+                        'swim': SwimOrderPaymentNotification,
+                        'lesson': LessonOrderPaymentNotification,
+                        'school': SchoolOrderPaymentNotification,
+                    }
+                    NotifModel = notif_model_map.get(order_type)
+                    if NotifModel and not NotifModel.objects.filter(order=order, txId=tx_id).exists():
+                        try:
+                            NotifModel.objects.create(
+                                order=order,
+                                txId=tx_id,
+                                merchantTxId='',
+                                amount=boipa_amount,
+                                currency=details.get('currency', 'EUR'),
+                                status=details.get('status', 'CAPTURED'),
+                                errorMessage='Created from API verification',
+                            )
+                        except Exception as e:
+                            logger.warning(f"Failed to save notification from verify: {e}")
             else:
                 verify_error = 'No response from BOIPA API'
         except Exception as e:

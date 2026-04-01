@@ -188,50 +188,57 @@ def payment_response(request):
                 boipa_logger.info(f"Found LessonOrder {order_ref}")
 
             # Mark order as paid if not already
-            if not order.paid:
+            newly_paid = not order.paid
+            if newly_paid:
                 order.paid = True
                 order.txId = txId
                 order.save(update_fields=["paid", "txId"])
                 boipa_logger.info(f"✅ Order {order_ref} ({order_type}) marked paid via payment_response")
+            elif not order.txId:
+                order.txId = txId
+                order.save(update_fields=["txId"])
+                boipa_logger.info(f"📝 Updated txId for already-paid order {order_ref}")
 
-                # Save notification record for reconciliation
-                notif_map = {
-                    "swim": SwimOrderPaymentNotification,
-                    "lesson": LessonOrderPaymentNotification,
-                    "school": SchoolOrderPaymentNotification,
-                }
-                NotifModel = notif_map.get(order_type)
-                if NotifModel and not NotifModel.objects.filter(order=order, txId=txId).exists():
+            # Save notification record for reconciliation (always, even if already paid)
+            notif_map = {
+                "swim": SwimOrderPaymentNotification,
+                "lesson": LessonOrderPaymentNotification,
+                "school": SchoolOrderPaymentNotification,
+            }
+            NotifModel = notif_map.get(order_type)
+            if NotifModel and not NotifModel.objects.filter(order=order, txId=txId).exists():
+                try:
+                    from decimal import Decimal, InvalidOperation
+                    raw_amount = data.get("amount")
                     try:
-                        from decimal import Decimal, InvalidOperation
-                        raw_amount = data.get("amount")
-                        try:
-                            notif_amount = Decimal(str(raw_amount)) if raw_amount else order.amount
-                        except (InvalidOperation, TypeError):
-                            notif_amount = order.amount
-                        NotifModel.objects.create(
-                            order=order,
-                            txId=txId,
-                            merchantTxId=merchantTxId,
-                            amount=notif_amount,
-                            currency=data.get("currency", "EUR"),
-                            status=status or "CAPTURED",
-                            action=data.get("action", "PURCHASE"),
-                            country=data.get("country", ""),
-                            auth_code=data.get("auth_code", ""),
-                            acquirer=data.get("acquirer", ""),
-                            acquirerAmount=None,
-                            merchantId=data.get("merchantId", ""),
-                            brandId=data.get("brandId", ""),
-                            customerId=data.get("customerId", ""),
-                            acquirerCurrency=data.get("acquirerCurrency", ""),
-                            paymentSolutionId=data.get("paymentSolutionId"),
-                            errorMessage="Created from payment_response",
-                        )
-                        boipa_logger.info(f"📝 Notification record saved for {order_type} order {order_ref}")
-                    except Exception as e:
-                        boipa_logger.error(f"❌ Failed to save notification record: {e}")
+                        # BOIPA API returns amounts in minor units (cents)
+                        notif_amount = Decimal(str(raw_amount)) / Decimal('100') if raw_amount else order.amount
+                    except (InvalidOperation, TypeError):
+                        notif_amount = order.amount
+                    NotifModel.objects.create(
+                        order=order,
+                        txId=txId,
+                        merchantTxId=merchantTxId,
+                        amount=notif_amount,
+                        currency=data.get("currency", "EUR"),
+                        status=status or "CAPTURED",
+                        action=data.get("action", "PURCHASE"),
+                        country=data.get("country", ""),
+                        auth_code=data.get("auth_code", ""),
+                        acquirer=data.get("acquirer", ""),
+                        acquirerAmount=None,
+                        merchantId=data.get("merchantId", ""),
+                        brandId=data.get("brandId", ""),
+                        customerId=data.get("customerId", ""),
+                        acquirerCurrency=data.get("acquirerCurrency", ""),
+                        paymentSolutionId=data.get("paymentSolutionId"),
+                        errorMessage="Created from payment_response",
+                    )
+                    boipa_logger.info(f"📝 Notification record saved for {order_type} order {order_ref}")
+                except Exception as e:
+                    boipa_logger.error(f"❌ Failed to save notification record: {e}")
 
+            if newly_paid:
                 # Create enrollments and send emails based on order type
                 if order_type == "lesson":
                     try:

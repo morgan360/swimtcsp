@@ -103,7 +103,8 @@ def _fetch_new_api(tx_id):
             data = response.json()
             status = data.get('status', '').upper()
             amount_str = data.get('amount', None)
-            amount = Decimal(amount_str) if amount_str else None
+            # BOIPA API returns amounts in minor units (cents), convert to euros
+            amount = Decimal(amount_str) / Decimal('100') if amount_str else None
             currency = data.get('currency', '')
             logger.info(f"BOIPA verify {tx_id}: status={status} amount={amount} currency={currency}")
             return {

@@ -60,19 +60,33 @@ def verify_boipa_transaction(tx_id):
     return _verify_legacy_api(tx_id)
 
 
-def _verify_new_api(tx_id):
-    """Verify transaction using the new Global Payments / BOIPA API."""
+def get_boipa_transaction_details(tx_id):
+    """
+    Get full transaction details from BOIPA API.
+    Returns dict with 'captured', 'status', 'amount', 'currency' or None on error.
+    """
+    if not tx_id:
+        return None
+
+    if tx_id.startswith('TRN_') or hasattr(settings, 'BOIPA_APP_ID'):
+        return _fetch_new_api(tx_id)
+
+    return None
+
+
+def _fetch_new_api(tx_id):
+    """Fetch transaction details from the new Global Payments / BOIPA API.
+    Returns dict with 'captured', 'status', 'amount', 'currency' or None on error."""
     try:
         token = _get_access_token()
         if not token:
-            return False
+            return None
 
         transactions_url = getattr(settings, 'BOIPA_TRANSACTIONS_URL', '')
         if not transactions_url:
             logger.error("BOIPA_TRANSACTIONS_URL not configured")
-            return False
+            return None
 
-        # The full txId (including appended reference) IS the transaction ID
         url = f"{transactions_url}/{tx_id}"
         response = requests.get(
             url,
@@ -88,17 +102,34 @@ def _verify_new_api(tx_id):
         if response.status_code == 200:
             data = response.json()
             status = data.get('status', '').upper()
-            logger.info(f"BOIPA verify {tx_id}: status={status}")
-            return status == 'CAPTURED'
+            amount_str = data.get('amount', None)
+            amount = Decimal(amount_str) if amount_str else None
+            currency = data.get('currency', '')
+            logger.info(f"BOIPA verify {tx_id}: status={status} amount={amount} currency={currency}")
+            return {
+                'captured': status == 'CAPTURED',
+                'status': status,
+                'amount': amount,
+                'currency': currency,
+                'raw': data,
+            }
         else:
             logger.error(f"BOIPA verify failed for {tx_id}: HTTP {response.status_code} {response.text[:200]}")
-            return False
+            return None
     except requests.Timeout:
         logger.error(f"BOIPA verify timed out for {tx_id}")
-        return False
+        return None
     except Exception as e:
         logger.error(f"BOIPA verify error for {tx_id}: {e}")
+        return None
+
+
+def _verify_new_api(tx_id):
+    """Verify transaction using the new Global Payments / BOIPA API."""
+    result = _fetch_new_api(tx_id)
+    if result is None:
         return False
+    return result['captured']
 
 
 def _verify_legacy_api(tx_id):

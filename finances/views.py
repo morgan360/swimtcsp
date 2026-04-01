@@ -459,35 +459,48 @@ def reconciliation_verify(request, order_type, order_id):
     tx_id = getattr(order, 'txId', '') or ''
     verified = False
     verify_error = None
+    boipa_amount = None
     if tx_id:
         try:
-            from boipa.utils import verify_boipa_transaction
-            verified = verify_boipa_transaction(tx_id)
-            order.boipa_reconciled = verified
-            order.save(update_fields=['boipa_reconciled'])
+            from boipa.utils import get_boipa_transaction_details
+            details = get_boipa_transaction_details(tx_id)
+            if details:
+                verified = details['captured']
+                boipa_amount = details.get('amount')
+                order.boipa_reconciled = verified
+                order.save(update_fields=['boipa_reconciled'])
+            else:
+                verify_error = 'No response from BOIPA API'
         except Exception as e:
             verify_error = str(e)
 
     # Rebuild classification for this single order
+    # Use BOIPA API amount if available, otherwise fall back to notifications
     notifications = list(order.notifications.all())
     if not tx_id:
         cat = 'no_txid'
         notif_amount = None
         difference = None
-    elif not notifications:
-        cat = 'missing_notification'
-        notif_amount = None
-        difference = None
     else:
-        captured = [n for n in notifications if (n.status or '').upper() == 'CAPTURED']
-        best = captured[0] if captured else notifications[0]
-        notif_amount = best.amount
+        # Prefer the amount from BOIPA API (just verified), then notifications
+        if boipa_amount is not None:
+            notif_amount = boipa_amount
+        elif notifications:
+            captured = [n for n in notifications if (n.status or '').upper() == 'CAPTURED']
+            best = captured[0] if captured else notifications[0]
+            notif_amount = best.amount
+        else:
+            notif_amount = None
+
         if notif_amount is not None and notif_amount == order.amount:
             cat = 'matched'
             difference = Decimal('0')
-        else:
+        elif notif_amount is not None:
             cat = 'mismatched'
-            difference = (order.amount - notif_amount) if notif_amount is not None else None
+            difference = order.amount - notif_amount
+        else:
+            cat = 'missing_notification'
+            difference = None
 
     row = {
         'order_id': order.id,
@@ -502,6 +515,7 @@ def reconciliation_verify(request, order_type, order_id):
         'tx_id': tx_id,
         'reconciled': order.boipa_reconciled,
         'verify_error': verify_error,
+        'notification_count': len(notifications),
     }
     return render(request, 'finances/partials/reconciliation_row.html', {'row': row})
 

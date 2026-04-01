@@ -433,11 +433,14 @@ def reconciliation_table(request):
     return render(request, 'finances/partials/reconciliation_table.html', context)
 
 
-@staff_member_required
 def reconciliation_verify(request, order_type, order_id):
     """Verify a single order with BOIPA API and return updated row."""
-    from boipa.utils import verify_boipa_transaction
-    from django.views.decorators.http import require_POST
+    # Manual auth check instead of @staff_member_required to avoid redirect in HTMX
+    if not request.user.is_authenticated or not request.user.is_staff:
+        return HttpResponse(
+            '<td colspan="10" class="px-4 py-2 text-center text-red-600">Authentication required. Please refresh the page.</td>',
+            status=200,
+        )
 
     if request.method != 'POST':
         return HttpResponse('Method not allowed', status=405)
@@ -454,10 +457,15 @@ def reconciliation_verify(request, order_type, order_id):
 
     tx_id = getattr(order, 'txId', '') or ''
     verified = False
+    verify_error = None
     if tx_id:
-        verified = verify_boipa_transaction(tx_id)
-        order.boipa_reconciled = verified
-        order.save(update_fields=['boipa_reconciled'])
+        try:
+            from boipa.utils import verify_boipa_transaction
+            verified = verify_boipa_transaction(tx_id)
+            order.boipa_reconciled = verified
+            order.save(update_fields=['boipa_reconciled'])
+        except Exception as e:
+            verify_error = str(e)
 
     # Rebuild classification for this single order
     notifications = list(order.notifications.all())
@@ -492,6 +500,7 @@ def reconciliation_verify(request, order_type, order_id):
         'category': cat,
         'tx_id': tx_id,
         'reconciled': order.boipa_reconciled,
+        'verify_error': verify_error,
     }
     return render(request, 'finances/partials/reconciliation_row.html', {'row': row})
 

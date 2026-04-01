@@ -3,7 +3,7 @@ from django.contrib.admin import AdminSite, ModelAdmin, register
 from django.db.models import Sum
 from django.utils.timezone import localtime
 from django.http import HttpResponse
-import csv, requests, time
+import csv
 
 # Import all Order models
 from swims_orders.models import Order as SwimOrder
@@ -36,35 +36,7 @@ class TodayFilter(SimpleListFilter):
 # ---------------------------
 # BOIPA verification helper
 # ---------------------------
-MERCHANT_ID = "100121"
-PASSWORD = "u0AYACBNI2643G87wk4o"
-TOKEN_URL = "https://api.boipapaymentgateway.com/token"
-PAYMENTS_URL = "https://api.boipapaymentgateway.com/payments"
-
-
-def verify_boipa_transaction(tx_id):
-    """Return True if BOIPA confirms transaction as CAPTURED."""
-    try:
-        token_resp = requests.post(TOKEN_URL, data={
-            "merchantId": MERCHANT_ID,
-            "password": PASSWORD,
-            "action": "GET_STATUS",
-            "timestamp": int(time.time() * 1000),
-        })
-        token = token_resp.json().get("token")
-        if not token:
-            return False
-
-        status_resp = requests.post(PAYMENTS_URL, data={
-            "merchantId": MERCHANT_ID,
-            "token": token,
-            "action": "GET_STATUS",
-            "txId": tx_id,
-        })
-        data = status_resp.json()
-        return data.get("status") == "CAPTURED"
-    except Exception:
-        return False
+from boipa.utils import verify_boipa_transaction
 
 
 # ---------------------------

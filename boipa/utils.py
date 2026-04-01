@@ -60,28 +60,9 @@ def verify_boipa_transaction(tx_id):
     return _verify_legacy_api(tx_id)
 
 
-def _extract_trn_id(tx_id):
-    """Extract the BOIPA transaction ID (TRN_xxxx) from a stored txId.
-
-    Stored txIds may include the merchant reference appended, e.g.:
-      TRN_GkJ2GwxFKY9bUN2kSL0JSDxK_lesson_2754
-      TRN_0mSdwQntBcc6eoWV3lJanWm_6_1774989051
-    The actual BOIPA transaction ID is TRN_ followed by 24 alphanumeric chars.
-    """
-    import re
-    match = re.match(r'(TRN_[A-Za-z0-9]{20,28})', tx_id)
-    if match:
-        return match.group(1)
-    return tx_id
-
-
 def _verify_new_api(tx_id):
     """Verify transaction using the new Global Payments / BOIPA API."""
     try:
-        # Extract just the TRN_ portion (without appended merchant reference)
-        trn_id = _extract_trn_id(tx_id)
-        logger.debug(f"Verifying TRN ID: {trn_id} (from {tx_id})")
-
         token = _get_access_token()
         if not token:
             return False
@@ -91,8 +72,8 @@ def _verify_new_api(tx_id):
             logger.error("BOIPA_TRANSACTIONS_URL not configured")
             return False
 
-        # GET /transactions/{trn_id}
-        url = f"{transactions_url}/{trn_id}"
+        # The full txId (including appended reference) IS the transaction ID
+        url = f"{transactions_url}/{tx_id}"
         response = requests.get(
             url,
             headers={

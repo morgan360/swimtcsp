@@ -276,3 +276,254 @@ def revenue_export_csv(request):
         summary['schools_total'], summary['grand_total'], summary['order_count'],
     ])
     return response
+
+
+# ---------------------------------------------------------------------------
+# BOIPA Reconciliation
+# ---------------------------------------------------------------------------
+
+ORDER_MODELS = {
+    'lesson': (LessonOrder, 'Lesson'),
+    'swim': (Order, 'Swim'),
+    'school': (SchoolOrder, 'School'),
+}
+
+
+def _classify_orders(start_date, end_date, order_type_filter='all'):
+    """Cross-reference paid orders with BOIPA payment notifications."""
+    results = []
+
+    models_to_check = ORDER_MODELS.items()
+    if order_type_filter != 'all' and order_type_filter in ORDER_MODELS:
+        models_to_check = [(order_type_filter, ORDER_MODELS[order_type_filter])]
+
+    for type_key, (model, type_label) in models_to_check:
+        orders = (
+            model.objects.filter(paid=True, created__date__gte=start_date, created__date__lte=end_date)
+            .prefetch_related('notifications')
+            .select_related('user')
+            .order_by('-created')
+        )
+
+        for order in orders:
+            notifications = list(order.notifications.all())
+            tx_id = getattr(order, 'txId', '') or ''
+
+            if not tx_id:
+                category = 'no_txid'
+                notif_amount = None
+                difference = None
+            elif not notifications:
+                category = 'missing_notification'
+                notif_amount = None
+                difference = None
+            else:
+                # Find the best notification (prefer CAPTURED status)
+                captured = [n for n in notifications if (n.status or '').upper() == 'CAPTURED']
+                best = captured[0] if captured else notifications[0]
+                notif_amount = best.amount
+
+                if notif_amount is not None and notif_amount == order.amount:
+                    category = 'matched'
+                    difference = Decimal('0')
+                else:
+                    category = 'mismatched'
+                    difference = (order.amount - notif_amount) if notif_amount is not None else None
+
+            results.append({
+                'order_id': order.id,
+                'order_type': type_key,
+                'type_label': type_label,
+                'created': order.created,
+                'user_email': getattr(order.user, 'email', '—'),
+                'order_amount': order.amount,
+                'notif_amount': notif_amount,
+                'difference': difference,
+                'category': category,
+                'tx_id': tx_id,
+                'reconciled': getattr(order, 'boipa_reconciled', False),
+            })
+
+    # Sort by date descending
+    results.sort(key=lambda r: r['created'], reverse=True)
+
+    # Summary
+    summary = {
+        'matched': {'count': 0, 'amount': Decimal('0')},
+        'mismatched': {'count': 0, 'amount': Decimal('0')},
+        'missing_notification': {'count': 0, 'amount': Decimal('0')},
+        'no_txid': {'count': 0, 'amount': Decimal('0')},
+    }
+    for r in results:
+        cat = r['category']
+        summary[cat]['count'] += 1
+        summary[cat]['amount'] += r['order_amount']
+
+    return results, summary
+
+
+def _parse_reconciliation_params(request):
+    """Extract common filter params from request."""
+    today = localtime(now()).date()
+    start_date = request.GET.get('start_date', '')
+    end_date = request.GET.get('end_date', '')
+
+    try:
+        start_date = datetime.date.fromisoformat(start_date)
+    except (ValueError, TypeError):
+        start_date = today - datetime.timedelta(days=30)
+
+    try:
+        end_date = datetime.date.fromisoformat(end_date)
+    except (ValueError, TypeError):
+        end_date = today
+
+    order_type = request.GET.get('order_type', 'all')
+    category = request.GET.get('category', 'problems')
+
+    return start_date, end_date, order_type, category
+
+
+@staff_member_required
+def reconciliation_dashboard(request):
+    """Main reconciliation page."""
+    start_date, end_date, order_type, category = _parse_reconciliation_params(request)
+
+    results, summary = _classify_orders(start_date, end_date, order_type)
+
+    # Filter by category
+    if category == 'problems':
+        filtered = [r for r in results if r['category'] != 'matched']
+    elif category != 'all':
+        filtered = [r for r in results if r['category'] == category]
+    else:
+        filtered = results
+
+    context = {
+        'results': filtered,
+        'summary': summary,
+        'start_date': start_date.isoformat(),
+        'end_date': end_date.isoformat(),
+        'order_type': order_type,
+        'category': category,
+        'total_orders': len(results),
+    }
+    return render(request, 'finances/reconciliation.html', context)
+
+
+@staff_member_required
+def reconciliation_table(request):
+    """HTMX partial for reconciliation table."""
+    start_date, end_date, order_type, category = _parse_reconciliation_params(request)
+
+    results, summary = _classify_orders(start_date, end_date, order_type)
+
+    if category == 'problems':
+        filtered = [r for r in results if r['category'] != 'matched']
+    elif category != 'all':
+        filtered = [r for r in results if r['category'] == category]
+    else:
+        filtered = results
+
+    context = {
+        'results': filtered,
+        'summary': summary,
+        'total_orders': len(results),
+    }
+    return render(request, 'finances/partials/reconciliation_table.html', context)
+
+
+@staff_member_required
+def reconciliation_verify(request, order_type, order_id):
+    """Verify a single order with BOIPA API and return updated row."""
+    from boipa.utils import verify_boipa_transaction
+    from django.views.decorators.http import require_POST
+
+    if request.method != 'POST':
+        return HttpResponse('Method not allowed', status=405)
+
+    model_info = ORDER_MODELS.get(order_type)
+    if not model_info:
+        return HttpResponse('Invalid order type', status=400)
+
+    model, type_label = model_info
+    try:
+        order = model.objects.prefetch_related('notifications').select_related('user').get(id=order_id)
+    except model.DoesNotExist:
+        return HttpResponse('Order not found', status=404)
+
+    tx_id = getattr(order, 'txId', '') or ''
+    verified = False
+    if tx_id:
+        verified = verify_boipa_transaction(tx_id)
+        order.boipa_reconciled = verified
+        order.save(update_fields=['boipa_reconciled'])
+
+    # Rebuild classification for this single order
+    notifications = list(order.notifications.all())
+    if not tx_id:
+        cat = 'no_txid'
+        notif_amount = None
+        difference = None
+    elif not notifications:
+        cat = 'missing_notification'
+        notif_amount = None
+        difference = None
+    else:
+        captured = [n for n in notifications if (n.status or '').upper() == 'CAPTURED']
+        best = captured[0] if captured else notifications[0]
+        notif_amount = best.amount
+        if notif_amount is not None and notif_amount == order.amount:
+            cat = 'matched'
+            difference = Decimal('0')
+        else:
+            cat = 'mismatched'
+            difference = (order.amount - notif_amount) if notif_amount is not None else None
+
+    row = {
+        'order_id': order.id,
+        'order_type': order_type,
+        'type_label': type_label,
+        'created': order.created,
+        'user_email': getattr(order.user, 'email', '—'),
+        'order_amount': order.amount,
+        'notif_amount': notif_amount,
+        'difference': difference,
+        'category': cat,
+        'tx_id': tx_id,
+        'reconciled': order.boipa_reconciled,
+    }
+    return render(request, 'finances/partials/reconciliation_row.html', {'row': row})
+
+
+@staff_member_required
+def reconciliation_export_csv(request):
+    """Export reconciliation results as CSV."""
+    import csv
+
+    start_date, end_date, order_type, category = _parse_reconciliation_params(request)
+    results, summary = _classify_orders(start_date, end_date, order_type)
+
+    if category == 'problems':
+        filtered = [r for r in results if r['category'] != 'matched']
+    elif category != 'all':
+        filtered = [r for r in results if r['category'] == category]
+    else:
+        filtered = results
+
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = f'attachment; filename="reconciliation_{start_date}_{end_date}.csv"'
+
+    writer = csv.writer(response)
+    writer.writerow(['Type', 'Order #', 'Date', 'User', 'Order Amount', 'BOIPA Amount', 'Difference', 'Category', 'TxId', 'Reconciled'])
+    for r in filtered:
+        writer.writerow([
+            r['type_label'], r['order_id'],
+            localtime(r['created']).strftime('%Y-%m-%d %H:%M'),
+            r['user_email'], r['order_amount'],
+            r['notif_amount'] or '—',
+            r['difference'] if r['difference'] is not None else '—',
+            r['category'], r['tx_id'],
+            'Yes' if r['reconciled'] else 'No',
+        ])
+    return response

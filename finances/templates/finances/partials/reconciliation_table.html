@@ -1,0 +1,56 @@
+{% load static %}
+
+<!-- Summary Cards -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+  <div class="bg-white shadow rounded-lg p-4 border-l-4 border-green-500">
+    <h3 class="text-sm font-medium text-gray-500">Matched</h3>
+    <p class="text-2xl font-bold text-green-600">{{ summary.matched.count }}</p>
+    <p class="text-xs text-gray-400">&euro;{{ summary.matched.amount|floatformat:2 }}</p>
+  </div>
+  <div class="bg-white shadow rounded-lg p-4 border-l-4 border-amber-500">
+    <h3 class="text-sm font-medium text-gray-500">Amount Mismatch</h3>
+    <p class="text-2xl font-bold text-amber-600">{{ summary.mismatched.count }}</p>
+    <p class="text-xs text-gray-400">&euro;{{ summary.mismatched.amount|floatformat:2 }}</p>
+  </div>
+  <div class="bg-white shadow rounded-lg p-4 border-l-4 border-red-500">
+    <h3 class="text-sm font-medium text-gray-500">Missing Notification</h3>
+    <p class="text-2xl font-bold text-red-600">{{ summary.missing_notification.count }}</p>
+    <p class="text-xs text-gray-400">&euro;{{ summary.missing_notification.amount|floatformat:2 }}</p>
+  </div>
+  <div class="bg-white shadow rounded-lg p-4 border-l-4 border-gray-400">
+    <h3 class="text-sm font-medium text-gray-500">No TxId</h3>
+    <p class="text-2xl font-bold text-gray-600">{{ summary.no_txid.count }}</p>
+    <p class="text-xs text-gray-400">&euro;{{ summary.no_txid.amount|floatformat:2 }}</p>
+  </div>
+</div>
+
+<p class="text-sm text-gray-500 mb-3">{{ total_orders }} total paid orders in range &middot; {{ results|length }} shown</p>
+
+<!-- Data Table -->
+<div class="overflow-x-auto bg-white rounded-lg shadow">
+  <table class="w-full text-sm">
+    <thead class="bg-gray-50 border-b">
+      <tr>
+        <th class="px-3 py-3 text-left font-semibold text-gray-600">Type</th>
+        <th class="px-3 py-3 text-left font-semibold text-gray-600">Order #</th>
+        <th class="px-3 py-3 text-left font-semibold text-gray-600">Date</th>
+        <th class="px-3 py-3 text-left font-semibold text-gray-600">User</th>
+        <th class="px-3 py-3 text-right font-semibold text-gray-600">Order Amt</th>
+        <th class="px-3 py-3 text-right font-semibold text-gray-600">BOIPA Amt</th>
+        <th class="px-3 py-3 text-right font-semibold text-gray-600">Diff</th>
+        <th class="px-3 py-3 text-center font-semibold text-gray-600">Status</th>
+        <th class="px-3 py-3 text-left font-semibold text-gray-600">TxId</th>
+        <th class="px-3 py-3 text-center font-semibold text-gray-600">Action</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-gray-100">
+      {% for row in results %}
+      {% include "finances/partials/reconciliation_row.html" %}
+      {% empty %}
+      <tr>
+        <td colspan="10" class="px-4 py-8 text-center text-gray-400">No orders found matching your filters.</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>

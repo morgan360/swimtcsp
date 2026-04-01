@@ -2,9 +2,12 @@
 {% load static %}
 
 {% block content %}
-    <div class="mb-4">
+    <div class="mb-4 flex flex-wrap gap-2">
         <a href="{% url 'finances:revenue_report' %}" class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition">
-            <i class="fas fa-chart-bar mr-2"></i> Combined Revenue Report
+            <i class="fas fa-chart-bar mr-2"></i> Revenue Report
+        </a>
+        <a href="{% url 'finances:reconciliation' %}" class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition">
+            <i class="fas fa-balance-scale mr-2"></i> BOIPA Reconciliation
         </a>
     </div>
     <div class="p-6 grid grid-cols-3 gap-6">

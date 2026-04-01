@@ -79,6 +79,7 @@ class FinanceAdminSite(AdminSite):
     def each_context(self, request):
         context = super().each_context(request)
         context['revenue_report_url'] = '/finances/revenue/'
+        context['reconciliation_url'] = '/finances/reconciliation/'
         return context
 
 

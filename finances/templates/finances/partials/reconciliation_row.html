@@ -1,0 +1,46 @@
+<tr class="hover:bg-gray-50" id="row-{{ row.order_type }}-{{ row.order_id }}">
+  <td class="px-3 py-2 font-medium text-gray-700">{{ row.type_label }}</td>
+  <td class="px-3 py-2 text-gray-600">#{{ row.order_id }}</td>
+  <td class="px-3 py-2 text-gray-600">{{ row.created|date:"d M Y H:i" }}</td>
+  <td class="px-3 py-2 text-gray-600 truncate max-w-[160px]" title="{{ row.user_email }}">{{ row.user_email }}</td>
+  <td class="px-3 py-2 text-right text-gray-700">&euro;{{ row.order_amount|floatformat:2 }}</td>
+  <td class="px-3 py-2 text-right {% if row.notif_amount == None %}text-gray-400{% else %}text-gray-700{% endif %}">
+    {% if row.notif_amount != None %}&euro;{{ row.notif_amount|floatformat:2 }}{% else %}&mdash;{% endif %}
+  </td>
+  <td class="px-3 py-2 text-right {% if row.difference and row.difference != 0 %}text-red-600 font-semibold{% else %}text-gray-400{% endif %}">
+    {% if row.difference != None %}&euro;{{ row.difference|floatformat:2 }}{% else %}&mdash;{% endif %}
+  </td>
+  <td class="px-3 py-2 text-center">
+    {% if row.category == 'matched' %}
+      <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">Matched</span>
+    {% elif row.category == 'mismatched' %}
+      <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800">Mismatch</span>
+    {% elif row.category == 'missing_notification' %}
+      <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">No Notification</span>
+    {% elif row.category == 'no_txid' %}
+      <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600">No TxId</span>
+    {% endif %}
+    {% if row.reconciled %}
+      <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700 ml-1">Verified</span>
+    {% endif %}
+  </td>
+  <td class="px-3 py-2 text-gray-500 text-xs font-mono truncate max-w-[120px]" title="{{ row.tx_id }}">
+    {{ row.tx_id|default:"—" }}
+  </td>
+  <td class="px-3 py-2 text-center">
+    {% if row.tx_id and row.category != 'matched' %}
+      <button
+        hx-post="{% url 'finances:reconciliation_verify' row.order_type row.order_id %}"
+        hx-target="#row-{{ row.order_type }}-{{ row.order_id }}"
+        hx-swap="outerHTML"
+        hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+        class="inline-flex items-center px-2 py-1 text-xs font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded transition">
+        <i class="fas fa-check-circle mr-1"></i> Verify
+      </button>
+    {% elif row.category == 'matched' and not row.reconciled %}
+      <span class="text-xs text-green-500"><i class="fas fa-check"></i></span>
+    {% else %}
+      <span class="text-gray-300">&mdash;</span>
+    {% endif %}
+  </td>
+</tr>

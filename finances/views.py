@@ -316,10 +316,15 @@ def _classify_orders(start_date, end_date, order_type_filter='all'):
                 category = 'no_txid'
                 notif_amount = None
                 difference = None
-            elif not notifications:
+            elif not notifications and not getattr(order, 'boipa_reconciled', False):
                 category = 'missing_notification'
                 notif_amount = None
                 difference = None
+            elif not notifications and getattr(order, 'boipa_reconciled', False):
+                # Verified via API but no notification record saved (verified before fix)
+                category = 'matched'
+                notif_amount = order.amount
+                difference = Decimal('0')
             else:
                 # Find the best notification (prefer CAPTURED status)
                 captured = [n for n in notifications if (n.status or '').upper() == 'CAPTURED']

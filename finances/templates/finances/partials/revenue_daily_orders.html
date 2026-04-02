@@ -1,0 +1,47 @@
+<div class="bg-white rounded-lg shadow p-4">
+  <div class="flex justify-between items-center mb-3">
+    <h3 class="text-sm font-semibold text-gray-700">
+      <i class="fas fa-list mr-1 text-blue-500"></i>
+      {{ target_date|date:"l d M Y" }} — {{ order_count }} order{{ order_count|pluralize }} — &euro;{{ total|floatformat:2 }}
+    </h3>
+    <button onclick="document.getElementById('daily-orders-panel').innerHTML=''"
+            class="text-xs text-gray-400 hover:text-gray-600 cursor-pointer">
+      <i class="fas fa-times"></i> Close
+    </button>
+  </div>
+
+  {% if orders %}
+  <div class="overflow-x-auto">
+    <table class="w-full text-sm">
+      <thead class="bg-gray-50 border-b">
+        <tr>
+          <th class="px-3 py-2 text-left font-medium text-gray-600">Type</th>
+          <th class="px-3 py-2 text-left font-medium text-gray-600">Order #</th>
+          <th class="px-3 py-2 text-left font-medium text-gray-600">Time</th>
+          <th class="px-3 py-2 text-left font-medium text-gray-600">User</th>
+          <th class="px-3 py-2 text-right font-medium text-gray-600">Amount</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-100">
+        {% for o in orders %}
+        <tr class="hover:bg-gray-50">
+          <td class="px-3 py-1.5 text-gray-600">{{ o.type_label }}</td>
+          <td class="px-3 py-1.5 font-medium text-gray-700">#{{ o.order_id }}</td>
+          <td class="px-3 py-1.5 text-gray-600">{{ o.created|date:"H:i" }}</td>
+          <td class="px-3 py-1.5 text-gray-600 truncate max-w-[200px]" title="{{ o.user_email }}">{{ o.user_email }}</td>
+          <td class="px-3 py-1.5 text-right text-gray-700">&euro;{{ o.amount|floatformat:2 }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+      <tfoot class="bg-gray-50 border-t">
+        <tr class="font-bold">
+          <td colspan="4" class="px-3 py-2 text-gray-700">Total</td>
+          <td class="px-3 py-2 text-right text-gray-900">&euro;{{ total|floatformat:2 }}</td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+  {% else %}
+  <p class="text-sm text-gray-400 py-4 text-center">No paid orders on this date.</p>
+  {% endif %}
+</div>

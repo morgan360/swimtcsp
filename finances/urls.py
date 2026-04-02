@@ -9,6 +9,7 @@ urlpatterns = [
     path("revenue/", views.revenue_report, name="revenue_report"),
     path("revenue/table/", views.revenue_report_table, name="revenue_report_table"),
     path("revenue/chart-data/", views.revenue_chart_data, name="revenue_chart_data"),
+    path("revenue/daily-orders/", views.revenue_daily_orders, name="revenue_daily_orders"),
     path("revenue/export/csv/", views.revenue_export_csv, name="revenue_export_csv"),
     path("reconciliation/", views.reconciliation_dashboard, name="reconciliation"),
     path("reconciliation/table/", views.reconciliation_table, name="reconciliation_table"),

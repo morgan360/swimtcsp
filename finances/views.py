@@ -17,6 +17,12 @@ from swims_orders.models import Order  # ✅ your Order model
 from lessons_orders.models import Order as LessonOrder
 from schools_orders.models import Order as SchoolOrder
 
+ORDER_MODELS = {
+    'lesson': (LessonOrder, 'Lesson'),
+    'swim': (Order, 'Swim'),
+    'school': (SchoolOrder, 'School'),
+}
+
 
 @staff_member_required
 def transactions_data(request):
@@ -187,6 +193,9 @@ def revenue_report(request):
     for row in rows:
         row['label'] = _format_period_label(row['period'], granularity)
 
+    today = localtime(now()).date()
+    yesterday = today - timedelta(days=1)
+
     context = {
         'rows': rows,
         'summary': summary,
@@ -197,6 +206,8 @@ def revenue_report(request):
         'months': [
             (i, datetime.date(2000, i, 1).strftime('%B')) for i in range(1, 13)
         ],
+        'today': today.isoformat(),
+        'yesterday': yesterday.isoformat(),
     }
     return render(request, 'finances/revenue_report.html', context)
 
@@ -251,6 +262,45 @@ def revenue_chart_data(request):
 
 
 @staff_member_required
+def revenue_daily_orders(request):
+    """HTMX partial: list individual orders for a specific date."""
+    if not request.user.is_staff:
+        return HttpResponse('Unauthorized', status=403)
+
+    date_str = request.GET.get('date', '')
+    try:
+        target_date = datetime.datetime.strptime(date_str, '%Y-%m-%d').date()
+    except (ValueError, TypeError):
+        target_date = localtime(now()).date()
+
+    orders = []
+    for type_key, (model, type_label) in ORDER_MODELS.items():
+        qs = model.objects.filter(
+            paid=True,
+            created__date=target_date,
+        ).select_related('user').order_by('-created')
+        for o in qs:
+            orders.append({
+                'type_label': type_label,
+                'order_id': o.id,
+                'created': o.created,
+                'user_email': getattr(o.user, 'email', '—'),
+                'amount': o.amount,
+            })
+
+    orders.sort(key=lambda x: x['created'], reverse=True)
+    total = sum(o['amount'] for o in orders)
+
+    context = {
+        'orders': orders,
+        'target_date': target_date,
+        'total': total,
+        'order_count': len(orders),
+    }
+    return render(request, 'finances/partials/revenue_daily_orders.html', context)
+
+
+@staff_member_required
 def revenue_export_csv(request):
     """Export revenue report as CSV."""
     import csv
@@ -284,13 +334,6 @@ def revenue_export_csv(request):
 # ---------------------------------------------------------------------------
 # BOIPA Reconciliation
 # ---------------------------------------------------------------------------
-
-ORDER_MODELS = {
-    'lesson': (LessonOrder, 'Lesson'),
-    'swim': (Order, 'Swim'),
-    'school': (SchoolOrder, 'School'),
-}
-
 
 def _classify_orders(start_date, end_date, order_type_filter='all'):
     """Cross-reference paid orders with BOIPA payment notifications."""

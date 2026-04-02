@@ -12,8 +12,22 @@
       <i class="fas fa-chart-bar mr-2 text-blue-600"></i>Revenue Report
     </h1>
 
-    <!-- Export Buttons -->
+    <!-- Quick Views & Export -->
     <div class="flex items-center space-x-2">
+      <button
+        hx-get="{% url 'finances:revenue_daily_orders' %}?date={{ yesterday }}"
+        hx-target="#daily-orders-panel"
+        hx-swap="innerHTML"
+        class="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition">
+        <i class="fas fa-calendar-day mr-1.5"></i> Yesterday
+      </button>
+      <button
+        hx-get="{% url 'finances:revenue_daily_orders' %}?date={{ today }}"
+        hx-target="#daily-orders-panel"
+        hx-swap="innerHTML"
+        class="inline-flex items-center px-3 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition">
+        <i class="fas fa-calendar-check mr-1.5"></i> Today
+      </button>
       <a :href="csvUrl()" class="inline-flex items-center px-3 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-lg transition">
         <i class="fas fa-file-csv mr-1.5"></i> Export CSV
       </a>
@@ -66,6 +80,9 @@
 
     </div>
   </div>
+
+  <!-- Daily Orders Panel (HTMX target) -->
+  <div id="daily-orders-panel" class="mb-6"></div>
 
   <!-- Chart -->
   <div class="bg-white rounded-lg shadow p-4 mb-6">

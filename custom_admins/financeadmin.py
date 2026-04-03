@@ -48,10 +48,36 @@ class FinanceAdminSite(AdminSite):
     index_title = "Finance Overview"
     index_template = "admin/financeadmin/index.html"
 
+    def get_urls(self):
+        from django.urls import path
+        from functools import partial
+        from finances import views as fv
+
+        custom_urls = [
+            path('revenue/', self.admin_view(
+                partial(fv.revenue_report, template_name='admin/financeadmin/revenue_report.html')
+            ), name='revenue_report'),
+            path('revenue/table/', self.admin_view(fv.revenue_report_table), name='revenue_report_table'),
+            path('revenue/chart-data/', self.admin_view(fv.revenue_chart_data), name='revenue_chart_data'),
+            path('revenue/daily-orders/', self.admin_view(fv.revenue_daily_orders), name='revenue_daily_orders'),
+            path('revenue/export/csv/', self.admin_view(fv.revenue_export_csv), name='revenue_export_csv'),
+            path('reconciliation/', self.admin_view(
+                partial(fv.reconciliation_dashboard, template_name='admin/financeadmin/reconciliation.html')
+            ), name='reconciliation'),
+            path('reconciliation/table/', self.admin_view(fv.reconciliation_table), name='reconciliation_table'),
+            path('reconciliation/verify/<str:order_type>/<int:order_id>/',
+                 self.admin_view(fv.reconciliation_verify), name='reconciliation_verify'),
+            path('reconciliation/details/<str:order_type>/<int:order_id>/',
+                 self.admin_view(fv.reconciliation_details), name='reconciliation_details'),
+            path('reconciliation/export/csv/', self.admin_view(fv.reconciliation_export_csv), name='reconciliation_export_csv'),
+        ]
+        return custom_urls + super().get_urls()
+
     def each_context(self, request):
+        from django.urls import reverse
         context = super().each_context(request)
-        context['revenue_report_url'] = '/finances/revenue/'
-        context['reconciliation_url'] = '/finances/reconciliation/'
+        context['revenue_report_url'] = reverse('financeadmin:revenue_report')
+        context['reconciliation_url'] = reverse('financeadmin:reconciliation')
         return context
 
 

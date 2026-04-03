@@ -179,7 +179,7 @@ def _get_available_years():
 
 
 @staff_member_required
-def revenue_report(request):
+def revenue_report(request, template_name='finances/revenue_report.html'):
     """Main revenue report page."""
     available_years = _get_available_years()
     year = int(request.GET.get('year', localtime(now()).year))
@@ -209,7 +209,7 @@ def revenue_report(request):
         'today': today.isoformat(),
         'yesterday': yesterday.isoformat(),
     }
-    return render(request, 'finances/revenue_report.html', context)
+    return render(request, template_name, context)
 
 
 @staff_member_required
@@ -437,7 +437,7 @@ def _parse_reconciliation_params(request):
 
 
 @staff_member_required
-def reconciliation_dashboard(request):
+def reconciliation_dashboard(request, template_name='finances/reconciliation.html'):
     """Main reconciliation page."""
     start_date, end_date, order_type, category = _parse_reconciliation_params(request)
 
@@ -460,7 +460,7 @@ def reconciliation_dashboard(request):
         'category': category,
         'total_orders': len(results),
     }
-    return render(request, 'finances/reconciliation.html', context)
+    return render(request, template_name, context)
 
 
 @staff_member_required

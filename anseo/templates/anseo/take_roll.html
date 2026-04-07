@@ -172,8 +172,8 @@
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
-    const rows = Array.from(document.querySelectorAll("tr[data-row]"));
-    console.log("Found rows:", rows.length);  // ✅ This is the log
+    const rows = Array.from(document.querySelectorAll("[data-row]"));
+    console.log("Found rows:", rows.length);
 
     function setRowStatus(row, value) {
         const radios = row.querySelectorAll(`input[type="radio"][name^="status_"]`);

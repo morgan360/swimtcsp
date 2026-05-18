@@ -32,8 +32,8 @@ def send_lesson_order_email(order_id):
 
     # --- Safe arithmetic for totals ---
     amount = _as_decimal(order.amount)
-    discount = _as_decimal(order.discount_amount)
-    original_price = amount + discount
+    original_price = _as_decimal(order.get_total_cost())
+    discount = original_price - amount
 
     context = {
         "user": order.user,

@@ -43,7 +43,7 @@ def send_lesson_order_email(order_id):
         "coupon": order.coupon,
         "discount": discount,
         "original_price": original_price, # pre-discount price
-        "support_email": settings.DEFAULT_FROM_EMAIL,
+        "support_email": settings.DEFAULT_SUPPORT_EMAIL,
     }
 
     try:

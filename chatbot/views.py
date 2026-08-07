@@ -44,6 +44,12 @@ LIVE_DATA_KEYWORDS = (
     "next swim", "next public swim", "what swims", "any swims",
     # Capacity
     "available", "availability", "places left", "spaces", "fully booked",
+    # "Opening hours" has no single answer — the pool runs scheduled sessions,
+    # so these go to the live timetable rather than a fixed FAQ. Full phrases,
+    # because a bare "open" also matches "open swim".
+    "opening hours", "opening times", "are you open", "when are you open",
+    "when do you open", "what time do you open", "what time do you close",
+    "closing time", "open today", "open on",
 )
 
 

@@ -44,8 +44,9 @@
   answer: Yes, family swim sessions are listed under “Public Swims.” Prices vary by
     group size.
 - question: Can I cancel or reschedule a booking?
-  answer: <p>Cancellations are possible depending on timing and policy. Please log
-    into your account or contact us directly.</p>
+  answer: <p>Please contact reception to arrange a cancellation or change &mdash;
+    email <a href="mailto:swimming@tcsp.ie">swimming@tcsp.ie</a> or call <strong>01
+    490 1711</strong>.</p>
 - question: Do I need to wear a swimming hat?
   answer: <p>Yes, swimming hats are required for all swimmers in the pool. They help
     keep the water clean and ensure better hygiene for everyone.</p>
@@ -53,9 +54,12 @@
   answer: Yes, swimming hats and goggles are available for purchase at reception.
     Just ask a staff member when you arrive.
 - question: Are there discounts for children, OAPs, or students?
-  answer: <p>Yes! We offer discounted rates for children, students, and OAPs. Infants
-    under 3 years old can swim for free. Please check the pricing listed with each
-    session or ask at reception for details.</p>
+  answer: <p>Yes.</p><ul><li><strong>Students</strong> &euro;5 with valid ID.</li><li><strong>OAPs</strong>
+    &euro;3.50 at standard times. We also run a dedicated <strong>OAP Swim</strong>
+    session at <strong>&euro;3</strong>.</li><li><strong>Children</strong> &euro;4
+    at public swims.</li><li><strong>Infants under 3</strong> swim free when accompanied
+    by a responsible adult.</li></ul><p>Prices are shown with each session when you
+    book &mdash; just ask me and I'll tell you what's on.</p>
 - question: What age is considered an infant?
   answer: <p>For our swim sessions, an infant is any child under the age of 3. Infants
     under 3 years swim free of charge when accompanied by a responsible adult.</p>
@@ -90,21 +94,24 @@
     and supervision guidelines.&nbsp;You must always hold them or have an appropriate
     floatation device. &nbsp;</p>
 - question: What is a Public Swim?
-  answer: "<p>Public Swim - Open swim session suitable for families and leisure swimmers,\
-    \ those practicing swimming up to being able to swim lengths continuously (no\
-    \ lanes)&nbsp;</p>\r\n\r\n<p>Adult &euro;6 / Child &euro;4 / Under 3 Free / OAP\
-    \ &euro;3:50&nbsp;</p>"
+  answer: <p>Public Swim &mdash; an open swim session suitable for families and leisure
+    swimmers, and those practising swimming up to being able to swim lengths continuously
+    (no lanes).</p><ul><li>Adult &euro;6</li><li>Child &euro;4</li><li>Student &euro;5
+    (with valid ID)</li><li>OAP &euro;3.50</li><li>Under 3 free</li></ul>
 - question: What are Lane Swims?
-  answer: "<p>25m lengths roped off, suitable for proficient swimmers who are moving\
-    \ continuously up and down the pool.&nbsp; Lanes are categorised as Fast - lane\
-    \ 3 / Medium lanes 2 &amp; 4 / Slow lanes 1 &amp; 5&nbsp;</p>\r\n\r\n<p>Adult\
-    \ &euro;6 / OAP &euro;3:50&nbsp;</p>"
+  answer: <p>25m lengths roped off, suitable for proficient swimmers moving continuously
+    up and down the pool. Lanes are categorised as Fast (lane 3), Medium (lanes 2
+    &amp; 4) and Slow (lanes 1 &amp; 5).</p><ul><li>Adult &euro;6 (standard rate)</li><li><strong>Early
+    morning lane swims &euro;5</strong> &mdash; a special rate for those sessions
+    only</li><li>Student &euro;5 (with valid ID)</li><li>OAP &euro;3.50</li></ul>
 - question: What are Coached Ladies Lanes?
   answer: <p>These session are&nbsp;suitable for ladies progressing from Advanced
     lessons, or beginner - advanced lane swimmers improving technique with a coach &euro;7:25&nbsp;</p>
 - question: What are Ladies Lessons / Ladies Coached Widths class?
-  answer: <p>These sessions are suitable for Ladies learning and improving on technique
-    from Beginner to Advanced levels &euro;7:25&nbsp;</p>
+  answer: '<p>These sessions suit ladies learning and improving technique, from Beginner
+    to Advanced level. &euro;7.25.</p><p><em>Please note: the Ladies Coached Widths
+    class does not run during July and August, so it will not appear on the timetable
+    then.</em></p>'
 - question: What are Coached Lanes?
   answer: "<p>Coached Lanes are suitable for all those ages 13+ - lane swim for those\
     \ progressing from children&rsquo;s lengths classes/teens continuing to swim,\
@@ -319,6 +326,25 @@
     the roll number is correct, the schools panel becomes visible in the Swimling
     Dashboard. If you still cannot see it, please contact us.</p>'
 - question: How do I contact the pool?
-  answer: <p>You can reach us on <strong>+353 1 490 1711</strong> or by email at <a
-    href="mailto:swimming@tcsp.ie">swimming@tcsp.ie</a>.</p><p>There is also a contact
-    form on our <a href="/info/#contact-form">About Us</a> page.</p>
+  answer: <p>You can reach us on <strong>01 490 1711</strong> or by email at <a href="mailto:swimming@tcsp.ie">swimming@tcsp.ie</a>.</p><p>There
+    is also a contact form on our <a href="/info/#contact-form">About Us</a> page.</p><p>For
+    <strong>pool hire</strong> enquiries, please email <a href="mailto:info@tcsp.ie">info@tcsp.ie</a>.</p>
+- question: What are your opening hours?
+  answer: <p>We don't work to general opening hours &mdash; the pool runs as scheduled
+    <strong>sessions</strong>, and what's available changes through the day.</p><p>The
+    best place to look is the <a href="/timetable/grid/">timetable</a>, which shows
+    every session and when it runs. You can also just ask me what's on today or on
+    a particular day and I'll tell you.</p>
+- question: Do you do birthday parties?
+  answer: <p>No, we don't run birthday parties.</p><p>If you're looking to hire the
+    pool, please email <a href="mailto:info@tcsp.ie">info@tcsp.ie</a>.</p>
+- question: Can I hire the pool?
+  answer: <p>For pool hire enquiries, please email <a href="mailto:info@tcsp.ie">info@tcsp.ie</a>.</p>
+- question: Is there parking?
+  answer: <p>Yes &mdash; there is free parking available.</p>
+- question: How do I use a coupon or credit note?
+  answer: <p>When you book online, enter your coupon code in the <strong>coupon box
+    at checkout</strong> and the discount is applied to your order.</p>
+- question: Can I get a refund?
+  answer: <p>Please contact reception to discuss a refund &mdash; email <a href="mailto:swimming@tcsp.ie">swimming@tcsp.ie</a>
+    or call <strong>01 490 1711</strong>.</p>

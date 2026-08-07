@@ -44,7 +44,7 @@
             hx-swap="outerHTML"
             hx-push-url="true"
             hx-indicator="#stagnation-loading">
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
           <div>
             <label for="level" class="block text-sm font-medium text-slate-600 mb-1">Level</label>
             <select id="level" name="level"
@@ -69,12 +69,24 @@
               {% endfor %}
             </select>
           </div>
+          <div>
+            <label for="time" class="block text-sm font-medium text-slate-600 mb-1">Time</label>
+            <select id="time" name="time"
+                    class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 focus:border-slate-500 focus:ring-slate-500">
+              <option value="">All times</option>
+              {% for value in time_choices %}
+                <option value="{{ value }}" {% if selected_time == value %}selected{% endif %}>
+                  {{ value }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
           <div class="flex flex-col sm:flex-row gap-3">
             <button type="submit"
                     class="inline-flex justify-center rounded-lg bg-slate-800 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-slate-700 transition">
               Apply filters
             </button>
-            {% if selected_level or selected_day %}
+            {% if selected_level or selected_day or selected_time %}
               <a href="{% url 'dashboard:swimling_stagnation' %}"
                  class="inline-flex justify-center rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-white transition">
                 Reset

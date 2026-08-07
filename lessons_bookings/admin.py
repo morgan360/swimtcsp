@@ -109,6 +109,29 @@ class CategoryFilter(admin.SimpleListFilter):
 @admin.register(LessonAssignment)
 class LessonAssignmentAdmin(admin.ModelAdmin):
     list_display = ('term', 'instructor', 'display_lessons')
+    list_filter = (
+        ('term', RelatedDropdownFilter),
+        ('instructor', RelatedDropdownFilter),
+    )
+    # '=term__id' is an exact match, so searching "6" finds term 6 rather than
+    # every term whose id merely contains a 6.
+    search_fields = (
+        'instructor__first_name',
+        'instructor__last_name',
+        'instructor__email',
+        'lessons__name',
+        '=term__id',
+    )
+    filter_horizontal = ('lessons',)
+
+    def get_queryset(self, request):
+        # display_lessons walks the m2m for every row, so pull the lessons in
+        # one query instead of one per assignment.
+        return (
+            super().get_queryset(request)
+            .select_related('term', 'instructor')
+            .prefetch_related('lessons')
+        )
 
     def display_lessons(self, obj):
         return ', '.join([lesson.name for lesson in obj.lessons.all()])

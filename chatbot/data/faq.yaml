@@ -64,18 +64,6 @@
     in order. It is a good idea to be as specific as possible i.e. what is your preferred
     lesson, and in the notes specify flexibility or restrictions. e.g. Thursdays,
     Fridays but not Saturday.
-- question: How do I book a lesson?
-  answer: "<p>Before you can book into lessons you must register&nbsp; <strong>Sign\
-    \ Up</strong>&nbsp; . Make sure you tick the box &quot;I wish to sign up for swimming\
-    \ lessons.&quot; After you are signed in you should see a menu <strong>Swimling\
-    \ Dashboard</strong> there you can add swimmers and book them into lessons.<br\
-    \ />\r\n<span style=\"color:#e74c3c\">You can </span><a href=\"/accounts/signup/\"\
-    ><span style=\"color:#e74c3c\">Register Here</span></a></p>"
-- question: How do I book a public swim?
-  answer: "<p>In order to book a public swim you must register ( all you need is an\
-    \ email address). Once logged in&nbsp; you will be able to book a swim from the\
-    \ menu.</p>\r\n\r\n<p>You can <a href=\"/accounts/signup/\"><span style=\"color:#e74c3c\"\
-    >Register Here</span></a></p>"
 - question: What do I need to bring to a swim?
   answer: <p>Hat, goggles, swimsuit, flipflops and armbands (if needed)&nbsp;</p>
 - question: What age do lessons begin from?
@@ -287,3 +275,55 @@
 - question: At what age can my child start lessons?
   answer: <p><span style="color:#000000">We offer lessons to children four years old
     and above</span></p>
+- question: How do I book swimming lessons?
+  answer: <p>All term-based lessons, for adults and children, are managed through
+    the <strong>Swimling Dashboard</strong>.</p><ol><li>Create a free account &mdash;
+    all you need is your email address &mdash; and tick <em>&lsquo;I wish to sign
+    up for swimming lessons.&rsquo;</em> This makes you a Guardian, so you can register
+    yourself or others for lessons.</li><li>Go to the <a href="/dashboard/">Swimling
+    Dashboard</a> and click <strong>Add New Swimling</strong> to add the swimmer's
+    details.</li><li>You can then book lessons, rebook for the next term, join the
+    waiting list and edit details, all in one place.</li></ol><p>You can reach the
+    Swimling Dashboard from <strong>Main Menu</strong> in the navigation, or from
+    your profile dropdown in the top-right corner.</p><p><a href="/accounts/signup/">Register
+    here</a></p>
+- question: How do I rebook my child into their class for the next term?
+  answer: <p>Rebooking is done from the <a href="/dashboard/">Swimling Dashboard</a>,
+    the same place you booked originally &mdash; you do not need to register the swimmer
+    again.</p><p>Existing swimmers get a priority rebooking window before general
+    booking opens to everyone. If the rebooking option is not showing yet, the window
+    has not opened; ask me &lsquo;when does rebooking open?&rsquo; and I will tell
+    you the current dates.</p>
+  lessons_only: true
+- question: I already have an account but I cannot see the option to book lessons
+  answer: <p>You most likely do not have <strong>Guardian</strong> permissions yet.
+    Guardian status is what lets you register swimmers and book lessons.</p><p>Go
+    to your <strong>profile</strong> and choose the option to become a guardian. The
+    <a href="/dashboard/">Swimling Dashboard</a> will then be available, and you can
+    add a swimling and book classes.</p>
+- question: How do I book a public swim?
+  answer: <p>Public swims are pay-as-you-go. Booking is easy:</p><ol><li>Create a
+    free account &mdash; all you need is an email address. You only need to tick <em>&lsquo;I
+    wish to sign up for swimming lessons&rsquo;</em> if you also want lessons; you
+    can add that to your profile later.</li><li>Browse the swim sessions to find one
+    that suits your schedule.</li><li>Follow the prompts to book.</li></ol><p>Just
+    ask me what swims are on and I will show you the current sessions, places and
+    prices.</p>
+- question: Where do I go on the website to manage my bookings?
+  answer: '<p>Everything to do with swimmers and lessons lives in the <a href="/dashboard/">Swimling
+    Dashboard</a>: booking lessons, rebooking for the next term, joining the waiting
+    list, and editing a swimling''s details.</p><p>You can get to it from <strong>Main
+    Menu</strong> in the navigation, or from your profile dropdown in the top-right
+    corner of the page.</p>'
+- question: How do I register for school swimming lessons?
+  answer: '<p>First follow the normal steps: create an account, become a Guardian,
+    and register at least one swimling.</p><ol><li>Go to your profile and click <strong>Join
+    schools</strong> in the quick actions section, then follow the instructions.</li><li>Make
+    sure the swimling has the correct <strong>school roll number</strong> &mdash;
+    you can check this by editing their details in the Swimling Dashboard.</li></ol><p>Once
+    the roll number is correct, the schools panel becomes visible in the Swimling
+    Dashboard. If you still cannot see it, please contact us.</p>'
+- question: How do I contact the pool?
+  answer: <p>You can reach us on <strong>+353 1 490 1711</strong> or by email at <a
+    href="mailto:swimming@tcsp.ie">swimming@tcsp.ie</a>.</p><p>There is also a contact
+    form on our <a href="/info/#contact-form">About Us</a> page.</p>

@@ -19,7 +19,12 @@ from .helpers.gpt import (
     render_faq_markdown,
     render_model_markdown,
 )
-from .helpers.lesson import format_lesson_list, get_active_lessons, get_upcoming_terms
+from .helpers.lesson import (
+    format_booking_phase,
+    format_lesson_list,
+    get_active_lessons,
+    get_upcoming_terms,
+)
 from .helpers.swim import format_swim_list, get_available_swims
 from .helpers.throttle import TOO_MANY_MESSAGES, is_rate_limited
 
@@ -125,6 +130,9 @@ def public_lesson_chat_api(request):
         term_info = "\n".join(
             f"- **Term** from **{t.start_date}** to **{t.end_date}**" for t in terms
         ) or "No upcoming terms available."
+        booking_phase = format_booking_phase()
+        if booking_phase:
+            term_info = f"{booking_phase}\n{term_info}"
         lesson_list = format_lesson_list(get_active_lessons()) or "No active public lessons found."
 
         skill_summary = ""
@@ -201,6 +209,9 @@ def public_swim_chat(request):
             )
 
         lesson_term_info = ""
+        booking_phase = format_booking_phase()
+        if booking_phase:
+            lesson_term_info += booking_phase + "\n\n"
         current_term = Term.get_current_term()
         next_term = Term.get_next_term()
         if current_term:

@@ -208,6 +208,42 @@ class SkillSummaryTests(TestCase):
             self.assertFalse(_is_progression_question(message), message)
 
 
+class BookingPhaseTests(TestCase):
+    """"How do I rebook?" needs today's booking stage, not a raw term date."""
+
+    def test_no_current_term_yields_empty_string(self):
+        from chatbot.helpers.lesson import format_booking_phase
+
+        # No Term fixtures, so there is no phase — the prompt block is simply
+        # omitted rather than carrying "None".
+        self.assertEqual(format_booking_phase(), "")
+
+    def test_phase_summary_is_rendered_for_the_prompt(self):
+        from unittest.mock import patch
+
+        from chatbot.helpers import lesson
+
+        summary = {
+            "current": {"id": "BK", "label": "Current Term Booking", "until": "10 Sep 2026"},
+            "next": {"id": "RB", "label": "Rebooking", "starts": "17 Aug 2026"},
+        }
+        with patch.object(lesson, "get_term_info", return_value={"phase_summary": summary}):
+            rendered = lesson.format_booking_phase()
+
+        self.assertIn("Current Term Booking", rendered)
+        self.assertIn("10 Sep 2026", rendered)
+        self.assertIn("Rebooking", rendered)
+        self.assertIn("17 Aug 2026", rendered)
+
+    def test_failure_degrades_to_empty_rather_than_breaking_the_reply(self):
+        from unittest.mock import patch
+
+        from chatbot.helpers import lesson
+
+        with patch.object(lesson, "get_term_info", side_effect=RuntimeError("boom")):
+            self.assertEqual(lesson.format_booking_phase(), "")
+
+
 class ThresholdCheckTests(TestCase):
     """The thresholds are only meaningful in a strict order.
 

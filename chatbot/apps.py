@@ -6,4 +6,5 @@ class ChatbotConfig(AppConfig):
     name = 'chatbot'
 
     def ready(self):
+        from chatbot import checks  # noqa: F401  (registers threshold sanity checks)
         from chatbot import signals  # noqa: F401  (registers FAQ index invalidation)

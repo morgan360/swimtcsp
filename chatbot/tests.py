@@ -6,6 +6,7 @@ vectors are supplied directly and scores are exact and predictable.
 from django.core.cache import cache
 from django.test import RequestFactory, TestCase, override_settings
 
+from chatbot.checks import check_faq_thresholds
 from chatbot.helpers import faq as faq_helper
 from chatbot.helpers.faq_index import embedding_text, get_index, normalize
 from chatbot.helpers.throttle import is_rate_limited
@@ -178,6 +179,49 @@ class FAQIndexTests(TestCase):
 
     def test_normalize_collapses_case_and_whitespace(self):
         self.assertEqual(normalize("  Do I   Need\na Hat? "), "do i need a hat?")
+
+
+class ThresholdCheckTests(TestCase):
+    """The thresholds are only meaningful in a strict order.
+
+    Production was found with FAQ_MATCH_THRESHOLD=0.40 against a hedge floor of
+    0.58, which makes the hedged tier unreachable.
+    """
+
+    def ids(self):
+        return {m.id for m in check_faq_thresholds(None)}
+
+    @override_settings(
+        FAQ_MATCH_THRESHOLD=0.68, FAQ_MIN_CONFIDENCE=0.58, FAQ_CONTEXT_MIN_SCORE=0.50
+    )
+    def test_calibrated_defaults_pass(self):
+        self.assertEqual(self.ids(), set())
+
+    @override_settings(
+        FAQ_MATCH_THRESHOLD=0.40, FAQ_MIN_CONFIDENCE=0.58, FAQ_CONTEXT_MIN_SCORE=0.50
+    )
+    def test_match_below_hedge_is_an_error(self):
+        self.assertIn("chatbot.E003", self.ids())
+
+    @override_settings(
+        FAQ_MATCH_THRESHOLD=0.68, FAQ_MIN_CONFIDENCE=0.58, FAQ_CONTEXT_MIN_SCORE=0.60
+    )
+    def test_context_floor_above_hedge_is_an_error(self):
+        self.assertIn("chatbot.E004", self.ids())
+
+    @override_settings(
+        FAQ_MATCH_THRESHOLD=1.5, FAQ_MIN_CONFIDENCE=0.58, FAQ_CONTEXT_MIN_SCORE=0.50
+    )
+    def test_out_of_range_is_an_error(self):
+        self.assertIn("chatbot.E002", self.ids())
+
+    @override_settings(
+        FAQ_MATCH_THRESHOLD=0.50, FAQ_MIN_CONFIDENCE=0.45, FAQ_CONTEXT_MIN_SCORE=0.40
+    )
+    def test_low_but_ordered_thresholds_only_warn(self):
+        ids = self.ids()
+        self.assertIn("chatbot.W001", ids)
+        self.assertFalse({i for i in ids if i.startswith("chatbot.E")})
 
 
 @override_settings(CHATBOT_MAX_MESSAGES_PER_HOUR=3)

@@ -1,4 +1,3 @@
-import os
 from django.contrib.admin import AdminSite, TabularInline, ModelAdmin
 from navigation.models import MenuGroup, MenuItem
 from waiting_list.models import WaitingList  # ✅ Import your model
@@ -14,11 +13,10 @@ from progress.models import (
     InstructorNote
 )
 from chatbot.models import ChatbotQuery, FAQEntry
-import openai
-from openai import OpenAI
+from chatbot.helpers.client import embed, embed_model
+from chatbot.helpers.faq_index import embedding_text
 from lessons_bookings.models import LessonEnrollment, Term
 from django.contrib.admin import SimpleListFilter
-from django.conf import settings
 import time
 import logging
 
@@ -257,10 +255,6 @@ class InstructorNoteAdmin(ModelAdmin):
     list_filter = ['term', 'instructor']
 
 ######## AI Splash BOT ############
-EMBED_MODEL = os.getenv(
-    "OPENAI_EMBED_MODEL",
-    getattr(settings, "OPENAI_EMBED_MODEL", "text-embedding-3-small"),
-)
 
 class ChatbotQueryAdmin(admin.ModelAdmin):
     list_display = ("source", "timestamp", "short_message", "short_response", "response_type", "confidence_score")
@@ -282,8 +276,6 @@ class ChatbotQueryAdmin(admin.ModelAdmin):
 
 # Frequently Asked Questions
 
-client = OpenAI()
-
 @admin.action(description="Generate embeddings using OpenAI")
 def generate_embeddings(modeladmin, request, queryset):
     """
@@ -291,30 +283,32 @@ def generate_embeddings(modeladmin, request, queryset):
     """
     count = 0
     errors = 0
+    last_error = None
 
     for faq in queryset.iterator():
         if not faq.question:
             continue
-        try:
-            resp = client.embeddings.create(
-                model=EMBED_MODEL,
-                input=faq.question.strip(),
-            )
-            faq.embedding = resp.data[0].embedding
-            faq.save(update_fields=["embedding", "updated"])
-            count += 1
 
-        except Exception as e:
+        # Question and answer together — matches what every other writer of
+        # FAQEntry.embedding stores, so the vectors stay comparable.
+        vector = embed(embedding_text(faq.question, faq.answer))
+        if vector is None:
             errors += 1
-            logger.exception("Embedding failed for FAQ id=%s question=%r", faq.id, faq.question[:80])
-            messages.warning(request, f"❌ Error for '{faq.question[:60]}': {e}")
+            last_error = f"embedding failed for '{faq.question[:60]}'"
+            logger.warning("Embedding failed for FAQ id=%s", faq.id)
+            messages.warning(request, f"❌ Error for '{faq.question[:60]}'")
             # optional tiny backoff for transient rate limits
             time.sleep(0.25)
+            continue
+
+        faq.embedding = vector
+        faq.save(update_fields=["embedding", "updated"])
+        count += 1
 
     if count:
-        messages.success(request, f"✅ Generated embeddings for {count} FAQ(s) using {EMBED_MODEL}.")
+        messages.success(request, f"✅ Generated embeddings for {count} FAQ(s) using {embed_model()}.")
     if errors and not count:
-        messages.error(request, f"⚠️ No embeddings created. Last error: {e}")
+        messages.error(request, f"⚠️ No embeddings created. Last error: {last_error}")
     elif errors:
         messages.warning(request, f"⚠️ {errors} item(s) failed; see logs for details.")
 

@@ -86,3 +86,8 @@ swimtcsp/home/management/
 # Deployment scripts (server-specific)
 deploy-to-dev.sh
 deploy-to-prod.sh
+
+# Database and FAQ backups taken during deploys — never commit
+backups/
+*.sql
+*.sql.gz

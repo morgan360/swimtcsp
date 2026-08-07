@@ -33,6 +33,47 @@ def get_git_version():
 
 VERSION = get_git_version()
 
+# -------------------------
+# OpenAI / chatbot
+# -------------------------
+# Single source of truth for every environment. Previously each settings file
+# declared its own OpenAI block with a different default, and chatbot/views.py
+# preferred os.getenv() over these values — so which model actually ran depended
+# on whether the process environment happened to carry the variable. Read these
+# through chatbot.helpers.client only.
+OPENAI_API_KEY = config('OPENAI_API_KEY', default='')
+OPENAI_CHAT_MODEL = config('OPENAI_CHAT_MODEL', default='gpt-5.4-mini')
+OPENAI_EMBED_MODEL = config('OPENAI_EMBED_MODEL', default='text-embedding-3-small')
+OPENAI_PROJECT = config('OPENAI_PROJECT', default='')
+
+# FAQ retrieval tiers. A query is embedded once and scored against every FAQ:
+#   >= FAQ_MATCH_THRESHOLD  -> serve the stored answer verbatim (no model call)
+#   >= FAQ_MIN_CONFIDENCE   -> serve it, but hedged ("I'm not certain, but...")
+#   below that              -> call the model, with any FAQ scoring above
+#                              FAQ_CONTEXT_MIN_SCORE injected as grounding
+#
+# Calibrated by scoring 200 real historical questions from ChatbotQuery against
+# the live FAQ set (see `manage.py faq_calibrate`):
+#   0.73+       reliably the right entry — near-identical wording lands 0.88-1.00
+#               ("Do i need to wear a swimming hat" 0.948, "What's coached lanes?"
+#               0.895), and everything down to 0.748 was still correct
+#   0.65-0.73   right topic, often the neighbouring entry ("What ages are the
+#               swim lessons for?" matching the public-swim age FAQ at 0.727) —
+#               worth showing, but only with a hedge
+#   0.55-0.65   related enough to ground a prompt, not to quote. Below 0.65 the
+#               wrong matches start ("lockers" -> showers at 0.634)
+#   below 0.55  unrelated
+# These rose from 0.68/0.58/0.50 when the query prefix was removed — see
+# faq_index.query_text. Re-run faq_calibrate after any material corpus change,
+# and re-calibrate from scratch if the embedding text on either side changes.
+FAQ_MATCH_THRESHOLD = float(config('FAQ_MATCH_THRESHOLD', default=0.73))
+FAQ_MIN_CONFIDENCE = float(config('FAQ_MIN_CONFIDENCE', default=0.65))
+FAQ_CONTEXT_MIN_SCORE = float(config('FAQ_CONTEXT_MIN_SCORE', default=0.55))
+
+# Both chatbot endpoints are public and every message spends OpenAI credits.
+CHATBOT_MAX_MESSAGES_PER_HOUR = int(config('CHATBOT_MAX_MESSAGES_PER_HOUR', default=30))
+CHATBOT_MAX_MESSAGE_CHARS = int(config('CHATBOT_MAX_MESSAGE_CHARS', default=500))
+
 # Set the URL prefix for static files
 STATIC_URL = '/static/'
 

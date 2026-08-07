@@ -19,7 +19,11 @@ PRODUCTION_HOST="ssh.eu.pythonanywhere.com"
 PRODUCTION_USER="morganmck"
 PRODUCTION_DIR="swimtcsp"  # UPDATE THIS to your production directory name
 PRODUCTION_VENV="../.virtualenvs/swimtcsp"  # UPDATE THIS to your production venv path
-PRODUCTION_WSGI="/var/www/morganmck_pythonanywhere_com_wsgi.py"  # UPDATE THIS
+# The WSGI file that actually serves www.tcsp.ie. This previously pointed at
+# /var/www/morganmck_pythonanywhere_com_wsgi.py, which is a 0-byte unused file —
+# so every deploy "reloaded" nothing and the new code only took effect whenever
+# PythonAnywhere happened to recycle the worker.
+PRODUCTION_WSGI="/var/www/www_tcsp_ie_wsgi.py"
 PRODUCTION_SETTINGS="config.production_settings"
 
 echo -e "${BLUE}╔════════════════════════════════════════════════════════════╗${NC}"
@@ -102,10 +106,49 @@ echo -e "${YELLOW}STEP 1: Database Backup${NC}"
 echo -e "${YELLOW}═══════════════════════════════════════════════════════${NC}"
 
 mkdir -p backups
-BACKUP_FILE="backups/backup_$(date +%Y%m%d_%H%M%S).sql"
+BACKUP_FILE="backups/backup_$(date +%Y%m%d_%H%M%S).sql.gz"
 echo -e "${BLUE}📦 Creating database backup...${NC}"
-echo -e "${GREEN}✅ Backup location: $BACKUP_FILE${NC}"
-echo -e "${YELLOW}   (Configure mysqldump command with your credentials)${NC}"
+
+# Credentials come from Django settings so this stays correct if they change.
+# MYSQL_PWD rather than -p on the command line, which would expose the password
+# in the process list.
+source PRODUCTION_VENV_PLACEHOLDER/bin/activate
+eval "$(python - <<'PYEOF'
+import os, django, shlex
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "PRODUCTION_SETTINGS_PLACEHOLDER")
+django.setup()
+from django.conf import settings
+db = settings.DATABASES["default"]
+for key in ("NAME", "USER", "HOST", "PASSWORD"):
+    print(f"DB_{key}={shlex.quote(str(db[key]))}")
+PYEOF
+)"
+
+# --no-tablespaces: the shared MySQL user has no PROCESS privilege, and without
+# this mysqldump emits an access-denied warning for tablespaces.
+# PIPESTATUS, because a mysqldump failure would otherwise be hidden by gzip
+# exiting 0 on the truncated stream it received.
+MYSQL_PWD="$DB_PASSWORD" mysqldump \
+    --user="$DB_USER" --host="$DB_HOST" \
+    --single-transaction --quick --no-tablespaces \
+    --default-character-set=utf8mb4 \
+    "$DB_NAME" | gzip > "$BACKUP_FILE"
+DUMP_STATUS=${PIPESTATUS[0]}
+if [ "$DUMP_STATUS" -ne 0 ]; then
+    echo -e "${RED}❌ mysqldump exited ${DUMP_STATUS} — aborting before any change${NC}"
+    exit 1
+fi
+
+# A backup that exists but is empty is worse than none, because it looks fine.
+BACKUP_BYTES=$(stat -c %s "$BACKUP_FILE" 2>/dev/null || stat -f %z "$BACKUP_FILE")
+if [ "$BACKUP_BYTES" -lt 10000 ]; then
+    echo -e "${RED}❌ Backup is only ${BACKUP_BYTES} bytes — aborting${NC}"
+    exit 1
+fi
+
+echo -e "${GREEN}✅ Backup written: $BACKUP_FILE ($(( BACKUP_BYTES / 1024 )) KB)${NC}"
+# Keep the 5 most recent: these are ~30 MB each against a shared disk quota.
+ls -1t backups/backup_*.sql.gz 2>/dev/null | tail -n +6 | xargs -r rm --
 echo ""
 
 echo -e "${YELLOW}═══════════════════════════════════════════════════════${NC}"
@@ -157,8 +200,13 @@ echo -e "${YELLOW}STEP 6: Rebuild FAQ Embeddings${NC}"
 echo -e "${YELLOW}═══════════════════════════════════════════════════════${NC}"
 
 echo -e "${BLUE}🤖 Re-vectorizing FAQs...${NC}"
-python manage.py rebuild_faq_embeddings --settings=PRODUCTION_SETTINGS_PLACEHOLDER || {
-    echo -e "${YELLOW}⚠️  Warning: FAQ embedding failed (non-critical)${NC}"
+# Not optional: without embeddings the chatbot silently stops matching FAQs and
+# sends every question to the model, so a failure here must stop the deploy.
+# --delete-orphans: drop rows no longer in faq.yaml, so entries merged away
+# during a corpus cleanup stop competing for matches.
+python manage.py rebuild_faq_embeddings --delete-orphans --settings=PRODUCTION_SETTINGS_PLACEHOLDER || {
+    echo -e "${RED}❌ FAQ embedding failed — aborting deploy${NC}"
+    exit 1
 }
 echo -e "${GREEN}✅ FAQ embeddings rebuilt${NC}"
 echo ""

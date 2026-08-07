@@ -440,3 +440,18 @@ MAINTENANCE_MODE_IGNORE_IP_ADDRESSES = [
 # Google reCAPTCHA v2
 RECAPTCHA_PUBLIC_KEY = config('RECAPTCHA_PUBLIC_KEY')
 RECAPTCHA_PRIVATE_KEY = config('RECAPTCHA_PRIVATE_KEY')
+
+# Phone numbers
+#
+# These belong here rather than in a per-environment file. They were previously
+# set in local_settings only, so dev and production ran with no default region:
+# `PhoneNumberField.get_prep_value` had nothing to parse a bare national number
+# like "0851639462" against, and silently stored the raw string instead of a
+# valid number. Roughly 4,600 guardian numbers ended up unreadable that way and
+# had to be repaired by `manage.py normalise_phone_numbers`.
+#
+# Every number is Irish, so IE is the region to fall back on when one is written
+# without a country code. Storing E.164 keeps the value unambiguous even if the
+# region is ever wrong or missing.
+PHONENUMBER_DEFAULT_REGION = 'IE'
+PHONENUMBER_DB_FORMAT = 'E164'

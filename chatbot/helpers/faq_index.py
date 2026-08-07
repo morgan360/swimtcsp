@@ -52,13 +52,29 @@ def embedding_text(question, answer=""):
 
 
 def query_text(user_message):
-    """Frame a user question so it sits near stored FAQs in embedding space."""
-    return f"Question about Templeogue College Swimming Pool:\n{user_message.strip()}"
+    """The text a user question is embedded as: the question itself.
+
+    An earlier version prefixed this with "Question about Templeogue College
+    Swimming Pool:" to frame it. Because FAQs are embedded as bare questions,
+    that made query and document asymmetric and dragged every score down —
+    measured against production, "is there parking" scored 0.561 against the
+    *identical* stored question, versus 0.900 unframed, and three of five test
+    queries matched the wrong entry entirely.
+
+    Both sides are now embedded the same way. Keep it that way: whatever is done
+    here must also be done in embedding_text.
+    """
+    return user_message.strip()
+
+
+# Bumped whenever the query embedding text changes, so cached vectors from the
+# previous scheme are never compared against freshly embedded FAQs.
+_QUERY_EMBED_VERSION = "v2-bare"
 
 
 def query_cache_key(user_message):
     digest = hashlib.sha256(normalize(user_message).encode("utf-8")).hexdigest()
-    return f"chatbot:qembed:{digest}"
+    return f"chatbot:qembed:{_QUERY_EMBED_VERSION}:{digest}"
 
 
 def current_version():

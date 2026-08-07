@@ -52,19 +52,23 @@ OPENAI_PROJECT = config('OPENAI_PROJECT', default='')
 #   below that              -> call the model, with any FAQ scoring above
 #                              FAQ_CONTEXT_MIN_SCORE injected as grounding
 #
-# Calibrated by scoring 133 real historical questions from ChatbotQuery against
+# Calibrated by scoring 200 real historical questions from ChatbotQuery against
 # the live FAQ set (see `manage.py faq_calibrate`):
-#   0.68+       reliably the right entry ("Do I need a swim hat" -> the swim hat
-#               FAQ at 0.739; lockers, Masters, booking all land here)
-#   0.58-0.68   right topic, sometimes the neighbouring entry — worth showing,
-#               but only with a hedge
-#   0.50-0.58   related enough to ground a prompt, not to quote
-#   below 0.50  unrelated
-# The old single threshold of 0.65 let only 5 of 110 messages reach the FAQ tier;
-# re-run faq_calibrate after any material change to the corpus.
-FAQ_MATCH_THRESHOLD = float(config('FAQ_MATCH_THRESHOLD', default=0.68))
-FAQ_MIN_CONFIDENCE = float(config('FAQ_MIN_CONFIDENCE', default=0.58))
-FAQ_CONTEXT_MIN_SCORE = float(config('FAQ_CONTEXT_MIN_SCORE', default=0.50))
+#   0.73+       reliably the right entry — near-identical wording lands 0.88-1.00
+#               ("Do i need to wear a swimming hat" 0.948, "What's coached lanes?"
+#               0.895), and everything down to 0.748 was still correct
+#   0.65-0.73   right topic, often the neighbouring entry ("What ages are the
+#               swim lessons for?" matching the public-swim age FAQ at 0.727) —
+#               worth showing, but only with a hedge
+#   0.55-0.65   related enough to ground a prompt, not to quote. Below 0.65 the
+#               wrong matches start ("lockers" -> showers at 0.634)
+#   below 0.55  unrelated
+# These rose from 0.68/0.58/0.50 when the query prefix was removed — see
+# faq_index.query_text. Re-run faq_calibrate after any material corpus change,
+# and re-calibrate from scratch if the embedding text on either side changes.
+FAQ_MATCH_THRESHOLD = float(config('FAQ_MATCH_THRESHOLD', default=0.73))
+FAQ_MIN_CONFIDENCE = float(config('FAQ_MIN_CONFIDENCE', default=0.65))
+FAQ_CONTEXT_MIN_SCORE = float(config('FAQ_CONTEXT_MIN_SCORE', default=0.55))
 
 # Both chatbot endpoints are public and every message spends OpenAI credits.
 CHATBOT_MAX_MESSAGES_PER_HOUR = int(config('CHATBOT_MAX_MESSAGES_PER_HOUR', default=30))

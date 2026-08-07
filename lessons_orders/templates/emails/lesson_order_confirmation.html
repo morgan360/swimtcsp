@@ -36,19 +36,21 @@
           {% endfor %}
         </tbody>
         <tfoot>
-          {% if coupon %}
+          {% if redemptions %}
           <tr>
             <td colspan="3" style="text-align: right; padding: 10px;">Subtotal:</td>
-            <td style="text-align: right; padding: 10px;">€{{ original_price }}</td>
+            <td style="text-align: right; padding: 10px;">€{{ original_price|floatformat:2 }}</td>
           </tr>
+          {% for r in redemptions %}
           <tr>
-            <td colspan="3" style="text-align: right; padding: 10px;">Coupon ({{ coupon.code }}):</td>
-            <td style="text-align: right; padding: 10px; color: #f14668;">–€{{ discount }}</td>
+            <td colspan="3" style="text-align: right; padding: 10px;">Coupon ({{ r.coupon.code }}):</td>
+            <td style="text-align: right; padding: 10px; color: #f14668;">–€{{ r.redeemed_amount|floatformat:2 }}</td>
           </tr>
+          {% endfor %}
           {% endif %}
           <tr>
             <td colspan="3" style="text-align: right; padding: 10px; font-weight: bold;">Total:</td>
-            <td style="text-align: right; padding: 10px; font-weight: bold;">€{{ total_price }}</td>
+            <td style="text-align: right; padding: 10px; font-weight: bold;">€{{ total_price|floatformat:2 }}</td>
           </tr>
         </tfoot>
       </table>

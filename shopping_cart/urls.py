@@ -19,4 +19,5 @@ urlpatterns = [
     path('rebook/<int:swimling_id>/<int:product_id>/', views.direct_rebooking, name='direct_rebooking'),
     path('validate-coupon/', views.validate_coupon, name='validate_coupon'),
     path('remove-coupon/', views.remove_coupon, name='remove_coupon'),
+    path('remove-coupon/<str:code>/', views.remove_coupon, name='remove_coupon_code'),
 ]

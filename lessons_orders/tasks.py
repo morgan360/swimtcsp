@@ -1,8 +1,10 @@
 from decimal import Decimal
 import logging
+from django.contrib.contenttypes.models import ContentType
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.conf import settings
+from coupons.models import CouponRedemption
 from .models import Order
 
 logger = logging.getLogger("orders")
@@ -35,14 +37,21 @@ def send_lesson_order_email(order_id):
     original_price = _as_decimal(order.get_total_cost())
     discount = original_price - amount
 
+    redemptions = list(
+        CouponRedemption.objects.filter(
+            content_type=ContentType.objects.get_for_model(Order),
+            object_id=order.id,
+        ).select_related('coupon')
+    )
+
     context = {
         "user": order.user,
         "order": order,
         "order_items": order_items,
         "total_price": amount,            # discounted total
-        "coupon": order.coupon,
-        "discount": discount,
-        "original_price": original_price, # pre-discount price
+        "redemptions": redemptions,       # one row per applied coupon
+        "discount": discount,             # total discount across all coupons
+        "original_price": original_price, # pre-discount subtotal
         "support_email": settings.DEFAULT_SUPPORT_EMAIL,
     }
 

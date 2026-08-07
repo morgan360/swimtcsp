@@ -411,3 +411,194 @@ class LessonOrderBOIPAIntegrationTest(TransactionTestCase):
         print("\n" + "="*60)
         print("✅ MULTI-CHILD ENROLLMENT TEST PASSED")
         print("="*60)
+
+class OrderDiscountDisplayTests(TestCase):
+    """Discounts shown to the customer come from CouponRedemption rows.
+
+    Order.discount_amount was never a real database field — a stray trailing
+    comma in models.py makes it a tuple, and migration 0009 dropped the column —
+    so assigning to it silently did nothing and the confirmation page and
+    booking card rendered a blank or a tuple repr where a figure belonged.
+    """
+
+    def setUp(self):
+        from coupons.models import Coupon, CouponRedemption
+        from django.contrib.contenttypes.models import ContentType
+
+        self.user = User.objects.create_user(
+            email="discount@example.com", password="pw12345!"
+        )
+        self.order = Order.objects.create(user=self.user, amount=Decimal("59.50"), paid=True)
+        self.ct = ContentType.objects.get_for_model(Order)
+        self.Coupon, self.CouponRedemption = Coupon, CouponRedemption
+
+    def _redeem(self, code, amount):
+        now = timezone.now()
+        coupon = self.Coupon.objects.create(
+            code=code, discount_type="fixed", discount_value=Decimal(amount),
+            balance_remaining=Decimal(amount),
+            valid_from=now - timedelta(days=1), valid_to=now + timedelta(days=30),
+        )
+        return self.CouponRedemption.objects.create(
+            coupon=coupon, redeemed_amount=Decimal(amount),
+            content_type=self.ct, object_id=self.order.id,
+        )
+
+    def test_total_discount_sums_every_redemption(self):
+        self._redeem("TEST-A", "20.50")
+        self._redeem("TEST-B", "10.00")
+        self.assertEqual(self.order.total_discount, Decimal("30.50"))
+
+    def test_total_discount_is_zero_without_redemptions(self):
+        self.assertEqual(self.order.total_discount, Decimal("0.00"))
+
+    def test_discount_amount_is_still_not_a_real_field(self):
+        """Guard: if this ever starts passing as a field, the templates can move back."""
+        field_names = [f.name for f in Order._meta.get_fields()]
+        self.assertNotIn("discount_amount", field_names)
+
+    def _render(self, template, context):
+        import html as html_mod
+        import re
+        from django.template.loader import render_to_string
+        from django.test import RequestFactory
+
+        request = RequestFactory().get("/")
+        request.user = self.user
+        request.session = {}
+        out = render_to_string(template, context, request=request)
+        return re.sub(r"\s+", " ", html_mod.unescape(re.sub(r"<[^>]+>", " ", out)))
+
+    def test_booking_card_shows_the_real_discount(self):
+        self._redeem("TEST-A", "20.50")
+        text = self._render("users/_lesson_booking_card.html", {
+            "order": self.order, "status_label": "Paid",
+            "status_classes": "", "status_hint": "",
+        })
+        self.assertIn("TEST-A", text)
+        self.assertIn("20.50", text)
+
+    def test_confirmation_page_lists_each_coupon(self):
+        self._redeem("TEST-A", "20.50")
+        self._redeem("TEST-B", "10.00")
+        text = self._render("orders/order/created.html", {"order": self.order})
+        self.assertIn("TEST-A", text)
+        self.assertIn("TEST-B", text)
+        # With more than one coupon the page also shows the combined figure.
+        self.assertIn("30.50", text)
+
+
+class CheckoutCouponFailureTests(TestCase):
+    """A coupon that stops validating must not silently cost the customer money.
+
+    Previously payment_process logged the failure and carried on, so the customer
+    reached the payment page owing the undiscounted amount with no explanation.
+    """
+
+    def setUp(self):
+        from coupons.models import Coupon
+        from lessons_bookings.models import Term
+
+        self.client = Client()
+        self.user = User.objects.create_user(email="checkout@example.com", password="pw12345!")
+        self.client.force_login(self.user)
+
+        now = timezone.now()
+        today = now.date()
+        self.program = Program.objects.create(name="Checkout Prog")
+        self.category = Category.objects.create(
+            program=self.program, name="Checkout Cat",
+            slug="checkout-cat", stage="Stage 1",
+        )
+        self.term = Term.objects.create(
+            start_date=today,
+            end_date=today + timedelta(days=56),
+            rebooking_date=today - timedelta(days=7),
+            booking_date=today - timedelta(days=5),
+            assessment_date=today + timedelta(days=57),
+        )
+        self.swimling = Swimling.objects.create(
+            guardian=self.user, first_name="Kid", last_name="Test",
+            dob=date(2016, 1, 1),
+        )
+        self.product = Product.objects.create(
+            category=self.category, day_of_week=0,
+            start_time=time(10, 0), end_time=time(10, 45),
+            num_places=10, num_weeks=8,
+            price=Decimal("100.00"), active=True,
+        )
+        self.Coupon = Coupon
+        self.now = now
+
+    def _make_coupon(self, code, value="20.00", **kwargs):
+        opts = dict(
+            code=code, discount_type="fixed", discount_value=Decimal(value),
+            balance_remaining=Decimal(value),
+            valid_from=self.now - timedelta(days=1),
+            valid_to=self.now + timedelta(days=30),
+        )
+        opts.update(kwargs)
+        return self.Coupon.objects.create(**opts)
+
+    def _seed_cart(self, codes):
+        """Build the cart through the real Cart API so its shape stays correct."""
+        from shopping_cart.cart import Cart
+
+        request = type("R", (), {})()
+        request.session = self.client.session
+        cart = Cart(request)
+        cart.add(product=self.product, type="lesson",
+                 swimling_id=self.swimling.id, term=self.term)
+
+        request.session["coupon_codes"] = codes
+        request.session.save()
+        self.client.cookies[settings.SESSION_COOKIE_NAME] = request.session.session_key
+
+    def test_expired_coupon_blocks_checkout_instead_of_charging_full_price(self):
+        from coupons.models import CouponRedemption
+
+        # Valid when added to the cart, expired by the time they press pay.
+        coupon = self._make_coupon("GONE-OFF")
+        coupon.valid_to = self.now - timedelta(hours=1)
+        coupon.save()
+        self._seed_cart(["GONE-OFF"])
+
+        orders_before = Order.objects.count()
+        response = self.client.get(reverse("shopping_cart:payment_process"), follow=True)
+
+        # Sent back to the cart, told why, and nothing was created or spent.
+        self.assertContains(response, "has not been placed")
+        self.assertEqual(Order.objects.count(), orders_before)
+        self.assertEqual(CouponRedemption.objects.count(), 0)
+        self.assertEqual(self.Coupon.objects.get(code="GONE-OFF").times_used, 0)
+
+    def test_one_bad_coupon_does_not_spend_the_good_one(self):
+        """The failure must not leave the first coupon already redeemed."""
+        from coupons.models import CouponRedemption
+
+        good = self._make_coupon("GOOD-ONE")
+        bad = self._make_coupon("BAD-ONE")
+        bad.valid_to = self.now - timedelta(hours=1)
+        bad.save()
+        self._seed_cart(["GOOD-ONE", "BAD-ONE"])
+
+        self.client.get(reverse("shopping_cart:payment_process"), follow=True)
+
+        self.assertEqual(CouponRedemption.objects.count(), 0)
+        good.refresh_from_db()
+        self.assertEqual(good.times_used, 0)
+        self.assertEqual(good.balance_remaining, Decimal("20.00"))
+
+    def test_valid_coupons_still_check_out_and_discount(self):
+        from coupons.models import CouponRedemption
+
+        self._make_coupon("FINE-ONE", "25.00")
+        self._seed_cart(["FINE-ONE"])
+
+        self.client.get(reverse("shopping_cart:payment_process"), follow=True)
+
+        order = Order.objects.filter(user=self.user).order_by("-id").first()
+        self.assertIsNotNone(order)
+        self.assertEqual(order.amount, Decimal("75.00"))
+        self.assertEqual(order.total_discount, Decimal("25.00"))
+        self.assertEqual(CouponRedemption.objects.count(), 1)

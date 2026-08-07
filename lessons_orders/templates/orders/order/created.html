@@ -96,7 +96,8 @@
         </div>
 
         <!-- Coupon -->
-        {% if order.coupon %}
+        {% with redemptions=order.coupon_redemptions.all %}
+        {% if redemptions %}
         <div class="rounded-2xl border border-amber-200 bg-amber-50 p-5 shadow-sm">
           <div class="flex items-start space-x-3">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -104,13 +105,21 @@
             </svg>
             <div>
               <p class="text-sm font-semibold text-amber-800">Discount Applied</p>
+              {% for redemption in redemptions %}
               <p class="text-sm text-amber-700 mt-1">
-                Coupon <span class="font-mono font-semibold">{{ order.coupon.code }}</span> saved you €{{ order.discount_amount|floatformat:2 }}
+                Coupon <span class="font-mono font-semibold">{{ redemption.coupon.code }}</span> saved you €{{ redemption.redeemed_amount|floatformat:2 }}
               </p>
+              {% endfor %}
+              {% if redemptions|length > 1 %}
+              <p class="text-sm font-semibold text-amber-800 mt-2">
+                Total saved: €{{ order.total_discount|floatformat:2 }}
+              </p>
+              {% endif %}
             </div>
           </div>
         </div>
         {% endif %}
+        {% endwith %}
 
         <!-- Actions -->
         <div class="flex flex-wrap gap-4 items-center justify-between">

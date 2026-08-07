@@ -4,6 +4,59 @@ from .models import Coupon, CouponRedemption
 from django.core.exceptions import ValidationError
 from django.contrib.contenttypes.models import ContentType
 
+
+MAX_COUPONS_PER_ORDER = 2
+
+
+def compute_cart_totals(*, user, subtotal: Decimal, codes, context='lessons'):
+    """
+    Dry-run computation of multi-coupon totals for a cart. No DB writes.
+
+    Returns a dict with subtotal, total_discount, final_price, applied list of
+    {'code', 'coupon', 'discount'}, and errors list of {'code', 'message'}.
+    Invalid codes are dropped and reported in errors so the caller can decide
+    whether to surface them.
+
+    Each coupon's discount is capped at the remaining cart balance so two
+    fixed-amount coupons on a cart smaller than their combined face value
+    never push the total below €0.
+    """
+    applied = []
+    errors = []
+    remaining = subtotal
+    for code in codes:
+        try:
+            coupon = Coupon.objects.get(code=code)
+        except Coupon.DoesNotExist:
+            errors.append({'code': code, 'message': 'Invalid coupon code'})
+            continue
+        service = CouponService(coupon)
+        try:
+            service.validate(user=user, amount=subtotal, context=context)
+        except ValidationError as e:
+            errors.append({'code': code, 'message': str(e)})
+            continue
+        if coupon.discount_type == 'fixed':
+            cap = coupon.discount_value if coupon.multi_use else coupon.balance_remaining
+            discount = min(cap, remaining)
+        elif coupon.discount_type == 'percent':
+            discount = min(subtotal * (coupon.discount_value / Decimal('100')), remaining)
+        else:
+            errors.append({'code': code, 'message': 'Unknown discount type'})
+            continue
+        applied.append({'code': code, 'coupon': coupon, 'discount': discount})
+        remaining -= discount
+
+    total_discount = subtotal - remaining
+    return {
+        'subtotal': subtotal,
+        'total_discount': total_discount,
+        'final_price': remaining,
+        'applied': applied,
+        'errors': errors,
+    }
+
+
 class CouponService:
     def __init__(self, coupon: Coupon):
         self.coupon = coupon
@@ -62,19 +115,27 @@ class CouponService:
 
         return True
 
-    def apply(self, *, purchase_obj, amount: Decimal, user=None, product=None, context='any') -> Decimal:
+    def apply(self, *, purchase_obj, amount: Decimal, user=None, product=None, context='any', discount_cap: Decimal = None) -> Decimal:
+        """
+        Apply this coupon, writing a CouponRedemption row.
+
+        `amount` is validated against (e.g. minimum_order_value) and used as the
+        basis for percentage discounts. `discount_cap`, if provided, limits the
+        actual discount taken — used when stacking coupons so each redemption
+        only takes what remains of the cart.
+        """
         self.validate(user=user, amount=amount, product=product, context=context)
+        cap = amount if discount_cap is None else discount_cap
         if self.coupon.discount_type == 'fixed':
             if self.coupon.multi_use:
                 # Multi-use coupons: apply discount_value each time without depleting balance
-                discount = min(amount, self.coupon.discount_value)
+                discount = min(cap, self.coupon.discount_value)
             else:
                 # Single-use coupons: deplete from remaining balance
-                discount = min(amount, self.coupon.balance_remaining)
+                discount = min(cap, self.coupon.balance_remaining)
         elif self.coupon.discount_type == 'percent':
-            discount = amount * (self.coupon.discount_value / 100)
-            # For percentage coupons, balance_remaining doesn't apply
-            # The percentage is always calculated from the order amount
+            discount = amount * (self.coupon.discount_value / Decimal('100'))
+            discount = min(discount, cap)
         else:
             raise ValidationError("Unknown discount type.")
 

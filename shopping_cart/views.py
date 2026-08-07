@@ -1,5 +1,6 @@
 from django.contrib import messages
 from django.conf import settings
+from django.db import transaction
 from django.shortcuts import render, redirect, reverse, \
     get_object_or_404
 from django.views.decorators.http import require_POST
@@ -23,9 +24,53 @@ from lessons_bookings.utils.enrollment import handle_lessons_enrollment
 from django.http import HttpResponse
 from coupons.forms import CouponApplyForm
 from coupons.models import Coupon
-from coupons.services import CouponService
+from coupons.services import CouponService, compute_cart_totals, MAX_COUPONS_PER_ORDER
 from django.core.exceptions import ValidationError
 import logging
+
+
+COUPON_CODES_SESSION_KEY = 'coupon_codes'
+
+
+def _get_applied_coupon_codes(session):
+    """Read applied coupon codes from session, migrating legacy single-coupon key."""
+    codes = list(session.get(COUPON_CODES_SESSION_KEY, []))
+    legacy = session.get('coupon_code')
+    if legacy and legacy not in codes:
+        codes.append(legacy)
+    return codes
+
+
+def _clear_applied_coupons(session):
+    for key in (COUPON_CODES_SESSION_KEY, 'coupon_code', 'coupon_discount'):
+        session.pop(key, None)
+
+
+def _set_applied_coupon_codes(session, codes):
+    session[COUPON_CODES_SESSION_KEY] = codes
+    # Drop the legacy single-coupon keys so they don't conflict with the list
+    session.pop('coupon_code', None)
+    session.pop('coupon_discount', None)
+
+
+def _coupon_context(request):
+    """The coupon usage_context for whatever is currently in the cart.
+
+    Coupons can be scoped to 'lessons' or 'schools'. The cart is shared between
+    both, so this must be derived rather than assumed: the cart used to validate
+    everything as 'lessons' while checkout validated school carts as 'schools',
+    which meant a lessons-scoped coupon showed a discount in the cart and then
+    failed silently at checkout, charging the customer the undiscounted amount.
+    """
+    cart_type = request.session.get(f"{settings.CART_SESSION_ID}_type", None)
+    return 'schools' if cart_type == 'school' else 'lessons'
+
+
+def _cart_subtotal(cart):
+    total = Decimal('0.00')
+    for item_data in cart.cart.values():
+        total += Decimal(item_data['price']) * item_data['quantity']
+    return total
 
 
 def _ensure_rebooking_open(request):
@@ -146,92 +191,117 @@ def cart_detail(request):
     # Include the coupon form
     coupon_form = CouponApplyForm()
 
-    # Check if there's a validated coupon in the session
-    discount_amount = Decimal('0.00')
-    coupon_code = None
-    final_price = total_price
+    # Recompute totals from the currently applied coupon codes
+    user = request.user if request.user.is_authenticated else None
+    codes = _get_applied_coupon_codes(request.session)
+    totals = compute_cart_totals(
+        user=user, subtotal=total_price, codes=codes, context=_coupon_context(request)
+    )
 
-    if 'coupon_code' in request.session and 'coupon_discount' in request.session:
-        coupon_code = request.session['coupon_code']
-        discount_amount = Decimal(str(request.session['coupon_discount']))
-        final_price = max(total_price - discount_amount, Decimal('0.00'))
+    # Drop any codes that no longer validate so the session stays clean
+    valid_codes = [a['code'] for a in totals['applied']]
+    if valid_codes != codes:
+        _set_applied_coupon_codes(request.session, valid_codes)
 
     return render(request, 'shopping_cart/detail.html', {
         'cart_items': cart_items,
         'total_price': total_price,
         'coupon_form': coupon_form,
-        'coupon_code': coupon_code,
-        'discount_amount': discount_amount,
-        'final_price': final_price,
+        'applied_coupons': totals['applied'],
+        'total_discount': totals['total_discount'],
+        'final_price': totals['final_price'],
+        'max_coupons': MAX_COUPONS_PER_ORDER,
     })
 
 
 @login_required
 @require_POST
 def validate_coupon(request):
-    """HTMX endpoint to validate coupon and return discount preview"""
+    """HTMX endpoint to add a coupon to the applied list and return the refreshed panel."""
     cart = Cart(request)
-    coupon_code = request.POST.get("code", "").strip()
-
-    # Calculate cart total
-    total_price = Decimal('0.00')
-    for item_key, item_data in cart.cart.items():
-        item_total = Decimal(item_data['price']) * item_data['quantity']
-        total_price += item_total
-
-    # Default values
-    discount_amount = Decimal('0.00')
+    new_code = request.POST.get("code", "").strip()
+    subtotal = _cart_subtotal(cart)
+    existing_codes = _get_applied_coupon_codes(request.session)
     error_message = None
-    success = False
 
-    if not coupon_code:
+    if not new_code:
         error_message = "Please enter a coupon code"
+    elif new_code in existing_codes:
+        error_message = "That coupon is already applied"
+    elif len(existing_codes) >= MAX_COUPONS_PER_ORDER:
+        error_message = f"You can apply at most {MAX_COUPONS_PER_ORDER} coupons per order"
     else:
         try:
-            coupon = Coupon.objects.get(code=coupon_code)
-            service = CouponService(coupon)
-
-            # Validate without applying (dry run) - specify lessons context
-            service.validate(user=request.user, amount=total_price, context='lessons')
-
-            # Calculate discount
-            if coupon.discount_type == 'fixed':
-                discount_amount = min(total_price, coupon.balance_remaining)
-            elif coupon.discount_type == 'percent':
-                discount_amount = total_price * (coupon.discount_value / 100)
-                # For percentage coupons, balance_remaining doesn't apply
-
-            # Store in session for later use
-            request.session['coupon_code'] = coupon_code
-            request.session['coupon_discount'] = str(discount_amount)
-            success = True
-
+            new_coupon = Coupon.objects.get(code=new_code)
         except Coupon.DoesNotExist:
+            new_coupon = None
             error_message = "Invalid coupon code"
-        except ValidationError as e:
-            error_message = str(e)
 
-    final_price = max(total_price - discount_amount, Decimal('0.00'))
+        if new_coupon is not None:
+            # Stacking rule: only fixed-amount coupons may stack
+            if existing_codes:
+                if new_coupon.discount_type != 'fixed':
+                    error_message = "Only fixed-amount coupons can be combined"
+                else:
+                    existing_coupons = Coupon.objects.filter(code__in=existing_codes)
+                    if any(c.discount_type != 'fixed' for c in existing_coupons):
+                        error_message = "Only fixed-amount coupons can be combined"
 
-    # Return HTML fragment for HTMX
+            if error_message is None:
+                try:
+                    CouponService(new_coupon).validate(
+                        user=request.user, amount=subtotal, context=_coupon_context(request)
+                    )
+                except ValidationError as e:
+                    error_message = str(e)
+
+            if error_message is None:
+                existing_codes.append(new_code)
+                _set_applied_coupon_codes(request.session, existing_codes)
+
+    totals = compute_cart_totals(
+        user=request.user, subtotal=subtotal, codes=existing_codes,
+        context=_coupon_context(request),
+    )
+
     return render(request, 'shopping_cart/_coupon_result.html', {
-        'success': success,
         'error_message': error_message,
-        'coupon_code': coupon_code if success else None,
-        'discount_amount': discount_amount,
-        'total_price': total_price,
-        'final_price': final_price,
+        'applied_coupons': totals['applied'],
+        'total_price': subtotal,
+        'total_discount': totals['total_discount'],
+        'final_price': totals['final_price'],
+        'max_coupons': MAX_COUPONS_PER_ORDER,
     })
 
 
 @login_required
 @require_POST
-def remove_coupon(request):
-    """Remove coupon from session"""
-    if 'coupon_code' in request.session:
-        del request.session['coupon_code']
-    if 'coupon_discount' in request.session:
-        del request.session['coupon_discount']
+def remove_coupon(request, code=None):
+    """Remove a single coupon (by code) or all coupons (if no code) from the session."""
+    codes = _get_applied_coupon_codes(request.session)
+    if code:
+        codes = [c for c in codes if c != code]
+        _set_applied_coupon_codes(request.session, codes)
+    else:
+        _clear_applied_coupons(request.session)
+        codes = []
+
+    # HTMX path: return refreshed coupon panel
+    if request.headers.get('HX-Request'):
+        cart = Cart(request)
+        subtotal = _cart_subtotal(cart)
+        totals = compute_cart_totals(
+            user=request.user, subtotal=subtotal, codes=codes,
+            context=_coupon_context(request),
+        )
+        return render(request, 'shopping_cart/_coupon_result.html', {
+            'error_message': None,
+            'applied_coupons': totals['applied'],
+            'total_price': subtotal,
+            'total_discount': totals['total_discount'],
+            'final_price': totals['final_price'],
+            'max_coupons': MAX_COUPONS_PER_ORDER,
+        })
 
     return redirect('shopping_cart:cart_detail')
 
@@ -288,28 +358,75 @@ def payment_process(request):
     else:
         return HttpResponse("Invalid product type in cart.", status=400)
 
-    # Step 2: Handle coupon if present (from session)
-    coupon_code = request.session.get('coupon_code')
-    if coupon_code:
+    # Step 2: Handle any applied coupons from the session
+    subtotal = total_price
+    applied_codes = _get_applied_coupon_codes(request.session)
+    remaining = subtotal
+
+    if applied_codes:
+        # Check every coupon before applying any of them. A coupon can lapse, be
+        # spent elsewhere or hit its usage limit between the cart page and the
+        # payment button. That used to be logged and skipped, which sent the
+        # customer to the payment page owing more than the cart had quoted, with
+        # nothing to explain the difference.
+        preview = compute_cart_totals(
+            user=request.user,
+            subtotal=subtotal,
+            codes=applied_codes,
+            context=_coupon_context(request),
+        )
+        if preview['errors']:
+            order.delete()
+            # Keep whatever still validates so they only have to deal with the
+            # coupon that actually went wrong.
+            _set_applied_coupon_codes(
+                request.session, [a['code'] for a in preview['applied']]
+            )
+            for err in preview['errors']:
+                logger.warning(
+                    "[Coupon] %s rejected at checkout: %s", err['code'], err['message']
+                )
+                messages.error(
+                    request,
+                    f"Coupon {err['code']} could no longer be applied: {err['message']} "
+                    f"Your order has not been placed and you have not been charged.",
+                )
+            return redirect('shopping_cart:cart_detail')
+
         try:
-            coupon = Coupon.objects.get(code=coupon_code)
-            service = CouponService(coupon)
-            discount = service.apply(purchase_obj=order, amount=total_price, user=request.user)
-            total_price -= discount
+            # One transaction: apply() writes a redemption and deducts balance as
+            # it goes, so without this a failure on the second coupon would leave
+            # the first one already spent against an order that never happened.
+            with transaction.atomic():
+                for code in applied_codes:
+                    coupon = Coupon.objects.get(code=code)
+                    discount = CouponService(coupon).apply(
+                        purchase_obj=order,
+                        amount=subtotal,
+                        user=request.user,
+                        context=_coupon_context(request),
+                        discount_cap=remaining,
+                    )
+                    remaining -= discount
+                    # Populate legacy single-coupon field with the first applied coupon
+                    if order.coupon_id is None:
+                        order.coupon = coupon
+                    logger.info(f"[Coupon] Applied {code} for €{discount} to order {order.id}")
+        except (Coupon.DoesNotExist, ValidationError) as exc:
+            # Lost a race between the check above and applying. Every redemption
+            # in the block is rolled back, so nothing is half-spent.
+            logger.error("[Coupon] Application failed at checkout: %s", exc)
+            order.delete()
+            messages.error(
+                request,
+                "We couldn't apply your coupon just now. Your order has not been "
+                "placed and you have not been charged — please check your coupons "
+                "and try again.",
+            )
+            return redirect('shopping_cart:cart_detail')
 
-            # ✅ Persist coupon info to order
-            order.coupon = coupon
-            order.discount_amount = discount
-
-            # Clear coupon from session after applying
-            del request.session['coupon_code']
-            del request.session['coupon_discount']
-
-            logger.info(f"[Coupon] Applied {coupon_code} for €{discount} to order {order.id}")
-        except Coupon.DoesNotExist:
-            logger.error(f"[Coupon] Invalid code: {coupon_code}")
-        except ValidationError as e:
-            logger.error(f"[Coupon] Error: {str(e)}")
+    total_price = remaining
+    _clear_applied_coupons(request.session)
 
     # Step 3: Save the final amount and clear cart
     order.amount = total_price

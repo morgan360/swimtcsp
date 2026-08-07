@@ -3,7 +3,7 @@
 import yaml
 from pathlib import Path
 from django.conf import settings
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 from chatbot.models import FAQEntry
 from chatbot.helpers.client import embed, embed_model
 from chatbot.helpers.faq_index import embedding_text
@@ -87,11 +87,17 @@ class Command(BaseCommand):
                         }
                     )
 
-                    # Update answer and lessons_only if changed
+                    # Update answer and lessons_only if changed. Saved here and
+                    # not with the embedding: these are cheap local edits that
+                    # must survive an embedding API failure. Previously the only
+                    # save() sat inside the embedding branch, so a bad API key
+                    # silently discarded every content and scoping change while
+                    # still reporting them as updated.
                     if not was_created:
                         if faq.answer != answer or faq.lessons_only != lessons_only:
                             faq.answer = answer
                             faq.lessons_only = lessons_only
+                            faq.save(update_fields=["answer", "lessons_only", "updated"])
                             updated_count += 1
 
                     # Generate embedding if needed
@@ -100,14 +106,14 @@ class Command(BaseCommand):
                     if needs_embedding:
                         self.stdout.write(f"🔧 Embedding: {question[:60]}...")
 
-                        # Question *and* answer, so the answer body is
-                        # reachable by retrieval too.
                         vector = embed(embedding_text(question, answer))
                         if vector is None:
-                            raise RuntimeError("embedding API returned no vector")
+                            raise RuntimeError(
+                                "embedding API returned no vector (check OPENAI_API_KEY)"
+                            )
 
                         faq.embedding = vector
-                        faq.save()
+                        faq.save(update_fields=["embedding", "updated"])
 
                         if was_created:
                             created_count += 1
@@ -125,7 +131,10 @@ class Command(BaseCommand):
 
         # Step 6: Summary
         self.stdout.write("\n" + "="*60)
-        self.stdout.write(self.style.SUCCESS("✅ FAQ Rebuild Complete!"))
+        if error_count:
+            self.stdout.write(self.style.ERROR("❌ FAQ Rebuild finished with errors"))
+        else:
+            self.stdout.write(self.style.SUCCESS("✅ FAQ Rebuild Complete!"))
         self.stdout.write("="*60)
         self.stdout.write(f"📊 Summary:")
         self.stdout.write(f"   • New FAQs created: {created_count}")
@@ -145,7 +154,17 @@ class Command(BaseCommand):
             self.stdout.write(self.style.WARNING(
                 f"\n⚠️  Warning: {total_in_db - total_with_embeddings} FAQ(s) still missing embeddings"
             ))
-        else:
+        elif not error_count:
             self.stdout.write(self.style.SUCCESS("\n✅ All FAQs have embeddings!"))
 
         self.stdout.write("")
+
+        # Exit non-zero so a deploy stops here. "Every FAQ has an embedding" was
+        # previously reported even when every call had failed, because the rows
+        # still held their previous vectors — a failed rebuild looked like a
+        # clean one, and the deploy script's error check could never fire.
+        if error_count:
+            raise CommandError(
+                f"{error_count} FAQ(s) failed to embed — the corpus may be stale. "
+                f"Check OPENAI_API_KEY for this environment."
+            )

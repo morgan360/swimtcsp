@@ -26,8 +26,10 @@
   answer: <p>Swim sessions typically last between 45 and 60 minutes. The exact time
     is shown in the session list.</p>
 - question: What ages are allowed for public swims?
-  answer: <p>Public swims are open to all ages. Children under 8 must be accompanied
-    in the water by an adult.</p>
+  answer: <p>Public swims are open to all ages.</p><ul><li>Children aged <strong>8
+    and under</strong> must be accompanied <strong>in the water</strong> by an adult
+    (over 18).</li><li>Children aged <strong>12 and under</strong> must have an accompanying
+    adult <strong>in the building</strong>.</li></ul>
 - question: How do I know what level to book for my child?
   answer: "<p>Our instructors assess each swimmer and recommend the appropriate level.\
     \ If unsure, ask the staff at reception.</p>\r\n\r\n<p><span style=\"color:#000000\"\
@@ -66,8 +68,6 @@
     Fridays but not Saturday.
 - question: What do I need to bring to a swim?
   answer: <p>Hat, goggles, swimsuit, flipflops and armbands (if needed)&nbsp;</p>
-- question: What age do lessons begin from?
-  answer: <p>We only accommodate for children over the age of four. &nbsp;</p>
 - question: Do I need to book into the public swimming sessions?
   answer: <p>It is recommended that you book before your swim in order to assure a
     place, however, if space allows you can come down and pay at the desk.&nbsp;</p>
@@ -217,11 +217,6 @@
     occur at the end of a term. If a child is ready to progress, we will look after
     all of the admin for you!</span></p>
   lessons_only: true
-- question: How do I move my child to the next level?
-  answer: <p><span style="color:#000000">Progression of levels is decided by the class
-    teacher. We will notify you when your child is ready to move. If you require information
-    on your child&rsquo;s progression, please speak to their class teacher.</span></p>
-  lessons_only: true
 - question: My child was injured/sick, can I get a refund for the lessons missed?
   answer: <p><span style="color:#000000">Medical credit is assessed and allocated
     on a case-by-case basis. Medical credit can be issued for long-term absence only
@@ -237,10 +232,11 @@
   answer: <p><span style="color:#000000">All public sessions will have a lifeguard
     on duty.</span></p>
 - question: Are there age restrictions for public swims?
-  answer: <p><span style="color:#000000">Our public swim sessions welcome swimmers
-    of all ages. We have family-friendly sessions, as well as some specialised sessions
-    for ladies only. Children under 8 must be accompanied by a responsible adult at
-    all times.</span></p>
+  answer: <p>Our public swim sessions welcome swimmers of all ages. We have family-friendly
+    sessions, as well as some specialised sessions for ladies only.</p><ul><li>Children
+    aged <strong>8 and under</strong> must be accompanied <strong>in the water</strong>
+    by an adult (over 18).</li><li>Children aged <strong>12 and under</strong> must
+    have an accompanying adult <strong>in the building</strong>.</li></ul>
 - question: Do teachers teach scripted lessons?
   answer: <p><span style="color:#000000">No, our teachers do not teach scripted lessons</span></p>
   lessons_only: true
@@ -273,8 +269,7 @@
     designated lanes for length swimming.&nbsp;We are a pool-only facility, meaning
     we do not have a sauna, steam room, etc.</span></p>
 - question: At what age can my child start lessons?
-  answer: <p><span style="color:#000000">We offer lessons to children four years old
-    and above</span></p>
+  answer: <p>We take children for lessons <strong>from the age of 4</strong>.</p>
 - question: How do I book swimming lessons?
   answer: <p>All term-based lessons, for adults and children, are managed through
     the <strong>Swimling Dashboard</strong>.</p><ol><li>Create a free account &mdash;

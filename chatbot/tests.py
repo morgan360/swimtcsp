@@ -181,6 +181,33 @@ class FAQIndexTests(TestCase):
         self.assertEqual(normalize("  Do I   Need\na Hat? "), "do i need a hat?")
 
 
+class SkillSummaryTests(TestCase):
+    """The summary must actually build.
+
+    It traversed a `lesson` field CategorySkill does not have, so it raised
+    FieldError on every call — and the caller caught the exception, so the
+    lesson bot silently prompted without the skill tree for as long as the
+    feature had existed.
+    """
+
+    def test_builds_without_error(self):
+        from chatbot.utils import _build_skill_structure_summary
+
+        summary = _build_skill_structure_summary()
+        self.assertIn("Skill Structure by Core Aquatic Skill", summary)
+
+    def test_only_progression_questions_get_the_skill_tree(self):
+        from chatbot.views import _is_progression_question
+
+        for message in ["why hasn't my child moved up a level",
+                        "when will she be ready to progress",
+                        "what skills are assessed"]:
+            self.assertTrue(_is_progression_question(message), message)
+
+        for message in ["how do i pay", "where do i park", "do i need a hat"]:
+            self.assertFalse(_is_progression_question(message), message)
+
+
 class ThresholdCheckTests(TestCase):
     """The thresholds are only meaningful in a strict order.
 

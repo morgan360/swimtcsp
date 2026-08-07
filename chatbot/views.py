@@ -42,8 +42,23 @@ LIVE_DATA_KEYWORDS = (
 )
 
 
+# The skill tree renders to ~11 KB (roughly 3k tokens). It is the answer to
+# "why hasn't my child moved up", and noise for "how do I pay", so it is only
+# attached when the question is actually about progression.
+PROGRESSION_KEYWORDS = (
+    "level", "levels", "move up", "moved up", "move-up", "moving up",
+    "progress", "progression", "advance", "next stage", "stage",
+    "skill", "skills", "ready", "assess", "assessment", "repeat",
+    "badge", "beginner", "improver", "widths", "lengths",
+)
+
+
 def _needs_live_data(message):
     return any(keyword in message for keyword in LIVE_DATA_KEYWORDS)
+
+
+def _is_progression_question(message):
+    return any(keyword in message for keyword in PROGRESSION_KEYWORDS)
 
 
 def _read_message(request):
@@ -112,11 +127,12 @@ def public_lesson_chat_api(request):
         ) or "No upcoming terms available."
         lesson_list = format_lesson_list(get_active_lessons()) or "No active public lessons found."
 
-        try:
-            skill_summary = get_skill_structure_summary()
-        except Exception as exc:
-            logger.error("Skill summary failed: %s", exc)
-            skill_summary = ""
+        skill_summary = ""
+        if _is_progression_question(user_message.lower()):
+            try:
+                skill_summary = get_skill_structure_summary()
+            except Exception as exc:
+                logger.error("Skill summary failed: %s", exc)
 
         prompt = build_lesson_prompt(
             user_message,

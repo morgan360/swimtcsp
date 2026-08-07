@@ -29,9 +29,14 @@ def get_skill_structure_summary():
 
 def _build_skill_structure_summary():
     # One pass for every skill→level mapping, instead of a query per skill.
+    #
+    # CategorySkill links a skill to a lessons.Category directly — it has no
+    # `lesson` field. The original traversed `lesson__category`, which raises
+    # FieldError, and the caller swallowed it, so the skill tree was never
+    # actually reaching the prompt in any environment.
     levels_by_skill = defaultdict(set)
-    for link in CategorySkill.objects.select_related("lesson__category"):
-        levels_by_skill[link.skill_id].add(link.lesson.category.name)
+    for link in CategorySkill.objects.select_related("category"):
+        levels_by_skill[link.skill_id].add(link.category.name)
 
     lines = ["## 🏊 Skill Structure by Core Aquatic Skill\n"]
 

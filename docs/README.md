@@ -17,6 +17,7 @@ Documentation for admin staff on how to use the platform features.
   - Troubleshooting
 
 - **[Chatbot FAQ Management](chatbot-faq-management.md)** - Guide for managing the AI chatbot FAQ system
+- **[Chatbot FAQ Content Review](chatbot-faq-content-review.md)** - Open policy/pricing questions in the FAQ corpus, awaiting sign-off
 
 ---
 

@@ -1,3 +1,211 @@
-from django.test import TestCase
+"""Tests for FAQ retrieval, scoping and throttling.
 
-# Create your tests here.
+No test here touches the OpenAI API: match_faq accepts an `embed_func`, so
+vectors are supplied directly and scores are exact and predictable.
+"""
+from django.core.cache import cache
+from django.test import RequestFactory, TestCase, override_settings
+
+from chatbot.helpers import faq as faq_helper
+from chatbot.helpers.faq_index import embedding_text, get_index, normalize
+from chatbot.helpers.throttle import is_rate_limited
+from chatbot.models import FAQEntry
+
+
+def unit(*components):
+    """A vector on the unit sphere, padded to a small fixed dimension."""
+    vector = list(components) + [0.0] * (4 - len(components))
+    return vector
+
+
+# Orthogonal axes: cosine similarity against each is simply the shared component.
+HAT = unit(1.0, 0.0, 0.0, 0.0)
+LEVELS = unit(0.0, 1.0, 0.0, 0.0)
+PARKING = unit(0.0, 0.0, 1.0, 0.0)
+
+
+@override_settings(
+    FAQ_MATCH_THRESHOLD=0.65,
+    FAQ_MIN_CONFIDENCE=0.45,
+    FAQ_CONTEXT_MIN_SCORE=0.40,
+)
+class MatchFAQTests(TestCase):
+    def setUp(self):
+        cache.clear()
+        FAQEntry.objects.create(
+            question="Do I need to wear a swimming hat?",
+            answer="<p>Yes, swimming hats are required.</p>",
+            embedding=HAT,
+            lessons_only=False,
+        )
+        FAQEntry.objects.create(
+            question="How many levels for children are there?",
+            answer="<p>5 widths levels and 3 lengths levels.</p>",
+            embedding=LEVELS,
+            lessons_only=True,
+        )
+
+    def match(self, message, vector, **kwargs):
+        return faq_helper.match_faq(
+            message, embed_func=lambda _: vector, **kwargs
+        )
+
+    def test_strong_similarity_answers_verbatim(self):
+        result = self.match("hats?", HAT)
+        self.assertEqual(result.tier, faq_helper.MATCH)
+        self.assertIn("swimming hats are required", result.answer)
+        self.assertAlmostEqual(result.score, 1.0, places=5)
+
+    def test_middling_similarity_is_hedged(self):
+        # cos = 0.55: past FAQ_MIN_CONFIDENCE but short of FAQ_MATCH_THRESHOLD.
+        result = self.match("something about hats", unit(0.55, 0.0, 0.835))
+        self.assertEqual(result.tier, faq_helper.HEDGED)
+        self.assertTrue(result.answer.startswith(faq_helper.HEDGE_PREFIX))
+        self.assertIn("swimming hats are required", result.answer)
+
+    def test_weak_similarity_misses_but_still_returns_context(self):
+        # cos = 0.42: below the hedge floor, above the context floor.
+        result = self.match("where do I park?", unit(0.42, 0.0, 0.907))
+        self.assertEqual(result.tier, faq_helper.MISS)
+        self.assertIsNone(result.answer)
+        self.assertEqual(len(result.context), 1)
+        # Context carries plain text, not the stored markup.
+        self.assertNotIn("<p>", result.context[0]["answer"])
+
+    def test_unrelated_query_yields_no_context(self):
+        result = self.match("where do I park?", PARKING)
+        self.assertEqual(result.tier, faq_helper.MISS)
+        self.assertEqual(result.context, [])
+
+    def test_exact_question_needs_no_embedding(self):
+        """A verbatim repeat should cost nothing at the API."""
+        def explode(_):
+            raise AssertionError("embed_func must not be called for an exact match")
+
+        result = faq_helper.match_faq(
+            "  do i need to wear a SWIMMING hat?  ", embed_func=explode
+        )
+        self.assertEqual(result.tier, faq_helper.MATCH)
+        self.assertAlmostEqual(result.score, 1.0)
+
+    def test_embedding_failure_degrades_to_miss(self):
+        result = faq_helper.match_faq("anything", embed_func=lambda _: None)
+        self.assertEqual(result.tier, faq_helper.MISS)
+
+
+@override_settings(FAQ_MATCH_THRESHOLD=0.65, FAQ_MIN_CONFIDENCE=0.45)
+class LessonsOnlyScopingTests(TestCase):
+    """lessons_only entries belong to the lesson bot; the rest are shared.
+
+    The old filter used exact equality on the flag, so the lesson bot saw only
+    lessons_only rows — and with none tagged, it matched nothing at all.
+    """
+
+    def setUp(self):
+        cache.clear()
+        FAQEntry.objects.create(
+            question="Do I need to wear a swimming hat?",
+            answer="<p>Yes.</p>",
+            embedding=HAT,
+            lessons_only=False,
+        )
+        FAQEntry.objects.create(
+            question="How many levels for children are there?",
+            answer="<p>Eight.</p>",
+            embedding=LEVELS,
+            lessons_only=True,
+        )
+
+    def test_lesson_bot_sees_shared_entries(self):
+        result = faq_helper.match_faq(
+            "hats?", lessons_mode=True, embed_func=lambda _: HAT
+        )
+        self.assertEqual(result.tier, faq_helper.MATCH)
+        self.assertIn("Yes.", result.answer)
+
+    def test_lesson_bot_sees_lessons_only_entries(self):
+        result = faq_helper.match_faq(
+            "levels?", lessons_mode=True, embed_func=lambda _: LEVELS
+        )
+        self.assertEqual(result.tier, faq_helper.MATCH)
+        self.assertIn("Eight.", result.answer)
+
+    def test_swim_bot_cannot_see_lessons_only_entries(self):
+        result = faq_helper.match_faq(
+            "levels?", lessons_mode=False, embed_func=lambda _: LEVELS
+        )
+        self.assertEqual(result.tier, faq_helper.MISS)
+
+
+class FAQIndexTests(TestCase):
+    def setUp(self):
+        cache.clear()
+
+    def test_saving_an_entry_rebuilds_the_index(self):
+        self.assertEqual(len(get_index()), 0)
+
+        entry = FAQEntry.objects.create(
+            question="Do you open on Bank Holidays?",
+            answer="<p>No.</p>",
+            embedding=HAT,
+        )
+        self.assertEqual(len(get_index()), 1)
+
+        entry.delete()
+        self.assertEqual(len(get_index()), 0)
+
+    def test_entries_without_embeddings_are_excluded(self):
+        FAQEntry.objects.create(question="Unembedded", answer="<p>x</p>")
+        self.assertEqual(len(get_index()), 0)
+
+    def test_mismatched_vector_dimensions_are_dropped(self):
+        """A partial re-embed with a different model must not break matching."""
+        FAQEntry.objects.create(question="A", answer="<p>a</p>", embedding=HAT)
+        FAQEntry.objects.create(question="B", answer="<p>b</p>", embedding=[1.0] * 9)
+
+        index = get_index()
+        self.assertEqual(len(index), 1)
+        self.assertEqual(index.matrix.shape, (1, 4))
+
+    def test_embedding_text_is_the_question_alone(self):
+        """Answers are deliberately excluded — see embedding_text's docstring.
+
+        Including them turned the one FAQ with a long answer into a hub that
+        came top for unrelated queries.
+        """
+        text = embedding_text("How deep is the pool?", "<p>Six feet six.</p>")
+        self.assertEqual(text, "How deep is the pool?")
+
+    def test_normalize_collapses_case_and_whitespace(self):
+        self.assertEqual(normalize("  Do I   Need\na Hat? "), "do i need a hat?")
+
+
+@override_settings(CHATBOT_MAX_MESSAGES_PER_HOUR=3)
+class ThrottleTests(TestCase):
+    def setUp(self):
+        cache.clear()
+        self.factory = RequestFactory()
+
+    def _request(self, session_key="abc123"):
+        request = self.factory.post("/chatbot/api/chat/public-swim/")
+        request.session = type("S", (), {"session_key": session_key})()
+        return request
+
+    def test_allows_up_to_the_limit_then_blocks(self):
+        request = self._request()
+        for _ in range(3):
+            self.assertFalse(is_rate_limited(request))
+        self.assertTrue(is_rate_limited(request))
+
+    def test_sessions_are_counted_separately(self):
+        first = self._request("session-one")
+        for _ in range(3):
+            is_rate_limited(first)
+        self.assertTrue(is_rate_limited(first))
+        self.assertFalse(is_rate_limited(self._request("session-two")))
+
+    @override_settings(CHATBOT_MAX_MESSAGES_PER_HOUR=0)
+    def test_zero_disables_throttling(self):
+        request = self._request()
+        for _ in range(10):
+            self.assertFalse(is_rate_limited(request))

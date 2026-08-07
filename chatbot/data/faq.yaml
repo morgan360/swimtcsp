@@ -33,19 +33,17 @@
     \ If unsure, ask the staff at reception.</p>\r\n\r\n<p><span style=\"color:#000000\"\
     >If your child is in our classes, their level information can be found on your\
     \ swimling dashboard.</span></p>"
+  lessons_only: true
 - question: Can my child repeat a level?
   answer: Yes, it’s normal and beneficial for a child to repeat a level to master
     the core aquatic skills confidently.
+  lessons_only: true
 - question: Are family swims available?
   answer: Yes, family swim sessions are listed under “Public Swims.” Prices vary by
     group size.
 - question: Can I cancel or reschedule a booking?
   answer: <p>Cancellations are possible depending on timing and policy. Please log
     into your account or contact us directly.</p>
-- question: Is there a waiting list I can join for Public lessons?
-  answer: Yes! When you see a lesson is full, you will be given the option to join
-    a waiting list. This list is actively monitored and you will be informed by email
-    when a place becomes available.
 - question: Do I need to wear a swimming hat?
   answer: <p>Yes, swimming hats are required for all swimmers in the pool. They help
     keep the water clean and ensure better hygiene for everyone.</p>
@@ -75,7 +73,7 @@
     ><span style=\"color:#e74c3c\">Register Here</span></a></p>"
 - question: How do I book a public swim?
   answer: "<p>In order to book a public swim you must register ( all you need is an\
-    \ email address). Once loggeid in&nbsp; you will be able to book a swim from the\
+    \ email address). Once logged in&nbsp; you will be able to book a swim from the\
     \ menu.</p>\r\n\r\n<p>You can <a href=\"/accounts/signup/\"><span style=\"color:#e74c3c\"\
     >Register Here</span></a></p>"
 - question: What do I need to bring to a swim?
@@ -89,9 +87,9 @@
   answer: "<p>Aqua aerobics is a form of exercise performed in shallow water that\
     \ combines aerobic movements with the resistance of water to improve fitness,\
     \ strength, and flexibility. The Aqua aerobics class is very popular so it is\
-    \ advisiided to book in advance. To book you need to be registered (all you need\
-    \ is an email address).</p>\r\n\r\n<p>You can <a href=\"http://tcsp-morganmck.eu.pythonanywhere.com/accounts/signup/\"\
-    >Register Here</a></p>"
+    \ advisable to book in advance. To book you need to be registered (all you need\
+    \ is an email address).</p>\r\n\r\n<p>You can <a href=\"/accounts/signup/\">Register\
+    \ Here</a></p>"
 - question: How long is a term ?
   answer: <p>A term runs for 3 months.</p>
 - question: Do you sell swimming equipment?
@@ -104,10 +102,10 @@
     and supervision guidelines.&nbsp;You must always hold them or have an appropriate
     floatation device. &nbsp;</p>
 - question: What is a Public Swim?
-  answer: "<p>Public Swim - Open swim session suitable for family&rsquo;s and leisure\
-    \ swimmers, those practicing swimming up to being able to swim lengths continuously\
-    \ (no lanes)&nbsp;</p>\r\n\r\n<p>Adult &euro;6 / Child &euro;4 / Under 3 Free\
-    \ / OAP &euro;3:50&nbsp;</p>"
+  answer: "<p>Public Swim - Open swim session suitable for families and leisure swimmers,\
+    \ those practicing swimming up to being able to swim lengths continuously (no\
+    \ lanes)&nbsp;</p>\r\n\r\n<p>Adult &euro;6 / Child &euro;4 / Under 3 Free / OAP\
+    \ &euro;3:50&nbsp;</p>"
 - question: What are Lane Swims?
   answer: "<p>25m lengths roped off, suitable for proficient swimmers who are moving\
     \ continuously up and down the pool.&nbsp; Lanes are categorised as Fast - lane\
@@ -125,7 +123,7 @@
     \ progression from adult lessons, beginner triathletes&nbsp;</p>\r\n\r\n<p>Adult\
     \ &euro;7:25 / Teen &euro;5&nbsp;</p>"
 - question: What are Masters sessions?
-  answer: <p>The next stepup from CoachedLanes.suits 18+, competent swimmers capable
+  answer: <p>The next step up from Coached Lanes. Suits 18+, competent swimmers capable
     of a structured training session, those progressing from coached sessions, ex-competitive
     swimmers, triathletes, open water swimmers, or those training for an event &euro;7:25&nbsp;</p>
 - question: Do you do Water safety training?
@@ -158,12 +156,13 @@
     \ PARENTS should NEVER be present in the Female Showers&nbsp;</p>\r\n\r\n<p>The\
     \ privacy and safety of ALL customers should be respected by ALL&nbsp;</p>"
 - question: Can I borrow a swim hat?
-  answer: <p>Yes at receiption</p>
+  answer: <p>Yes at reception</p>
 - question: When will my child be ready for the next level?
   answer: <p><span style="color:#000000">Your child&#39;s usual teacher is the best
     person to answer this question. We recommend catching their attention five minutes
     before or after your child&#39;s lesson to have a quick conversation about your
     child&#39;s progress.</span></p>
+  lessons_only: true
 - question: Do you offer lessons for adults who are just learning to swim?
   answer: "<p><span style=\"color:#000000\">Yes, we offer lessons for adults of all\
     \ levels. </span></p>\r\n\r\n<p><span style=\"color:#000000\">We offer adults&nbsp;<strong>Beginner</strong>&nbsp;lessons\
@@ -175,6 +174,7 @@
 - question: Does my child need armbands?
   answer: <p><span style="color:#000000">We would recommend armbands for new or inexperienced
     swimmers starting in lessons (until they are swimming with their face in the water).</span></p>
+  lessons_only: true
 - question: Do you have any open swims for adults?
   answer: <p><span style="color:#000000">Public swims are available to all swimmers.
     Lane swims are available for competent adult swimmers.</span></p>
@@ -182,24 +182,6 @@
   answer: <p><span style="color:#000000">Adult lane swims run early morning on weekdays
     and some lunchtimes. As times vary and can change, please see our timetable for
     up-to-date sessions.</span></p>
-- question: Do you have family changing rooms?
-  answer: "<p>We have <strong>4</strong> changing rooms:&nbsp;&nbsp;</p>\r\n\r\n<p>1.&nbsp;<span\
-    \ style=\"color:#e74c3c\"><em><strong>MALE</strong> <strong>only</strong> Changing\
-    \ room.</em></span>&nbsp;BOYS ONLY in this room (There should NOT be any females\
-    \ in this side)&nbsp;</p>\r\n\r\n<p>2.&nbsp;<span style=\"color:#e74c3c\"><em><strong>FEMALE\
-    \ only</strong> Changing room.</em></span>&nbsp;GIRLS ONLY in this room (There\
-    \ should NOT be any males in this side)&nbsp;</p>\r\n\r\n<p>3. <span style=\"\
-    color:#e74c3c\">FAMILY Changing Room (<strong>Male</strong> Side)</span><span\
-    \ style=\"color:#3498db\">.</span>&nbsp;Parents typically changing children Under\
-    \ 8 (as required to assist)&nbsp; - MOST of these children will be accompanied\
-    \ by a Male parent/guardian.&nbsp;<strong>Female parents are NOT ALLOWED in the\
-    \ male shower area.</strong></p>\r\n\r\n<p>4. <span style=\"color:#e74c3c\">FAMILY\
-    \ Changing Room (<strong>Female</strong> Side)</span><span style=\"color:#2ecc71\"\
-    >.</span>&nbsp;Parents typically changing children Under 8 (as required to assist)\
-    \ - MOST of these children will be accompanied by a Female parent/guardian.&nbsp;<strong>Male\
-    \ parents are NOT ALLOWED in the Female shower area.</strong></p>\r\n\r\n<p><span\
-    \ style=\"color:#3498db\"><em><strong>The privacy and safety of ALL customers\
-    \ should be respected by ALL.</strong></em></span></p>\r\n\r\n<p>&nbsp;</p>"
 - question: Can I use the pool equipment?
   answer: <p><span style="color:#000000">Pool equipment is only for use during classes.
     If you require something for use or a flotation device, please ask the lifeguard.</span></p>
@@ -208,11 +190,6 @@
     \ flotation devices in public sessions.</span></p>\r\n\r\n<p><span style=\"color:#000000\"\
     >We do not allow the use of rings, baby seats, fins or large inflatables during\
     \ public sessions.</span></p>"
-- question: Can I bring my own toys to public and family swims?
-  answer: "<p><span style=\"color:#000000\">We allow some small equipment, toys and\
-    \ flotation devices&nbsp;during public sessions.</span></p>\r\n\r\n<p><span style=\"\
-    color:#000000\">We <strong>do not</strong> allow the use of rings, baby seats,\
-    \ fins or large inflatables during public sessions.</span></p>"
 - question: Can I bring my own flippers/fins to public and family swims?
   answer: <p><span style="color:#000000">We <strong>do not</strong> allow the use
     of flippers or fins during public sessions.</span></p>
@@ -232,6 +209,7 @@
     lessons; swim socks are only recommended if required for a current foot complaint.
     Flip-flops/Crocs are sufficient for foot hygiene when travelling to and from the
     pool area.</span></p>
+  lessons_only: true
 - question: What can I wear in the pool?
   answer: "<p><span style=\"color:#000000\">Appropriate swimwear should be worn in\
     \ the pool. Swim shorts, trunks or a swimsuit or togs. General streetwear clothing\
@@ -244,24 +222,29 @@
 - question: How many levels for children are there?
   answer: <p><span style="color:#000000">We run 5 children&rsquo;s widths levels and
     3 lengths levels.</span></p>
+  lessons_only: true
 - question: How do move-ups work?
   answer: <p><span style="color:#000000">Swimmers are assessed on an ongoing basis
     by their teacher and moved accordingly depending on space. Most progressions will
     occur at the end of a term. If a child is ready to progress, we will look after
     all of the admin for you!</span></p>
+  lessons_only: true
 - question: How do I move my child to the next level?
   answer: <p><span style="color:#000000">Progression of levels is decided by the class
     teacher. We will notify you when your child is ready to move. If you require information
     on your child&rsquo;s progression, please speak to their class teacher.</span></p>
+  lessons_only: true
 - question: My child was injured/sick, can I get a refund for the lessons missed?
   answer: <p><span style="color:#000000">Medical credit is assessed and allocated
     on a case-by-case basis. Medical credit can be issued for long-term absence only
     with a doctor&rsquo;s letter.</span></p>
+  lessons_only: true
 - question: My child missed lessons because of a holiday. Can I get a refund?
   answer: "<p><span style=\"color:#000000\">We do not offer refunds for missed classes\
     \ due to holidays.</span></p>\r\n\r\n<p><span style=\"color:#000000\">For the\
     \ Summer term (July - September) there is a coupon which can be used if you miss\
     \ 2 weeks for a holiday.</span></p>"
+  lessons_only: true
 - question: Will there be a lifeguard on duty?
   answer: <p><span style="color:#000000">All public sessions will have a lifeguard
     on duty.</span></p>
@@ -272,6 +255,7 @@
     all times.</span></p>
 - question: Do teachers teach scripted lessons?
   answer: <p><span style="color:#000000">No, our teachers do not teach scripted lessons</span></p>
+  lessons_only: true
 - question: How deep is the pool?
   answer: <p><span style="color:#000000">One end of the pool is 3&#39;, while the
     other is 3&#39; 3&quot;. The centre of the pool is 6&#39; 6&quot;. The depth is

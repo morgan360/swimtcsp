@@ -1,11 +1,12 @@
 # chatbot/management/commands/rebuild_faq_embeddings.py
 
 import yaml
-import os
 from pathlib import Path
+from django.conf import settings
 from django.core.management.base import BaseCommand
 from chatbot.models import FAQEntry
-from openai import OpenAI
+from chatbot.helpers.client import embed, embed_model
+from chatbot.helpers.faq_index import embedding_text
 from django.db import transaction
 
 
@@ -31,9 +32,9 @@ class Command(BaseCommand):
         self.stdout.write(self.style.WARNING("\n🔄 Starting FAQ Rebuild Process...\n"))
 
         # Step 1: Load YAML file
-        faq_path = Path('chatbot/data/faq.yaml')
+        faq_path = Path(settings.BASE_DIR) / 'chatbot' / 'data' / 'faq.yaml'
         if not faq_path.exists():
-            self.stderr.write(self.style.ERROR("❌ FAQ YAML file not found at chatbot/data/faq.yaml"))
+            self.stderr.write(self.style.ERROR(f"❌ FAQ YAML file not found at {faq_path}"))
             return
 
         with faq_path.open('r', encoding='utf-8') as f:
@@ -45,15 +46,12 @@ class Command(BaseCommand):
 
         self.stdout.write(f"📄 Loaded {len(faq_data)} FAQs from faq.yaml")
 
-        # Step 2: Initialize OpenAI client
-        api_key = os.getenv("OPENAI_API_KEY")
-        if not api_key:
-            self.stderr.write(self.style.ERROR("❌ OPENAI_API_KEY not found in environment"))
+        # Step 2: Confirm the API is configured before touching the database
+        if not settings.OPENAI_API_KEY:
+            self.stderr.write(self.style.ERROR("❌ OPENAI_API_KEY is not configured"))
             return
 
-        client = OpenAI(api_key=api_key)
-        embed_model = os.getenv("OPENAI_EMBED_MODEL", "text-embedding-3-small")
-        self.stdout.write(f"🤖 Using embedding model: {embed_model}")
+        self.stdout.write(f"🤖 Using embedding model: {embed_model()}")
 
         # Step 3: Track questions from YAML
         yaml_questions = {item['question'] for item in faq_data}
@@ -102,12 +100,13 @@ class Command(BaseCommand):
                     if needs_embedding:
                         self.stdout.write(f"🔧 Embedding: {question[:60]}...")
 
-                        response = client.embeddings.create(
-                            input=[question],
-                            model=embed_model
-                        )
+                        # Question *and* answer, so the answer body is
+                        # reachable by retrieval too.
+                        vector = embed(embedding_text(question, answer))
+                        if vector is None:
+                            raise RuntimeError("embedding API returned no vector")
 
-                        faq.embedding = response.data[0].embedding
+                        faq.embedding = vector
                         faq.save()
 
                         if was_created:

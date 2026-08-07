@@ -33,6 +33,43 @@ def get_git_version():
 
 VERSION = get_git_version()
 
+# -------------------------
+# OpenAI / chatbot
+# -------------------------
+# Single source of truth for every environment. Previously each settings file
+# declared its own OpenAI block with a different default, and chatbot/views.py
+# preferred os.getenv() over these values — so which model actually ran depended
+# on whether the process environment happened to carry the variable. Read these
+# through chatbot.helpers.client only.
+OPENAI_API_KEY = config('OPENAI_API_KEY', default='')
+OPENAI_CHAT_MODEL = config('OPENAI_CHAT_MODEL', default='gpt-5.4-mini')
+OPENAI_EMBED_MODEL = config('OPENAI_EMBED_MODEL', default='text-embedding-3-small')
+OPENAI_PROJECT = config('OPENAI_PROJECT', default='')
+
+# FAQ retrieval tiers. A query is embedded once and scored against every FAQ:
+#   >= FAQ_MATCH_THRESHOLD  -> serve the stored answer verbatim (no model call)
+#   >= FAQ_MIN_CONFIDENCE   -> serve it, but hedged ("I'm not certain, but...")
+#   below that              -> call the model, with any FAQ scoring above
+#                              FAQ_CONTEXT_MIN_SCORE injected as grounding
+#
+# Calibrated by scoring 133 real historical questions from ChatbotQuery against
+# the live FAQ set (see `manage.py faq_calibrate`):
+#   0.68+       reliably the right entry ("Do I need a swim hat" -> the swim hat
+#               FAQ at 0.739; lockers, Masters, booking all land here)
+#   0.58-0.68   right topic, sometimes the neighbouring entry — worth showing,
+#               but only with a hedge
+#   0.50-0.58   related enough to ground a prompt, not to quote
+#   below 0.50  unrelated
+# The old single threshold of 0.65 let only 5 of 110 messages reach the FAQ tier;
+# re-run faq_calibrate after any material change to the corpus.
+FAQ_MATCH_THRESHOLD = float(config('FAQ_MATCH_THRESHOLD', default=0.68))
+FAQ_MIN_CONFIDENCE = float(config('FAQ_MIN_CONFIDENCE', default=0.58))
+FAQ_CONTEXT_MIN_SCORE = float(config('FAQ_CONTEXT_MIN_SCORE', default=0.50))
+
+# Both chatbot endpoints are public and every message spends OpenAI credits.
+CHATBOT_MAX_MESSAGES_PER_HOUR = int(config('CHATBOT_MAX_MESSAGES_PER_HOUR', default=30))
+CHATBOT_MAX_MESSAGE_CHARS = int(config('CHATBOT_MAX_MESSAGE_CHARS', default=500))
+
 # Set the URL prefix for static files
 STATIC_URL = '/static/'
 

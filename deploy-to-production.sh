@@ -157,8 +157,11 @@ echo -e "${YELLOW}STEP 6: Rebuild FAQ Embeddings${NC}"
 echo -e "${YELLOW}═══════════════════════════════════════════════════════${NC}"
 
 echo -e "${BLUE}🤖 Re-vectorizing FAQs...${NC}"
+# Not optional: without embeddings the chatbot silently stops matching FAQs and
+# sends every question to the model, so a failure here must stop the deploy.
 python manage.py rebuild_faq_embeddings --settings=PRODUCTION_SETTINGS_PLACEHOLDER || {
-    echo -e "${YELLOW}⚠️  Warning: FAQ embedding failed (non-critical)${NC}"
+    echo -e "${RED}❌ FAQ embedding failed — aborting deploy${NC}"
+    exit 1
 }
 echo -e "${GREEN}✅ FAQ embeddings rebuilt${NC}"
 echo ""

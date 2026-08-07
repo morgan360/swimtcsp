@@ -4,10 +4,21 @@ This guide explains how to manage FAQs for the TCSP chatbot system, including ad
 
 ## Overview
 
-The chatbot uses a **hybrid approach** combining pre-stored FAQs with OpenAI GPT responses:
+The chatbot answers in **three tiers**. One embedding of the user's question
+decides which:
 
-1. **FAQ Matching** - Uses OpenAI embeddings + cosine similarity to match user questions to stored FAQs
-2. **GPT Fallback** - If no FAQ matches (confidence < threshold), falls back to GPT with real-time data
+| Tier | Condition | Behaviour | API cost |
+|------|-----------|-----------|----------|
+| Match | score ≥ `FAQ_MATCH_THRESHOLD` | Stored answer, verbatim | embedding only |
+| Hedged | score ≥ `FAQ_MIN_CONFIDENCE` | Stored answer, prefixed "I'm not certain, but this may help" | embedding only |
+| Miss | below that | Model call, **with** any FAQ scoring above `FAQ_CONTEXT_MIN_SCORE` injected as grounding | embedding + completion |
+
+A question that exactly matches a stored one (ignoring case and spacing) is
+answered with **no API call at all**. Query embeddings are cached for 24h, so
+repeats are free after the first.
+
+The model tier still receives live data — swim sessions, term dates, lesson
+lists — as it always did.
 
 ## Key Components
 
@@ -27,15 +38,30 @@ The chatbot uses a **hybrid approach** combining pre-stored FAQs with OpenAI GPT
 Key settings in `.env`:
 
 ```bash
-OPENAI_API_KEY=sk-proj-...           # Your OpenAI API key
-OPENAI_EMBED_MODEL=text-embedding-3-small  # Embedding model
-OPENAI_CHAT_MODEL=gpt-4o-mini        # Chat completion model
-FAQ_MATCH_THRESHOLD=0.65             # Minimum cosine similarity score (0.0-1.0)
+OPENAI_API_KEY=sk-proj-...                  # Your OpenAI API key
+OPENAI_EMBED_MODEL=text-embedding-3-small   # Embedding model
+OPENAI_CHAT_MODEL=gpt-5.4-mini              # Chat completion model
+FAQ_MATCH_THRESHOLD=0.65                    # Serve the stored answer at or above this
+FAQ_MIN_CONFIDENCE=0.45                     # Serve it hedged at or above this
+FAQ_CONTEXT_MIN_SCORE=0.40                  # Inject as prompt grounding at or above this
+CHATBOT_MAX_MESSAGES_PER_HOUR=30            # Per-session throttle (0 disables)
+CHATBOT_MAX_MESSAGE_CHARS=500               # Message length cap
 ```
 
-**Important:** The embedding model must match between:
-- FAQ generation (`embed_faqs.py`)
-- Query matching (`chatbot/views.py`)
+All of these are declared **once**, in `config/base_settings.py`. The
+per-environment settings files no longer override them — they used to, with
+different defaults each, which meant the model actually in use depended on
+whether the process environment happened to carry the variable.
+
+**Important:** the embedding model must be the same one that built
+`FAQEntry.embedding`. Changing `OPENAI_EMBED_MODEL` requires
+`python manage.py rebuild_faq_embeddings --force`; otherwise queries are scored
+against vectors from a different space, which degrades matching without ever
+raising an error.
+
+**Model parameters:** `chatbot/helpers/client.py` shapes the call per model —
+gpt-5.x rejects `max_tokens` and non-default `temperature`, so those go only to
+the models in `LEGACY_PARAM_MODELS`.
 
 ## Adding New FAQs
 
@@ -63,14 +89,9 @@ FAQ_MATCH_THRESHOLD=0.65             # Minimum cosine similarity score (0.0-1.0)
      lessons_only: false  # Optional, defaults to false
    ```
 
-2. Run embedding script:
+2. Sync and embed:
    ```bash
-   python embed_faqs.py
-   ```
-
-3. Update database:
-   ```bash
-   python update_faq_embeddings.py
+   python manage.py rebuild_faq_embeddings
    ```
 
 ## Management Commands & Scripts
@@ -82,37 +103,28 @@ FAQ_MATCH_THRESHOLD=0.65             # Minimum cosine similarity score (0.0-1.0)
 | `python manage.py embed_new_faqs` | Embed FAQs without embeddings | After adding FAQ in admin |
 | `python manage.py import_faqs` | Import FAQs from YAML | Initial setup or bulk import |
 
-### Full Re-sync Scripts
+### Full Re-sync
 
-Use these when changing embedding models or doing major cleanup:
+Use this when changing embedding models, after editing `faq.yaml`, or during
+cleanup:
 
-#### 1. Export FAQs from Database
+```bash
+python manage.py rebuild_faq_embeddings --force
+```
+
+Reads `chatbot/data/faq.yaml`, upserts every entry, and re-embeds using the
+configured model. Add `--delete-orphans` to remove database entries no longer
+present in the YAML.
+
+To go the other way (database → YAML):
+
 ```bash
 python export_faqs.py
 ```
-- Exports all FAQs from database to `chatbot/data/faq.yaml`
-- Creates backup of existing YAML file
-- Includes `lessons_only` flags
 
-#### 2. Embed All FAQs
-```bash
-# From YAML file (default)
-python embed_faqs.py
-
-# Or directly from database
-python embed_faqs.py --from-db
-```
-- Generates OpenAI embeddings for all questions
-- Saves to `chatbot/data/faq_with_embeddings.json`
-- Takes ~1 second per FAQ (rate limiting)
-
-#### 3. Update Database
-```bash
-python update_faq_embeddings.py
-```
-- Syncs embeddings from JSON file to database
-- Matches by question text
-- Updates `lessons_only` flags if present
+> The old `embed_faqs.py` / `update_faq_embeddings.py` chain has been retired.
+> It embedded the question alone and pinned both the settings module and the
+> model, so it would now write vectors the matcher cannot use.
 
 ## Common Workflows
 
@@ -129,31 +141,21 @@ python manage.py embed_new_faqs
 
 ```bash
 # 1. Update OPENAI_EMBED_MODEL in .env
-# 2. Export current FAQs
-python export_faqs.py
-
-# 3. Re-embed all with new model
-python embed_faqs.py
-
-# 4. Update database
-python update_faq_embeddings.py
-
-# 5. Restart Django server
-python manage.py runserver
+# 2. Re-embed everything with the new model
+python manage.py rebuild_faq_embeddings --force
 ```
+
+No restart needed — saving a FAQ invalidates the in-memory vector index.
 
 ### Syncing Production Database to Local
 
 ```bash
-# 1. Export FAQs from production database
+# 1. On production: export FAQs to YAML
 python export_faqs.py
 
-# 2. Copy faq.yaml to local environment
-# 3. Embed locally (uses local API key)
-python embed_faqs.py
-
-# 4. Update local database
-python update_faq_embeddings.py
+# 2. Copy chatbot/data/faq.yaml to your local checkout
+# 3. Locally: import and embed
+python manage.py rebuild_faq_embeddings --force
 ```
 
 ## Troubleshooting
@@ -188,14 +190,11 @@ for q in recent:
 
 **Fix:**
 ```bash
-# Check embedding model in views.py matches embed_faqs.py
-grep "EMBED_MODEL" .env
-grep "model=" embed_faqs.py
+# Confirm every environment agrees on the model
+python manage.py shell -c "from chatbot.helpers.client import embed_model; print(embed_model())"
 
-# Re-embed all FAQs
-python export_faqs.py
-python embed_faqs.py
-python update_faq_embeddings.py
+# Re-embed all FAQs with it
+python manage.py rebuild_faq_embeddings --force
 ```
 
 ### Issue: OpenAI API 401 Unauthorized
@@ -210,18 +209,16 @@ python update_faq_embeddings.py
 ### Issue: FAQs in Database but Not in YAML
 
 **Symptoms:**
-- Database has 72 FAQs
-- YAML only has 21 FAQs
-- `embed_faqs.py` only processes 21
+- The database holds more FAQs than `faq.yaml` lists
+- `rebuild_faq_embeddings` reports fewer entries than you expect
 
 **Fix:**
 ```bash
 # Export all FAQs from database to YAML
 python export_faqs.py
 
-# Now YAML will have all 72 FAQs
-python embed_faqs.py
-python update_faq_embeddings.py
+# Then re-import and embed from it
+python manage.py rebuild_faq_embeddings --force
 ```
 
 ## File Structure
@@ -230,23 +227,27 @@ python update_faq_embeddings.py
 swimtcsp/
 ├── chatbot/
 │   ├── data/
-│   │   ├── faq.yaml                      # Source FAQ questions/answers
-│   │   └── faq_with_embeddings.json      # Generated embeddings
+│   │   └── faq.yaml                      # Source of truth for FAQ content
 │   ├── management/
 │   │   └── commands/
-│   │       ├── import_faqs.py            # Import from YAML to DB
-│   │       └── embed_new_faqs.py         # Embed new FAQs only
+│   │       ├── rebuild_faq_embeddings.py # YAML → DB + embeddings (deploy path)
+│   │       ├── embed_new_faqs.py         # Embed DB rows missing a vector
+│   │       ├── import_faqs.py            # Import from YAML, no embeddings
+│   │       └── faq_calibrate.py          # Threshold calibration report
 │   ├── helpers/
-│   │   ├── faq.py                        # FAQ matching logic
-│   │   ├── gpt.py                        # GPT prompt builders
+│   │   ├── client.py                     # Model choice + safe OpenAI calls
+│   │   ├── faq.py                        # Three-tier matching
+│   │   ├── faq_index.py                  # Cached vector index
+│   │   ├── throttle.py                   # Per-session rate limit
+│   │   ├── gpt.py                        # Prompt builders + HTML sanitising
 │   │   ├── swim.py                       # Swim session helpers
 │   │   └── lesson.py                     # Lesson helpers
+│   ├── signals.py                        # Invalidate index on FAQ save
 │   ├── models.py                         # FAQEntry, ChatbotQuery
 │   ├── views.py                          # Chatbot API endpoints
 │   └── urls.py                           # Chatbot routes
-├── embed_faqs.py                         # Standalone embedding script
+├── static/chatbot/chat.js                # Shared chat widget (both bots)
 ├── export_faqs.py                        # Export DB → YAML
-├── update_faq_embeddings.py              # Sync JSON → DB
 └── docs/
     └── chatbot-faq-management.md         # This file
 ```
@@ -291,8 +292,8 @@ These are questions that *almost* matched an FAQ. Consider:
 
 ### 4. Separate Swim vs Lesson FAQs
 Use the `lessons_only` flag appropriately:
-- **False** - General questions (hours, payment, lockers, hats)
-- **True** - Lesson-specific (skill progression, assessments, term dates)
+- **False** - General questions (hours, payment, lockers, hats). Visible to **both** bots.
+- **True** - Lesson-specific (skill progression, assessments, term dates). Visible to the **lesson bot only**.
 
 ### 5. Keep Answers Concise
 - Use bullet points for lists
@@ -312,15 +313,23 @@ Use the `lessons_only` flag appropriately:
 - Add question variations as separate FAQ entries
 - Review `ChatbotQuery` logs monthly for missed questions
 
-### API Rate Limits
-The `embed_faqs.py` script includes a 1-second delay per FAQ to avoid rate limits:
-```python
-time.sleep(1)  # In get_embedding() function
-```
-
-For faster processing, adjust based on your OpenAI tier limits.
+### Abuse protection
+Both chatbot endpoints are public, and every message can spend credits. Each
+session is capped at `CHATBOT_MAX_MESSAGES_PER_HOUR` messages and each message
+at `CHATBOT_MAX_MESSAGE_CHARS` characters. Set the hourly cap to `0` to disable
+throttling entirely (not recommended in production).
 
 ## Monitoring & Analytics
+
+### Calibration report (start here)
+
+```bash
+python manage.py faq_calibrate --days 90
+```
+
+Prints the tier mix, the confidence-score distribution, the near-miss band and
+the most frequently asked questions. Set the three thresholds from this rather
+than guessing, and turn recurring near-misses into new FAQ entries.
 
 ### Check FAQ Hit Rate
 ```python
@@ -363,46 +372,49 @@ for q in top_questions:
    - `OPENAI_EMBED_MODEL`
    - `FAQ_MATCH_THRESHOLD`
 
-2. **Upload FAQ data**:
-   ```bash
-   # On local machine
-   scp chatbot/data/faq_with_embeddings.json username@ssh.pythonanywhere.com:~/swimtcsp/chatbot/data/
-   ```
+2. **Deploy the code** (`faq.yaml` travels with it).
 
-3. **Update database**:
+3. **Rebuild embeddings** — `deploy-to-production.sh` does this for you and now
+   aborts the deploy if it fails. Manually:
    ```bash
-   # On PythonAnywhere console
    cd ~/swimtcsp
-   python manage.py shell < update_faq_embeddings.py
+   python manage.py rebuild_faq_embeddings
    ```
 
 4. **Reload web app** via PythonAnywhere dashboard
 
 ### Continuous Updates
 
-For production FAQ updates:
-1. Add FAQ locally via Django admin
-2. Run `python manage.py embed_new_faqs` locally
-3. Export updated FAQ: `python export_faqs.py`
-4. Deploy YAML and JSON files to production
-5. Run `python update_faq_embeddings.py` on production
-6. Reload production web app
+For production FAQ updates, either:
+
+**Via admin (fastest)** — add the FAQ in `/generaladmin/`, select it, and run
+the "Generate embeddings using OpenAI" action. It takes effect immediately; no
+reload needed.
+
+**Via YAML (version-controlled, preferred)**:
+1. Edit `chatbot/data/faq.yaml`
+2. `python manage.py rebuild_faq_embeddings` locally to test
+3. Commit and deploy — the deploy script rebuilds embeddings on production
 
 ## API Costs
 
 Approximate OpenAI costs (as of 2025):
 
-| Model | Cost | Use Case |
-|-------|------|----------|
-| `text-embedding-3-small` | $0.020 / 1M tokens | FAQ embeddings |
-| `gpt-4o-mini` | $0.150 / 1M input tokens | Chat responses |
+Check current pricing at https://platform.openai.com/docs/pricing — the figures
+that used to be quoted here went stale.
 
-### Cost Example (72 FAQs):
-- Embedding 72 questions (~1000 tokens total) = $0.00002
-- 1000 FAQ matches = $0 (no API call)
-- 1000 GPT responses = ~$0.15
+What actually drives the bill:
 
-**Takeaway:** Maximize FAQ matches to minimize costs!
+- A **Match** or **Hedged** answer costs one embedding call, and nothing if the
+  question was asked before (24h query-embedding cache) or matches a stored
+  question exactly.
+- A **Miss** costs an embedding *and* a completion. Completions are capped at
+  600 tokens.
+- FAQ embeddings are a one-off per entry, regenerated only on
+  `rebuild_faq_embeddings`.
+
+**Takeaway:** maximise Match/Hedged answers. Run `manage.py faq_calibrate` to
+see the current tier mix and which questions keep falling through.
 
 ## Related Documentation
 
@@ -413,13 +425,16 @@ Approximate OpenAI costs (as of 2025):
 ## Support
 
 For issues or questions:
-1. Check Django logs: `tail -f logs/django.log`
-2. Review ChatbotQuery table for confidence scores
-3. Test embeddings with identical questions (should score >0.95)
-4. Verify API key is valid: `python -c "import openai; client = openai.OpenAI(); print(client.models.list())"`
+1. Check logs: `tail -f logs/application.log`
+2. Run `python manage.py faq_calibrate` for confidence scores
+3. Test with a question copied verbatim from a FAQ (should answer from the FAQ tier)
+4. Verify the API key and model resolve:
+   ```bash
+   python manage.py shell -c "from chatbot.helpers.client import chat_model, embed_model, get_client; print(chat_model(), embed_model()); get_client().models.list()"
+   ```
 
 ---
 
-**Last Updated:** 2025-10-31
+**Last Updated:** 2026-08-07
 **Embedding Model:** text-embedding-3-small
-**Chat Model:** gpt-4o-mini
+**Chat Model:** gpt-5.4-mini

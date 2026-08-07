@@ -1,43 +1,147 @@
-import os
-from chatbot.models import FAQEntry
-import numpy as np
-from sklearn.metrics.pairwise import cosine_similarity
+"""FAQ retrieval, in three tiers.
+
+Matching used to be an either/or gate: above the threshold it returned the
+stored answer, below it returned nothing and the caller asked the model with no
+FAQ context at all — so weak-but-relevant entries were thrown away and the
+model answered pricing and policy questions from thin air.
+
+Now a single embedding produces one of three outcomes:
+
+    MATCH   score >= FAQ_MATCH_THRESHOLD   serve the answer verbatim, no model call
+    HEDGED  score >= FAQ_MIN_CONFIDENCE    serve it, flagged as uncertain
+    MISS    below that                     call the model, with any entry above
+                                           FAQ_CONTEXT_MIN_SCORE as grounding
+"""
 import logging
+
+from django.conf import settings
+from django.core.cache import cache
+from django.utils.html import strip_tags
+
+from chatbot.helpers import client
+from chatbot.helpers.faq_index import (
+    get_index,
+    query_cache_key,
+    query_text,
+)
 
 logger = logging.getLogger(__name__)
 
-# Read threshold from env; fall back to a safe default
-FAQ_MATCH_THRESHOLD = float(os.getenv("FAQ_MATCH_THRESHOLD", "0.70"))
+MATCH = "FAQ"
+HEDGED = "FAQ_HEDGED"
+MISS = "GPT"
 
-def match_faq(user_query, embed_func, lessons_mode=False, threshold=None, top_k=5):
+HEDGE_PREFIX = "<p><em>I'm not certain, but this may help:</em></p>"
+
+QUERY_EMBED_TTL = 60 * 60 * 24
+
+
+class FAQResult:
+    """The outcome of one FAQ lookup.
+
+    `tier` doubles as ChatbotQuery.response_type, so the effect of threshold
+    changes is visible in the logged traffic.
     """
-    Returns (answer_or_none, cosine_score)
+
+    def __init__(self, tier, answer=None, score=None, context=None):
+        self.tier = tier
+        self.answer = answer
+        self.score = score
+        self.context = context or []
+
+    @property
+    def is_answered(self):
+        return self.tier in (MATCH, HEDGED)
+
+
+def embed_query(user_message):
+    """Embedding for a user message, cached by normalised text.
+
+    Repeated questions — which is most of the traffic — then cost no API call
+    and skip the round-trip latency.
     """
-    if threshold is None:
-        threshold = FAQ_MATCH_THRESHOLD
+    key = query_cache_key(user_message)
+    cached = cache.get(key)
+    if cached is not None:
+        return cached
 
-    query_vector = np.array(embed_func(user_query), dtype=np.float64)
+    vector = client.embed(query_text(user_message))
+    if vector is not None:
+        cache.set(key, vector, QUERY_EMBED_TTL)
+    return vector
 
-    qs = FAQEntry.objects.filter(lessons_only=lessons_mode).exclude(embedding=None)
-    faqs = list(qs)
-    if not faqs:
-        return None, 0.0
 
-    faq_vecs = np.vstack([np.array(f.embedding, dtype=np.float64) for f in faqs])
-    sims = cosine_similarity(query_vector.reshape(1, -1), faq_vecs)[0]
+def match_faq(user_message, lessons_mode=False, embed_func=None, top_k=5):
+    """Look up `user_message` against the FAQ corpus.
 
-    best_idx = int(np.argmax(sims))
-    best_score = float(sims[best_idx])
-    best_faq = faqs[best_idx]
+    `embed_func` is injectable so tests can score against fixed vectors without
+    touching the API.
+    """
+    index = get_index()
+    if not len(index):
+        return FAQResult(MISS)
 
-    # optional: quick debug of top-k
-    if top_k and len(faqs) > 1:
-        top_idx = np.argsort(-sims)[:min(top_k, len(faqs))]
-        preview = [{"q": faqs[i].question, "score": float(sims[i])} for i in top_idx]
-        logger.info("🔎 FAQ top matches for '%s': %s", user_query, preview)
+    exact = index.exact_match(user_message, lessons_mode)
+    if exact:
+        logger.debug("FAQ exact-text hit, no embedding needed")
+        return FAQResult(
+            MATCH,
+            answer=exact["answer"],
+            score=1.0,
+            context=relevant_context([(1.0, exact)]),
+        )
 
-    logger.info("🤖 FAQ best: '%s' → '%s' (cos=%.3f)", user_query, best_faq.question, best_score)
+    embed_func = embed_func or embed_query
+    vector = embed_func(user_message)
+    if vector is None:
+        # Embeddings unavailable — answer without grounding rather than fail.
+        return FAQResult(MISS)
 
-    if best_score >= threshold:
-        return best_faq.answer, best_score
-    return None, best_score
+    scored = index.search(vector, lessons_mode, top_k=top_k)
+    if not scored:
+        return FAQResult(MISS)
+
+    best_score, best_entry = scored[0]
+    logger.debug("FAQ best match scored %.3f", best_score)
+
+    # Context is attached to every result, not just misses: a caller may decide
+    # it needs the model anyway (the swim bot does, for live timetable
+    # questions) and should still get the grounding.
+    context = relevant_context(scored)
+
+    if best_score >= settings.FAQ_MATCH_THRESHOLD:
+        return FAQResult(
+            MATCH, answer=best_entry["answer"], score=best_score, context=context
+        )
+
+    if best_score >= settings.FAQ_MIN_CONFIDENCE:
+        return FAQResult(
+            HEDGED,
+            answer=HEDGE_PREFIX + best_entry["answer"],
+            score=best_score,
+            context=context,
+        )
+
+    return FAQResult(MISS, score=best_score, context=context)
+
+
+def relevant_context(scored, limit=3):
+    """FAQ answers worth putting in a prompt, best first.
+
+    Anything below FAQ_CONTEXT_MIN_SCORE is dropped: a weak match is not
+    background for the model, it's a distraction.
+    """
+    floor = settings.FAQ_CONTEXT_MIN_SCORE
+    return [
+        {"question": entry["question"], "answer": strip_tags(entry["answer"]).strip()}
+        for score, entry in scored[:limit]
+        if score >= floor
+    ]
+
+
+def format_context(context):
+    """Render retrieved FAQs as a prompt block, or '' if there are none."""
+    if not context:
+        return ""
+    lines = [f"- **{item['question']}** {item['answer']}" for item in context]
+    return "\n".join(lines)

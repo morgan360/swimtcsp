@@ -1,157 +1,178 @@
-import os
 import json
 import logging
-import markdown
-from pathlib import Path
+
 from django.conf import settings
 from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render
 from django.utils import timezone
-from openai import OpenAI
+from django.views.decorators.csrf import ensure_csrf_cookie
+
 from lessons_bookings.models import Term
 
 from chatbot.models import ChatbotQuery
-from .helpers.faq import match_faq
-from .helpers.swim import get_available_swims, format_swim_list
-from .helpers.lesson import get_upcoming_terms, get_active_lessons, format_lesson_list
 from chatbot.utils import get_skill_structure_summary
-from .helpers.gpt import build_swim_prompt, build_lesson_prompt, parse_markdown_reply
+from .helpers import faq as faq_helper
+from .helpers.client import ask_openai
+from .helpers.gpt import (
+    build_lesson_prompt,
+    build_swim_prompt,
+    render_faq_markdown,
+    render_model_markdown,
+)
+from .helpers.lesson import format_lesson_list, get_active_lessons, get_upcoming_terms
+from .helpers.swim import format_swim_list, get_available_swims
+from .helpers.throttle import TOO_MANY_MESSAGES, is_rate_limited
 
 logger = logging.getLogger(__name__)
 
-# Initialise OpenAI client – will pick up key from env
-client = OpenAI()
+# Questions whose answer depends on live session data, which no stored FAQ can
+# hold. Kept deliberately narrow: the old list included "booking", "lesson" and
+# "sessions", which sent straight-up FAQ questions like "How do I book a
+# lesson?" to the model for no reason.
+LIVE_DATA_KEYWORDS = (
+    # When
+    "today", "tomorrow", "tonight", "this week", "weekend",
+    "when is", "when's", "whens", "when are", "when can", "when do",
+    "what time", "times", "timetable", "schedule",
+    # Which session, on which day — the phrasings real traffic actually uses
+    "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday",
+    "next swim", "next public swim", "what swims", "any swims",
+    # Capacity
+    "available", "availability", "places left", "spaces", "fully booked",
+)
 
-# Read model names from env or Django settings, with sensible defaults
-CHAT_MODEL = os.getenv("OPENAI_CHAT_MODEL", getattr(settings, "OPENAI_CHAT_MODEL", "gpt-4o-mini"))
-EMBED_MODEL = os.getenv("OPENAI_EMBED_MODEL", getattr(settings, "OPENAI_EMBED_MODEL", "text-embedding-3-small"))
 
-def get_query_embedding(text):
-    response = client.embeddings.create(
-        input=text,
-        model=EMBED_MODEL
+def _needs_live_data(message):
+    return any(keyword in message for keyword in LIVE_DATA_KEYWORDS)
+
+
+def _read_message(request):
+    """Extract and bound the user's message. Returns (message, error_response)."""
+    try:
+        data = json.loads(request.body)
+    except (ValueError, TypeError):
+        return None, JsonResponse({"error": "Invalid request body."}, status=400)
+
+    message = (data.get("message") or "").strip()
+    if not message:
+        return None, JsonResponse({"error": "Please type a question."}, status=400)
+
+    # Bound the text before it reaches the embedding or completion API.
+    return message[: settings.CHATBOT_MAX_MESSAGE_CHARS], None
+
+
+def _log_query(request, source, message, response, response_type, score):
+    ChatbotQuery.objects.create(
+        user=request.user if request.user.is_authenticated else None,
+        session_key=request.session.session_key or "",
+        source=source,
+        message=message,
+        response=response,
+        response_type=response_type,
+        confidence_score=score,
     )
-    return response.data[0].embedding
+
+
+def _prepare(request):
+    """Shared entry checks. Returns (message, error_response)."""
+    if request.method != "POST":
+        return None, JsonResponse({"error": "Invalid request method"}, status=405)
+
+    if not request.session.session_key:
+        request.session.save()
+
+    if is_rate_limited(request):
+        return None, JsonResponse({"reply": f"<p>{TOO_MANY_MESSAGES}</p>"}, status=429)
+
+    return _read_message(request)
 
 
 # ✅ PUBLIC LESSON CHATBOT VIEW
-@csrf_exempt
 def public_lesson_chat_api(request):
-    if request.method != "POST":
-        return JsonResponse({"error": "Invalid request method"}, status=405)
+    user_message, error = _prepare(request)
+    if error:
+        return error
+
+    logger.debug("Lesson bot message received (%d chars)", len(user_message))
 
     try:
-        data = json.loads(request.body)
-        user_message = data.get("message", "").strip()
-        logger.info("📩 Lesson bot message: %s", user_message)
-        faq_answer, confidence = match_faq(user_message, embed_func=get_query_embedding, lessons_mode=True)
+        result = faq_helper.match_faq(user_message, lessons_mode=True)
 
-        if faq_answer:
-            logger.info("✅ Responding from FAQ")
-            html_reply = markdown.markdown(faq_answer, extensions=["extra"])
-            ChatbotQuery.objects.create(
-                user=request.user if request.user.is_authenticated else None,
-                session_key=request.session.session_key,
-                source="public_lesson",
-                message=user_message,
-                response=faq_answer,
-                response_type="FAQ",
-                confidence_score=confidence
+        if result.is_answered:
+            html_reply = render_faq_markdown(result.answer)
+            _log_query(
+                request, "public_lesson", user_message,
+                result.answer, result.tier, result.score,
             )
             return JsonResponse({"reply": html_reply})
 
         terms = get_upcoming_terms()
-        lessons = get_active_lessons()
-        term_info = "\n".join([
-            f"- **Term** from **{t.start_date}** to **{t.end_date}**"
-            for t in terms
-        ]) or "No upcoming terms available."
-        lesson_list = format_lesson_list(lessons) or "No active public lessons found."
+        term_info = "\n".join(
+            f"- **Term** from **{t.start_date}** to **{t.end_date}**" for t in terms
+        ) or "No upcoming terms available."
+        lesson_list = format_lesson_list(get_active_lessons()) or "No active public lessons found."
 
         try:
             skill_summary = get_skill_structure_summary()
-        except Exception as e:
-            logger.error("❌ Skill summary failed: %s", e)
-            skill_summary = "*Skill summary temporarily unavailable.*"
+        except Exception as exc:
+            logger.error("Skill summary failed: %s", exc)
+            skill_summary = ""
 
-        prompt = build_lesson_prompt(user_message, term_info, lesson_list, skill_summary)
-        response = client.chat.completions.create(
-            model=CHAT_MODEL,
-            messages=[
-                {"role": "system",
-                 "content": "You are an expert assistant helping parents understand swimming lessons, progression, and skills."},
-                {"role": "user", "content": prompt}
-            ]
+        prompt = build_lesson_prompt(
+            user_message,
+            term_info,
+            lesson_list,
+            skill_summary=skill_summary,
+            faq_context=faq_helper.format_context(result.context),
         )
+        raw_reply, api_error = ask_openai([
+            {
+                "role": "system",
+                "content": "You are an expert assistant helping parents understand swimming lessons, progression, and skills.",
+            },
+            {"role": "user", "content": prompt},
+        ])
 
-        html_reply = parse_markdown_reply(response)
-        raw_reply = response.choices[0].message.content
-        ChatbotQuery.objects.create(
-            user=request.user if request.user.is_authenticated else None,
-            session_key=request.session.session_key,
-            source="public_lesson",
-            message=user_message,
-            response=raw_reply,
-            response_type="GPT",
-            confidence_score=confidence
+        if api_error:
+            return JsonResponse({"reply": f"<p>{api_error}</p>"}, status=503)
+
+        _log_query(
+            request, "public_lesson", user_message,
+            raw_reply, result.tier, result.score,
         )
-        return JsonResponse({"reply": html_reply})
+        return JsonResponse({"reply": render_model_markdown(raw_reply)})
 
-    except Exception as e:
-        logger.error("❌ Lesson chatbot error: %s", str(e), exc_info=True)
-        return JsonResponse({"reply": f"⚠️ Error: {str(e)}"}, status=200)
+    except Exception as exc:
+        logger.error("Lesson chatbot error: %s", exc, exc_info=True)
+        return JsonResponse(
+            {"error": "Something went wrong while processing your message."},
+            status=500,
+        )
 
 
 # ✅ PUBLIC SWIM CHATBOT VIEW
-@csrf_exempt
 def public_swim_chat(request):
-    if request.method != "POST":
-        return JsonResponse({"error": "Invalid request method"}, status=405)
+    user_message, error = _prepare(request)
+    if error:
+        return error
+
+    logger.debug("Swim bot message received (%d chars)", len(user_message))
 
     try:
-        data = json.loads(request.body)
-        user_message = data.get("message", "").strip()
-        logger.info("📩 Swim bot message: %s", user_message)
+        result = faq_helper.match_faq(user_message, lessons_mode=False)
 
-        # Ensure session exists
-        if not request.session.session_key:
-            request.session.save()
-
-        confidence = None
-        time_keywords = [
-            "when is the next swim", "what swims are available", "swim today",
-            "swim times", "weekend swims", "can I swim", "sessions", "next public swim",
-            "lesson", "term", "rebooking", "booking", "assessment", "swim term"
-        ]
-        if any(kw in user_message.lower() for kw in time_keywords):
-            faq_answer = None
-        else:
-            faq_answer, confidence = match_faq(
-                user_message,
-                embed_func=get_query_embedding,
-                lessons_mode=False
-            )
-
-        if faq_answer:
-            logger.info("✅ Responding from FAQ")
-            html_reply = markdown.markdown(faq_answer, extensions=["extra"])
-            ChatbotQuery.objects.create(
-                user=request.user if request.user.is_authenticated else None,
-                session_key=request.session.session_key,
-                source="public_swim",
-                message=user_message,
-                response=faq_answer,
-                response_type="FAQ",
-                confidence_score=confidence
+        # A confident FAQ answers most things — but anything that depends on
+        # today's timetable has to go to the live-data path instead.
+        if result.is_answered and not _needs_live_data(user_message.lower()):
+            html_reply = render_faq_markdown(result.answer)
+            _log_query(
+                request, "public_swim", user_message,
+                result.answer, result.tier, result.score,
             )
             return JsonResponse({"reply": html_reply})
 
-        swims = get_available_swims()
-        swim_list = format_swim_list(swims)
+        swim_list = format_swim_list(get_available_swims())
         today = timezone.now().date()
-        current_term = Term.get_current_term()
-        next_term = Term.get_next_term()
 
         def format_term_info(term, label):
             if not term:
@@ -164,64 +185,63 @@ def public_swim_chat(request):
             )
 
         lesson_term_info = ""
+        current_term = Term.get_current_term()
+        next_term = Term.get_next_term()
         if current_term:
             lesson_term_info += format_term_info(current_term, "Current lesson term") + "\n\n"
         if next_term:
             lesson_term_info += format_term_info(next_term, "Next lesson term")
 
-        swim_prompt = build_swim_prompt(user_message, swim_list, today.strftime('%A %d %B'))
+        swim_prompt = build_swim_prompt(
+            user_message,
+            swim_list,
+            today.strftime("%A %d %B"),
+            faq_context=faq_helper.format_context(result.context),
+        )
         full_prompt = (
             f"You may find this lesson term info useful:\n\n{lesson_term_info}\n\n"
             f"{swim_prompt}"
         )
 
-        response = client.chat.completions.create(
-            model=CHAT_MODEL,
-            messages=[
-                {
-                    "role": "system",
-                    "content": """
-You are SplashBot — a helpful assistant who answers questions about public swims and lessons.
-You have access to lesson term dates, including rebooking, booking, and assessment dates.
-Use this info to answer when customers can book, rebook, or plan lessons.
-"""
-                },
-                {"role": "user", "content": full_prompt}
-            ]
+        raw_reply, api_error = ask_openai([
+            {
+                "role": "system",
+                "content": (
+                    "You are SplashBot — a helpful assistant who answers questions about "
+                    "public swims and lessons.\nYou have access to lesson term dates, "
+                    "including rebooking, booking, and assessment dates.\nUse this info to "
+                    "answer when customers can book, rebook, or plan lessons."
+                ),
+            },
+            {"role": "user", "content": full_prompt},
+        ])
+
+        if api_error:
+            return JsonResponse({"reply": f"<p>{api_error}</p>"}, status=503)
+
+        _log_query(
+            request, "public_swim", user_message,
+            raw_reply, faq_helper.MISS, result.score,
         )
+        return JsonResponse({"reply": render_model_markdown(raw_reply)})
 
-        try:
-            raw_reply = response.choices[0].message.content
-            logger.info("🧠 GPT says:\n%s", raw_reply)
-            html_reply = markdown.markdown(raw_reply, extensions=["extra"])
-        except Exception as e:
-            logger.error("⚠️ Failed to parse GPT reply: %s", e)
-            raw_reply = "⚠️ Sorry, I didn't understand that. Please try again."
-            html_reply = raw_reply
-
-        ChatbotQuery.objects.create(
-            user=request.user if request.user.is_authenticated else None,
-            session_key=request.session.session_key,
-            source="public_swim",
-            message=user_message,
-            response=raw_reply,
-            response_type="GPT",
-            confidence_score=confidence
+    except Exception as exc:
+        logger.error("Swim chatbot error: %s", exc, exc_info=True)
+        return JsonResponse(
+            {"error": "Something went wrong while processing your message."},
+            status=500,
         )
-
-        return JsonResponse({"reply": html_reply})
-
-    except Exception as e:
-        logger.error("❌ Swim chatbot error: %s", str(e), exc_info=True)
-        return JsonResponse({"error": "Something went wrong while processing your message."}, status=500)
-
 
 
 # ✅ UI ROUTES
+# ensure_csrf_cookie: these pages contain no form, so without it there is no
+# csrftoken cookie for chat.js to send and every POST would be rejected.
+@ensure_csrf_cookie
 def public_lesson_chat_ui(request):
     return render(request, "chatbot/public_lesson_chat.html")
 
 
+@ensure_csrf_cookie
 def public_swim_chat_ui(request):
     return render(request, "chatbot/public_swim_chat.html")
 

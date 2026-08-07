@@ -9,11 +9,7 @@ DEBUG = False
 # --- Core secrets/env (prod reads from real env) ---
 SECRET_KEY = config('SECRET_KEY')
 
-# OpenAI
-OPENAI_API_KEY     = config("OPENAI_API_KEY")
-OPENAI_CHAT_MODEL  = config("OPENAI_CHAT_MODEL", default="gpt-4o")
-OPENAI_EMBED_MODEL = config("OPENAI_EMBED_MODEL", default="text-embedding-3-small")
-OPENAI_PROJECT     = config("OPENAI_PROJECT", default="")
+# OpenAI settings live in base_settings.py — see the OpenAI/chatbot block there.
 
 # --- BOIPA Configuration ---
 # =============================================================================

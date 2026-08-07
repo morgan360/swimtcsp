@@ -181,6 +181,9 @@ def lessons(request):
 def swimling_stagnation(request):
     selected_level = request.GET.get('level', '').strip()
     selected_day = request.GET.get('day', '').strip()
+    # Class start time as "HH:MM", pairing with the day filter so a single
+    # class can be picked out rather than a whole day's worth.
+    selected_time = request.GET.get('time', '').strip()
 
     current_term = Term.get_current_term() or Term.objects.order_by('-start_date', '-id').first()
 
@@ -191,8 +194,10 @@ def swimling_stagnation(request):
             'total_swimlings': 0,
             'level_choices': [],
             'day_choices': Product.DAY_CHOICES,
+            'time_choices': [],
             'selected_level': selected_level,
             'selected_day': selected_day,
+            'selected_time': selected_time,
         }
         return render(request, 'dashboard/swimling_stagnation.html', context)
 
@@ -226,8 +231,10 @@ def swimling_stagnation(request):
             'total_swimlings': 0,
             'level_choices': [],
             'day_choices': Product.DAY_CHOICES,
+            'time_choices': [],
             'selected_level': selected_level,
             'selected_day': selected_day,
+            'selected_time': selected_time,
         }
         return render(request, 'dashboard/swimling_stagnation.html', context)
 
@@ -243,6 +250,7 @@ def swimling_stagnation(request):
 
     levels_map = {}
     available_categories = {}
+    available_times = set()
     total_swimlings = 0
 
     for (swimling_id, category_id), current_enrollment in current_entries.items():
@@ -298,12 +306,21 @@ def swimling_stagnation(request):
 
         available_categories[category_id] = category
 
+        # Collected before the filters below, so the dropdown keeps offering
+        # every start time rather than narrowing to the current selection.
+        lesson_time_value = format_time(lesson.start_time)
+        if lesson_time_value:
+            available_times.add(lesson_time_value)
+
         if selected_level:
             try:
                 if str(category_id) != str(int(selected_level)):
                     continue
             except ValueError:
                 continue
+
+        if selected_time and lesson_time_value != selected_time:
+            continue
 
         lesson_day_value = getattr(current_enrollment.lesson, 'day_of_week', None)
         if selected_day:
@@ -348,8 +365,10 @@ def swimling_stagnation(request):
         'total_swimlings': total_swimlings,
         'level_choices': level_choices,
         'day_choices': Product.DAY_CHOICES,
+        'time_choices': sorted(available_times),
         'selected_level': selected_level,
         'selected_day': selected_day,
+        'selected_time': selected_time,
     }
 
     return render(request, 'dashboard/swimling_stagnation.html', context)

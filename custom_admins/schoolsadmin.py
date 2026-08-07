@@ -1,7 +1,7 @@
 from django.contrib.admin import AdminSite
 from django.contrib import admin
 from schools.models import ScoLessons, ScoCategory, ScoProgram, ScoSchool
-from schools_orders.models import Order
+from schools_orders.models import Order, OrderItem
 from schools_bookings.models import ScoTerm, ScoEnrollment
 from users.models import Swimling
 from .lessonsadmin import LessonEnrollmentAdmin, SwimlingAutocompleteAdmin
@@ -115,6 +115,67 @@ class ScoEnrollmentAdmin(admin.ModelAdmin):
 
     export_enrollments_csv.short_description = "Export selected enrollments to CSV"
 
+class ScoOrderItemInline(admin.TabularInline):
+    model = OrderItem
+    extra = 0
+    raw_id_fields = ['product', 'term', 'swimling']
+
+
+class ScoOrderAdmin(admin.ModelAdmin):
+    """School orders.
+
+    Registered bare until now, so the changelist showed only "Order 123" and
+    you had to open each one to find out whose it was.
+    """
+    list_display = ['id', 'guardian', 'swimmers', 'school', 'amount', 'paid', 'created']
+    list_display_links = ['id', 'guardian']
+    list_filter = ['paid', ('school', RelatedDropdownFilter), 'created']
+    search_fields = [
+        'id',
+        'user__first_name',
+        'user__last_name',
+        'user__email',
+        'txId',
+        'items__swimling__first_name',
+        'items__swimling__last_name',
+    ]
+    readonly_fields = ['created', 'updated', 'txId', 'boipa_reconciled']
+    # No date_hierarchy: it truncates dates in the database, which needs MySQL's
+    # timezone tables loaded, and they are not. The 'created' list_filter covers
+    # date filtering the way the rest of the admins here do.
+    ordering = ['-created']
+    inlines = [ScoOrderItemInline]
+
+    def get_queryset(self, request):
+        # guardian and swimmers are read for every row.
+        return (
+            super().get_queryset(request)
+            .select_related('user', 'school')
+            .prefetch_related('items__swimling')
+        )
+
+    def guardian(self, obj):
+        if not obj.user:
+            return "—"
+        return obj.user.get_full_name() or obj.user.email
+    guardian.short_description = 'Guardian'
+    guardian.admin_order_field = 'user__last_name'
+
+    def swimmers(self, obj):
+        """The children the order was placed for — the thing you actually
+        want to see without opening the order."""
+        names = []
+        for item in obj.items.all():
+            swimling = item.swimling
+            if not swimling:
+                continue
+            name = f"{swimling.first_name} {swimling.last_name or ''}".strip()
+            if name and name not in names:
+                names.append(name)
+        return ', '.join(names) or "—"
+    swimmers.short_description = 'Swimmer(s)'
+
+
 class ScoTermAdmin(ImportExportMixin, admin.ModelAdmin):
     resource_class = TermResource
     list_display = ['id', 'is_active', 'start_date', 'end_date', 'booking_start_date', 'booking_end_date', 'school']
@@ -150,5 +211,5 @@ schools_admin_site.register(ScoCategory)
 schools_admin_site.register(ScoProgram)
 schools_admin_site.register(ScoSchool)
 # schools_admin_site.register(ScoTerm)
-schools_admin_site.register(Order)
+schools_admin_site.register(Order, ScoOrderAdmin)
 schools_admin_site.register(ScoTerm, ScoTermAdmin)

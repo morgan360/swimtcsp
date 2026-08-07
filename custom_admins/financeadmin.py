@@ -1,14 +1,14 @@
 from django.contrib import messages
-from django.contrib.admin import AdminSite, ModelAdmin, register
+from django.contrib.admin import AdminSite, ModelAdmin, TabularInline, register
 from django.db.models import Sum
 from django.utils.timezone import localtime
 from django.http import HttpResponse
 import csv
 
 # Import all Order models
-from swims_orders.models import Order as SwimOrder
-from lessons_orders.models import Order as LessonOrder
-from schools_orders.models import Order as SchoolOrder
+from swims_orders.models import Order as SwimOrder, OrderItem as SwimOrderItem
+from lessons_orders.models import Order as LessonOrder, OrderItem as LessonOrderItem
+from schools_orders.models import Order as SchoolOrder, OrderItem as SchoolOrderItem
 
 # Date range filter
 from rangefilter.filters import DateRangeFilter
@@ -217,18 +217,67 @@ class BaseOrderAdmin(ModelAdmin):
 
 
 # ---------------------------
+# Order line items
+# ---------------------------
+# Opening an order here used to show only the order-level fields (guardian,
+# amount, paid), with no way to see which swimmer or which class the money was
+# for without cross-referencing another admin. These inlines put the line items
+# on the order page. Finance is a reconciliation view, so they are read-only --
+# amounts must not be editable from a reporting screen.
+class BaseOrderItemInline(TabularInline):
+    extra = 0
+    can_delete = False
+    show_change_link = True
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+
+class LessonOrderItemInline(BaseOrderItemInline):
+    model = LessonOrderItem
+    fields = ("swimling", "product", "term", "price", "quantity")
+    readonly_fields = fields
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related("swimling", "product", "term")
+
+
+class SchoolOrderItemInline(BaseOrderItemInline):
+    model = SchoolOrderItem
+    fields = ("swimling", "product", "term", "price", "quantity")
+    readonly_fields = fields
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related("swimling", "product", "term")
+
+
+class SwimOrderItemInline(BaseOrderItemInline):
+    # Public swims are ticket purchases, not per-child enrolments, so there is
+    # no swimling to show -- the variant is the meaningful detail.
+    model = SwimOrderItem
+    fields = ("variant", "quantity")
+    readonly_fields = fields
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related("variant")
+
+
+# ---------------------------
 # Register models
 # ---------------------------
 @register(SwimOrder, site=finance_admin_site)
 class SwimOrderAdmin(BaseOrderAdmin):
-    pass
+    inlines = [SwimOrderItemInline]
 
 
 @register(LessonOrder, site=finance_admin_site)
 class LessonOrderAdmin(BaseOrderAdmin):
-    pass
+    inlines = [LessonOrderItemInline]
 
 
 @register(SchoolOrder, site=finance_admin_site)
 class SchoolOrderAdmin(BaseOrderAdmin):
-    pass
+    inlines = [SchoolOrderItemInline]

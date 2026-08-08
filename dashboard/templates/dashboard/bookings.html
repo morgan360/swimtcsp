@@ -12,22 +12,77 @@
       <!-- Category Tabs -->
       <div class="mb-2 border-b border-gray-200">
         <nav class="-mb-px flex space-x-6" aria-label="Tabs">
-          <a href="?category=swims&le_page={{ le_page_obj.number|default:1 }}"
+          <a href="?category=swims{% if qs_filters %}&{{ qs_filters }}{% endif %}"
              class="whitespace-nowrap py-2 px-1 border-b-2 text-sm font-medium {% if category == 'swims' %}border-blue-600 text-blue-700{% else %}border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300{% endif %}">
             Public Swims
           </a>
-          <a href="?category=lessons&sw_page={{ sw_page_obj.number|default:1 }}"
+          <a href="?category=lessons{% if qs_filters %}&{{ qs_filters }}{% endif %}"
              class="whitespace-nowrap py-2 px-1 border-b-2 text-sm font-medium {% if category == 'lessons' %}border-blue-600 text-blue-700{% else %}border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300{% endif %}">
             Lessons
           </a>
         </nav>
       </div>
 
+      <!-- Filters -->
+      <form method="get" class="grid grid-cols-1 md:grid-cols-6 gap-3">
+        {% if category %}<input type="hidden" name="category" value="{{ category }}" />{% endif %}
+
+        <input type="text" name="q" value="{{ filters.q }}"
+               placeholder="{% if category == 'swims' %}Search name, email, product or transaction{% else %}Search swimmer, guardian or lesson{% endif %}"
+               class="col-span-1 md:col-span-2 border rounded-md px-3 py-2 text-sm" />
+
+        {% if category != 'lessons' %}
+        <select name="status" class="border rounded-md px-3 py-2 text-sm" title="Applies to swim bookings">
+          <option value="">All statuses</option>
+          <option value="paid" {% if filters.status == 'paid' %}selected{% endif %}>Paid</option>
+          <option value="unpaid" {% if filters.status == 'unpaid' %}selected{% endif %}>Unpaid</option>
+        </select>
+        {% endif %}
+
+        {% if category != 'swims' %}
+        <select name="term" class="border rounded-md px-3 py-2 text-sm" title="Public lesson term">
+          <option value="">All terms</option>
+          {% for term in terms %}
+          <option value="{{ term.id }}" {% if filters.term == term.id|stringformat:"s" %}selected{% endif %}>{{ term.label }}</option>
+          {% endfor %}
+        </select>
+
+        {% if sco_terms %}
+        <select name="sco_term" class="border rounded-md px-3 py-2 text-sm" title="School term">
+          <option value="">All school terms</option>
+          {% for term in sco_terms %}
+          <option value="{{ term.id }}" {% if filters.sco_term == term.id|stringformat:"s" %}selected{% endif %}>
+            {{ term.school.name|default:"School" }} ({{ term.start_date }} → {{ term.end_date }})
+          </option>
+          {% endfor %}
+        </select>
+        {% endif %}
+        {% endif %}
+
+        <input type="date" name="from" value="{{ filters.from }}" class="border rounded-md px-3 py-2 text-sm" title="From date" />
+        <input type="date" name="to" value="{{ filters.to }}" class="border rounded-md px-3 py-2 text-sm" title="To date" />
+
+        <div class="md:col-span-6 flex items-center gap-3">
+          <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2 rounded">
+            Apply
+          </button>
+          {% if has_filters %}
+          <a href="?{% if category %}category={{ category }}{% endif %}" class="text-sm text-gray-600 hover:text-gray-900">Reset</a>
+          {% endif %}
+          <span class="text-xs text-gray-500">
+            Dates match the swim date for bookings, and the date enrolled for lessons.
+          </span>
+        </div>
+      </form>
+
       {% if category != 'lessons' %}
       <!-- Public Swim Bookings -->
       <section>
         <div class="flex items-center justify-between mb-3">
-          <h3 class="text-lg font-semibold text-gray-900">Public Swim Bookings</h3>
+          <h3 class="text-lg font-semibold text-gray-900">
+            Public Swim Bookings
+            <span class="ml-2 text-sm font-normal text-gray-500">{{ sw_page_obj.paginator.count }} result{{ sw_page_obj.paginator.count|pluralize }}</span>
+          </h3>
         </div>
 
         <!-- Desktop Table -->
@@ -113,10 +168,10 @@
           <div class="text-sm text-gray-600">Page {{ sw_page_obj.number }} of {{ sw_page_obj.paginator.num_pages }}</div>
           <div class="flex gap-2">
             {% if sw_page_obj.has_previous %}
-              <a href="?category=swims&sw_page={{ sw_page_obj.previous_page_number }}&le_page={{ le_page_obj.number }}" class="px-3 py-1.5 text-sm bg-gray-100 rounded hover:bg-gray-200">Previous</a>
+              <a href="?sw_page={{ sw_page_obj.previous_page_number }}{% if qs_swim_page %}&{{ qs_swim_page }}{% endif %}" class="px-3 py-1.5 text-sm bg-gray-100 rounded hover:bg-gray-200">Previous</a>
             {% endif %}
             {% if sw_page_obj.has_next %}
-              <a href="?category=swims&sw_page={{ sw_page_obj.next_page_number }}&le_page={{ le_page_obj.number }}" class="px-3 py-1.5 text-sm bg-gray-100 rounded hover:bg-gray-200">Next</a>
+              <a href="?sw_page={{ sw_page_obj.next_page_number }}{% if qs_swim_page %}&{{ qs_swim_page }}{% endif %}" class="px-3 py-1.5 text-sm bg-gray-100 rounded hover:bg-gray-200">Next</a>
             {% endif %}
           </div>
         </div>
@@ -128,7 +183,10 @@
       <!-- School Lesson Enrollments -->
       <section>
         <div class="flex items-center justify-between mb-3">
-          <h3 class="text-lg font-semibold text-gray-900">School Lesson Enrollments</h3>
+          <h3 class="text-lg font-semibold text-gray-900">
+            School Lesson Enrollments
+            <span class="ml-2 text-sm font-normal text-gray-500">{{ sco_page_obj.paginator.count }} result{{ sco_page_obj.paginator.count|pluralize }}</span>
+          </h3>
         </div>
 
         <!-- Desktop Table -->
@@ -183,10 +241,10 @@
           <div class="text-sm text-gray-600">Page {{ sco_page_obj.number }} of {{ sco_page_obj.paginator.num_pages }}</div>
           <div class="flex gap-2">
             {% if sco_page_obj.has_previous %}
-              <a href="?category=lessons&sco_page={{ sco_page_obj.previous_page_number }}&le_page={{ le_page_obj.number }}&sw_page={{ sw_page_obj.number }}" class="px-3 py-1.5 text-sm bg-gray-100 rounded hover:bg-gray-200">Previous</a>
+              <a href="?sco_page={{ sco_page_obj.previous_page_number }}{% if qs_school_page %}&{{ qs_school_page }}{% endif %}" class="px-3 py-1.5 text-sm bg-gray-100 rounded hover:bg-gray-200">Previous</a>
             {% endif %}
             {% if sco_page_obj.has_next %}
-              <a href="?category=lessons&sco_page={{ sco_page_obj.next_page_number }}&le_page={{ le_page_obj.number }}&sw_page={{ sw_page_obj.number }}" class="px-3 py-1.5 text-sm bg-gray-100 rounded hover:bg-gray-200">Next</a>
+              <a href="?sco_page={{ sco_page_obj.next_page_number }}{% if qs_school_page %}&{{ qs_school_page }}{% endif %}" class="px-3 py-1.5 text-sm bg-gray-100 rounded hover:bg-gray-200">Next</a>
             {% endif %}
           </div>
         </div>
@@ -200,7 +258,10 @@
       <!-- Lesson Enrollments -->
       <section>
         <div class="flex items-center justify-between mb-3">
-          <h3 class="text-lg font-semibold text-gray-900">Lesson Enrollments</h3>
+          <h3 class="text-lg font-semibold text-gray-900">
+            Lesson Enrollments
+            <span class="ml-2 text-sm font-normal text-gray-500">{{ le_page_obj.paginator.count }} result{{ le_page_obj.paginator.count|pluralize }}</span>
+          </h3>
         </div>
 
         <!-- Desktop Table -->
@@ -263,10 +324,10 @@
           <div class="text-sm text-gray-600">Page {{ le_page_obj.number }} of {{ le_page_obj.paginator.num_pages }}</div>
           <div class="flex gap-2">
             {% if le_page_obj.has_previous %}
-              <a href="?category=lessons&le_page={{ le_page_obj.previous_page_number }}&sw_page={{ sw_page_obj.number }}" class="px-3 py-1.5 text-sm bg-gray-100 rounded hover:bg-gray-200">Previous</a>
+              <a href="?le_page={{ le_page_obj.previous_page_number }}{% if qs_lesson_page %}&{{ qs_lesson_page }}{% endif %}" class="px-3 py-1.5 text-sm bg-gray-100 rounded hover:bg-gray-200">Previous</a>
             {% endif %}
             {% if le_page_obj.has_next %}
-              <a href="?category=lessons&le_page={{ le_page_obj.next_page_number }}&sw_page={{ sw_page_obj.number }}" class="px-3 py-1.5 text-sm bg-gray-100 rounded hover:bg-gray-200">Next</a>
+              <a href="?le_page={{ le_page_obj.next_page_number }}{% if qs_lesson_page %}&{{ qs_lesson_page }}{% endif %}" class="px-3 py-1.5 text-sm bg-gray-100 rounded hover:bg-gray-200">Next</a>
             {% endif %}
           </div>
         </div>

@@ -3,14 +3,19 @@
 No test here touches the OpenAI API: match_faq accepts an `embed_func`, so
 vectors are supplied directly and scores are exact and predictable.
 """
+from datetime import datetime, time
+
+import pytz
 from django.core.cache import cache
 from django.test import RequestFactory, TestCase, override_settings
 
 from chatbot.checks import check_faq_thresholds
 from chatbot.helpers import faq as faq_helper
+from chatbot.helpers import swim as swim_helper
 from chatbot.helpers.faq_index import embedding_text, get_index, normalize
 from chatbot.helpers.throttle import is_rate_limited
 from chatbot.models import FAQEntry
+from swims.models import PublicSwimCategory, PublicSwimProduct
 
 
 def unit(*components):
@@ -316,3 +321,87 @@ class ThrottleTests(TestCase):
         request = self._request()
         for _ in range(10):
             self.assertFalse(is_rate_limited(request))
+
+
+class NextSwimOrderingTests(TestCase):
+    """get_available_swims sorted on the raw day number, so Sunday came last
+    whatever day it was. On a Saturday evening the list therefore began at Monday
+    and the 15-session cap dropped Sunday entirely, so the bot named a session
+    days after the one that was genuinely next."""
+
+    DUBLIN = pytz.timezone("Europe/Dublin")
+
+    def setUp(self):
+        self.public = PublicSwimCategory.objects.create(
+            name="Public Swim", slug="public-swim", description="Open swim",
+        )
+        self.lanes = PublicSwimCategory.objects.create(
+            name="Sunday Lanes", slug="sunday-lanes", description="Lanes",
+        )
+
+    def _session(self, category, day, start, end):
+        return PublicSwimProduct.objects.create(
+            category=category, day_of_week=day,
+            start_time=start, end_time=end, num_places=30, available=True,
+        )
+
+    def _at(self, year, month, day, hour, minute):
+        return self.DUBLIN.localize(datetime(year, month, day, hour, minute))
+
+    def _first_at(self, moment):
+        """The head of the list the bot is handed, at a given moment."""
+        from unittest.mock import patch
+        with patch.object(swim_helper.timezone, "now", return_value=moment):
+            swims = swim_helper.get_available_swims()
+        return swims[0] if swims else None
+
+    def _build_week(self):
+        # Saturday 8 Aug 2026 is a Saturday; day_of_week is 0=Monday.
+        self._session(self.public, 5, time(13, 15), time(14, 0))   # Sat
+        self._session(self.public, 5, time(16, 0), time(17, 0))    # Sat
+        self._session(self.lanes, 6, time(12, 50), time(13, 50))   # Sun
+        self._session(self.public, 6, time(14, 0), time(14, 55))   # Sun
+        self._session(self.public, 0, time(12, 0), time(13, 0))    # Mon
+
+    def test_saturday_evening_rolls_over_to_sunday_not_monday(self):
+        self._build_week()
+        first = self._first_at(self._at(2026, 8, 8, 20, 34))
+
+        self.assertEqual(first.get_day_of_week_display(), "Sunday")
+        self.assertEqual(first.start_time, time(12, 50))
+
+    def test_todays_remaining_sessions_come_first(self):
+        self._build_week()
+        first = self._first_at(self._at(2026, 8, 8, 12, 0))
+
+        self.assertEqual(first.get_day_of_week_display(), "Saturday")
+        self.assertEqual(first.start_time, time(13, 15))
+
+    def test_a_session_already_finished_today_is_dropped(self):
+        self._build_week()
+        # 14:30 on the Saturday: the 13:15 has ended, the 16:00 has not.
+        first = self._first_at(self._at(2026, 8, 8, 14, 30))
+
+        self.assertEqual(first.get_day_of_week_display(), "Saturday")
+        self.assertEqual(first.start_time, time(16, 0))
+
+    def test_sunday_night_rolls_over_to_monday(self):
+        self._build_week()
+        first = self._first_at(self._at(2026, 8, 9, 23, 0))
+
+        self.assertEqual(first.get_day_of_week_display(), "Monday")
+
+    def test_every_weekday_starts_no_further_away_than_any_other_session(self):
+        """The head of the list must be the soonest session, whatever day it is —
+        the property the raw-day-number sort broke from Tuesday to Saturday."""
+        self._build_week()
+        for offset in range(7):
+            moment = self._at(2026, 8, 8 + offset, 6, 0)
+            with self.subTest(day=moment.strftime("%A")):
+                from unittest.mock import patch
+                with patch.object(swim_helper.timezone, "now", return_value=moment):
+                    swims = swim_helper.get_available_swims()
+                weekday = moment.date().weekday()
+                distances = [(s.day_of_week - weekday) % 7 for s in swims]
+                self.assertEqual(distances, sorted(distances))
+                self.assertEqual(distances[0], min(distances))

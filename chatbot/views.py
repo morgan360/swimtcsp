@@ -202,7 +202,10 @@ def public_swim_chat(request):
             return JsonResponse({"reply": html_reply})
 
         swim_list = format_swim_list(get_available_swims())
-        today = timezone.now().date()
+        # localtime rather than now().date(): the UTC date is still on yesterday
+        # between midnight and 1am Irish summer time, which would have the bot
+        # naming the wrong day for the first hour of every summer morning.
+        now_local = timezone.localtime()
 
         def format_term_info(term, label):
             if not term:
@@ -228,7 +231,7 @@ def public_swim_chat(request):
         swim_prompt = build_swim_prompt(
             user_message,
             swim_list,
-            today.strftime("%A %d %B"),
+            now_local.strftime("%A %d %B at %H:%M"),
             faq_context=faq_helper.format_context(result.context),
         )
         full_prompt = (

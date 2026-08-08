@@ -9,21 +9,23 @@ def get_available_swims():
     weekday = today.weekday()
     current_time = now.time()
 
-    all_swims = PublicSwimProduct.objects.filter(available=True).order_by("day_of_week", "start_time")
-    filtered = []
+    all_swims = PublicSwimProduct.objects.filter(available=True)
 
-    for swim in all_swims:
-        if swim.day_of_week == weekday and swim.end_time > current_time:
-            filtered.append(swim)
-        elif swim.day_of_week != weekday:
-            filtered.append(swim)
+    # Today's sessions only count while they are still running.
+    upcoming = [
+        swim for swim in all_swims
+        if swim.day_of_week != weekday or swim.end_time > current_time
+    ]
 
-    sorted_swims = sorted(
-        filtered,
-        key=lambda s: (0 if s.day_of_week == weekday else 1, s.day_of_week, s.start_time)
-    )
+    # Order by how many days ahead each session is, wrapping around the end of the
+    # week. Sorting on the raw day number put Sunday last whatever day it was, so on
+    # a Saturday the list ran Monday, Tuesday, ... and the cap below cut Sunday off
+    # entirely — the genuinely next session was not in the list the bot was given.
+    # Only Sunday and Monday came out right, being the two days from which the raw
+    # numbers already ascend; Tuesday through Saturday were all wrong.
+    upcoming.sort(key=lambda s: ((s.day_of_week - weekday) % 7, s.start_time))
 
-    return sorted_swims[:15]
+    return upcoming[:15]
 
 def format_swim_list(swims):
     def get_price_table(product):

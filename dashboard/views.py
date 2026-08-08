@@ -17,6 +17,7 @@ from django.contrib.auth.forms import UserCreationForm
 from django import forms
 from django.contrib import messages
 from django.http import HttpResponseNotFound
+from django.views.decorators.http import require_POST
 from django.core.paginator import Paginator
 from django.db.models import Q, Sum, Count, Value
 from django.db.models.functions import Concat, Coalesce
@@ -72,7 +73,7 @@ def public_swims(request):
 def public_swims_attendance(request):
     base_orders = (
         SwimOrder.objects.filter(paid=True, booking__isnull=False)
-        .select_related('product', 'product__category', 'user')
+        .select_related('product', 'product__category', 'user', 'checked_in_by')
         .prefetch_related('items__variant')
     )
 
@@ -140,6 +141,7 @@ def public_swims_attendance(request):
         total_bookings=Count('id', distinct=True),
         total_attendees=Coalesce(Sum('items__quantity'), Value(0)),
         unique_swimmers=Count('user', distinct=True),
+        checked_in=Count('id', distinct=True, filter=Q(checked_in_at__isnull=False)),
     )
 
     catalog_stats = {
@@ -168,6 +170,26 @@ def public_swims_attendance(request):
 }
 
     return render(request, 'dashboard/public_swims_attendance.html', context)
+
+
+@login_required
+@user_passes_test(is_staff)
+@require_POST
+def public_swims_check_in(request, order_id):
+    """Record or clear the poolside check-in for one swim booking."""
+    order = get_object_or_404(SwimOrder, pk=order_id, paid=True, booking__isnull=False)
+
+    # The desired state is posted, not toggled from what the page happened to show.
+    # A checkbox sends nothing when unchecked, so an absent value means "not here".
+    if request.POST.get('checked_in') == '1':
+        order.checked_in_at = timezone.now()
+        order.checked_in_by = request.user
+    else:
+        order.checked_in_at = None
+        order.checked_in_by = None
+    order.save(update_fields=['checked_in_at', 'checked_in_by', 'updated'])
+
+    return render(request, 'dashboard/partials/_swim_checkin_cell.html', {'order': order})
 
 
 @login_required

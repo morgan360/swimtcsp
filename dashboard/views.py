@@ -1018,43 +1018,167 @@ def bookings_overview(request):
             category = 'swims'
     except Exception:
         pass
+
+    search = request.GET.get('q', '').strip()
+    status = request.GET.get('status', '').strip()  # "paid" | "unpaid" | ""
+    selected_term = request.GET.get('term', '').strip()
+    selected_sco_term = request.GET.get('sco_term', '').strip()
+    date_from = request.GET.get('from', '').strip()
+    date_to = request.GET.get('to', '').strip()
+
+    def parse_day(value):
+        try:
+            return datetime.strptime(value, "%Y-%m-%d").date()
+        except ValueError:
+            return None
+
+    from_day = parse_day(date_from) if date_from else None
+    to_day = parse_day(date_to) if date_to else None
+
+    # Enrollments carry a timestamp, not a date. Compare against aware datetimes rather
+    # than using __date, which truncates in the database and needs MySQL's timezone
+    # tables loaded — they are not.
+    created_from = timezone.make_aware(datetime.combine(from_day, dt_time.min)) if from_day else None
+    created_to = (
+        timezone.make_aware(datetime.combine(to_day + timedelta(days=1), dt_time.min))
+        if to_day else None
+    )
+
     # Public Swim bookings (have a concrete booking date)
     swim_bookings = (
         SwimOrder.objects.select_related('user', 'product')
         .filter(booking__isnull=False)
         .order_by('-booking', '-created')
     )
+    if search:
+        swim_bookings = swim_bookings.annotate(
+            booker_name=Concat(
+                Coalesce('user__first_name', Value('')),
+                Value(' '),
+                Coalesce('user__last_name', Value('')),
+            ),
+        ).filter(
+            Q(booker_name__icontains=search)
+            | Q(user__email__icontains=search)
+            | Q(product__name__icontains=search)
+            | Q(txId__icontains=search)
+        )
+    # Only swim bookings get a payment status filter: nearly every lesson enrollment
+    # predates the current order system and has no order attached to read `paid` from.
+    if status == 'paid':
+        swim_bookings = swim_bookings.filter(paid=True)
+    elif status == 'unpaid':
+        swim_bookings = swim_bookings.filter(paid=False)
+    if from_day:
+        swim_bookings = swim_bookings.filter(booking__gte=from_day)
+    if to_day:
+        swim_bookings = swim_bookings.filter(booking__lte=to_day)
+
     sw_page_num = request.GET.get('sw_page')
     sw_paginator = Paginator(swim_bookings, 25)
     sw_page_obj = sw_paginator.get_page(sw_page_num)
 
     # Lesson enrollments (public)
     lesson_enrollments = (
-        LessonEnrollment.objects.select_related('lesson', 'swimling', 'term')
+        LessonEnrollment.objects.select_related('lesson', 'swimling', 'term', 'swimling__guardian')
         .order_by('-created')
     )
+    if search:
+        lesson_enrollments = lesson_enrollments.annotate(
+            swimmer_name=Concat(
+                Coalesce('swimling__first_name', Value('')),
+                Value(' '),
+                Coalesce('swimling__last_name', Value('')),
+            ),
+            guardian_name=Concat(
+                Coalesce('swimling__guardian__first_name', Value('')),
+                Value(' '),
+                Coalesce('swimling__guardian__last_name', Value('')),
+            ),
+        ).filter(
+            Q(swimmer_name__icontains=search)
+            | Q(guardian_name__icontains=search)
+            | Q(swimling__guardian__email__icontains=search)
+            | Q(lesson__name__icontains=search)
+        )
+    if selected_term:
+        try:
+            lesson_enrollments = lesson_enrollments.filter(term_id=int(selected_term))
+        except (TypeError, ValueError):
+            pass
+    if created_from:
+        lesson_enrollments = lesson_enrollments.filter(created__gte=created_from)
+    if created_to:
+        lesson_enrollments = lesson_enrollments.filter(created__lt=created_to)
+
     le_page_num = request.GET.get('le_page')
     le_paginator = Paginator(lesson_enrollments, 25)
     le_page_obj = le_paginator.get_page(le_page_num)
 
     # School enrollments
+    sco_terms = []
     try:
-        from schools_bookings.models import ScoEnrollment
+        from schools_bookings.models import ScoEnrollment, ScoTerm
         school_enrollments = (
             ScoEnrollment.objects.select_related('lesson', 'swimling', 'term', 'order')
             .order_by('-created')
         )
+        if search:
+            school_enrollments = school_enrollments.annotate(
+                swimmer_name=Concat(
+                    Coalesce('swimling__first_name', Value('')),
+                    Value(' '),
+                    Coalesce('swimling__last_name', Value('')),
+                ),
+            ).filter(
+                Q(swimmer_name__icontains=search)
+                | Q(lesson__name__icontains=search)
+                | Q(term__school__name__icontains=search)
+            )
+        if selected_sco_term:
+            try:
+                school_enrollments = school_enrollments.filter(term_id=int(selected_sco_term))
+            except (TypeError, ValueError):
+                pass
+        if created_from:
+            school_enrollments = school_enrollments.filter(created__gte=created_from)
+        if created_to:
+            school_enrollments = school_enrollments.filter(created__lt=created_to)
+
         sco_page_num = request.GET.get('sco_page')
         sco_paginator = Paginator(school_enrollments, 25)
         sco_page_obj = sco_paginator.get_page(sco_page_num)
+        sco_terms = ScoTerm.objects.select_related('school').order_by('-start_date', '-id')
     except Exception:
         sco_page_obj = None
+
+    def querystring_without(*keys):
+        """Preserve the current filters in a link while replacing one page number."""
+        params = request.GET.copy()
+        for key in keys:
+            params.pop(key, None)
+        return params.urlencode()
 
     context = {
         'sw_page_obj': sw_page_obj,
         'le_page_obj': le_page_obj,
         'sco_page_obj': sco_page_obj,
         'category': category,
+        'filters': {
+            'q': search,
+            'status': status,
+            'term': selected_term,
+            'sco_term': selected_sco_term,
+            'from': date_from,
+            'to': date_to,
+        },
+        'has_filters': any([search, status, selected_term, selected_sco_term, date_from, date_to]),
+        'terms': Term.objects.all(),
+        'sco_terms': sco_terms,
+        'qs_swim_page': querystring_without('sw_page'),
+        'qs_lesson_page': querystring_without('le_page'),
+        'qs_school_page': querystring_without('sco_page'),
+        'qs_filters': querystring_without('category', 'sw_page', 'le_page', 'sco_page'),
     }
     return render(request, 'dashboard/bookings.html', context)
 

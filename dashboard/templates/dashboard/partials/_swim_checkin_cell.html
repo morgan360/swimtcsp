@@ -1,0 +1,27 @@
+{% comment %}
+Check-in control for one swim booking. Rendered inline by the attendance page and
+returned on its own by dashboard:dashboard_public_swims_check_in after each save,
+so the two always agree on what a saved row looks like.
+{% endcomment %}
+<label for="checkin-{{ order.id }}"
+  class="inline-flex items-center gap-2 text-xs font-medium {% if order.checked_in_at %}text-green-700{% else %}text-gray-600{% endif %}">
+  <input type="checkbox" id="checkin-{{ order.id }}" name="checked_in" value="1"
+    {% if order.checked_in_at %}checked{% endif %}
+    hx-post="{% url 'dashboard:dashboard_public_swims_check_in' order.id %}"
+    hx-trigger="change"
+    hx-target="#checkin-cell-{{ order.id }}"
+    hx-swap="innerHTML"
+    hx-indicator="#checkin-spinner-{{ order.id }}"
+    class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+  {% if order.checked_in_at %}
+  Checked in
+  {% else %}
+  Check in
+  {% endif %}
+  <i id="checkin-spinner-{{ order.id }}" class="fas fa-spinner fa-spin htmx-indicator text-gray-400"></i>
+</label>
+{% if order.checked_in_at %}
+<div class="mt-1 text-[11px] text-gray-500">
+  {{ order.checked_in_at|date:"H:i" }}{% if order.checked_in_by %} · {{ order.checked_in_by.get_full_name|default:order.checked_in_by.email }}{% endif %}
+</div>
+{% endif %}

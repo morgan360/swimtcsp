@@ -121,9 +121,11 @@
         <div class="border-t border-gray-100 pt-8">
           <div class="flex flex-col sm:flex-row gap-4 justify-center">
             <!-- Preview Button -->
-            <button type="button" 
+            <button type="button" id="previewButton"
                     onclick="previewClassList()"
-                    class="inline-flex items-center justify-center px-6 py-3 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 focus:ring-4 focus:ring-gray-300 transition-all duration-200 shadow-sm">
+                    class="inline-flex items-center justify-center px-6 py-3 bg-gray-100 text-gray-400 font-medium rounded-lg cursor-not-allowed transition-all duration-200 shadow-sm"
+                    disabled
+                    title="Please fill in all fields to preview a class list">
               <i class="fas fa-eye mr-2"></i>
               Preview List
             </button>
@@ -145,31 +147,51 @@
 </section>
 
 <script>
-function checkFormValidity() {
+// A class list needs a term, plus either a specific lesson or a day and a time —
+// the two cases reports.views.class_print knows how to build. Preview and print
+// share the rule so the two buttons can never disagree about what is printable.
+function formIsReady() {
   const term = document.getElementById('id_term').value;
   const day = document.getElementById('id_day').value;
   const lesson = document.getElementById('id_lesson').value;
   const time = document.getElementById('id_time').value;
-  
-  const button = document.getElementById('generateButton');
-  
-  // Enable if: (term && lesson) OR (term && day && time)
-  if ((term && lesson) || (term && day && time)) {
-    // Enable button with active styling
-    button.disabled = false;
-    button.className = "inline-flex items-center justify-center px-8 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-blue-800 focus:ring-4 focus:ring-blue-300 transition-all duration-200 shadow-lg transform hover:scale-105 cursor-pointer";
-    button.title = "Click to generate and print your class list";
+
+  return Boolean((term && lesson) || (term && day && time));
+}
+
+function missingFieldsText() {
+  const term = document.getElementById('id_term').value;
+  const day = document.getElementById('id_day').value;
+  const lesson = document.getElementById('id_lesson').value;
+  const time = document.getElementById('id_time').value;
+
+  const missingFields = [];
+  if (!term) missingFields.push("Term");
+  if (!(lesson || (day && time))) missingFields.push("Lesson or Day+Time");
+
+  return `Please select an option for: ${missingFields.join(", ")}`;
+}
+
+function checkFormValidity() {
+  const ready = formIsReady();
+  const generateButton = document.getElementById('generateButton');
+  const previewButton = document.getElementById('previewButton');
+
+  generateButton.disabled = !ready;
+  previewButton.disabled = !ready;
+
+  if (ready) {
+    generateButton.className = "inline-flex items-center justify-center px-8 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-blue-800 focus:ring-4 focus:ring-blue-300 transition-all duration-200 shadow-lg transform hover:scale-105 cursor-pointer";
+    generateButton.title = "Click to generate and print your class list";
+
+    previewButton.className = "inline-flex items-center justify-center px-6 py-3 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 focus:ring-4 focus:ring-gray-300 transition-all duration-200 shadow-sm cursor-pointer";
+    previewButton.title = "Open the printable list in a new tab";
   } else {
-    // Disable button with grey styling
-    button.disabled = true;
-    button.className = "inline-flex items-center justify-center px-8 py-3 bg-gray-400 text-gray-300 font-semibold rounded-lg cursor-not-allowed transition-all duration-200 shadow-lg";
-    
-    // Dynamic tooltip based on missing fields
-    const missingFields = [];
-    if (!term) missingFields.push("Term");
-    if (!(lesson || (day && time))) missingFields.push("Lesson or Day+Time");
-    
-    button.title = `Please select an option for: ${missingFields.join(", ")} to generate a class list`;
+    generateButton.className = "inline-flex items-center justify-center px-8 py-3 bg-gray-400 text-gray-300 font-semibold rounded-lg cursor-not-allowed transition-all duration-200 shadow-lg";
+    generateButton.title = `${missingFieldsText()} to generate a class list`;
+
+    previewButton.className = "inline-flex items-center justify-center px-6 py-3 bg-gray-100 text-gray-400 font-medium rounded-lg cursor-not-allowed transition-all duration-200 shadow-sm";
+    previewButton.title = `${missingFieldsText()} to preview a class list`;
   }
 }
 
@@ -188,23 +210,25 @@ document.addEventListener('DOMContentLoaded', function() {
   checkFormValidity();
 });
 
+// Open the very page the print button submits to, in a new tab, so the filters
+// stay put for adjusting. This used to pop up an alert listing the filter values
+// the user had just chosen, which showed nothing of what would actually print.
 function previewClassList() {
-  // Basic form validation and preview functionality
+  if (!formIsReady()) {
+    return;
+  }
+
   const form = document.querySelector('form');
-  const formData = new FormData(form);
-  
-  let preview = "Class List Preview:\n\n";
-  for (let [key, value] of formData.entries()) {
+  const params = new URLSearchParams();
+  // Skip blanks: class_print branches on whether lesson, day and time are set,
+  // and an empty lesson= would otherwise look like a lesson was chosen.
+  new FormData(form).forEach((value, key) => {
     if (value) {
-      preview += `${key.charAt(0).toUpperCase() + key.slice(1)}: ${value}\n`;
+      params.append(key, value);
     }
-  }
-  
-  if (preview === "Class List Preview:\n\n") {
-    alert("Please select at least one filter criteria to preview.");
-  } else {
-    alert(preview);
-  }
+  });
+
+  window.open(`${form.action}?${params.toString()}`, '_blank', 'noopener');
 }
 </script>
 </section>

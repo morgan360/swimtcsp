@@ -34,7 +34,7 @@ Today is {today_str}. The user may be asking about:
 - Types of swims (e.g. public, family)
 - Facility info (e.g. lockers, swimming hats)
 
-If the user is asking about swim **times or availability**, answer based on this list of current swim sessions:
+If the user is asking about swim **times or availability**, answer based on this list of current swim sessions. It is ordered soonest first, and sessions that have already finished today have been removed — so if the user asks what is next, the answer is the first session of the type they asked about:
 
 {swim_list}
 {_context_block(faq_context)}

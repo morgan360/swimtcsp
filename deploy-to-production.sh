@@ -67,6 +67,41 @@ fi
 echo -e "${GREEN}✅ Git checks passed${NC}"
 echo ""
 
+# Tailwind stylesheet freshness.
+#
+# static/css/styles.css is a committed artifact, and PythonAnywhere has no Node,
+# so it can only be built here. Tailwind emits just the classes it finds when it
+# runs, which means a class added to a template since the last build is silently
+# missing from the deployed stylesheet — no error, just an unstyled element. The
+# chat panel shipped full-width exactly this way.
+#
+# Rebuild to a temporary file and compare. This never writes to the working tree
+# and never commits: a deploy quietly amending a tracked file is worse than one
+# that stops and says what to do.
+if command -v npx >/dev/null 2>&1 && [ -d node_modules ]; then
+    echo -e "${YELLOW}🎨 Checking the Tailwind stylesheet is current${NC}"
+    TMP_CSS=$(mktemp -t tcsp_styles)
+    if npx tailwindcss -i ./static/src/input.css -o "$TMP_CSS" >/dev/null 2>&1; then
+        if ! cmp -s "$TMP_CSS" static/css/styles.css; then
+            rm -f "$TMP_CSS"
+            echo -e "${RED}❌ static/css/styles.css is out of date${NC}"
+            echo -e "${YELLOW}   A class used in a template is missing from the built stylesheet.${NC}"
+            echo -e "${YELLOW}   Run:  npm run build:css${NC}"
+            echo -e "${YELLOW}   then commit and push static/css/styles.css, and deploy again.${NC}"
+            exit 1
+        fi
+        echo -e "${GREEN}✅ Stylesheet is up to date${NC}"
+    else
+        # A broken build must not block a deploy of unrelated Python changes.
+        echo -e "${YELLOW}⚠️  Could not run Tailwind — skipping the stylesheet check${NC}"
+    fi
+    rm -f "$TMP_CSS"
+else
+    echo -e "${YELLOW}⚠️  Node or node_modules missing — skipping the stylesheet check${NC}"
+    echo -e "${YELLOW}   Run 'npm install' if you edit templates on this machine.${NC}"
+fi
+echo ""
+
 # Confirmation prompt (skipped for automated deployment)
 echo -e "${RED}⚠️  WARNING: You are about to deploy to PRODUCTION${NC}"
 echo -e "${YELLOW}   This will affect live users at www.tcsp.ie${NC}"

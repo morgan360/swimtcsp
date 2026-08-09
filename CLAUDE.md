@@ -27,7 +27,15 @@ python manage.py runserver
 
 # Frontend build (Tailwind CSS)
 npm install
-npm run build  # Watches ./static/src/input.css and rebuilds on changes (continuous)
+npm run build:css   # One-shot build of ./static/css/styles.css
+npm run watch:css   # Same, but rebuilds continuously while you work
+npm run build       # Alias for build:css
+
+# static/css/styles.css is committed, and PythonAnywhere has no Node, so it can
+# only be built here. Tailwind emits only the classes it finds when it runs, so a
+# class added to a template without a rebuild is silently missing from the
+# deployed CSS — no error, just an unstyled element. Rebuild and commit the CSS
+# whenever you add classes; deploy-to-production.sh refuses to deploy a stale one.
 
 # Collect static files (for production)
 python manage.py collectstatic
@@ -283,7 +291,7 @@ app_name/
 2. Ensure `.env` file is configured (use `.env.example` as template)
 3. Run migrations if models changed
 4. Start Django dev server on default port 8000
-5. In separate terminal, run `npm run build` for Tailwind watch mode
+5. In separate terminal, run `npm run watch:css` for Tailwind watch mode
 6. Access site at `http://localhost:8000`
 
 ### Making Changes to Models

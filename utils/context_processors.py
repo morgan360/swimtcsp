@@ -39,12 +39,22 @@ def get_term_info(request: HttpRequest) -> Dict[str, str]:
     # 🧠 Determine active modes
     active_modes = []
 
+    # Every date on Term is nullable, and get_current_term() selects on start_date
+    # and end_date alone — so a term can be the current one while its rebooking or
+    # booking date is still blank. Comparing against None raises, and this runs as
+    # a context processor, so it would take down every page on the site rather than
+    # just the booking pages. Guard each comparison by the dates it actually uses,
+    # the way Term.determine_phase already does.
+    #
+    # A missing date leaves active_modes empty, which reads as no phase: banners
+    # disappear and the cart gate (which admits 'RB' only) refuses. Incomplete
+    # dates therefore close booking rather than open it.
     if current_term:
-        if today < rebooking_date:
+        if rebooking_date and today < rebooking_date:
             active_modes = ['BK']
-        elif rebooking_date <= today < booking_date:
+        elif rebooking_date and booking_date and rebooking_date <= today < booking_date:
             active_modes = ['BK', 'RB']
-        elif booking_date <= today <= current_term.end_date:
+        elif booking_date and current_term.end_date and booking_date <= today <= current_term.end_date:
             active_modes = ['BN']
 
     # 📌 Choose dominant phase for backward compatibility (e.g., RB takes priority over BK)

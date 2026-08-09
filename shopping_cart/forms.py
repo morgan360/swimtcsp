@@ -20,9 +20,14 @@ class CartAddProductForm(forms.Form):
 class NewSwimlingForm(forms.ModelForm):
     class Meta:
         model = Swimling
-        fields = ['first_name', 'last_name', 'dob', 'sco_role_num', 'notes']
+        fields = ['first_name', 'last_name', 'dob', 'sco_role_num', 'medical_info', 'notes']
         widgets = {
             'dob': forms.DateInput(attrs={'type': 'date'}),
+            'medical_info': forms.Textarea(attrs={
+                'rows': 3,
+                'placeholder': 'e.g. asthma, epilepsy, allergies, hearing aid. '
+                               'Leave blank if there is nothing.',
+            }),
             'notes': forms.Textarea(attrs={'rows': 4}),
         }
         labels = {
@@ -30,7 +35,12 @@ class NewSwimlingForm(forms.ModelForm):
             'last_name': 'Last Name',
             'dob': 'Date of Birth',
             'sco_role_num': 'School Role Number',
-            'notes': 'Additional Notes'
+            'medical_info': 'Medical information',
+            'notes': 'Other notes',
+        }
+        help_texts = {
+            'medical_info': 'Shown to your child\'s teacher at poolside.',
+            'notes': 'Not shown to teachers.',
         }
 
 

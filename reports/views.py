@@ -201,8 +201,16 @@ def enrollment_report_data(request):
     })
 
 
+# The pool's term length, and the number of tick columns on a printed sheet.
+TERM_WEEKS = 15
+
+
 def class_print(request):
-    """Print swimlings for either a single lesson or all lessons at a time slot."""
+    """Print the attendance sheet for a single lesson, or for every lesson at a slot.
+
+    The sheet is ticked by hand, so it carries a fixed fifteen week columns — the
+    pool's term length — rather than a column per session actually scheduled.
+    """
     lesson_id = request.GET.get('lesson')
     term_choice = request.GET.get('term', 'current')
     category_id = request.GET.get('category')
@@ -226,7 +234,8 @@ def class_print(request):
         return render(request, 'reports/printable_swimlings_list.html', {
             'swimlings': swimlings,
             'product': product,
-            'term_label': term_choice.title() + " Term"
+            'term_label': term_choice.title() + " Term",
+            'weeks': range(1, TERM_WEEKS + 1),
         })
 
     # Case 2: filter by term + day + time → print all lessons at that time
@@ -261,13 +270,15 @@ def class_print(request):
             'lesson_lists': lesson_lists,
             'term_label': term_choice.title() + " Term",
             'time_label': time_str,
+            'weeks': range(1, TERM_WEEKS + 1),
         })
 
     # Fallback: nothing matched; render a simple empty state
     return render(request, 'reports/printable_swimlings_list.html', {
         'swimlings': [],
         'product': None,
-        'term_label': term_choice.title() + " Term"
+        'term_label': term_choice.title() + " Term",
+        'weeks': range(1, TERM_WEEKS + 1),
     })
 
 

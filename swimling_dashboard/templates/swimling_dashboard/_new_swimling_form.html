@@ -38,8 +38,17 @@
 
         <div>
             <label class="block text-blue-900 text-lg font-semibold mt-4 mb-2">
-                Notes <i class="fa-solid fa-circle-info mr-2 title" title="Add any relevant swimling information that might help us better accommodate their needs. This will only be visible to the class teacher and upper management."></i></label>
+                Medical information <i class="fa-solid fa-circle-info mr-2 title" title="Anything the teacher needs to know at poolside, such as asthma, epilepsy, allergies or a hearing aid. Leave blank if there is nothing."></i></label>
+                {{ form.medical_info|add_class:"w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500" }}
+                <p class="text-sm text-blue-800 mt-1">This is printed on the class teacher's attendance sheet.</p>
+                {{ form.medical_info.errors }}
+        </div>
+
+        <div>
+            <label class="block text-blue-900 text-lg font-semibold mt-4 mb-2">
+                Other notes <i class="fa-solid fa-circle-info mr-2 title" title="Anything else you would like us to know. This is not shown to teachers."></i></label>
                 {{ form.notes|add_class:"w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500" }}
+                <p class="text-sm text-blue-800 mt-1">Not shown to teachers.</p>
                 {{ form.notes.errors }}
         </div>
 

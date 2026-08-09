@@ -79,6 +79,19 @@ class Swimling(models.Model):
     dob = models.DateField(null=True, blank=False)
     sco_role_num = models.CharField(max_length=6, blank=True, null=True)
     notes = models.TextField(null=True, blank=True)
+    # Kept apart from notes on purpose. `notes` is a general box guardians have
+    # filled with all sorts over the years, and only medical information belongs
+    # in front of a teacher at poolside, so only this field is printed on the
+    # attendance sheet. Existing notes are deliberately left where they are
+    # rather than migrated across: they are mostly not medical, and guessing
+    # which ones are would put the wrong thing on a class list.
+    medical_info = models.TextField(
+        null=True,
+        blank=True,
+        verbose_name="Medical information",
+        help_text="Anything a teacher needs to know at poolside, e.g. asthma, "
+                  "epilepsy, allergies, or a hearing aid.",
+    )
     wp_student_id = models.IntegerField(blank=True, null=True)
 
     def __str__(self):

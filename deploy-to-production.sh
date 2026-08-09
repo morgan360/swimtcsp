@@ -157,6 +157,15 @@ echo -e "${YELLOW}════════════════════�
 
 source PRODUCTION_VENV_PLACEHOLDER/bin/activate
 
+# Stash BEFORE enabling maintenance, not after. The mode is stored in the tracked
+# file config/maintenance_mode_state.txt, so a stash taken afterwards captures the
+# "on" state as a local change and reverts the file — putting the site straight
+# back to live. Every deploy before this one therefore migrated against a site
+# that was still serving, and left the stash behind, which is where the backlog
+# of stashes came from.
+echo -e "${BLUE}📦 Stashing local changes...${NC}"
+git stash
+
 echo -e "${BLUE}🔒 Enabling maintenance mode...${NC}"
 python manage.py maintenance_mode on --settings=PRODUCTION_SETTINGS_PLACEHOLDER || {
     echo -e "${RED}❌ Failed to enable maintenance mode${NC}"
@@ -169,12 +178,49 @@ echo -e "${YELLOW}════════════════════�
 echo -e "${YELLOW}STEP 3: Pull Latest Code${NC}"
 echo -e "${YELLOW}═══════════════════════════════════════════════════════${NC}"
 
-echo -e "${BLUE}📦 Stashing local changes...${NC}"
-git stash
+git fetch origin main
+
+# Production carries migration files that were generated here and never committed.
+# When one shares a path with a file an incoming commit adds, git refuses to
+# overwrite it and the pull aborts — with the site already in maintenance. Move
+# any such file aside: git is about to write its own copy of that exact path, and
+# the original is kept so nothing is lost. Git refuses even when the contents are
+# byte-identical, so this cannot be skipped by comparing first.
+MIGRATION_BACKUPS="../prod-migration-backups"
+git diff --name-only HEAD origin/main | sort > /tmp/tcsp_incoming.$$
+git status --short --untracked-files=all | grep '^??' | sed 's/^?? //' | sort > /tmp/tcsp_untracked.$$
+COLLISIONS=$(comm -12 /tmp/tcsp_incoming.$$ /tmp/tcsp_untracked.$$)
+rm -f /tmp/tcsp_incoming.$$ /tmp/tcsp_untracked.$$
+
+if [ -n "$COLLISIONS" ]; then
+    mkdir -p "$MIGRATION_BACKUPS"
+    echo -e "${YELLOW}⚠️  Untracked files in the way of the pull:${NC}"
+    echo "$COLLISIONS" | while read -r f; do
+        DEST="$MIGRATION_BACKUPS/$(echo "$f" | tr '/' '_').$(date +%Y%m%d-%H%M%S)"
+        cp "$f" "$DEST"
+        if git show "origin/main:$f" | diff -q - "$f" >/dev/null 2>&1; then
+            echo -e "   ${BLUE}$f${NC} (identical to incoming) → $DEST"
+        else
+            # Worth saying out loud: the copy being replaced was not the same file.
+            echo -e "   ${YELLOW}$f (DIFFERS from incoming)${NC} → $DEST"
+        fi
+        rm -f "$f"
+    done
+fi
+
 echo -e "${BLUE}⬇️  Pulling latest code...${NC}"
 git pull origin main
 git log --oneline -1
-echo -e "${GREEN}✅ Code updated${NC}"
+
+# Assert maintenance mode rather than assume it. The flag lives in a tracked file,
+# so the pull can move it, and everything after this point changes the schema.
+python manage.py maintenance_mode on --settings=PRODUCTION_SETTINGS_PLACEHOLDER >/dev/null 2>&1 || true
+MAINT_STATE=$(cat config/maintenance_mode_state.txt 2>/dev/null || echo "unknown")
+if [ "$MAINT_STATE" != "1" ]; then
+    echo -e "${RED}❌ Maintenance mode is '${MAINT_STATE}', not 1 — aborting before the schema changes${NC}"
+    exit 1
+fi
+echo -e "${GREEN}✅ Code updated, maintenance mode confirmed on${NC}"
 echo ""
 
 echo -e "${YELLOW}═══════════════════════════════════════════════════════${NC}"
@@ -187,16 +233,72 @@ echo -e "${GREEN}✅ Dependencies updated${NC}"
 echo ""
 
 echo -e "${YELLOW}═══════════════════════════════════════════════════════${NC}"
-echo -e "${YELLOW}STEP 5: Run Database Migrations${NC}"
+echo -e "${YELLOW}STEP 5: Reconcile Migration Branches${NC}"
 echo -e "${YELLOW}═══════════════════════════════════════════════════════${NC}"
 
+# Production's migration history has branches the repo does not, and deliberately
+# so — see the "Commit the missing lessons price migration" commit for why they
+# are not committed. When a migration arrives from the repo alongside one of
+# production's own, the app is left with two leaf nodes and migrate refuses to run
+# at all, which would strand the deploy here with the site already down.
+#
+# Only merge when a conflict is actually detected, and only for the apps that have
+# one. Running makemigrations --merge unconditionally is not safe: on a graph with
+# no conflicts it falls through to ordinary makemigrations, which could invent
+# migrations on production from whatever the models happen to say.
+echo -e "${BLUE}🔍 Checking for conflicting migration leaves...${NC}"
+CONFLICT_APPS=$(python - <<'PYEOF'
+import os, django
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "PRODUCTION_SETTINGS_PLACEHOLDER")
+django.setup()
+from django.db import connections, DEFAULT_DB_ALIAS
+from django.db.migrations.loader import MigrationLoader
+loader = MigrationLoader(connections[DEFAULT_DB_ALIAS])
+print(" ".join(sorted(loader.detect_conflicts())))
+PYEOF
+)
+
+if [ -n "$CONFLICT_APPS" ]; then
+    echo -e "${YELLOW}⚠️  Conflicting leaves in: ${CONFLICT_APPS}${NC}"
+    python manage.py makemigrations --merge --noinput $CONFLICT_APPS --settings=PRODUCTION_SETTINGS_PLACEHOLDER || {
+        echo -e "${RED}❌ Could not merge — aborting before the schema is touched${NC}"
+        exit 1
+    }
+
+    # A merge that did not actually resolve the conflict must not reach migrate.
+    STILL_CONFLICTING=$(python - <<'PYEOF'
+import os, django
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "PRODUCTION_SETTINGS_PLACEHOLDER")
+django.setup()
+from django.db import connections, DEFAULT_DB_ALIAS
+from django.db.migrations.loader import MigrationLoader
+loader = MigrationLoader(connections[DEFAULT_DB_ALIAS])
+print(" ".join(sorted(loader.detect_conflicts())))
+PYEOF
+)
+    if [ -n "$STILL_CONFLICTING" ]; then
+        echo -e "${RED}❌ Still conflicting after merge: ${STILL_CONFLICTING} — aborting${NC}"
+        exit 1
+    fi
+    echo -e "${GREEN}✅ Merge migration created${NC}"
+else
+    echo -e "${GREEN}✅ No migration conflicts${NC}"
+fi
+echo ""
+
+echo -e "${YELLOW}═══════════════════════════════════════════════════════${NC}"
+echo -e "${YELLOW}STEP 6: Run Database Migrations${NC}"
+echo -e "${YELLOW}═══════════════════════════════════════════════════════${NC}"
+
+echo -e "${BLUE}💾 Showing what will be applied...${NC}"
+python manage.py migrate --plan --settings=PRODUCTION_SETTINGS_PLACEHOLDER 2>/dev/null | grep -A100 "Planned operations" || echo "   (no pending migrations)"
 echo -e "${BLUE}💾 Running migrations...${NC}"
 python manage.py migrate --settings=PRODUCTION_SETTINGS_PLACEHOLDER
 echo -e "${GREEN}✅ Migrations complete${NC}"
 echo ""
 
 echo -e "${YELLOW}═══════════════════════════════════════════════════════${NC}"
-echo -e "${YELLOW}STEP 6: Rebuild FAQ Embeddings${NC}"
+echo -e "${YELLOW}STEP 7: Rebuild FAQ Embeddings${NC}"
 echo -e "${YELLOW}═══════════════════════════════════════════════════════${NC}"
 
 echo -e "${BLUE}🤖 Re-vectorizing FAQs...${NC}"
@@ -212,7 +314,7 @@ echo -e "${GREEN}✅ FAQ embeddings rebuilt${NC}"
 echo ""
 
 echo -e "${YELLOW}═══════════════════════════════════════════════════════${NC}"
-echo -e "${YELLOW}STEP 7: Collect Static Files${NC}"
+echo -e "${YELLOW}STEP 8: Collect Static Files${NC}"
 echo -e "${YELLOW}═══════════════════════════════════════════════════════${NC}"
 
 echo -e "${BLUE}📂 Collecting static files...${NC}"
@@ -221,7 +323,7 @@ echo -e "${GREEN}✅ Static files collected${NC}"
 echo ""
 
 echo -e "${YELLOW}═══════════════════════════════════════════════════════${NC}"
-echo -e "${YELLOW}STEP 8: Reload Web Application${NC}"
+echo -e "${YELLOW}STEP 9: Reload Web Application${NC}"
 echo -e "${YELLOW}═══════════════════════════════════════════════════════${NC}"
 
 echo -e "${BLUE}🔄 Reloading web app...${NC}"
@@ -230,7 +332,7 @@ echo -e "${GREEN}✅ Web app reloaded${NC}"
 echo ""
 
 echo -e "${YELLOW}═══════════════════════════════════════════════════════${NC}"
-echo -e "${YELLOW}STEP 9: Disable Maintenance Mode${NC}"
+echo -e "${YELLOW}STEP 10: Disable Maintenance Mode${NC}"
 echo -e "${YELLOW}═══════════════════════════════════════════════════════${NC}"
 
 echo -e "${BLUE}🔓 Disabling maintenance mode...${NC}"

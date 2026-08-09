@@ -367,6 +367,12 @@ SOCIALACCOUNT_PROVIDERS = {
 ACCOUNT_FORMS = {
     'signup': 'users.forms.CustomSignupForm',
 }
+# Without this, a Google signup uses allauth's stock form and asks for no phone
+# number, so the requirement on the email signup form was only ever half of the
+# door. SOCIALACCOUNT_AUTO_SIGNUP is False, so this form is genuinely shown.
+SOCIALACCOUNT_FORMS = {
+    'signup': 'users.forms.CustomSocialSignupForm',
+}
 SOCIALACCOUNT_ADAPTER = "users.adapters.AutoLinkSocialAccountAdapter"
 
 # # CrispyForms

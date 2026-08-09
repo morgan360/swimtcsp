@@ -19,7 +19,12 @@ document.addEventListener("DOMContentLoaded", () => {
   const sendText = document.getElementById("send-text");
   const sendSpinner = document.getElementById("send-spinner");
 
-  input.focus();
+  // The full-page chat wants focus straight away. The floating panel starts
+  // hidden and focuses its own input when opened, so focusing here would put the
+  // caret in an invisible field and can scroll the page on some browsers.
+  if (input.offsetParent !== null) {
+    input.focus();
+  }
 
   function getCookie(name) {
     const match = document.cookie.match("(^|;)\\s*" + name + "\\s*=\\s*([^;]+)");

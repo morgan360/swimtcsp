@@ -103,16 +103,6 @@ class Term(models.Model):
             return 'BN'
         return 'Outside Term Dates'
 
-    def get_phase_code(self):
-        today = timezone.now().date()
-        if self.start_date and self.booking_date and today < self.booking_date:
-            return '1'
-        elif self.booking_date and self.rebooking_date and self.booking_date <= today < self.rebooking_date:
-            return '2'
-        elif self.rebooking_date and self.end_date and self.rebooking_date <= today <= self.end_date:
-            return '3'
-        return '0'
-
 
 # Contains all the bookings that have being confirmed
 # models.py

@@ -79,6 +79,16 @@ CHATBOT_MAX_MESSAGES_PER_HOUR = int(config('CHATBOT_MAX_MESSAGES_PER_HOUR', defa
 CHATBOT_MAX_MESSAGES_PER_HOUR_PER_IP = int(config('CHATBOT_MAX_MESSAGES_PER_HOUR_PER_IP', default=120))
 CHATBOT_MAX_MESSAGE_CHARS = int(config('CHATBOT_MAX_MESSAGE_CHARS', default=500))
 
+# The ceiling on the whole site's model spend, which the per-caller buckets
+# above cannot provide: enough separate visitors add up without any one of them
+# misbehaving. Counts completions only, so FAQ answers keep working after it
+# trips and the bot degrades to its stored answers rather than going dark.
+# The hourly window bounds a burst; the daily one bounds the overnight case,
+# where an hourly cap alone would just be paid twenty-four times over.
+# Set either to 0 to remove that ceiling.
+CHATBOT_MAX_MODEL_CALLS_PER_HOUR = int(config('CHATBOT_MAX_MODEL_CALLS_PER_HOUR', default=100))
+CHATBOT_MAX_MODEL_CALLS_PER_DAY = int(config('CHATBOT_MAX_MODEL_CALLS_PER_DAY', default=600))
+
 # PythonAnywhere load-balances web apps across a cluster, so REMOTE_ADDR is the
 # internal address of the balancer — identical for every visitor, which would
 # collapse the whole site into a single rate-limit bucket. Their frontend writes

@@ -4,12 +4,16 @@ No test here touches the OpenAI API: match_faq accepts an `embed_func`, so
 vectors are supplied directly and scores are exact and predictable.
 """
 from datetime import datetime, time
+from types import SimpleNamespace
+from unittest.mock import patch
 
 import pytz
 from django.core.cache import cache
 from django.test import RequestFactory, TestCase, override_settings
 
 from chatbot.checks import check_faq_thresholds
+from chatbot.helpers import budget
+from chatbot.helpers import client
 from chatbot.helpers import faq as faq_helper
 from chatbot.helpers import swim as swim_helper
 from chatbot.helpers.faq_index import embedding_text, get_index, normalize
@@ -346,6 +350,100 @@ class ThrottleTests(TestCase):
         for _ in range(3):
             self.assertFalse(is_rate_limited(request))
         self.assertTrue(is_rate_limited(request))
+
+
+@override_settings(CHATBOT_MAX_MODEL_CALLS_PER_HOUR=3, CHATBOT_MAX_MODEL_CALLS_PER_DAY=5)
+class ModelBudgetTests(TestCase):
+    """The site-wide ceiling the per-caller buckets cannot provide."""
+
+    def setUp(self):
+        cache.clear()
+
+    def test_allows_up_to_the_hourly_ceiling_then_refuses(self):
+        for _ in range(3):
+            self.assertTrue(budget.consume_model_call())
+        self.assertFalse(budget.consume_model_call())
+
+    @override_settings(CHATBOT_MAX_MODEL_CALLS_PER_HOUR=0)
+    def test_daily_ceiling_binds_when_hourly_is_disabled(self):
+        for _ in range(5):
+            self.assertTrue(budget.consume_model_call())
+        self.assertFalse(budget.consume_model_call())
+
+    @override_settings(CHATBOT_MAX_MODEL_CALLS_PER_HOUR=0, CHATBOT_MAX_MODEL_CALLS_PER_DAY=0)
+    def test_zero_removes_the_ceiling(self):
+        for _ in range(20):
+            self.assertTrue(budget.consume_model_call())
+
+    def test_a_refused_call_is_not_charged(self):
+        """A call the daily ceiling refuses must not eat an hour's allowance.
+
+        Otherwise the hourly counter runs ahead of the calls actually made, and
+        the two disagree about what was spent.
+        """
+        with override_settings(CHATBOT_MAX_MODEL_CALLS_PER_DAY=2):
+            for _ in range(2):
+                budget.consume_model_call()
+            self.assertFalse(budget.consume_model_call())
+        self.assertEqual(budget.spent_this_hour(), 2)
+
+    def test_counters_report_what_was_spent(self):
+        for _ in range(2):
+            budget.consume_model_call()
+        self.assertEqual(budget.spent_this_hour(), 2)
+        self.assertEqual(budget.spent_today(), 2)
+
+
+@override_settings(CHATBOT_MAX_MODEL_CALLS_PER_HOUR=2, CHATBOT_MAX_MODEL_CALLS_PER_DAY=10)
+class BudgetEnforcementTests(TestCase):
+    """The ceiling is enforced at the one place every model call passes."""
+
+    def setUp(self):
+        cache.clear()
+
+    def test_exhausted_budget_never_reaches_the_api(self):
+        with patch("chatbot.helpers.client.get_client") as fake_client:
+            fake_client.return_value.chat.completions.create.return_value = SimpleNamespace(
+                choices=[SimpleNamespace(message=SimpleNamespace(content="hello"))]
+            )
+            messages = [{"role": "user", "content": "hi"}]
+
+            for _ in range(2):
+                reply, error = client.ask_openai(messages)
+                self.assertEqual(reply, "hello")
+                self.assertIsNone(error)
+
+            reply, error = client.ask_openai(messages)
+            self.assertIsNone(reply)
+            self.assertEqual(error, budget.BUDGET_SPENT)
+            # The refusal must cost nothing: two calls made, two charged.
+            self.assertEqual(fake_client.return_value.chat.completions.create.call_count, 2)
+
+    @override_settings(
+        CHATBOT_MAX_MODEL_CALLS_PER_HOUR=0,
+        FAQ_MATCH_THRESHOLD=0.65,
+        FAQ_MIN_CONFIDENCE=0.45,
+        FAQ_CONTEXT_MIN_SCORE=0.40,
+    )
+    def test_faq_answers_survive_an_exhausted_budget(self):
+        """The whole point of capping completions rather than messages.
+
+        A spent budget must not take the bot down — the traffic an FAQ can
+        answer never reaches the model, so it should carry on unaffected.
+        """
+        FAQEntry.objects.create(
+            question="Do I need to wear a swimming hat?",
+            answer="<p>Yes, swimming hats are required.</p>",
+            embedding=HAT,
+            lessons_only=False,
+        )
+        with override_settings(CHATBOT_MAX_MODEL_CALLS_PER_DAY=1):
+            self.assertTrue(budget.consume_model_call())
+            self.assertFalse(budget.consume_model_call())
+
+            result = faq_helper.match_faq("hats?", embed_func=lambda _: HAT)
+            self.assertTrue(result.is_answered)
+            self.assertIn("swimming hats are required", result.answer)
 
 
 class ClientIPTests(TestCase):

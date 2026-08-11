@@ -11,6 +11,8 @@ import logging
 from django.conf import settings
 from openai import OpenAI
 
+from chatbot.helpers import budget
+
 logger = logging.getLogger(__name__)
 
 _client = None
@@ -59,7 +61,15 @@ def ask_openai(messages, *, max_tokens=600, temperature=0.3, timeout=20):
 
     Never raises: a provider outage, an expired key or an exhausted balance
     should show a customer a friendly note, not a 500 page or a raw traceback.
+
+    The site-wide budget is enforced here rather than in the views because this
+    is the one place every model call passes through — the same reason model
+    choice lives here. A check in the two views would be two checks to keep in
+    step, and the drift would be invisible until the bill arrived.
     """
+    if not budget.consume_model_call():
+        return None, budget.BUDGET_SPENT
+
     model = chat_model()
     kwargs = {"model": model, "messages": messages, "timeout": timeout}
 

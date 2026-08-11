@@ -13,7 +13,7 @@ from chatbot.checks import check_faq_thresholds
 from chatbot.helpers import faq as faq_helper
 from chatbot.helpers import swim as swim_helper
 from chatbot.helpers.faq_index import embedding_text, get_index, normalize
-from chatbot.helpers.throttle import is_rate_limited
+from chatbot.helpers.throttle import client_ip, is_rate_limited
 from chatbot.models import FAQEntry
 from swims.models import PublicSwimCategory, PublicSwimProduct
 
@@ -292,14 +292,15 @@ class ThresholdCheckTests(TestCase):
         self.assertFalse({i for i in ids if i.startswith("chatbot.E")})
 
 
-@override_settings(CHATBOT_MAX_MESSAGES_PER_HOUR=3)
+@override_settings(CHATBOT_MAX_MESSAGES_PER_HOUR=3, CHATBOT_MAX_MESSAGES_PER_HOUR_PER_IP=8)
 class ThrottleTests(TestCase):
     def setUp(self):
         cache.clear()
         self.factory = RequestFactory()
 
-    def _request(self, session_key="abc123"):
-        request = self.factory.post("/chatbot/api/chat/public-swim/")
+    def _request(self, session_key="abc123", ip="203.0.113.10", **headers):
+        request = self.factory.post("/chatbot/api/chat/public-swim/", **headers)
+        request.META["HTTP_X_REAL_IP"] = ip
         request.session = type("S", (), {"session_key": session_key})()
         return request
 
@@ -314,13 +315,72 @@ class ThrottleTests(TestCase):
         for _ in range(3):
             is_rate_limited(first)
         self.assertTrue(is_rate_limited(first))
-        self.assertFalse(is_rate_limited(self._request("session-two")))
+        self.assertFalse(is_rate_limited(self._request("session-two", ip="203.0.113.99")))
 
-    @override_settings(CHATBOT_MAX_MESSAGES_PER_HOUR=0)
+    def test_rotating_sessions_from_one_ip_is_still_capped(self):
+        """The bypass this exists to close.
+
+        A caller that discards cookies gets a fresh session — and so a fresh,
+        empty session bucket — on every request, because the view mints one for
+        anybody arriving without it. Only the IP bucket stops them.
+        """
+        for i in range(8):
+            self.assertFalse(is_rate_limited(self._request(f"rotating-{i}")))
+        self.assertTrue(is_rate_limited(self._request("rotating-fresh")))
+
+    def test_per_ip_bucket_does_not_punish_other_addresses(self):
+        for i in range(8):
+            is_rate_limited(self._request(f"rotating-{i}"))
+        self.assertTrue(is_rate_limited(self._request("rotating-fresh")))
+        self.assertFalse(is_rate_limited(self._request("elsewhere", ip="198.51.100.7")))
+
+    @override_settings(CHATBOT_MAX_MESSAGES_PER_HOUR=0, CHATBOT_MAX_MESSAGES_PER_HOUR_PER_IP=0)
     def test_zero_disables_throttling(self):
         request = self._request()
         for _ in range(10):
             self.assertFalse(is_rate_limited(request))
+
+    def test_session_bucket_still_applies_within_one_ip(self):
+        """Both buckets are live: the tighter session one trips first."""
+        request = self._request("chatty")
+        for _ in range(3):
+            self.assertFalse(is_rate_limited(request))
+        self.assertTrue(is_rate_limited(request))
+
+
+class ClientIPTests(TestCase):
+    """Which header the throttle trusts, which is the whole basis of the IP bucket."""
+
+    def setUp(self):
+        self.factory = RequestFactory()
+
+    def test_prefers_the_configured_proxy_header(self):
+        request = self.factory.post("/", HTTP_X_REAL_IP="203.0.113.10")
+        # RequestFactory sets REMOTE_ADDR to 127.0.0.1, standing in for
+        # PythonAnywhere's load balancer address.
+        self.assertEqual(client_ip(request), "203.0.113.10")
+
+    def test_ignores_client_supplied_forwarded_for(self):
+        """X-Forwarded-For is attacker-controlled on PythonAnywhere.
+
+        Honouring it would reopen the bypass: a caller could put a different
+        address in the header on every request and never fill a bucket.
+        """
+        request = self.factory.post(
+            "/",
+            HTTP_X_REAL_IP="203.0.113.10",
+            HTTP_X_FORWARDED_FOR="1.2.3.4, 5.6.7.8",
+        )
+        self.assertEqual(client_ip(request), "203.0.113.10")
+
+    def test_forwarded_for_alone_is_not_trusted(self):
+        request = self.factory.post("/", HTTP_X_FORWARDED_FOR="1.2.3.4")
+        self.assertEqual(client_ip(request), "127.0.0.1")
+
+    @override_settings(CHATBOT_CLIENT_IP_HEADER="")
+    def test_falls_back_to_remote_addr_with_no_proxy(self):
+        request = self.factory.post("/", HTTP_X_REAL_IP="203.0.113.10")
+        self.assertEqual(client_ip(request), "127.0.0.1")
 
 
 class NextSwimOrderingTests(TestCase):

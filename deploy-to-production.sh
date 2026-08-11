@@ -330,6 +330,14 @@ python manage.py migrate --plan --settings=PRODUCTION_SETTINGS_PLACEHOLDER 2>/de
 echo -e "${BLUE}💾 Running migrations...${NC}"
 python manage.py migrate --settings=PRODUCTION_SETTINGS_PLACEHOLDER
 echo -e "${GREEN}✅ Migrations complete${NC}"
+
+# The cache is a database table (see CACHES in base_settings), and the chatbot's
+# rate limiter reads it before the view's error handling starts — so a missing
+# table is a 500 on every chat message, not a degraded feature. Idempotent, so
+# it runs every deploy rather than being a step somebody has to remember once.
+echo -e "${BLUE}🗄️  Ensuring cache table exists...${NC}"
+python manage.py createcachetable --settings=PRODUCTION_SETTINGS_PLACEHOLDER
+echo -e "${GREEN}✅ Cache table ready${NC}"
 echo ""
 
 echo -e "${YELLOW}═══════════════════════════════════════════════════════${NC}"

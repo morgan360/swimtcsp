@@ -71,8 +71,52 @@ FAQ_MIN_CONFIDENCE = float(config('FAQ_MIN_CONFIDENCE', default=0.65))
 FAQ_CONTEXT_MIN_SCORE = float(config('FAQ_CONTEXT_MIN_SCORE', default=0.55))
 
 # Both chatbot endpoints are public and every message spends OpenAI credits.
+# The session allowance is what a real customer might conceivably hit; the
+# per-IP one is the backstop, since a session key costs an abuser nothing to
+# mint. It is deliberately several times higher because a school or a family
+# behind one NAT address shares an IP legitimately.
 CHATBOT_MAX_MESSAGES_PER_HOUR = int(config('CHATBOT_MAX_MESSAGES_PER_HOUR', default=30))
+CHATBOT_MAX_MESSAGES_PER_HOUR_PER_IP = int(config('CHATBOT_MAX_MESSAGES_PER_HOUR_PER_IP', default=120))
 CHATBOT_MAX_MESSAGE_CHARS = int(config('CHATBOT_MAX_MESSAGE_CHARS', default=500))
+
+# PythonAnywhere load-balances web apps across a cluster, so REMOTE_ADDR is the
+# internal address of the balancer — identical for every visitor, which would
+# collapse the whole site into a single rate-limit bucket. Their frontend writes
+# the true client address into X-Real-IP.
+#
+# X-Forwarded-For is deliberately not used: PythonAnywhere passes it through but
+# does not guarantee it, so a client can put whatever it likes in there — which
+# is precisely the bypass the per-IP bucket exists to close.
+#
+# Set to empty in any environment with no trusted proxy in front, so that
+# REMOTE_ADDR (which is then the real client) is used instead.
+CHATBOT_CLIENT_IP_HEADER = config('CHATBOT_CLIENT_IP_HEADER', default='HTTP_X_REAL_IP')
+
+# The chatbot's throttle counters, query-embedding cache and FAQ index version
+# all live in the cache. Django's default backend is per-process LocMemCache,
+# which quietly broke all three: each worker kept its own counters (so the real
+# limit was the configured one multiplied by however many workers happened to be
+# running), and every worker paid to re-embed questions the others had already
+# embedded. A rate limit that resets on redeploy and scales with worker count is
+# not a rate limit.
+#
+# DatabaseCache rather than Redis/Memcached because PythonAnywhere offers
+# neither on standard plans, and MySQL is already there. Requires a one-off
+# `python manage.py createcachetable` per environment; the test runner creates
+# it automatically.
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
+        'LOCATION': 'django_cache',
+        'OPTIONS': {
+            # The default of 300 is far too small here: one cached query
+            # embedding is ~1536 floats, and culling them costs a paid API call
+            # to rebuild. Culling also evicts the FAQ index version key, which
+            # only forces a rebuild, but there is no reason to invite it.
+            'MAX_ENTRIES': 5000,
+        },
+    }
+}
 
 # Set the URL prefix for static files
 STATIC_URL = '/static/'

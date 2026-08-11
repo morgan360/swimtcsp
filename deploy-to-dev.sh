@@ -108,6 +108,13 @@ fi
 echo '💾 Running database migrations...'
 python manage.py migrate --settings=DEV_SETTINGS_PLACEHOLDER
 
+# The cache is a database table (see CACHES in base_settings), and the chatbot's
+# rate limiter reads it before the view's error handling starts — so a missing
+# table is a 500 on every chat message, not a degraded feature. Idempotent, so
+# it runs every deploy rather than being a step somebody has to remember once.
+echo '🗄️  Ensuring cache table exists...'
+python manage.py createcachetable --settings=DEV_SETTINGS_PLACEHOLDER
+
 echo '📂 Collecting static files...'
 python manage.py collectstatic --noinput --settings=DEV_SETTINGS_PLACEHOLDER
 

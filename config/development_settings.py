@@ -41,7 +41,12 @@ DATABASES = {
         'USER': 'morganmck',
         'PASSWORD': config("DB_PASSWORD"),
         'HOST': 'morganmck.mysql.eu.pythonanywhere-services.com',
-        'OPTIONS': {'init_command': "SET sql_mode='STRICT_TRANS_TABLES'"},
+        # See the note in production_settings: the schema is utf8mb4, so the
+        # connection says so explicitly rather than relying on a driver default.
+        'OPTIONS': {
+            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+            'charset': 'utf8mb4',
+        },
     }
 }
 

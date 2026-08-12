@@ -980,10 +980,6 @@ video {
   margin-left: auto;
 }
 
-.mr-0 {
-  margin-right: 0px;
-}
-
 .mr-1 {
   margin-right: 0.25rem;
 }
@@ -1873,10 +1869,6 @@ video {
   overflow-x: hidden;
 }
 
-.overflow-y-hidden {
-  overflow-y: hidden;
-}
-
 .truncate {
   overflow: hidden;
   text-overflow: ellipsis;
@@ -2603,10 +2595,6 @@ video {
 
 .bg-red-600\/5 {
   background-color: rgb(220 38 38 / 0.05);
-}
-
-.bg-red-600\/90 {
-  background-color: rgb(220 38 38 / 0.9);
 }
 
 .bg-red-700 {
@@ -5694,10 +5682,6 @@ video {
 
   .sm\:ml-4 {
     margin-left: 1rem;
-  }
-
-  .sm\:mr-2 {
-    margin-right: 0.5rem;
   }
 
   .sm\:mr-3 {

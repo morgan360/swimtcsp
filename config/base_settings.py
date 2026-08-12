@@ -490,6 +490,11 @@ HIJACK_PERMISSION_CHECK = "hijack.permissions.superusers_and_staff"
 
 # Default Email
 DEFAULT_SUPPORT_EMAIL = "swimming@tcsp.ie"
+# Where replies should go. DEFAULT_FROM_EMAIL is the mailbox Django logs into to
+# send (web@), which is not the one anybody reads — so without this, replies to
+# booking confirmations and password resets pile up in the wrong inbox. Applied
+# by utils.email_backend.ReplyToEmailBackend to any message not setting its own.
+DEFAULT_REPLY_TO_EMAIL = config('DEFAULT_REPLY_TO_EMAIL', default=DEFAULT_SUPPORT_EMAIL)
 # Mailchimp
 MAILCHIMP_API_KEY = config("MAILCHIMP_API_KEY")
 MAILCHIMP_SERVER_PREFIX = config("MAILCHIMP_SERVER_PREFIX")

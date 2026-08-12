@@ -37,12 +37,17 @@ def info_view(request, section=None):
 
             from django.core.mail import EmailMessage
 
+            # Reply-To is the person who wrote in, so hitting Reply in the
+            # support inbox answers them. It used to be swimming@ itself, which
+            # meant replying to an enquiry sent it straight back to ourselves.
+            # Safe to take from the form: ContactForm.email is an EmailField, and
+            # Django rejects newlines in headers regardless.
             email_msg = EmailMessage(
                 subject=f"Contact Us - {subject}",
                 body='',
                 from_email=settings.FROM_EMAIL,
-                to=['swimming@tcsp.ie'],
-                reply_to=['swimming@tcsp.ie'],
+                to=[settings.DEFAULT_SUPPORT_EMAIL],
+                reply_to=[email],
             )
             email_msg.content_subtype = 'html'
             email_msg.body = html_message

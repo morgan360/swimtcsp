@@ -659,7 +659,7 @@ class ModerationTests(TestCase):
 
 
 @override_settings(
-    CHATBOT_ABUSE_ALERT_EMAILS="owner@example.com",
+    CHATBOT_ABUSE_ALERT_EMAIL="owner@example.com",
     FAQ_MATCH_THRESHOLD=0.65,
     FAQ_MIN_CONFIDENCE=0.45,
     FAQ_CONTEXT_MIN_SCORE=0.40,
@@ -745,7 +745,7 @@ class BlockedMessageTests(TestCase):
         self.assertEqual(ChatbotQuery.objects.count(), 5)
         self.assertEqual(len(mail.outbox), 1)
 
-    @override_settings(CHATBOT_ABUSE_ALERT_EMAILS="")
+    @override_settings(CHATBOT_ABUSE_ALERT_EMAIL="")
     def test_no_recipients_configured_still_refuses(self):
         with self._flagged():
             response = self._post(self.ABUSE)

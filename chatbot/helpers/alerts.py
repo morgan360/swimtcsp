@@ -30,7 +30,7 @@ COOLDOWN_SECONDS = 60 * 60
 
 def recipients():
     """Who to tell, or [] when alerting is switched off."""
-    configured = getattr(settings, "CHATBOT_ABUSE_ALERT_EMAILS", "") or ""
+    configured = getattr(settings, "CHATBOT_ABUSE_ALERT_EMAIL", "") or ""
     if isinstance(configured, (list, tuple)):
         return [str(a).strip() for a in configured if str(a).strip()]
     return [a.strip() for a in configured.split(",") if a.strip()]

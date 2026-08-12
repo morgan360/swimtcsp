@@ -88,6 +88,14 @@ CHATBOT_MAX_MESSAGE_CHARS = int(config('CHATBOT_MAX_MESSAGE_CHARS', default=500)
 # completions only. Set to False only to debug the moderation path itself.
 CHATBOT_MODERATION_ENABLED = config('CHATBOT_MODERATION_ENABLED', default=True, cast=bool)
 
+# Screening uses a small chat model rather than OpenAI's /v1/moderations
+# endpoint, which is not available on this account — no moderation model appears
+# in the project's model list or rate-limit table, and the endpoint answers 403.
+# This model must be one the project is actually allowed to call. It is NOT
+# counted against the spend cap: a spent budget must not be able to switch
+# screening off. The throttle bounds the volume instead.
+CHATBOT_MODERATION_MODEL = config('CHATBOT_MODERATION_MODEL', default='gpt-4o-mini')
+
 # Comma-separated addresses told when a message is flagged and refused. Empty
 # disables alerting; the flag is still recorded either way. Rate limited to one
 # email per session per hour by chatbot.helpers.alerts, because a single troll

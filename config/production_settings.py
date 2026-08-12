@@ -50,7 +50,13 @@ DATABASES = {
         'USER': 'morganmck',
         'PASSWORD': config("DB_PASSWORD"),
         'HOST': 'morganmck.mysql.eu.pythonanywhere-services.com',
-        'OPTIONS': {'init_command': "SET sql_mode='STRICT_TRANS_TABLES'"},
+        # charset is explicit rather than left to the driver's default: the
+        # schema is utf8mb4 (users migration 0017) and a connection negotiating
+        # anything narrower would reintroduce the four-byte failure it fixed.
+        'OPTIONS': {
+            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+            'charset': 'utf8mb4',
+        },
     }
 }
 

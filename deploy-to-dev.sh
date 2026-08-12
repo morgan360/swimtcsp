@@ -4,6 +4,15 @@
 
 set -e  # Exit on error
 
+# Keep the Mac awake for the whole deploy — see deploy-to-production.sh for the
+# full story. Shorter here (no database backup), but pip --upgrade and
+# collectstatic are still enough to let an idle machine sleep and cut the
+# connection mid-migration.
+if [ "$(uname)" = "Darwin" ] && [ -z "$TCSP_CAFFEINATED" ] && command -v caffeinate >/dev/null 2>&1; then
+    export TCSP_CAFFEINATED=1
+    exec caffeinate -i "$0" "$@"
+fi
+
 DEV_HOST="ssh.eu.pythonanywhere.com"
 DEV_DIR="dev-swimtcsp"
 DEV_VENV="../.virtualenvs/dev-swimtcsp"
@@ -130,7 +139,48 @@ DEPLOY_SCRIPT="${DEPLOY_SCRIPT//DEV_VENV_PLACEHOLDER/$DEV_VENV}"
 DEPLOY_SCRIPT="${DEPLOY_SCRIPT//DEV_SETTINGS_PLACEHOLDER/$DEV_SETTINGS}"
 DEPLOY_SCRIPT="${DEPLOY_SCRIPT//DEV_WSGI_PLACEHOLDER/$DEV_WSGI}"
 
-ssh ${DEV_HOST} "${DEPLOY_SCRIPT}"
+# Run detached on the server and follow the log from here, as production does.
+# Dev has no maintenance mode, so a dropped connection cannot strand the site —
+# but it can still kill the run part-way through migrate or collectstatic and
+# leave dev in a state nobody chose. Detaching costs nothing and removes that.
+STAMP=$(date +%Y%m%d-%H%M%S)
+REMOTE_SCRIPT="dev-deploy-run-${STAMP}.sh"
+REMOTE_LOG="dev-deploy-${STAMP}.log"
+REMOTE_STATUS="dev-deploy-${STAMP}.status"
+SSH_OPTS="-o ServerAliveInterval=30 -o ServerAliveCountMax=6"
+
+echo "📤 Sending the deploy script to the server..."
+printf '%s\n' "$DEPLOY_SCRIPT" | ssh $SSH_OPTS ${DEV_HOST} "cat > ~/${REMOTE_SCRIPT}"
+
+echo "▶️  Launching it detached (survives a dropped connection)..."
+ssh $SSH_OPTS ${DEV_HOST} "cd ~ && setsid nohup bash -c 'bash ~/${REMOTE_SCRIPT} > ~/${REMOTE_LOG} 2>&1; echo \$? > ~/${REMOTE_STATUS}' < /dev/null > /dev/null 2>&1 &"
+
+echo "   If this terminal dies, the deploy continues. Re-attach with:"
+echo "   ssh ${DEV_HOST} 'tail -f ~/${REMOTE_LOG}'"
+echo ""
+
+set +e
+ssh $SSH_OPTS ${DEV_HOST} "
+    while [ ! -f ~/${REMOTE_LOG} ]; do sleep 1; done
+    tail -n +1 -f ~/${REMOTE_LOG} &
+    TAIL_PID=\$!
+    while [ ! -f ~/${REMOTE_STATUS} ]; do sleep 2; done
+    sleep 2  # let tail flush the last lines before it is killed
+    kill \$TAIL_PID 2>/dev/null
+    exit \$(cat ~/${REMOTE_STATUS})
+"
+DEPLOY_STATUS=$?
+set -e
+
+# Tidy the run script; keep the log, which is the record of what happened.
+ssh $SSH_OPTS ${DEV_HOST} "rm -f ~/${REMOTE_SCRIPT}; ls -1t ~/dev-deploy-*.log 2>/dev/null | tail -n +11 | xargs -r rm --" || true
+
+if [ "$DEPLOY_STATUS" -ne 0 ]; then
+    echo ""
+    echo "❌ Dev deployment failed (exit ${DEPLOY_STATUS})"
+    echo "   Full log: ssh ${DEV_HOST} 'less ~/${REMOTE_LOG}'"
+    exit "$DEPLOY_STATUS"
+fi
 
 echo ""
 echo "✨ Your dev server has been updated!"

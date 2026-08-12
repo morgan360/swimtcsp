@@ -25,10 +25,13 @@ from .helpers.lesson import (
     get_active_lessons,
     get_upcoming_terms,
 )
+from .helpers import alerts, moderation
 from .helpers.swim import format_swim_list, get_available_swims
 from .helpers.throttle import TOO_MANY_MESSAGES, is_rate_limited
 
 logger = logging.getLogger(__name__)
+
+BLOCKED = "BLOCKED"
 
 # Questions whose answer depends on live session data, which no stored FAQ can
 # hold. Kept deliberately narrow: the old list included "booking", "lesson" and
@@ -88,7 +91,7 @@ def _read_message(request):
 
 
 def _log_query(request, source, message, response, response_type, score):
-    ChatbotQuery.objects.create(
+    return ChatbotQuery.objects.create(
         user=request.user if request.user.is_authenticated else None,
         session_key=request.session.session_key or "",
         source=source,
@@ -99,7 +102,44 @@ def _log_query(request, source, message, response, response_type, score):
     )
 
 
-def _prepare(request):
+def _screen(request, source, message):
+    """Refuse an abusive message, or None to let it through.
+
+    Runs before match_faq on purpose. The FAQ tier serves stored answers with no
+    model call, so a check placed after retrieval would leave exactly the path
+    that answered "Yes!." to a question about assaulting someone unguarded —
+    see chatbot.helpers.moderation.
+    """
+    result = moderation.check(message)
+    if not result.flagged:
+        return None
+
+    logger.warning(
+        "Chatbot refused a flagged message on %s (%s)",
+        source, result.category_text or "uncategorised",
+    )
+
+    # The row is the audit trail, recorded with the refusal as the response so
+    # it shows what the customer actually saw. Notification is by email only —
+    # there is deliberately no flag surfaced in the admin.
+    #
+    # Wrapped because this runs outside the views' try/except: the refusal has
+    # already been decided, and losing the audit row to a database hiccup must
+    # not turn it into a 500 that serves the caller nothing at all.
+    try:
+        query = _log_query(
+            request, source, message, moderation.REFUSAL, BLOCKED, None,
+        )
+        alerts.send_abuse_alert(query, result, request=request)
+    except Exception as exc:
+        logger.error("Could not record a blocked message: %s", exc, exc_info=True)
+
+    # 200, not 4xx: this is a normal conversational turn as far as the widget is
+    # concerned, and chat.js renders `reply` for a 200 only.
+    return JsonResponse({"reply": f"<p>{moderation.REFUSAL}</p>"})
+
+
+def _prepare(request, source):
     """Shared entry checks. Returns (message, error_response)."""
     if request.method != "POST":
         return None, JsonResponse({"error": "Invalid request method"}, status=405)
@@ -110,12 +150,20 @@ def _prepare(request):
     if is_rate_limited(request):
         return None, JsonResponse({"reply": f"<p>{TOO_MANY_MESSAGES}</p>"}, status=429)
 
-    return _read_message(request)
+    message, error = _read_message(request)
+    if error:
+        return None, error
+
+    refusal = _screen(request, source, message)
+    if refusal:
+        return None, refusal
+
+    return message, None
 
 
 # ✅ PUBLIC LESSON CHATBOT VIEW
 def public_lesson_chat_api(request):
-    user_message, error = _prepare(request)
+    user_message, error = _prepare(request, "public_lesson")
     if error:
         return error
 
@@ -182,7 +230,7 @@ def public_lesson_chat_api(request):
 
 # ✅ PUBLIC SWIM CHATBOT VIEW
 def public_swim_chat(request):
-    user_message, error = _prepare(request)
+    user_message, error = _prepare(request, "public_swim")
     if error:
         return error
 

@@ -96,11 +96,12 @@ CHATBOT_MODERATION_ENABLED = config('CHATBOT_MODERATION_ENABLED', default=True, 
 # screening off. The throttle bounds the volume instead.
 CHATBOT_MODERATION_MODEL = config('CHATBOT_MODERATION_MODEL', default='gpt-4o-mini')
 
-# Comma-separated addresses told when a message is flagged and refused. Empty
-# disables alerting; the flag is still recorded either way. Rate limited to one
-# email per session per hour by chatbot.helpers.alerts, because a single troll
-# works through many variants in a few minutes.
-CHATBOT_ABUSE_ALERT_EMAILS = config('CHATBOT_ABUSE_ALERT_EMAILS', default='')
+# Who is told when a message is flagged and refused: one address, or several
+# comma separated. Empty disables alerting; the message is still refused and
+# still recorded either way. Rate limited to one email per session per hour by
+# chatbot.helpers.alerts, because a single troll works through many variants in
+# a few minutes.
+CHATBOT_ABUSE_ALERT_EMAIL = config('CHATBOT_ABUSE_ALERT_EMAIL', default='')
 
 # The ceiling on the whole site's model spend, which the per-caller buckets
 # above cannot provide: enough separate visitors add up without any one of them

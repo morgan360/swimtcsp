@@ -85,12 +85,12 @@ class Command(BaseCommand):
             else:
                 self.stdout.write(self.style.SUCCESS(f"✅ allowed: {label}"))
 
-        recipients = getattr(settings, "CHATBOT_ABUSE_ALERT_EMAILS", "")
+        recipients = getattr(settings, "CHATBOT_ABUSE_ALERT_EMAIL", "")
         if recipients:
             self.stdout.write(self.style.SUCCESS(f"✅ Alerts go to: {recipients}"))
         else:
             self.stdout.write(self.style.WARNING(
-                "⚠️  CHATBOT_ABUSE_ALERT_EMAILS is empty — messages will be "
+                "⚠️  CHATBOT_ABUSE_ALERT_EMAIL is empty — messages will be "
                 "refused and recorded, but nobody will be told."
             ))
 

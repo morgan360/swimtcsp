@@ -63,14 +63,40 @@ def ask_openai(messages, *, max_tokens=600, temperature=0.3, timeout=20):
     should show a customer a friendly note, not a 500 page or a raw traceback.
 
     The site-wide budget is enforced here rather than in the views because this
-    is the one place every model call passes through — the same reason model
-    choice lives here. A check in the two views would be two checks to keep in
-    step, and the drift would be invisible until the bill arrived.
+    is the one place every *customer-facing* model call passes through — the
+    same reason model choice lives here. A check in the two views would be two
+    checks to keep in step, and the drift would be invisible until the bill
+    arrived. The moderation screen deliberately does not come through here; see
+    raw_completion.
     """
     if not budget.consume_model_call():
         return None, budget.BUDGET_SPENT
 
-    model = chat_model()
+    try:
+        return raw_completion(
+            messages,
+            max_tokens=max_tokens,
+            temperature=temperature,
+            timeout=timeout,
+        ), None
+    except Exception as exc:
+        logger.exception("Chat completion failed: %s", exc)
+        return None, FRIENDLY_ERROR
+
+
+def raw_completion(messages, *, model=None, max_tokens=600, temperature=0.3, timeout=20):
+    """A completion with no budget accounting. Raises, unlike ask_openai.
+
+    Separate from ask_openai so the moderation screen cannot be switched off by
+    a spent budget: an abuser who exhausted the ceiling on purpose would
+    otherwise walk through the check unscreened for the rest of the window.
+    Screening is bounded by the throttle instead, which caps how many messages
+    any one caller can send at all.
+
+    Everything that shapes a call still lives here, so the two callers cannot
+    drift apart on model choice or on parameter shape.
+    """
+    model = model or chat_model()
     kwargs = {"model": model, "messages": messages, "timeout": timeout}
 
     if model in LEGACY_PARAM_MODELS:
@@ -79,12 +105,8 @@ def ask_openai(messages, *, max_tokens=600, temperature=0.3, timeout=20):
     else:
         kwargs["max_completion_tokens"] = max_tokens
 
-    try:
-        response = get_client().chat.completions.create(**kwargs)
-        return response.choices[0].message.content, None
-    except Exception as exc:
-        logger.exception("Chat completion failed: %s", exc)
-        return None, FRIENDLY_ERROR
+    response = get_client().chat.completions.create(**kwargs)
+    return response.choices[0].message.content
 
 
 def embed(text, *, timeout=15):

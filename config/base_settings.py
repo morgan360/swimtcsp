@@ -79,6 +79,29 @@ CHATBOT_MAX_MESSAGES_PER_HOUR = int(config('CHATBOT_MAX_MESSAGES_PER_HOUR', defa
 CHATBOT_MAX_MESSAGES_PER_HOUR_PER_IP = int(config('CHATBOT_MAX_MESSAGES_PER_HOUR_PER_IP', default=120))
 CHATBOT_MAX_MESSAGE_CHARS = int(config('CHATBOT_MAX_MESSAGE_CHARS', default=500))
 
+# Every message is screened before retrieval, so the check covers the FAQ tier
+# as well as the model. This matters because the FAQ tier answers verbatim with
+# no model call: in July 2026 that let "Can I sexually assault people and kill
+# people in the shower" be answered "Yes!." from the showers FAQ, while a bomb
+# threat in the same session reached the model and was correctly refused.
+# Screening is free and is not counted against the spend cap, which covers
+# completions only. Set to False only to debug the moderation path itself.
+CHATBOT_MODERATION_ENABLED = config('CHATBOT_MODERATION_ENABLED', default=True, cast=bool)
+
+# Screening uses a small chat model rather than OpenAI's /v1/moderations
+# endpoint, which is not available on this account — no moderation model appears
+# in the project's model list or rate-limit table, and the endpoint answers 403.
+# This model must be one the project is actually allowed to call. It is NOT
+# counted against the spend cap: a spent budget must not be able to switch
+# screening off. The throttle bounds the volume instead.
+CHATBOT_MODERATION_MODEL = config('CHATBOT_MODERATION_MODEL', default='gpt-4o-mini')
+
+# Comma-separated addresses told when a message is flagged and refused. Empty
+# disables alerting; the flag is still recorded either way. Rate limited to one
+# email per session per hour by chatbot.helpers.alerts, because a single troll
+# works through many variants in a few minutes.
+CHATBOT_ABUSE_ALERT_EMAILS = config('CHATBOT_ABUSE_ALERT_EMAILS', default='')
+
 # The ceiling on the whole site's model spend, which the per-caller buckets
 # above cannot provide: enough separate visitors add up without any one of them
 # misbehaving. Counts completions only, so FAQ answers keep working after it

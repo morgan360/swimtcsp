@@ -7,6 +7,18 @@
 
 set -e  # Exit on error
 
+# Keep the Mac awake for the whole deploy.
+#
+# The slow steps — mysqldump, pip --upgrade, the FAQ embeddings — run long enough
+# for an idle machine to sleep, which drops the SSH connection mid-deploy. Twice
+# now that has happened with the site already in maintenance mode. `-i` blocks
+# idle sleep only; closing the lid still sleeps, and nothing here can prevent
+# that, which is why the remote half also runs detached.
+if [ "$(uname)" = "Darwin" ] && [ -z "$TCSP_CAFFEINATED" ] && command -v caffeinate >/dev/null 2>&1; then
+    export TCSP_CAFFEINATED=1
+    exec caffeinate -i "$0" "$@"
+fi
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -396,7 +408,73 @@ DEPLOY_SCRIPT="${DEPLOY_SCRIPT//PRODUCTION_VENV_PLACEHOLDER/$PRODUCTION_VENV}"
 DEPLOY_SCRIPT="${DEPLOY_SCRIPT//PRODUCTION_SETTINGS_PLACEHOLDER/$PRODUCTION_SETTINGS}"
 DEPLOY_SCRIPT="${DEPLOY_SCRIPT//PRODUCTION_WSGI_PLACEHOLDER/$PRODUCTION_WSGI}"
 
-ssh ${PRODUCTION_HOST} "${DEPLOY_SCRIPT}"
+# Run the deploy detached on the server, and follow its log from here.
+#
+# Previously this was one `ssh HOST "$DEPLOY_SCRIPT"`, so the deploy was a child
+# of the SSH session: if the laptop slept or the network dropped, the remote
+# shell died wherever it happened to be — most dangerously between STEP 2
+# (maintenance on) and STEP 10 (maintenance off), stranding www.tcsp.ie on the
+# maintenance page with nobody running to fix it.
+#
+# Now the script is copied over and launched under setsid, detached from the
+# connection. Following the log is a separate, disposable SSH: losing it costs
+# nothing, and the deploy runs to completion either way.
+STAMP=$(date +%Y%m%d-%H%M%S)
+REMOTE_SCRIPT="deploy-run-${STAMP}.sh"
+REMOTE_LOG="deploy-${STAMP}.log"
+REMOTE_STATUS="deploy-${STAMP}.status"
+
+# ServerAliveInterval so a stalled connection is noticed rather than hanging the
+# terminal for the TCP timeout.
+SSH_OPTS="-o ServerAliveInterval=30 -o ServerAliveCountMax=6"
+
+echo -e "${BLUE}📤 Sending the deploy script to the server...${NC}"
+printf '%s\n' "$DEPLOY_SCRIPT" | ssh $SSH_OPTS ${PRODUCTION_HOST} "cat > ~/${REMOTE_SCRIPT}"
+
+echo -e "${BLUE}▶️  Launching it detached (survives a dropped connection)...${NC}"
+# The status file is what makes the exit code survive the detach: $? from the
+# deploy is written there, and the follower below reads it back.
+ssh $SSH_OPTS ${PRODUCTION_HOST} "cd ~ && setsid nohup bash -c 'bash ~/${REMOTE_SCRIPT} > ~/${REMOTE_LOG} 2>&1; echo \$? > ~/${REMOTE_STATUS}' < /dev/null > /dev/null 2>&1 &"
+
+echo -e "${GREEN}✅ Deploy is running on the server${NC}"
+echo -e "${YELLOW}   If this terminal dies, the deploy continues. Re-attach with:${NC}"
+echo -e "   ssh ${PRODUCTION_HOST} 'tail -f ~/${REMOTE_LOG}'"
+echo ""
+
+# Follow the log until the status file appears. Written as a remote shell loop so
+# it is one connection rather than a poll-per-second from here.
+set +e
+ssh $SSH_OPTS ${PRODUCTION_HOST} "
+    while [ ! -f ~/${REMOTE_LOG} ]; do sleep 1; done
+    tail -n +1 -f ~/${REMOTE_LOG} &
+    TAIL_PID=\$!
+    while [ ! -f ~/${REMOTE_STATUS} ]; do sleep 2; done
+    sleep 2  # let tail flush the last lines before it is killed
+    kill \$TAIL_PID 2>/dev/null
+    exit \$(cat ~/${REMOTE_STATUS})
+"
+DEPLOY_STATUS=$?
+set -e
+
+# Tidy the run script; keep the log, which is the record of what happened.
+ssh $SSH_OPTS ${PRODUCTION_HOST} "rm -f ~/${REMOTE_SCRIPT}; ls -1t ~/deploy-*.log 2>/dev/null | tail -n +11 | xargs -r rm --" || true
+
+if [ "$DEPLOY_STATUS" -ne 0 ]; then
+    echo ""
+    echo -e "${RED}╔════════════════════════════════════════════════════════════╗${NC}"
+    echo -e "${RED}║  ❌ DEPLOYMENT FAILED (exit ${DEPLOY_STATUS})                              ║${NC}"
+    echo -e "${RED}╚════════════════════════════════════════════════════════════╝${NC}"
+    echo ""
+    # Said explicitly because a failure after STEP 2 leaves the site down, and
+    # that is not obvious from a wall of log output.
+    echo -e "${YELLOW}⚠️  If it failed after STEP 2, www.tcsp.ie is still in maintenance mode.${NC}"
+    echo -e "${YELLOW}   Check, and clear it once you know why it failed:${NC}"
+    echo -e "   ssh ${PRODUCTION_HOST} 'cat ~/${PRODUCTION_DIR}/config/maintenance_mode_state.txt'"
+    echo -e "   ssh ${PRODUCTION_HOST} 'cd ~/${PRODUCTION_DIR} && source ${PRODUCTION_VENV}/bin/activate && python manage.py maintenance_mode off --settings=${PRODUCTION_SETTINGS}'"
+    echo ""
+    echo -e "${BLUE}   Full log: ssh ${PRODUCTION_HOST} 'less ~/${REMOTE_LOG}'${NC}"
+    exit "$DEPLOY_STATUS"
+fi
 
 echo ""
 echo -e "${GREEN}✨ Production deployment finished!${NC}"

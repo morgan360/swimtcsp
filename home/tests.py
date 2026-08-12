@@ -10,6 +10,8 @@ from django.core import mail
 from django.test import TestCase
 from django.urls import reverse
 
+from home.forms import ContactForm
+
 
 class ContactFormEmailTests(TestCase):
     def setUp(self):
@@ -57,6 +59,27 @@ class ContactFormEmailTests(TestCase):
 
         self.assertEqual(len(mail.outbox), 0)
         self.assertEqual(response.status_code, 200)
+
+    def test_a_honeypot_submission_is_told_it_succeeded(self):
+        """The point of a honeypot: the bot must not learn it was caught, or
+        whoever runs it just stops filling the field in."""
+        response = self.submit(website='http://spam.example.com')
+
+        self.assertTrue(response.context['success'])
+        self.assertNotContains(response, 'Spam detected')
+
+    def test_the_honeypot_value_survives_cleaning(self):
+        """info_view is the only thing that acts on the honeypot, so the form
+        has to hand it the value as submitted. A clean_website() that blanked or
+        rejected it would send the bot's mail, or show it an error."""
+        form = ContactForm(data={
+            'name': 'Bot', 'email': 'bot@example.com', 'subject': 'x',
+            'message': 'x', 'captcha': 'PASSED',
+            'website': 'http://spam.example.com',
+        })
+
+        self.assertTrue(form.is_valid(), form.errors)
+        self.assertEqual(form.cleaned_data['website'], 'http://spam.example.com')
 
     def test_a_message_full_of_links_sends_nothing(self):
         self.submit(message='http://a.example http://b.example http://c.example')

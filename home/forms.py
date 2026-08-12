@@ -13,17 +13,16 @@ class ContactForm(forms.Form):
     message = forms.CharField(widget=forms.Textarea)
     captcha = ReCaptchaField(widget=ReCaptchaV2Checkbox())
 
-    # Honeypot field - hidden from humans, bots will fill it in
+    # Honeypot field - hidden from humans, bots will fill it in.
+    # Deliberately left un-cleaned: info_view reads this value to decide whether
+    # to fake success, so the form must pass it through as submitted. It used to
+    # have a clean_website() that raised ValidationError, which defeated that
+    # twice over — the form came back invalid, so the view never got to look,
+    # and the bot was told "Spam detected." instead of being quietly dropped.
     website = forms.CharField(
         required=False,
         widget=forms.HiddenInput(attrs={'tabindex': '-1', 'autocomplete': 'off'}),
     )
-
-    def clean_website(self):
-        """Reject submissions where the honeypot field is filled in."""
-        if self.cleaned_data.get('website'):
-            raise ValidationError('Spam detected.')
-        return ''
 
     def clean_message(self):
         """Basic spam content checks."""

@@ -5,6 +5,7 @@ from django.http import Http404, JsonResponse
 from django.views.decorators.http import require_http_methods
 from users.utils.roles import is_guardian
 from home.forms import ContactForm
+from home.models import Announcement
 from django.template.loader import render_to_string
 from django.contrib.auth.decorators import login_required
 from utils.terms_utils import get_current_term
@@ -67,7 +68,7 @@ def info_view(request, section=None):
     raise Http404("Invalid section")
 
 def home(request):
-    return render(request, 'home.html')
+    return render(request, 'home.html', {'announcement': Announcement.current()})
 
 
 @login_required

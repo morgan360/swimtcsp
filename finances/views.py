@@ -30,7 +30,7 @@ def transactions_data(request):
     Return JSON for DataTables with optional period filter
     """
     data = []
-    orders = Order.objects.select_related("user", "product", "coupon")
+    orders = Order.objects.select_related("user", "product")
 
     # Check filter
     period = request.GET.get("period")

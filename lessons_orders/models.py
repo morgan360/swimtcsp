@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.contenttypes.fields import GenericRelation
 from lessons.models import Product
 from django.conf import settings
 from django.contrib.auth.models import User
@@ -38,6 +39,27 @@ class Order(models.Model):
         help_text="Total discount applied from the coupon."
     ),
 
+    # CouponRedemption is the record of what was actually taken off this order,
+    # written one row per coupon by CouponService.apply. It is the only reliable
+    # source: `discount_amount` above never became a real database field (note
+    # the trailing comma, which makes it a tuple) and migration 0009 dropped the
+    # column, so assigning to it silently did nothing.
+    #
+    # Declared as a GenericRelation so callers listing orders can
+    # prefetch_related('coupon_redemptions') instead of querying per row.
+    coupon_redemptions = GenericRelation(
+        'coupons.CouponRedemption',
+        content_type_field='content_type',
+        object_id_field='object_id',
+    )
+
+    @property
+    def total_discount(self):
+        """Total taken off this order across every coupon applied to it."""
+        return sum(
+            (r.redeemed_amount for r in self.coupon_redemptions.all()),
+            Decimal('0.00'),
+        )
 
     class Meta:
         verbose_name = "Lesson Order"

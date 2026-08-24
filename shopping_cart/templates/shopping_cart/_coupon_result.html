@@ -1,52 +1,51 @@
-<!-- Coupon validation result (HTMX target) -->
-{% if success %}
-<div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
-    <div class="flex items-center justify-between mb-2">
-        <div class="flex items-center">
-            <i class="fas fa-check-circle text-green-500 mr-2"></i>
-            <span class="text-green-800 font-semibold">Coupon "{{ coupon_code }}" applied!</span>
-        </div>
-        <form method="post" action="{% url 'shopping_cart:remove_coupon' %}">
-            {% csrf_token %}
-            <button type="submit" class="text-red-600 hover:text-red-700 text-sm">
-                <i class="fas fa-times-circle mr-1"></i>Remove
-            </button>
-        </form>
-    </div>
-    <p class="text-green-700 text-sm">You're saving €{{ discount_amount|floatformat:2 }} on this order!</p>
-</div>
-
-<!-- Updated price summary -->
-<div class="bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg p-4">
-    <div class="space-y-2">
-        <div class="flex items-center justify-between text-sm text-gray-600">
-            <span>Subtotal:</span>
-            <span>€{{ total_price|floatformat:2 }}</span>
-        </div>
-        <div class="flex items-center justify-between text-sm text-green-600 font-semibold">
-            <span>Discount:</span>
-            <span>-€{{ discount_amount|floatformat:2 }}</span>
-        </div>
-        <div class="h-px bg-gray-300"></div>
-        <div class="flex items-center justify-between">
-            <span class="text-lg font-semibold text-gray-900">Total Amount:</span>
-            <div class="text-2xl font-bold text-green-600">€{{ final_price|floatformat:2 }}</div>
-        </div>
-    </div>
-</div>
-{% elif error_message %}
+<!-- Coupon panel (HTMX target) -->
+{% if error_message %}
 <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
     <div class="flex items-center">
         <i class="fas fa-exclamation-circle text-red-500 mr-2"></i>
         <span class="text-red-800">{{ error_message }}</span>
     </div>
 </div>
+{% endif %}
 
-<!-- Original price (no discount) -->
-<div class="bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg p-4">
+{% for applied in applied_coupons %}
+<div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-3">
     <div class="flex items-center justify-between">
-        <span class="text-lg font-semibold text-gray-900">Total Amount:</span>
-        <div class="text-2xl font-bold text-green-600">€{{ total_price|floatformat:2 }}</div>
+        <div class="flex items-center">
+            <i class="fas fa-check-circle text-green-500 mr-2"></i>
+            <span class="text-green-800 font-semibold">Coupon "{{ applied.code }}" applied</span>
+        </div>
+        <form hx-post="{% url 'shopping_cart:remove_coupon_code' code=applied.code %}"
+              hx-target="#coupon-result"
+              hx-swap="innerHTML"
+              hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+            {% csrf_token %}
+            <button type="submit" class="text-red-600 hover:text-red-700 text-sm">
+                <i class="fas fa-times-circle mr-1"></i>Remove
+            </button>
+        </form>
+    </div>
+    <p class="text-green-700 text-sm mt-1">Saves €{{ applied.discount|floatformat:2 }}</p>
+</div>
+{% endfor %}
+
+<!-- Price summary -->
+<div class="bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg p-4">
+    <div class="space-y-2">
+        {% if applied_coupons %}
+        <div class="flex items-center justify-between text-sm text-gray-600">
+            <span>Subtotal:</span>
+            <span>€{{ total_price|floatformat:2 }}</span>
+        </div>
+        <div class="flex items-center justify-between text-sm text-green-600 font-semibold">
+            <span>Discount:</span>
+            <span>-€{{ total_discount|floatformat:2 }}</span>
+        </div>
+        <div class="h-px bg-gray-300"></div>
+        {% endif %}
+        <div class="flex items-center justify-between">
+            <span class="text-lg font-semibold text-gray-900">Total Amount:</span>
+            <div class="text-2xl font-bold text-green-600">€{{ final_price|floatformat:2 }}</div>
+        </div>
     </div>
 </div>
-{% endif %}

@@ -11,13 +11,15 @@ is that only medical information goes in front of a teacher at poolside; the
 general notes box has years of unrelated content in it, and it is deliberately
 left alone rather than migrated or cleared.
 """
+import itertools
 from unittest.mock import patch
 
 from allauth.socialaccount.models import SocialAccount, SocialLogin
 from allauth.socialaccount.views import SignupView
 from django.contrib.auth import get_user_model
-from django.test import RequestFactory, TestCase
+from django.test import Client, RequestFactory, TestCase
 from django.urls import reverse
+from django.utils import timezone
 
 from users.forms import CustomSignupForm, CustomSocialSignupForm
 from users.models import Swimling
@@ -162,3 +164,86 @@ class MedicalInfoTests(TestCase):
             reverse("swimling_dashboard:edit-swimling", args=[self.swimling.id])
         )
         self.assertNotEqual(response.status_code, 200)
+
+
+class MyBookingsQueryCountTests(TestCase):
+    """
+    The lesson card shows one line per coupon and reads total_discount, both off
+    the coupon_redemptions relation. Left unprefetched that is two queries per
+    order — invisible on a test account with one booking, and quietly linear for
+    a guardian with years of them.
+    """
+
+    def setUp(self):
+        from datetime import date, time, timedelta
+        from decimal import Decimal
+
+        from coupons.models import Coupon
+        from coupons.services import CouponService
+        from lessons.models import Category, Product, Program
+        from lessons_bookings.models import Term
+        from lessons_orders.models import Order, OrderItem
+        from users.models import Swimling
+
+        self.user = User.objects.create_user(email="bookings@example.com", password="pw12345!")
+        now = timezone.now()
+        today = now.date()
+        program = Program.objects.create(name="Bookings Prog")
+        category = Category.objects.create(
+            program=program, name="Bookings Cat", slug="bookings-cat", stage="Stage 1",
+        )
+        term = Term.objects.create(
+            start_date=today + timedelta(days=7), end_date=today + timedelta(days=63),
+            rebooking_date=today - timedelta(days=7), booking_date=today - timedelta(days=5),
+            assessment_date=today + timedelta(days=64),
+        )
+        swimling = Swimling.objects.create(
+            guardian=self.user, first_name="Kid", last_name="Bookings", dob=date(2016, 1, 1),
+        )
+        product = Product.objects.create(
+            category=category, day_of_week=0, start_time=time(10, 0), end_time=time(10, 45),
+            num_places=10, num_weeks=8, price=Decimal("100.00"), active=True,
+        )
+
+        counter = itertools.count()
+
+        def make_orders(count):
+            for _ in range(count):
+                i = next(counter)
+                order = Order.objects.create(user=self.user, paid=True, amount=Decimal("60.00"))
+                OrderItem.objects.create(
+                    order=order, product=product, price=Decimal("100.00"),
+                    quantity=1, swimling=swimling, term=term,
+                )
+                for j in range(2):
+                    coupon = Coupon.objects.create(
+                        code=f"QC-{i}-{j}", discount_type="fixed",
+                        discount_value=Decimal("20.00"), balance_remaining=Decimal("20.00"),
+                        valid_from=now - timedelta(days=1), valid_to=now + timedelta(days=30),
+                    )
+                    CouponService(coupon).apply(
+                        purchase_obj=order, amount=Decimal("100.00"),
+                        context="lessons", discount_cap=Decimal("100.00"),
+                    )
+
+        self.make_orders = make_orders
+
+    def _query_count(self):
+        from django.db import connection
+        from django.test.utils import CaptureQueriesContext
+
+        client = Client()
+        client.force_login(self.user)
+        with CaptureQueriesContext(connection) as ctx:
+            response = client.get(reverse("users:my_bookings"))
+        self.assertEqual(response.status_code, 200)
+        return len(ctx.captured_queries)
+
+    def test_more_orders_do_not_cost_more_queries(self):
+        self.make_orders(2)
+        for_two = self._query_count()
+
+        self.make_orders(6)
+        for_eight = self._query_count()
+
+        self.assertEqual(for_eight, for_two)

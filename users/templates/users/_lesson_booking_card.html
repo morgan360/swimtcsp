@@ -17,7 +17,7 @@
       </div>
       <div>
         <p class="text-xs text-gray-500">Discount</p>
-        <p class="font-medium">€{{ order.discount_amount|default:0 }}</p>
+        <p class="font-medium">€{{ order.total_discount|floatformat:2 }}</p>
       </div>
       <div>
         <p class="text-xs text-gray-500">Total</p>
@@ -26,11 +26,11 @@
     </div>
   </div>
 
-  {% if order.coupon %}
+  {% for redemption in order.coupon_redemptions.all %}
   <div class="mt-2 text-sm text-blue-800">
-    <span class="font-semibold">Coupon:</span> {{ order.coupon.code }} (−€{{ order.discount_amount|default:0 }})
+    <span class="font-semibold">Coupon:</span> {{ redemption.coupon.code }} (−€{{ redemption.redeemed_amount|floatformat:2 }})
   </div>
-  {% endif %}
+  {% endfor %}
 
   <div class="mt-3 grid grid-cols-1 gap-3">
     {% for item in order.items.all %}

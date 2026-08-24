@@ -41,7 +41,12 @@ DATABASES = {
         'USER': 'morganmck',
         'PASSWORD': config("DB_PASSWORD"),
         'HOST': 'morganmck.mysql.eu.pythonanywhere-services.com',
-        'OPTIONS': {'init_command': "SET sql_mode='STRICT_TRANS_TABLES'"},
+        # See the note in production_settings: the schema is utf8mb4, so the
+        # connection says so explicitly rather than relying on a driver default.
+        'OPTIONS': {
+            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+            'charset': 'utf8mb4',
+        },
     }
 }
 
@@ -49,7 +54,7 @@ ALLOWED_HOSTS = ["dev-morganmck.eu.pythonanywhere.com"]
 CSRF_TRUSTED_ORIGINS = ["https://dev-morganmck.eu.pythonanywhere.com"]
 
 # --- Email (M365) ---
-EMAIL_BACKEND       = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_BACKEND       = 'utils.email_backend.ReplyToEmailBackend'
 EMAIL_HOST          = config('EMAIL_HOST')
 EMAIL_PORT          = config('EMAIL_PORT', cast=int)
 EMAIL_USE_TLS       = config('EMAIL_USE_TLS', cast=bool)

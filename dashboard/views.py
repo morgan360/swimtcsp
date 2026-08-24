@@ -17,6 +17,7 @@ from django.contrib.auth.forms import UserCreationForm
 from django import forms
 from django.contrib import messages
 from django.http import HttpResponseNotFound
+from django.views.decorators.http import require_POST
 from django.core.paginator import Paginator
 from django.db.models import Q, Sum, Count, Value
 from django.db.models.functions import Concat, Coalesce
@@ -72,7 +73,7 @@ def public_swims(request):
 def public_swims_attendance(request):
     base_orders = (
         SwimOrder.objects.filter(paid=True, booking__isnull=False)
-        .select_related('product', 'product__category', 'user')
+        .select_related('product', 'product__category', 'user', 'checked_in_by')
         .prefetch_related('items__variant')
     )
 
@@ -140,6 +141,7 @@ def public_swims_attendance(request):
         total_bookings=Count('id', distinct=True),
         total_attendees=Coalesce(Sum('items__quantity'), Value(0)),
         unique_swimmers=Count('user', distinct=True),
+        checked_in=Count('id', distinct=True, filter=Q(checked_in_at__isnull=False)),
     )
 
     catalog_stats = {
@@ -172,6 +174,26 @@ def public_swims_attendance(request):
 
 @login_required
 @user_passes_test(is_staff)
+@require_POST
+def public_swims_check_in(request, order_id):
+    """Record or clear the poolside check-in for one swim booking."""
+    order = get_object_or_404(SwimOrder, pk=order_id, paid=True, booking__isnull=False)
+
+    # The desired state is posted, not toggled from what the page happened to show.
+    # A checkbox sends nothing when unchecked, so an absent value means "not here".
+    if request.POST.get('checked_in') == '1':
+        order.checked_in_at = timezone.now()
+        order.checked_in_by = request.user
+    else:
+        order.checked_in_at = None
+        order.checked_in_by = None
+    order.save(update_fields=['checked_in_at', 'checked_in_by', 'updated'])
+
+    return render(request, 'dashboard/partials/_swim_checkin_cell.html', {'order': order})
+
+
+@login_required
+@user_passes_test(is_staff)
 def lessons(request):
     return render(request, 'dashboard/lessons.html')
 
@@ -181,6 +203,9 @@ def lessons(request):
 def swimling_stagnation(request):
     selected_level = request.GET.get('level', '').strip()
     selected_day = request.GET.get('day', '').strip()
+    # Class start time as "HH:MM", pairing with the day filter so a single
+    # class can be picked out rather than a whole day's worth.
+    selected_time = request.GET.get('time', '').strip()
 
     current_term = Term.get_current_term() or Term.objects.order_by('-start_date', '-id').first()
 
@@ -191,8 +216,10 @@ def swimling_stagnation(request):
             'total_swimlings': 0,
             'level_choices': [],
             'day_choices': Product.DAY_CHOICES,
+            'time_choices': [],
             'selected_level': selected_level,
             'selected_day': selected_day,
+            'selected_time': selected_time,
         }
         return render(request, 'dashboard/swimling_stagnation.html', context)
 
@@ -226,8 +253,10 @@ def swimling_stagnation(request):
             'total_swimlings': 0,
             'level_choices': [],
             'day_choices': Product.DAY_CHOICES,
+            'time_choices': [],
             'selected_level': selected_level,
             'selected_day': selected_day,
+            'selected_time': selected_time,
         }
         return render(request, 'dashboard/swimling_stagnation.html', context)
 
@@ -243,6 +272,7 @@ def swimling_stagnation(request):
 
     levels_map = {}
     available_categories = {}
+    available_times = set()
     total_swimlings = 0
 
     for (swimling_id, category_id), current_enrollment in current_entries.items():
@@ -298,12 +328,21 @@ def swimling_stagnation(request):
 
         available_categories[category_id] = category
 
+        # Collected before the filters below, so the dropdown keeps offering
+        # every start time rather than narrowing to the current selection.
+        lesson_time_value = format_time(lesson.start_time)
+        if lesson_time_value:
+            available_times.add(lesson_time_value)
+
         if selected_level:
             try:
                 if str(category_id) != str(int(selected_level)):
                     continue
             except ValueError:
                 continue
+
+        if selected_time and lesson_time_value != selected_time:
+            continue
 
         lesson_day_value = getattr(current_enrollment.lesson, 'day_of_week', None)
         if selected_day:
@@ -348,8 +387,10 @@ def swimling_stagnation(request):
         'total_swimlings': total_swimlings,
         'level_choices': level_choices,
         'day_choices': Product.DAY_CHOICES,
+        'time_choices': sorted(available_times),
         'selected_level': selected_level,
         'selected_day': selected_day,
+        'selected_time': selected_time,
     }
 
     return render(request, 'dashboard/swimling_stagnation.html', context)
@@ -999,43 +1040,167 @@ def bookings_overview(request):
             category = 'swims'
     except Exception:
         pass
+
+    search = request.GET.get('q', '').strip()
+    status = request.GET.get('status', '').strip()  # "paid" | "unpaid" | ""
+    selected_term = request.GET.get('term', '').strip()
+    selected_sco_term = request.GET.get('sco_term', '').strip()
+    date_from = request.GET.get('from', '').strip()
+    date_to = request.GET.get('to', '').strip()
+
+    def parse_day(value):
+        try:
+            return datetime.strptime(value, "%Y-%m-%d").date()
+        except ValueError:
+            return None
+
+    from_day = parse_day(date_from) if date_from else None
+    to_day = parse_day(date_to) if date_to else None
+
+    # Enrollments carry a timestamp, not a date. Compare against aware datetimes rather
+    # than using __date, which truncates in the database and needs MySQL's timezone
+    # tables loaded — they are not.
+    created_from = timezone.make_aware(datetime.combine(from_day, dt_time.min)) if from_day else None
+    created_to = (
+        timezone.make_aware(datetime.combine(to_day + timedelta(days=1), dt_time.min))
+        if to_day else None
+    )
+
     # Public Swim bookings (have a concrete booking date)
     swim_bookings = (
         SwimOrder.objects.select_related('user', 'product')
         .filter(booking__isnull=False)
         .order_by('-booking', '-created')
     )
+    if search:
+        swim_bookings = swim_bookings.annotate(
+            booker_name=Concat(
+                Coalesce('user__first_name', Value('')),
+                Value(' '),
+                Coalesce('user__last_name', Value('')),
+            ),
+        ).filter(
+            Q(booker_name__icontains=search)
+            | Q(user__email__icontains=search)
+            | Q(product__name__icontains=search)
+            | Q(txId__icontains=search)
+        )
+    # Only swim bookings get a payment status filter: nearly every lesson enrollment
+    # predates the current order system and has no order attached to read `paid` from.
+    if status == 'paid':
+        swim_bookings = swim_bookings.filter(paid=True)
+    elif status == 'unpaid':
+        swim_bookings = swim_bookings.filter(paid=False)
+    if from_day:
+        swim_bookings = swim_bookings.filter(booking__gte=from_day)
+    if to_day:
+        swim_bookings = swim_bookings.filter(booking__lte=to_day)
+
     sw_page_num = request.GET.get('sw_page')
     sw_paginator = Paginator(swim_bookings, 25)
     sw_page_obj = sw_paginator.get_page(sw_page_num)
 
     # Lesson enrollments (public)
     lesson_enrollments = (
-        LessonEnrollment.objects.select_related('lesson', 'swimling', 'term')
+        LessonEnrollment.objects.select_related('lesson', 'swimling', 'term', 'swimling__guardian')
         .order_by('-created')
     )
+    if search:
+        lesson_enrollments = lesson_enrollments.annotate(
+            swimmer_name=Concat(
+                Coalesce('swimling__first_name', Value('')),
+                Value(' '),
+                Coalesce('swimling__last_name', Value('')),
+            ),
+            guardian_name=Concat(
+                Coalesce('swimling__guardian__first_name', Value('')),
+                Value(' '),
+                Coalesce('swimling__guardian__last_name', Value('')),
+            ),
+        ).filter(
+            Q(swimmer_name__icontains=search)
+            | Q(guardian_name__icontains=search)
+            | Q(swimling__guardian__email__icontains=search)
+            | Q(lesson__name__icontains=search)
+        )
+    if selected_term:
+        try:
+            lesson_enrollments = lesson_enrollments.filter(term_id=int(selected_term))
+        except (TypeError, ValueError):
+            pass
+    if created_from:
+        lesson_enrollments = lesson_enrollments.filter(created__gte=created_from)
+    if created_to:
+        lesson_enrollments = lesson_enrollments.filter(created__lt=created_to)
+
     le_page_num = request.GET.get('le_page')
     le_paginator = Paginator(lesson_enrollments, 25)
     le_page_obj = le_paginator.get_page(le_page_num)
 
     # School enrollments
+    sco_terms = []
     try:
-        from schools_bookings.models import ScoEnrollment
+        from schools_bookings.models import ScoEnrollment, ScoTerm
         school_enrollments = (
             ScoEnrollment.objects.select_related('lesson', 'swimling', 'term', 'order')
             .order_by('-created')
         )
+        if search:
+            school_enrollments = school_enrollments.annotate(
+                swimmer_name=Concat(
+                    Coalesce('swimling__first_name', Value('')),
+                    Value(' '),
+                    Coalesce('swimling__last_name', Value('')),
+                ),
+            ).filter(
+                Q(swimmer_name__icontains=search)
+                | Q(lesson__name__icontains=search)
+                | Q(term__school__name__icontains=search)
+            )
+        if selected_sco_term:
+            try:
+                school_enrollments = school_enrollments.filter(term_id=int(selected_sco_term))
+            except (TypeError, ValueError):
+                pass
+        if created_from:
+            school_enrollments = school_enrollments.filter(created__gte=created_from)
+        if created_to:
+            school_enrollments = school_enrollments.filter(created__lt=created_to)
+
         sco_page_num = request.GET.get('sco_page')
         sco_paginator = Paginator(school_enrollments, 25)
         sco_page_obj = sco_paginator.get_page(sco_page_num)
+        sco_terms = ScoTerm.objects.select_related('school').order_by('-start_date', '-id')
     except Exception:
         sco_page_obj = None
+
+    def querystring_without(*keys):
+        """Preserve the current filters in a link while replacing one page number."""
+        params = request.GET.copy()
+        for key in keys:
+            params.pop(key, None)
+        return params.urlencode()
 
     context = {
         'sw_page_obj': sw_page_obj,
         'le_page_obj': le_page_obj,
         'sco_page_obj': sco_page_obj,
         'category': category,
+        'filters': {
+            'q': search,
+            'status': status,
+            'term': selected_term,
+            'sco_term': selected_sco_term,
+            'from': date_from,
+            'to': date_to,
+        },
+        'has_filters': any([search, status, selected_term, selected_sco_term, date_from, date_to]),
+        'terms': Term.objects.all(),
+        'sco_terms': sco_terms,
+        'qs_swim_page': querystring_without('sw_page'),
+        'qs_lesson_page': querystring_without('le_page'),
+        'qs_school_page': querystring_without('sco_page'),
+        'qs_filters': querystring_without('category', 'sw_page', 'le_page', 'sco_page'),
     }
     return render(request, 'dashboard/bookings.html', context)
 

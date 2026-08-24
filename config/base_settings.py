@@ -71,8 +71,86 @@ FAQ_MIN_CONFIDENCE = float(config('FAQ_MIN_CONFIDENCE', default=0.65))
 FAQ_CONTEXT_MIN_SCORE = float(config('FAQ_CONTEXT_MIN_SCORE', default=0.55))
 
 # Both chatbot endpoints are public and every message spends OpenAI credits.
+# The session allowance is what a real customer might conceivably hit; the
+# per-IP one is the backstop, since a session key costs an abuser nothing to
+# mint. It is deliberately several times higher because a school or a family
+# behind one NAT address shares an IP legitimately.
 CHATBOT_MAX_MESSAGES_PER_HOUR = int(config('CHATBOT_MAX_MESSAGES_PER_HOUR', default=30))
+CHATBOT_MAX_MESSAGES_PER_HOUR_PER_IP = int(config('CHATBOT_MAX_MESSAGES_PER_HOUR_PER_IP', default=120))
 CHATBOT_MAX_MESSAGE_CHARS = int(config('CHATBOT_MAX_MESSAGE_CHARS', default=500))
+
+# Every message is screened before retrieval, so the check covers the FAQ tier
+# as well as the model. This matters because the FAQ tier answers verbatim with
+# no model call: in July 2026 that let "Can I sexually assault people and kill
+# people in the shower" be answered "Yes!." from the showers FAQ, while a bomb
+# threat in the same session reached the model and was correctly refused.
+# Screening is free and is not counted against the spend cap, which covers
+# completions only. Set to False only to debug the moderation path itself.
+CHATBOT_MODERATION_ENABLED = config('CHATBOT_MODERATION_ENABLED', default=True, cast=bool)
+
+# Screening uses a small chat model rather than OpenAI's /v1/moderations
+# endpoint, which is not available on this account — no moderation model appears
+# in the project's model list or rate-limit table, and the endpoint answers 403.
+# This model must be one the project is actually allowed to call. It is NOT
+# counted against the spend cap: a spent budget must not be able to switch
+# screening off. The throttle bounds the volume instead.
+CHATBOT_MODERATION_MODEL = config('CHATBOT_MODERATION_MODEL', default='gpt-4o-mini')
+
+# Who is told when a message is flagged and refused: one address, or several
+# comma separated. Empty disables alerting; the message is still refused and
+# still recorded either way. Rate limited to one email per session per hour by
+# chatbot.helpers.alerts, because a single troll works through many variants in
+# a few minutes.
+CHATBOT_ABUSE_ALERT_EMAIL = config('CHATBOT_ABUSE_ALERT_EMAIL', default='')
+
+# The ceiling on the whole site's model spend, which the per-caller buckets
+# above cannot provide: enough separate visitors add up without any one of them
+# misbehaving. Counts completions only, so FAQ answers keep working after it
+# trips and the bot degrades to its stored answers rather than going dark.
+# The hourly window bounds a burst; the daily one bounds the overnight case,
+# where an hourly cap alone would just be paid twenty-four times over.
+# Set either to 0 to remove that ceiling.
+CHATBOT_MAX_MODEL_CALLS_PER_HOUR = int(config('CHATBOT_MAX_MODEL_CALLS_PER_HOUR', default=100))
+CHATBOT_MAX_MODEL_CALLS_PER_DAY = int(config('CHATBOT_MAX_MODEL_CALLS_PER_DAY', default=600))
+
+# PythonAnywhere load-balances web apps across a cluster, so REMOTE_ADDR is the
+# internal address of the balancer — identical for every visitor, which would
+# collapse the whole site into a single rate-limit bucket. Their frontend writes
+# the true client address into X-Real-IP.
+#
+# X-Forwarded-For is deliberately not used: PythonAnywhere passes it through but
+# does not guarantee it, so a client can put whatever it likes in there — which
+# is precisely the bypass the per-IP bucket exists to close.
+#
+# Set to empty in any environment with no trusted proxy in front, so that
+# REMOTE_ADDR (which is then the real client) is used instead.
+CHATBOT_CLIENT_IP_HEADER = config('CHATBOT_CLIENT_IP_HEADER', default='HTTP_X_REAL_IP')
+
+# The chatbot's throttle counters, query-embedding cache and FAQ index version
+# all live in the cache. Django's default backend is per-process LocMemCache,
+# which quietly broke all three: each worker kept its own counters (so the real
+# limit was the configured one multiplied by however many workers happened to be
+# running), and every worker paid to re-embed questions the others had already
+# embedded. A rate limit that resets on redeploy and scales with worker count is
+# not a rate limit.
+#
+# DatabaseCache rather than Redis/Memcached because PythonAnywhere offers
+# neither on standard plans, and MySQL is already there. Requires a one-off
+# `python manage.py createcachetable` per environment; the test runner creates
+# it automatically.
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
+        'LOCATION': 'django_cache',
+        'OPTIONS': {
+            # The default of 300 is far too small here: one cached query
+            # embedding is ~1536 floats, and culling them costs a paid API call
+            # to rebuild. Culling also evicts the FAQ index version key, which
+            # only forces a rebuild, but there is no reason to invite it.
+            'MAX_ENTRIES': 5000,
+        },
+    }
+}
 
 # Set the URL prefix for static files
 STATIC_URL = '/static/'
@@ -367,6 +445,12 @@ SOCIALACCOUNT_PROVIDERS = {
 ACCOUNT_FORMS = {
     'signup': 'users.forms.CustomSignupForm',
 }
+# Without this, a Google signup uses allauth's stock form and asks for no phone
+# number, so the requirement on the email signup form was only ever half of the
+# door. SOCIALACCOUNT_AUTO_SIGNUP is False, so this form is genuinely shown.
+SOCIALACCOUNT_FORMS = {
+    'signup': 'users.forms.CustomSocialSignupForm',
+}
 SOCIALACCOUNT_ADAPTER = "users.adapters.AutoLinkSocialAccountAdapter"
 
 # # CrispyForms
@@ -406,6 +490,11 @@ HIJACK_PERMISSION_CHECK = "hijack.permissions.superusers_and_staff"
 
 # Default Email
 DEFAULT_SUPPORT_EMAIL = "swimming@tcsp.ie"
+# Where replies should go. DEFAULT_FROM_EMAIL is the mailbox Django logs into to
+# send (web@), which is not the one anybody reads — so without this, replies to
+# booking confirmations and password resets pile up in the wrong inbox. Applied
+# by utils.email_backend.ReplyToEmailBackend to any message not setting its own.
+DEFAULT_REPLY_TO_EMAIL = config('DEFAULT_REPLY_TO_EMAIL', default=DEFAULT_SUPPORT_EMAIL)
 # Mailchimp
 MAILCHIMP_API_KEY = config("MAILCHIMP_API_KEY")
 MAILCHIMP_SERVER_PREFIX = config("MAILCHIMP_SERVER_PREFIX")
@@ -440,3 +529,18 @@ MAINTENANCE_MODE_IGNORE_IP_ADDRESSES = [
 # Google reCAPTCHA v2
 RECAPTCHA_PUBLIC_KEY = config('RECAPTCHA_PUBLIC_KEY')
 RECAPTCHA_PRIVATE_KEY = config('RECAPTCHA_PRIVATE_KEY')
+
+# Phone numbers
+#
+# These belong here rather than in a per-environment file. They were previously
+# set in local_settings only, so dev and production ran with no default region:
+# `PhoneNumberField.get_prep_value` had nothing to parse a bare national number
+# like "0851639462" against, and silently stored the raw string instead of a
+# valid number. Roughly 4,600 guardian numbers ended up unreadable that way and
+# had to be repaired by `manage.py normalise_phone_numbers`.
+#
+# Every number is Irish, so IE is the region to fall back on when one is written
+# without a country code. Storing E.164 keeps the value unambiguous even if the
+# region is ever wrong or missing.
+PHONENUMBER_DEFAULT_REGION = 'IE'
+PHONENUMBER_DB_FORMAT = 'E164'

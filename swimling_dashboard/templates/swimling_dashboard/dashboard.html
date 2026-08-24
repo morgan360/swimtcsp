@@ -88,18 +88,28 @@
   </div>
 
   <!-- 🧒 Add Swimling Modal -->
-  <div id="addSwimlingModal" class="fixed inset-0 z-50 hidden bg-black bg-opacity-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden">
+  <!--
+    max-h-full + flex-col + a scrolling body, rather than a panel that simply
+    grows: the overlay is fixed and the body scroll is locked while it is open,
+    so a panel taller than the viewport is centred, clipped by overflow-hidden,
+    and has no way to be scrolled — the Submit button becomes reachable only by
+    tabbing blindly to it. That is what adding the medical box to the form did.
+    The header stays pinned and only the fields scroll.
+  -->
+  <div id="addSwimlingModal" class="fixed inset-0 z-50 hidden bg-black bg-opacity-50 flex items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden max-h-full flex flex-col">
       <!-- Header -->
-      <div class="bg-gradient-to-r from-blue-500 to-cyan-500 px-6 py-4 flex justify-between items-center">
+      <div class="bg-gradient-to-r from-blue-500 to-cyan-500 px-6 py-4 flex justify-between items-center shrink-0">
         <h2 class="text-xl font-semibold text-white">Add New Swimling</h2>
         <button onclick="closeAddSwimlingModal()" class="text-white hover:text-gray-200 transition-colors">
           <i class="fas fa-times text-xl"></i>
         </button>
       </div>
-      
+
       <!-- Body -->
-      <div id="addSwimlingFormTarget" class="p-6">
+      <!-- min-h-0: a flex item defaults to min-height:auto, which refuses to
+           shrink below its content and would defeat the overflow entirely. -->
+      <div id="addSwimlingFormTarget" class="p-6 overflow-y-auto min-h-0">
         <div class="flex items-center justify-center py-8">
           <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mr-3"></div>
           <span class="text-gray-500">Loading form...</span>
@@ -109,18 +119,20 @@
   </div>
 
   <!-- 🧒 Edit Swimling Modal -->
-  <div id="editSwimlingModal" class="fixed inset-0 z-50 hidden bg-black bg-opacity-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden">
+  <!-- Same sizing as the add modal above, and for the same reason: the edit form
+       gained the medical box too, so it overflows exactly as readily. -->
+  <div id="editSwimlingModal" class="fixed inset-0 z-50 hidden bg-black bg-opacity-50 flex items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden max-h-full flex flex-col">
       <!-- Header -->
-      <div class="bg-gradient-to-r from-green-500 to-emerald-500 px-6 py-4 flex justify-between items-center">
+      <div class="bg-gradient-to-r from-green-500 to-emerald-500 px-6 py-4 flex justify-between items-center shrink-0">
         <h2 class="text-xl font-semibold text-white">Edit Swimling</h2>
         <button onclick="closeEditSwimlingModal()" class="text-white hover:text-gray-200 transition-colors">
           <i class="fas fa-times text-xl"></i>
         </button>
       </div>
-      
+
       <!-- Body -->
-      <div id="editSwimlingFormTarget" class="p-6">
+      <div id="editSwimlingFormTarget" class="p-6 overflow-y-auto min-h-0">
         <div class="flex items-center justify-center py-8">
           <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500 mr-3"></div>
           <span class="text-gray-500">Loading form...</span>

@@ -13,6 +13,7 @@ from progress.models import (
     InstructorNote
 )
 from chatbot.models import ChatbotQuery, FAQEntry
+from home.models import Announcement
 from chatbot.helpers.client import embed, embed_model
 from chatbot.helpers.faq_index import embedding_text
 from lessons_bookings.models import LessonEnrollment, Term
@@ -325,6 +326,20 @@ class FAQEntryAdmin(admin.ModelAdmin):
     short_answer.short_description = "Answer"
 
 
+# ✅ HOME PAGE NOTICE
+class AnnouncementAdmin(ModelAdmin):
+    list_display = ("title", "is_active", "expires_on", "showing_now", "updated")
+    list_editable = ("is_active",)  # show/hide the notice straight from the list
+    list_filter = ("is_active",)
+    search_fields = ("title", "body")
+
+    @admin.display(description="Showing now", boolean=True)
+    def showing_now(self, obj):
+        """Ticked 'is active' but past its expiry date shows nothing on the site.
+        Spell that out here so it doesn't look like a bug."""
+        return obj.is_active and not obj.has_expired
+
+
 # ✅ Register all skills-related models
 general_admin_site.register(CoreAquaticSkill, CoreAquaticSkillAdmin)
 general_admin_site.register(Skill, SkillAdmin)
@@ -338,3 +353,4 @@ general_admin_site.register(WaitingList, WaitingListAdmin)  # ✅ Registered her
 general_admin_site.register(MenuItem, MenuItemAdmin)
 general_admin_site.register(ChatbotQuery, ChatbotQueryAdmin)
 general_admin_site.register(FAQEntry, FAQEntryAdmin)
+general_admin_site.register(Announcement, AnnouncementAdmin)

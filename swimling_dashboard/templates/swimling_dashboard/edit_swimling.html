@@ -37,12 +37,23 @@ class="bg-white/50 p-6 rounded-lg shadow-lg">
       type="text" name="sco_role_num" value="{{ form.sco_role_num.value|default_if_none:'' }}">
   </div>
 
-  <!-- 📝 Notes -->
-  <div class="mb-6">
-    <label class="block text-red-800 font-semibold mb-2">Additional Notes</label>
+  <!-- 🩺 Medical information -->
+  <div class="mb-5">
+    <label class="block text-red-800 font-semibold mb-2">Medical information</label>
     <textarea
       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-      name="notes" placeholder="Optional notes...">{{ form.notes.value }}</textarea>
+      name="medical_info"
+      placeholder="e.g. asthma, epilepsy, allergies, hearing aid. Leave blank if there is nothing.">{{ form.medical_info.value|default_if_none:'' }}</textarea>
+    <p class="text-sm text-gray-600 mt-1">This is printed on the class teacher's attendance sheet.</p>
+  </div>
+
+  <!-- 📝 Notes -->
+  <div class="mb-6">
+    <label class="block text-red-800 font-semibold mb-2">Other notes</label>
+    <textarea
+      class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+      name="notes" placeholder="Anything else you would like us to know.">{{ form.notes.value|default_if_none:'' }}</textarea>
+    <p class="text-sm text-gray-600 mt-1">Not shown to teachers.</p>
   </div>
 
   <!-- 📍 Buttons -->

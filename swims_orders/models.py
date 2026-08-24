@@ -29,6 +29,17 @@ class Order(models.Model):
     )
     discount_amount = models.DecimalField(max_digits=6, decimal_places=2, null=True, blank=True, default=0)
     redeemed = models.BooleanField(default=False)
+    # Poolside attendance. An order is for one session on one date, so the check-in
+    # belongs on the order itself. Stored as a timestamp rather than a flag so the
+    # arrival time survives, and with the staff member who recorded it.
+    checked_in_at = models.DateTimeField(null=True, blank=True)
+    checked_in_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='swim_check_ins',
+    )
 
     class Meta:
         ordering = ['-created']

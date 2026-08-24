@@ -5,6 +5,7 @@ from django.http import Http404, JsonResponse
 from django.views.decorators.http import require_http_methods
 from users.utils.roles import is_guardian
 from home.forms import ContactForm
+from home.models import Announcement
 from django.template.loader import render_to_string
 from django.contrib.auth.decorators import login_required
 from utils.terms_utils import get_current_term
@@ -37,12 +38,17 @@ def info_view(request, section=None):
 
             from django.core.mail import EmailMessage
 
+            # Reply-To is the person who wrote in, so hitting Reply in the
+            # support inbox answers them. It used to be swimming@ itself, which
+            # meant replying to an enquiry sent it straight back to ourselves.
+            # Safe to take from the form: ContactForm.email is an EmailField, and
+            # Django rejects newlines in headers regardless.
             email_msg = EmailMessage(
                 subject=f"Contact Us - {subject}",
                 body='',
                 from_email=settings.FROM_EMAIL,
-                to=['swimming@tcsp.ie'],
-                reply_to=['swimming@tcsp.ie'],
+                to=[settings.DEFAULT_SUPPORT_EMAIL],
+                reply_to=[email],
             )
             email_msg.content_subtype = 'html'
             email_msg.body = html_message
@@ -62,7 +68,7 @@ def info_view(request, section=None):
     raise Http404("Invalid section")
 
 def home(request):
-    return render(request, 'home.html')
+    return render(request, 'home.html', {'announcement': Announcement.current()})
 
 
 @login_required

@@ -7,6 +7,18 @@
 
 set -e  # Exit on error
 
+# Keep the Mac awake for the whole deploy.
+#
+# The slow steps — mysqldump, pip --upgrade, the FAQ embeddings — run long enough
+# for an idle machine to sleep, which drops the SSH connection mid-deploy. Twice
+# now that has happened with the site already in maintenance mode. `-i` blocks
+# idle sleep only; closing the lid still sleeps, and nothing here can prevent
+# that, which is why the remote half also runs detached.
+if [ "$(uname)" = "Darwin" ] && [ -z "$TCSP_CAFFEINATED" ] && command -v caffeinate >/dev/null 2>&1; then
+    export TCSP_CAFFEINATED=1
+    exec caffeinate -i "$0" "$@"
+fi
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -65,6 +77,41 @@ if [ "$LOCAL" != "$REMOTE" ]; then
 fi
 
 echo -e "${GREEN}✅ Git checks passed${NC}"
+echo ""
+
+# Tailwind stylesheet freshness.
+#
+# static/css/styles.css is a committed artifact, and PythonAnywhere has no Node,
+# so it can only be built here. Tailwind emits just the classes it finds when it
+# runs, which means a class added to a template since the last build is silently
+# missing from the deployed stylesheet — no error, just an unstyled element. The
+# chat panel shipped full-width exactly this way.
+#
+# Rebuild to a temporary file and compare. This never writes to the working tree
+# and never commits: a deploy quietly amending a tracked file is worse than one
+# that stops and says what to do.
+if command -v npx >/dev/null 2>&1 && [ -d node_modules ]; then
+    echo -e "${YELLOW}🎨 Checking the Tailwind stylesheet is current${NC}"
+    TMP_CSS=$(mktemp -t tcsp_styles)
+    if npx tailwindcss -i ./static/src/input.css -o "$TMP_CSS" >/dev/null 2>&1; then
+        if ! cmp -s "$TMP_CSS" static/css/styles.css; then
+            rm -f "$TMP_CSS"
+            echo -e "${RED}❌ static/css/styles.css is out of date${NC}"
+            echo -e "${YELLOW}   A class used in a template is missing from the built stylesheet.${NC}"
+            echo -e "${YELLOW}   Run:  npm run build:css${NC}"
+            echo -e "${YELLOW}   then commit and push static/css/styles.css, and deploy again.${NC}"
+            exit 1
+        fi
+        echo -e "${GREEN}✅ Stylesheet is up to date${NC}"
+    else
+        # A broken build must not block a deploy of unrelated Python changes.
+        echo -e "${YELLOW}⚠️  Could not run Tailwind — skipping the stylesheet check${NC}"
+    fi
+    rm -f "$TMP_CSS"
+else
+    echo -e "${YELLOW}⚠️  Node or node_modules missing — skipping the stylesheet check${NC}"
+    echo -e "${YELLOW}   Run 'npm install' if you edit templates on this machine.${NC}"
+fi
 echo ""
 
 # Confirmation prompt (skipped for automated deployment)
@@ -157,6 +204,15 @@ echo -e "${YELLOW}════════════════════�
 
 source PRODUCTION_VENV_PLACEHOLDER/bin/activate
 
+# Stash BEFORE enabling maintenance, not after. The mode is stored in the tracked
+# file config/maintenance_mode_state.txt, so a stash taken afterwards captures the
+# "on" state as a local change and reverts the file — putting the site straight
+# back to live. Every deploy before this one therefore migrated against a site
+# that was still serving, and left the stash behind, which is where the backlog
+# of stashes came from.
+echo -e "${BLUE}📦 Stashing local changes...${NC}"
+git stash
+
 echo -e "${BLUE}🔒 Enabling maintenance mode...${NC}"
 python manage.py maintenance_mode on --settings=PRODUCTION_SETTINGS_PLACEHOLDER || {
     echo -e "${RED}❌ Failed to enable maintenance mode${NC}"
@@ -169,12 +225,49 @@ echo -e "${YELLOW}════════════════════�
 echo -e "${YELLOW}STEP 3: Pull Latest Code${NC}"
 echo -e "${YELLOW}═══════════════════════════════════════════════════════${NC}"
 
-echo -e "${BLUE}📦 Stashing local changes...${NC}"
-git stash
+git fetch origin main
+
+# Production carries migration files that were generated here and never committed.
+# When one shares a path with a file an incoming commit adds, git refuses to
+# overwrite it and the pull aborts — with the site already in maintenance. Move
+# any such file aside: git is about to write its own copy of that exact path, and
+# the original is kept so nothing is lost. Git refuses even when the contents are
+# byte-identical, so this cannot be skipped by comparing first.
+MIGRATION_BACKUPS="../prod-migration-backups"
+git diff --name-only HEAD origin/main | sort > /tmp/tcsp_incoming.$$
+git status --short --untracked-files=all | grep '^??' | sed 's/^?? //' | sort > /tmp/tcsp_untracked.$$
+COLLISIONS=$(comm -12 /tmp/tcsp_incoming.$$ /tmp/tcsp_untracked.$$)
+rm -f /tmp/tcsp_incoming.$$ /tmp/tcsp_untracked.$$
+
+if [ -n "$COLLISIONS" ]; then
+    mkdir -p "$MIGRATION_BACKUPS"
+    echo -e "${YELLOW}⚠️  Untracked files in the way of the pull:${NC}"
+    echo "$COLLISIONS" | while read -r f; do
+        DEST="$MIGRATION_BACKUPS/$(echo "$f" | tr '/' '_').$(date +%Y%m%d-%H%M%S)"
+        cp "$f" "$DEST"
+        if git show "origin/main:$f" | diff -q - "$f" >/dev/null 2>&1; then
+            echo -e "   ${BLUE}$f${NC} (identical to incoming) → $DEST"
+        else
+            # Worth saying out loud: the copy being replaced was not the same file.
+            echo -e "   ${YELLOW}$f (DIFFERS from incoming)${NC} → $DEST"
+        fi
+        rm -f "$f"
+    done
+fi
+
 echo -e "${BLUE}⬇️  Pulling latest code...${NC}"
 git pull origin main
 git log --oneline -1
-echo -e "${GREEN}✅ Code updated${NC}"
+
+# Assert maintenance mode rather than assume it. The flag lives in a tracked file,
+# so the pull can move it, and everything after this point changes the schema.
+python manage.py maintenance_mode on --settings=PRODUCTION_SETTINGS_PLACEHOLDER >/dev/null 2>&1 || true
+MAINT_STATE=$(cat config/maintenance_mode_state.txt 2>/dev/null || echo "unknown")
+if [ "$MAINT_STATE" != "1" ]; then
+    echo -e "${RED}❌ Maintenance mode is '${MAINT_STATE}', not 1 — aborting before the schema changes${NC}"
+    exit 1
+fi
+echo -e "${GREEN}✅ Code updated, maintenance mode confirmed on${NC}"
 echo ""
 
 echo -e "${YELLOW}═══════════════════════════════════════════════════════${NC}"
@@ -187,16 +280,80 @@ echo -e "${GREEN}✅ Dependencies updated${NC}"
 echo ""
 
 echo -e "${YELLOW}═══════════════════════════════════════════════════════${NC}"
-echo -e "${YELLOW}STEP 5: Run Database Migrations${NC}"
+echo -e "${YELLOW}STEP 5: Reconcile Migration Branches${NC}"
 echo -e "${YELLOW}═══════════════════════════════════════════════════════${NC}"
 
-echo -e "${BLUE}💾 Running migrations...${NC}"
-python manage.py migrate --settings=PRODUCTION_SETTINGS_PLACEHOLDER
-echo -e "${GREEN}✅ Migrations complete${NC}"
+# Production's migration history has branches the repo does not, and deliberately
+# so — see the "Commit the missing lessons price migration" commit for why they
+# are not committed. When a migration arrives from the repo alongside one of
+# production's own, the app is left with two leaf nodes and migrate refuses to run
+# at all, which would strand the deploy here with the site already down.
+#
+# Only merge when a conflict is actually detected, and only for the apps that have
+# one. Running makemigrations --merge unconditionally is not safe: on a graph with
+# no conflicts it falls through to ordinary makemigrations, which could invent
+# migrations on production from whatever the models happen to say.
+echo -e "${BLUE}🔍 Checking for conflicting migration leaves...${NC}"
+CONFLICT_APPS=$(python - <<'PYEOF'
+import os, django
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "PRODUCTION_SETTINGS_PLACEHOLDER")
+django.setup()
+from django.db import connections, DEFAULT_DB_ALIAS
+from django.db.migrations.loader import MigrationLoader
+loader = MigrationLoader(connections[DEFAULT_DB_ALIAS])
+print(" ".join(sorted(loader.detect_conflicts())))
+PYEOF
+)
+
+if [ -n "$CONFLICT_APPS" ]; then
+    echo -e "${YELLOW}⚠️  Conflicting leaves in: ${CONFLICT_APPS}${NC}"
+    python manage.py makemigrations --merge --noinput $CONFLICT_APPS --settings=PRODUCTION_SETTINGS_PLACEHOLDER || {
+        echo -e "${RED}❌ Could not merge — aborting before the schema is touched${NC}"
+        exit 1
+    }
+
+    # A merge that did not actually resolve the conflict must not reach migrate.
+    STILL_CONFLICTING=$(python - <<'PYEOF'
+import os, django
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "PRODUCTION_SETTINGS_PLACEHOLDER")
+django.setup()
+from django.db import connections, DEFAULT_DB_ALIAS
+from django.db.migrations.loader import MigrationLoader
+loader = MigrationLoader(connections[DEFAULT_DB_ALIAS])
+print(" ".join(sorted(loader.detect_conflicts())))
+PYEOF
+)
+    if [ -n "$STILL_CONFLICTING" ]; then
+        echo -e "${RED}❌ Still conflicting after merge: ${STILL_CONFLICTING} — aborting${NC}"
+        exit 1
+    fi
+    echo -e "${GREEN}✅ Merge migration created${NC}"
+else
+    echo -e "${GREEN}✅ No migration conflicts${NC}"
+fi
 echo ""
 
 echo -e "${YELLOW}═══════════════════════════════════════════════════════${NC}"
-echo -e "${YELLOW}STEP 6: Rebuild FAQ Embeddings${NC}"
+echo -e "${YELLOW}STEP 6: Run Database Migrations${NC}"
+echo -e "${YELLOW}═══════════════════════════════════════════════════════${NC}"
+
+echo -e "${BLUE}💾 Showing what will be applied...${NC}"
+python manage.py migrate --plan --settings=PRODUCTION_SETTINGS_PLACEHOLDER 2>/dev/null | grep -A100 "Planned operations" || echo "   (no pending migrations)"
+echo -e "${BLUE}💾 Running migrations...${NC}"
+python manage.py migrate --settings=PRODUCTION_SETTINGS_PLACEHOLDER
+echo -e "${GREEN}✅ Migrations complete${NC}"
+
+# The cache is a database table (see CACHES in base_settings), and the chatbot's
+# rate limiter reads it before the view's error handling starts — so a missing
+# table is a 500 on every chat message, not a degraded feature. Idempotent, so
+# it runs every deploy rather than being a step somebody has to remember once.
+echo -e "${BLUE}🗄️  Ensuring cache table exists...${NC}"
+python manage.py createcachetable --settings=PRODUCTION_SETTINGS_PLACEHOLDER
+echo -e "${GREEN}✅ Cache table ready${NC}"
+echo ""
+
+echo -e "${YELLOW}═══════════════════════════════════════════════════════${NC}"
+echo -e "${YELLOW}STEP 7: Rebuild FAQ Embeddings${NC}"
 echo -e "${YELLOW}═══════════════════════════════════════════════════════${NC}"
 
 echo -e "${BLUE}🤖 Re-vectorizing FAQs...${NC}"
@@ -212,7 +369,7 @@ echo -e "${GREEN}✅ FAQ embeddings rebuilt${NC}"
 echo ""
 
 echo -e "${YELLOW}═══════════════════════════════════════════════════════${NC}"
-echo -e "${YELLOW}STEP 7: Collect Static Files${NC}"
+echo -e "${YELLOW}STEP 8: Collect Static Files${NC}"
 echo -e "${YELLOW}═══════════════════════════════════════════════════════${NC}"
 
 echo -e "${BLUE}📂 Collecting static files...${NC}"
@@ -221,7 +378,7 @@ echo -e "${GREEN}✅ Static files collected${NC}"
 echo ""
 
 echo -e "${YELLOW}═══════════════════════════════════════════════════════${NC}"
-echo -e "${YELLOW}STEP 8: Reload Web Application${NC}"
+echo -e "${YELLOW}STEP 9: Reload Web Application${NC}"
 echo -e "${YELLOW}═══════════════════════════════════════════════════════${NC}"
 
 echo -e "${BLUE}🔄 Reloading web app...${NC}"
@@ -230,7 +387,7 @@ echo -e "${GREEN}✅ Web app reloaded${NC}"
 echo ""
 
 echo -e "${YELLOW}═══════════════════════════════════════════════════════${NC}"
-echo -e "${YELLOW}STEP 9: Disable Maintenance Mode${NC}"
+echo -e "${YELLOW}STEP 10: Disable Maintenance Mode${NC}"
 echo -e "${YELLOW}═══════════════════════════════════════════════════════${NC}"
 
 echo -e "${BLUE}🔓 Disabling maintenance mode...${NC}"
@@ -251,7 +408,73 @@ DEPLOY_SCRIPT="${DEPLOY_SCRIPT//PRODUCTION_VENV_PLACEHOLDER/$PRODUCTION_VENV}"
 DEPLOY_SCRIPT="${DEPLOY_SCRIPT//PRODUCTION_SETTINGS_PLACEHOLDER/$PRODUCTION_SETTINGS}"
 DEPLOY_SCRIPT="${DEPLOY_SCRIPT//PRODUCTION_WSGI_PLACEHOLDER/$PRODUCTION_WSGI}"
 
-ssh ${PRODUCTION_HOST} "${DEPLOY_SCRIPT}"
+# Run the deploy detached on the server, and follow its log from here.
+#
+# Previously this was one `ssh HOST "$DEPLOY_SCRIPT"`, so the deploy was a child
+# of the SSH session: if the laptop slept or the network dropped, the remote
+# shell died wherever it happened to be — most dangerously between STEP 2
+# (maintenance on) and STEP 10 (maintenance off), stranding www.tcsp.ie on the
+# maintenance page with nobody running to fix it.
+#
+# Now the script is copied over and launched under setsid, detached from the
+# connection. Following the log is a separate, disposable SSH: losing it costs
+# nothing, and the deploy runs to completion either way.
+STAMP=$(date +%Y%m%d-%H%M%S)
+REMOTE_SCRIPT="deploy-run-${STAMP}.sh"
+REMOTE_LOG="deploy-${STAMP}.log"
+REMOTE_STATUS="deploy-${STAMP}.status"
+
+# ServerAliveInterval so a stalled connection is noticed rather than hanging the
+# terminal for the TCP timeout.
+SSH_OPTS="-o ServerAliveInterval=30 -o ServerAliveCountMax=6"
+
+echo -e "${BLUE}📤 Sending the deploy script to the server...${NC}"
+printf '%s\n' "$DEPLOY_SCRIPT" | ssh $SSH_OPTS ${PRODUCTION_HOST} "cat > ~/${REMOTE_SCRIPT}"
+
+echo -e "${BLUE}▶️  Launching it detached (survives a dropped connection)...${NC}"
+# The status file is what makes the exit code survive the detach: $? from the
+# deploy is written there, and the follower below reads it back.
+ssh $SSH_OPTS ${PRODUCTION_HOST} "cd ~ && setsid nohup bash -c 'bash ~/${REMOTE_SCRIPT} > ~/${REMOTE_LOG} 2>&1; echo \$? > ~/${REMOTE_STATUS}' < /dev/null > /dev/null 2>&1 &"
+
+echo -e "${GREEN}✅ Deploy is running on the server${NC}"
+echo -e "${YELLOW}   If this terminal dies, the deploy continues. Re-attach with:${NC}"
+echo -e "   ssh ${PRODUCTION_HOST} 'tail -f ~/${REMOTE_LOG}'"
+echo ""
+
+# Follow the log until the status file appears. Written as a remote shell loop so
+# it is one connection rather than a poll-per-second from here.
+set +e
+ssh $SSH_OPTS ${PRODUCTION_HOST} "
+    while [ ! -f ~/${REMOTE_LOG} ]; do sleep 1; done
+    tail -n +1 -f ~/${REMOTE_LOG} &
+    TAIL_PID=\$!
+    while [ ! -f ~/${REMOTE_STATUS} ]; do sleep 2; done
+    sleep 2  # let tail flush the last lines before it is killed
+    kill \$TAIL_PID 2>/dev/null
+    exit \$(cat ~/${REMOTE_STATUS})
+"
+DEPLOY_STATUS=$?
+set -e
+
+# Tidy the run script; keep the log, which is the record of what happened.
+ssh $SSH_OPTS ${PRODUCTION_HOST} "rm -f ~/${REMOTE_SCRIPT}; ls -1t ~/deploy-*.log 2>/dev/null | tail -n +11 | xargs -r rm --" || true
+
+if [ "$DEPLOY_STATUS" -ne 0 ]; then
+    echo ""
+    echo -e "${RED}╔════════════════════════════════════════════════════════════╗${NC}"
+    echo -e "${RED}║  ❌ DEPLOYMENT FAILED (exit ${DEPLOY_STATUS})                              ║${NC}"
+    echo -e "${RED}╚════════════════════════════════════════════════════════════╝${NC}"
+    echo ""
+    # Said explicitly because a failure after STEP 2 leaves the site down, and
+    # that is not obvious from a wall of log output.
+    echo -e "${YELLOW}⚠️  If it failed after STEP 2, www.tcsp.ie is still in maintenance mode.${NC}"
+    echo -e "${YELLOW}   Check, and clear it once you know why it failed:${NC}"
+    echo -e "   ssh ${PRODUCTION_HOST} 'cat ~/${PRODUCTION_DIR}/config/maintenance_mode_state.txt'"
+    echo -e "   ssh ${PRODUCTION_HOST} 'cd ~/${PRODUCTION_DIR} && source ${PRODUCTION_VENV}/bin/activate && python manage.py maintenance_mode off --settings=${PRODUCTION_SETTINGS}'"
+    echo ""
+    echo -e "${BLUE}   Full log: ssh ${PRODUCTION_HOST} 'less ~/${REMOTE_LOG}'${NC}"
+    exit "$DEPLOY_STATUS"
+fi
 
 echo ""
 echo -e "${GREEN}✨ Production deployment finished!${NC}"

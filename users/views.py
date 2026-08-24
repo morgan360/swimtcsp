@@ -526,8 +526,12 @@ def my_bookings(request):
     lesson_orders_base = (
         LessonOrder.objects
         .filter(user=request.user)
-        .prefetch_related('items__product', 'items__term', 'items__swimling')
-        .select_related('coupon')
+        .prefetch_related(
+            'items__product', 'items__term', 'items__swimling',
+            # The card shows one line per coupon and reads total_discount, both
+            # off coupon_redemptions. Without this that is two queries per order.
+            'coupon_redemptions__coupon',
+        )
         .order_by('-created')
     )
     lesson_orders_paid = lesson_orders_base.filter(paid=True)

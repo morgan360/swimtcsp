@@ -510,12 +510,15 @@ class CheckoutCouponFailureTests(TestCase):
             program=self.program, name="Checkout Cat",
             slug="checkout-cat", stage="Stage 1",
         )
+        # Booking is open but the term has not started, so the cart charges the
+        # full term price. Starting it today would prorate per remaining lesson,
+        # which varies with the weekday the suite happens to run on.
         self.term = Term.objects.create(
-            start_date=today,
-            end_date=today + timedelta(days=56),
+            start_date=today + timedelta(days=7),
+            end_date=today + timedelta(days=63),
             rebooking_date=today - timedelta(days=7),
             booking_date=today - timedelta(days=5),
-            assessment_date=today + timedelta(days=57),
+            assessment_date=today + timedelta(days=64),
         )
         self.swimling = Swimling.objects.create(
             guardian=self.user, first_name="Kid", last_name="Test",
@@ -602,3 +605,75 @@ class CheckoutCouponFailureTests(TestCase):
         self.assertEqual(order.amount, Decimal("75.00"))
         self.assertEqual(order.total_discount, Decimal("25.00"))
         self.assertEqual(CouponRedemption.objects.count(), 1)
+
+    def test_two_valid_coupons_stack_on_the_order(self):
+        """The point of the feature: both come off, and both are recorded."""
+        from coupons.models import CouponRedemption
+
+        self._make_coupon("PAIR-A", "25.00")
+        self._make_coupon("PAIR-B", "15.00")
+        self._seed_cart(["PAIR-A", "PAIR-B"])
+
+        self.client.get(reverse("shopping_cart:payment_process"), follow=True)
+
+        order = Order.objects.filter(user=self.user).order_by("-id").first()
+        self.assertIsNotNone(order)
+        self.assertEqual(order.amount, Decimal("60.00"))
+        self.assertEqual(order.total_discount, Decimal("40.00"))
+        self.assertEqual(CouponRedemption.objects.count(), 2)
+
+        # Both are spent, not just the one recorded on the legacy order.coupon.
+        for code, value in (("PAIR-A", "25.00"), ("PAIR-B", "15.00")):
+            coupon = self.Coupon.objects.get(code=code)
+            self.assertEqual(coupon.times_used, 1, code)
+            self.assertEqual(coupon.balance_remaining, Decimal("0.00"), code)
+
+    def test_two_coupons_worth_more_than_the_cart_leave_nothing_to_pay(self):
+        """A pair over the cart value must land on zero, never a negative charge."""
+        self._make_coupon("OVER-A", "80.00")
+        self._make_coupon("OVER-B", "50.00")
+        self._seed_cart(["OVER-A", "OVER-B"])
+
+        self.client.get(reverse("shopping_cart:payment_process"), follow=True)
+
+        order = Order.objects.filter(user=self.user).order_by("-id").first()
+        self.assertIsNotNone(order)
+        self.assertEqual(order.amount, Decimal("0.00"))
+        self.assertEqual(order.total_discount, Decimal("100.00"))
+
+        # The second coupon only spent what was left, keeping its unused €30.
+        self.assertEqual(
+            self.Coupon.objects.get(code="OVER-B").balance_remaining, Decimal("30.00")
+        )
+
+    def test_confirmation_email_lists_every_coupon(self):
+        """Both halves of the email, since a missing figure fails silently."""
+        from django.core import mail
+        from lessons_orders.tasks import send_lesson_order_email
+
+        self._make_coupon("MAIL-A", "25.00")
+        self._make_coupon("MAIL-B", "15.00")
+        self._seed_cart(["MAIL-A", "MAIL-B"])
+        self.client.get(reverse("shopping_cart:payment_process"), follow=True)
+        order = Order.objects.filter(user=self.user).order_by("-id").first()
+
+        mail.outbox = []
+        self.assertTrue(send_lesson_order_email(order.id))
+
+        message = mail.outbox[0]
+        html = message.alternatives[0][0]
+        for body in (message.body, html):
+            self.assertIn("MAIL-A", body)
+            self.assertIn("MAIL-B", body)
+            self.assertIn("25.00", body)
+            self.assertIn("15.00", body)
+            self.assertIn("60.00", body)   # the total actually charged
+
+    def test_session_coupons_are_cleared_after_checkout(self):
+        """Left behind, they would silently discount the customer's next order."""
+        self._make_coupon("ONCE-ONLY", "25.00")
+        self._seed_cart(["ONCE-ONLY"])
+
+        self.client.get(reverse("shopping_cart:payment_process"), follow=True)
+
+        self.assertFalse(self.client.session.get("coupon_codes"))

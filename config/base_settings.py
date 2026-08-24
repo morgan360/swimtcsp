@@ -471,7 +471,6 @@ CART_SESSION_ID = 'cart'
 # BOIPA_PASSWORD='qWGEJQQAkhROSTGpwS5O'
 # BOIPA_TOKEN_URL="https://apiuat.test.boipapaymentgateway.com/token"
 # BOIPA_PAYMENT_URL='https://apiuat.test.boipapaymentgateway.com/payments'
-# HPP_FORM='https://cashierui-apiuat.test.boipapaymentgateway.com/'
 # NGROK ='https://tcsp-morganmck.eu.pythonanywhere.com/'
 
 # How many records can you upload

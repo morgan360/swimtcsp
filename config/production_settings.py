@@ -35,7 +35,6 @@ NGROK                  = config('NGROK', default='https://www.tcsp.ie').rstrip('
 # BOIPA_MERCHANT_ID  = config('BOIPA_MERCHANT_ID')
 # BOIPA_PASSWORD     = config('BOIPA_PASSWORD')
 # BOIPA_TOKEN_URL    = config('BOIPA_TOKEN_URL')
-# HPP_FORM           = config('HPP_FORM')
 # NGROK              = config('NGROK', default='http://localhost:4040').rstrip('/')
 # BRAND_ID           = config('BRAND_ID')
 # BOIPA_PAYMENT_URL  = config('BOIPA_PAYMENT_URL')

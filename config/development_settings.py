@@ -28,7 +28,6 @@ NGROK                  = config('NGROK', default='http://localhost:4040').rstrip
 # Old BOIPA variables (deprecated but kept for reference)
 # BOIPA_PASSWORD     = config('BOIPA_PASSWORD', default='')
 # BOIPA_TOKEN_URL    = config('BOIPA_TOKEN_URL', default='')
-# HPP_FORM           = config('HPP_FORM', default='')
 # BRAND_ID           = config('BRAND_ID', default='')
 # BOIPA_PAYMENT_URL  = config('BOIPA_PAYMENT_URL', default='')
 

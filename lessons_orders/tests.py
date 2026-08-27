@@ -128,16 +128,11 @@ class LessonOrderBOIPAIntegrationTest(TransactionTestCase):
         self.assertEqual(enrollments_before.count(), 0)
         print("✓ No enrollment exists before payment")
 
-        # ===== STEP 2: Simulate BOIPA Token Generation (Mock) =====
-        with patch('boipa.payment_functions.get_boipa_session_token') as mock_token:
-            mock_token.return_value = {
-                'token': 'test_boipa_token_12345',
-                'timestamp': int(time_module.time() * 1000)
-            }
-
-            # Generate merchantTxId (same format as production)
-            merchant_tx_id = f"lesson_{order.id}_{int(time_module.time())}"
-            print(f"✓ Mock BOIPA token generated: {merchant_tx_id}")
+        # ===== STEP 2: Build the merchantTxId the checkout would have sent =====
+        # No BOIPA call to mock here: this test posts the webhook directly rather
+        # than going through checkout, so it only needs the reference format.
+        merchant_tx_id = f"lesson_{order.id}_{int(time_module.time())}"
+        print(f"✓ merchantTxId: {merchant_tx_id}")
 
         # ===== STEP 3: Simulate BOIPA Payment Notification Webhook =====
         payment_notification_data = {

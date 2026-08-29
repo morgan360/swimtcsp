@@ -64,7 +64,19 @@
                     </div>
 
                     <div class="p-6">
-                        {% if product and product.id and num_left >= 1 %}
+                        {% if booking_paused %}
+                        <div class="bg-amber-50 border border-amber-300 rounded-lg p-6 text-center">
+                            <div class="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <i class="fas fa-pause-circle text-amber-600"></i>
+                            </div>
+                            <h3 class="text-lg font-medium text-amber-900 mb-2">Booking Paused</h3>
+                            <p class="text-amber-800">{{ booking_pause_notice }}</p>
+                            <button onclick="history.back()"
+                                class="mt-4 inline-flex items-center px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors">
+                                <i class="fas fa-arrow-left mr-2"></i>Back to Lessons
+                            </button>
+                        </div>
+                        {% elif product and product.id and num_left >= 1 %}
                         <form method="post" action="{% url 'shopping_cart:cart_add' product.id 'lesson' %}"
                             class="space-y-6">
                             {% csrf_token %}

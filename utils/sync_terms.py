@@ -54,6 +54,9 @@ def sync_terms_from_remote():
                     "end_date": clean_date(row["finish_date"]),
                     "rebooking_date": clean_date(row["rebooking_date"]),
                     "booking_date": clean_date(row["booking_date"]),
+                    # pause_date is deliberately absent: the legacy mor_terms table
+                    # has no such column, and it is set here rather than upstream.
+                    # Adding it to these defaults would wipe it on every sync.
                     "assessment_date": clean_date(row["assessment_date"]),
                 }
             )

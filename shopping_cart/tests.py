@@ -186,3 +186,105 @@ class CartCouponPanelTests(TestCase):
 
         self.assertEqual(self._applied_codes(), [])
         self.assertContains(response, "100.00")
+
+
+class BookingPauseGateTests(TestCase):
+    """The pause has to hold at the endpoints, not just in the buttons.
+
+    A guardian who kept a tab open, bookmarked a lesson, or left items in the
+    cart before the pause started can reach these POST endpoints directly, so
+    each one refuses on its own rather than trusting the template.
+    """
+    def setUp(self):
+        self.client = Client()
+        self.guardian = User.objects.create_user(email="paused@example.com", password="pw12345!")
+        self.staff = User.objects.create_user(email="staff@example.com", password="pw12345!")
+        self.staff.is_staff = True
+        self.staff.save(update_fields=['is_staff'])
+
+        today = timezone.now().date()
+        self.program = Program.objects.create(name="Pause Prog")
+        self.category = Category.objects.create(
+            program=self.program, name="Pause Cat", slug="pause-cat", stage="Stage 1",
+        )
+        # Rebooking opened a week ago, the pause started yesterday, booking
+        # reopens in five days.
+        self.term = Term.objects.create(
+            start_date=today - timedelta(days=10),
+            end_date=today + timedelta(days=30),
+            rebooking_date=today - timedelta(days=7),
+            pause_date=today - timedelta(days=1),
+            booking_date=today + timedelta(days=5),
+        )
+        self.product = Product.objects.create(
+            category=self.category, day_of_week=0,
+            start_time=time(10, 0), end_time=time(10, 45),
+            num_places=10, num_weeks=8, price=Decimal("100.00"), active=True,
+        )
+        self.swimling = Swimling.objects.create(
+            guardian=self.guardian, first_name="Kid", last_name="Paused",
+            dob=date(2016, 1, 1),
+        )
+
+    def add_url(self):
+        return reverse('shopping_cart:cart_add', args=[self.product.id, 'lesson'])
+
+    def test_the_public_cannot_add_a_lesson_to_the_cart(self):
+        self.client.force_login(self.guardian)
+        response = self.client.post(self.add_url(), {'swimling': self.swimling.id})
+
+        # fetch_redirect_response=False: the dashboard bounces again for a user
+        # who is not yet in the guardian group, which is not what is under test.
+        self.assertRedirects(
+            response, reverse('swimling_dashboard:guardian_dashboard'),
+            fetch_redirect_response=False,
+        )
+        self.assertNotIn('cart', self.client.session)
+
+    def test_staff_can_still_add_a_lesson_to_the_cart(self):
+        """Esther's requirement: staff keep booking swimlings into classes."""
+        staff_swimling = Swimling.objects.create(
+            guardian=self.staff, first_name="Kid", last_name="Staff",
+            dob=date(2016, 1, 1),
+        )
+        self.client.force_login(self.staff)
+        response = self.client.post(self.add_url(), {'swimling': staff_swimling.id})
+
+        self.assertRedirects(response, reverse('shopping_cart:cart_detail'))
+        self.assertTrue(self.client.session.get('cart'))
+
+    def test_the_public_cannot_check_out_a_cart_filled_before_the_pause(self):
+        self.client.force_login(self.guardian)
+        session = self.client.session
+        session['cart'] = {
+            f'lesson_{self.product.id}_{self.swimling.id}': {
+                'price': '100.00', 'quantity': 1,
+            }
+        }
+        session[f'{settings.CART_SESSION_ID}_type'] = 'lesson'
+        session.save()
+
+        response = self.client.post(reverse('shopping_cart:payment_process'))
+
+        self.assertRedirects(response, reverse('shopping_cart:cart_detail'))
+        # Their selection is still there to pay for once booking reopens.
+        self.assertTrue(self.client.session['cart'])
+
+    def test_the_public_cannot_reach_the_rebooking_page(self):
+        self.client.force_login(self.guardian)
+        response = self.client.get(reverse('shopping_cart:rebooking_page'))
+        self.assertRedirects(
+            response, reverse('swimling_dashboard:guardian_dashboard'),
+            fetch_redirect_response=False,
+        )
+
+    def test_a_term_without_a_pause_date_still_books_normally(self):
+        """The pause is opt-in; terms that do not set one are untouched."""
+        self.term.pause_date = None
+        self.term.save()
+        self.client.force_login(self.guardian)
+
+        response = self.client.post(self.add_url(), {'swimling': self.swimling.id})
+
+        self.assertRedirects(response, reverse('shopping_cart:cart_detail'))
+        self.assertTrue(self.client.session.get('cart'))

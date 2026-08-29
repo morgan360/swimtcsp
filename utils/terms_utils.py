@@ -48,3 +48,51 @@ def get_term_context_data():
         'previous_term': previous_term,
         'current_phase_id': current_phase_id,
     }
+
+
+def acting_as_staff(request):
+    """Is the person driving this request a member of staff?
+
+    True for a logged-in staff member or superuser, and also inside a
+    django-hijack session: impersonating a guardian is how staff book on that
+    guardian's behalf, and a hijacked request carries the guardian's own
+    (non-staff) user. HIJACK_PERMISSION_CHECK restricts hijacking to staff and
+    superusers, so the presence of a hijack history is proof of a staff hijacker.
+    """
+    if request is None:
+        return False
+
+    user = getattr(request, 'user', None)
+    if user is not None and user.is_authenticated and (user.is_staff or user.is_superuser):
+        return True
+
+    session = getattr(request, 'session', None)
+    return bool(session and session.get('hijack_history'))
+
+
+def public_booking_paused(request=None, phase=None):
+    """Is public lesson booking currently inside the pause window?
+
+    The pause sits between a term's pause_date and its booking_date. It closes
+    lesson booking to the public only — staff keep booking swimlings into
+    classes throughout, which is the whole point of the window.
+
+    Pass `phase` when the caller has already resolved the phase, to save the
+    term lookup.
+    """
+    if phase is None:
+        phase = get_term_context_data()['current_phase_id']
+    return phase == 'PA' and not acting_as_staff(request)
+
+
+def booking_pause_notice(term=None):
+    """The message shown to the public when they hit the pause."""
+    if term is None:
+        term = get_current_term()
+    reopens = term.booking_date if term else None
+    if reopens:
+        return (
+            f"Lesson booking is paused while classes are finalised. "
+            f"It reopens on {reopens:%d %b %Y}."
+        )
+    return "Lesson booking is paused while classes are finalised."

@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.contrib.auth.models import User
 from lessons.models import Product
@@ -33,6 +34,15 @@ class Term(models.Model):
     start_date = models.DateField(null=True, blank=True)
     end_date = models.DateField(null=True, blank=True)
     rebooking_date = models.DateField(null=True, blank=True)
+    pause_date = models.DateField(
+        null=True,
+        blank=True,
+        help_text=(
+            "Optional. From this day until the booking date, public lesson booking "
+            "is paused so classes can be reshuffled. Staff can still book swimlings "
+            "in. Leave blank to run rebooking straight through to the booking date."
+        ),
+    )
     booking_date = models.DateField(null=True, blank=True)
     assessment_date = models.DateField(null=True, blank=True)
     created = models.DateTimeField(auto_now_add=True)
@@ -93,12 +103,31 @@ class Term(models.Model):
             return f"({self.id}) - {self.start_date:%d %b %Y} ~ {self.end_date:%d %b %Y}"
         return f"({self.id})"
 
+    def clean(self):
+        """Keep pause_date inside the rebooking window it is meant to cut short."""
+        super().clean()
+        if not self.pause_date:
+            return
+        errors = {}
+        if self.rebooking_date and self.pause_date < self.rebooking_date:
+            errors['pause_date'] = "The pause cannot start before rebooking opens."
+        if self.booking_date and self.pause_date > self.booking_date:
+            errors['pause_date'] = "The pause cannot start after booking opens."
+        if errors:
+            raise ValidationError(errors)
+
     def determine_phase(self):
         today = timezone.now().date()
+        # pause_date is optional. Without one, rebooking runs straight through to
+        # the booking date exactly as it did before the pause was introduced; with
+        # one, rebooking ends early and 'PA' fills the gap.
+        rebooking_ends = self.pause_date or self.booking_date
         if self.start_date and self.rebooking_date and today < self.rebooking_date:
             return 'BK'
-        elif self.rebooking_date and self.booking_date and self.rebooking_date <= today < self.booking_date:
+        elif self.rebooking_date and rebooking_ends and self.rebooking_date <= today < rebooking_ends:
             return 'RB'
+        elif self.pause_date and self.booking_date and self.pause_date <= today < self.booking_date:
+            return 'PA'
         elif self.booking_date and self.end_date and self.booking_date <= today <= self.end_date:
             return 'BN'
         return 'Outside Term Dates'

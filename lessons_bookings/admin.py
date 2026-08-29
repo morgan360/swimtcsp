@@ -143,7 +143,7 @@ class LessonAssignmentAdmin(admin.ModelAdmin):
 
 class TermAdmin(ImportExportMixin, admin.ModelAdmin):
     resource_class = TermResource
-    list_display = ['id', 'start_date', 'end_date', 'rebooking_date', 'booking_date', 'assessment_date', 'changed_by']
+    list_display = ['id', 'start_date', 'end_date', 'rebooking_date', 'pause_date', 'booking_date', 'assessment_date', 'changed_by']
     exclude = ('changed_by',)
     actions = ['sync_terms_now']  # ✅ add the custom action
     search_fields = ('id', 'start_date', 'end_date')

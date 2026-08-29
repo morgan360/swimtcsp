@@ -4,8 +4,15 @@
   - remaining_spaces (may be None when term not yet open)
   - is_full
   - can_book
-  Optional context: selected_swimling, booking_term_label, booking_term_is_next, booking_term_available
+  Optional context: selected_swimling, booking_term_label, booking_term_is_next,
+  booking_term_available, booking_paused, booking_pause_notice
 {% endcomment %}
+
+{% if booking_paused %}
+  <div class="mb-4 text-xs sm:text-sm text-amber-900 bg-amber-50 border border-amber-300 rounded-lg px-3 py-2">
+    <i class="fas fa-pause-circle mr-1"></i>{{ booking_pause_notice }}
+  </div>
+{% endif %}
 
 {% if booking_term_label %}
   <div class="mb-4 text-xs sm:text-sm text-blue-700 bg-blue-50 border border-blue-200 rounded-lg px-3 py-2">
@@ -45,7 +52,11 @@
             </span>
           {% endif %}
 
-          {% if lesson_info.can_book %}
+          {% if booking_paused %}
+            <span class="inline-flex items-center px-4 py-2 bg-amber-100 text-amber-800 text-xs font-medium rounded-lg" title="{{ booking_pause_notice }}">
+              <i class="fas fa-pause-circle mr-1"></i>Booking paused
+            </span>
+          {% elif lesson_info.can_book %}
             {% if selected_swimling %}
               <a href="{% url 'lessons:product_detail' id=lesson_info.lesson.id %}?swimling={{ selected_swimling.id }}"
                  class="inline-flex items-center px-4 py-2 bg-green-600 text-white text-xs font-medium rounded-lg hover:bg-green-700 transition-colors">

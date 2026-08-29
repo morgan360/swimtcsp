@@ -1,6 +1,7 @@
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, get_object_or_404, redirect
 from utils.context_processors import get_term_info
+from utils.terms_utils import acting_as_staff
 from lessons.models import Product
 from lessons_bookings.models import LessonEnrollment
 from users.helpers import fetch_waiting_list_data, collect_previous_lessons
@@ -213,6 +214,11 @@ def add_swimling(request):
             current_term_id = term_info['current_term_id']
             next_term_id = term_info['next_term_id']
             current_phase = term_info['current_phase_id']
+            # Staff keep booking through the pause, so for them the paused window
+            # behaves exactly like the rebooking phase it interrupts. For the
+            # public no action is offered and the template shows it disabled.
+            if current_phase == 'PA' and acting_as_staff(request):
+                current_phase = 'RB'
 
             public_lessons_data = []
             for s in swimlings:
@@ -285,6 +291,11 @@ def guardian_dashboard(request):
     current_term_id = term_info['current_term_id']
     next_term_id = term_info['next_term_id']
     current_phase = term_info['current_phase_id']
+    # Staff keep booking through the pause, so for them the paused window
+    # behaves exactly like the rebooking phase it interrupts. For the
+    # public no action is offered and the template shows it disabled.
+    if current_phase == 'PA' and acting_as_staff(request):
+        current_phase = 'RB'
     school_group_names = ['schools', 'Schools', 'zion', 'bishopgalvin', 'bishop_galvin']
     is_school_user = request.user.groups.filter(name__in=school_group_names).exists()
 

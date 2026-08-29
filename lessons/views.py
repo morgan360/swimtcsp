@@ -10,7 +10,7 @@ from users.models import Swimling
 from .models import Program, Category, Product
 from .filters import ProductFilter
 from utils.context_processors import get_term_info
-from utils.terms_utils import get_term_context_data
+from utils.terms_utils import get_term_context_data, booking_pause_notice, public_booking_paused
 from utils.terms_utils import get_current_term
 
 # HELPERS
@@ -141,7 +141,9 @@ def lesson_list(request):
     phase = term_data['current_phase_id']
     # BK: Book current term only
     # RB: Should not reach here (Rebook button only), but if they do, book current term
+    # PA: Booking is paused for the public; staff still book, into the RB term
     # BN: Book next term
+    booking_paused = public_booking_paused(request, phase=phase)
     booking_for_next_term = phase == 'BN'
 
     booking_term = term_data['next_term'] if booking_for_next_term else term_data['current_term']
@@ -230,6 +232,8 @@ def lesson_list(request):
         'booking_term_is_next': booking_for_next_term,
         'booking_term_available': booking_term is not None,
         'booking_term_obj': booking_term,
+        'booking_paused': booking_paused,
+        'booking_pause_notice': booking_pause_notice() if booking_paused else None,
         'selected_swimling': selected_swimling,
         **get_term_info(request),
     })
@@ -242,7 +246,9 @@ def update_lesson_list(request):
     phase = term_data['current_phase_id']
     # BK: Book current term only
     # RB: Should not reach here (Rebook button only), but if they do, book current term
+    # PA: Booking is paused for the public; staff still book, into the RB term
     # BN: Book next term
+    booking_paused = public_booking_paused(request, phase=phase)
     booking_for_next_term = phase == 'BN'
 
     booking_term = term_data['next_term'] if booking_for_next_term else term_data['current_term']
@@ -319,6 +325,8 @@ def update_lesson_list(request):
         'booking_term_is_next': booking_for_next_term,
         'booking_term_available': booking_term is not None,
         'booking_term_obj': booking_term,
+        'booking_paused': booking_paused,
+        'booking_pause_notice': booking_pause_notice() if booking_paused else None,
     })
 
 
@@ -346,7 +354,9 @@ def product_detail(request, id):
     phase = term_data['current_phase_id']
     # BK: Book current term only
     # RB: Should not reach here (Rebook button only), but if they do, book current term
+    # PA: Booking is paused for the public; staff still book, into the RB term
     # BN: Book next term
+    booking_paused = public_booking_paused(request, phase=phase)
     selected_term = term_data['next_term'] if phase == 'BN' else term_data['current_term']
 
     num_sold = product.get_num_sold(selected_term) if selected_term else 0
@@ -359,6 +369,8 @@ def product_detail(request, id):
         'selected_swimling': selected_swimling,  # 🔑 for use in template
         'num_sold': num_sold,
         'num_left': num_left,
+        'booking_paused': booking_paused,
+        'booking_pause_notice': booking_pause_notice() if booking_paused else None,
     })
 
 

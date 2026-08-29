@@ -1,3 +1,14 @@
+{% if booking_paused %}
+<div class="bg-amber-50 border border-amber-300 text-amber-900 rounded-xl px-6 py-4 mb-6 shadow-sm">
+  <p class="font-semibold text-sm sm:text-base">
+    <i class="fa-solid fa-circle-pause mr-2"></i>{{ booking_pause_notice }}
+  </p>
+  <p class="text-xs sm:text-sm text-amber-800 mt-1">
+    Existing bookings are unaffected. If you need to change a booking before then, please contact the office.
+  </p>
+</div>
+{% endif %}
+
 {% if phase_summary %}
 <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden mb-6">
   <!-- Header -->

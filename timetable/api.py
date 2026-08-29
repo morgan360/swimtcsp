@@ -118,6 +118,19 @@ def calendar_events(request):
                 }
             })
 
+        # Booking pause (optional)
+        if getattr(term, 'pause_date', None):
+            events.append({
+                "title": f"Booking Paused: {label}",
+                "start": term.pause_date.isoformat(),
+                "color": "#EF4444",  # red
+                "allDay": True,
+                "extendedProps": {
+                    "category": "lesson-booking-pause",
+                    "description": f"Public booking paused for {label}"
+                }
+            })
+
         # Booking phase
         if getattr(term, 'booking_date', None):
             events.append({

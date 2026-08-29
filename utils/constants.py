@@ -11,6 +11,12 @@ PHASE_DETAILS = {
         'bulma_class': 'is-warning is-light',
         'icon': '🔁',
     },
+    'PA': {
+        'label': 'Booking Paused',
+        'description': 'Booking is paused while classes are finalised. It reopens on {booking_date}',
+        'bulma_class': 'is-danger is-light',
+        'icon': '⏸',
+    },
     'BN': {
         'label': 'Open Booking',
         'description': 'Booking for next term is open until {end_date}',

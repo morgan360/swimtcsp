@@ -74,6 +74,15 @@
 
     </form>
 
+    {% if booking_paused %}
+    <div class="bg-amber-50 border border-amber-300 text-amber-900 rounded-xl px-6 py-4 mb-6 shadow-sm">
+      <p class="font-semibold text-sm sm:text-base">
+        <i class="fas fa-pause-circle mr-2"></i>{{ booking_pause_notice }}
+      </p>
+      <p class="text-xs sm:text-sm text-amber-800 mt-1">You can still browse the timetable, and join a waiting list for a class that is full.</p>
+    </div>
+    {% endif %}
+
     {% if booking_term_label %}
     <div class="bg-blue-50 border border-blue-200 text-blue-900 rounded-xl px-6 py-4 mb-6 shadow-sm">
       <p class="font-semibold text-sm sm:text-base">You are booking for
@@ -154,7 +163,11 @@
                 {% endif %}
               </td>
               <td class="px-6 py-4 text-center">
-                {% if lesson_info.can_book %}
+                {% if booking_paused %}
+                  <span class="inline-flex items-center px-4 py-2 bg-amber-100 text-amber-800 text-sm font-medium rounded-lg" title="{{ booking_pause_notice }}">
+                    <i class="fas fa-pause-circle mr-2"></i>Booking paused
+                  </span>
+                {% elif lesson_info.can_book %}
                   {% if selected_swimling %}
                   <a href="{% url 'lessons:product_detail' id=lesson_info.lesson.id %}?swimling={{ selected_swimling.id }}"
                     class="inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors">
@@ -227,7 +240,11 @@
               {% endif %}
             </div>
           </div>
-          {% if lesson_info.can_book %}
+          {% if booking_paused %}
+          <span class="w-full inline-flex items-center justify-center px-4 py-2 bg-amber-100 text-amber-800 text-sm font-medium rounded-lg" title="{{ booking_pause_notice }}">
+            <i class="fas fa-pause-circle mr-2"></i>Booking paused
+          </span>
+          {% elif lesson_info.can_book %}
             {% if selected_swimling %}
             <a href="{% url 'lessons:product_detail' id=lesson_info.lesson.id %}?swimling={{ selected_swimling.id }}"
               class="w-full inline-flex items-center justify-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors">

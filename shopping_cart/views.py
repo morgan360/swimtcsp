@@ -16,7 +16,7 @@ from django.urls import reverse
 from lessons_orders.models import Order as LessonOrder, OrderItem as LessonOrderItem
 from schools_orders.models import Order as SchoolOrder, OrderItem as SchoolOrderItem
 from lessons_bookings.models import Term
-from utils.terms_utils import get_term_context_data
+from utils.terms_utils import get_term_context_data, acting_as_staff, booking_pause_notice, public_booking_paused
 from schools_bookings.models import ScoTerm
 from utils.terms_utils import get_current_term, get_current_sco_term, get_next_term
 from boipa.views import initiate_boipa_payment_session
@@ -78,11 +78,20 @@ def _ensure_rebooking_open(request):
     term_data = get_term_context_data()
     current_phase = term_data.get('current_phase_id')
 
-    if current_phase != 'RB':
-        messages.error(request, "Rebooking is not currently available.")
+    if current_phase == 'RB':
+        return None
+
+    # 'PA' is the tail of the same rebooking window, cut short so classes can be
+    # finalised. Staff keep rebooking through it on a guardian's behalf; the
+    # public does not.
+    if current_phase == 'PA':
+        if acting_as_staff(request):
+            return None
+        messages.error(request, booking_pause_notice(term_data.get('current_term')))
         return redirect('swimling_dashboard:guardian_dashboard')
 
-    return None
+    messages.error(request, "Rebooking is not currently available.")
+    return redirect('swimling_dashboard:guardian_dashboard')
 
 
 # Create a logger object
@@ -99,6 +108,13 @@ def cart_add(request, product_id, type):  # type could be 'lesson' or 'school'
         product = get_object_or_404(ScoLessons, id=product_id)
     else:
         raise Http404("Product type is not defined")
+
+    # The pause closes public lesson booking outright between a term's pause_date
+    # and its booking_date. Staff (including staff hijacking a guardian) still
+    # book swimlings in, and school bookings are not affected.
+    if type == 'lesson' and public_booking_paused(request):
+        messages.error(request, booking_pause_notice())
+        return redirect('swimling_dashboard:guardian_dashboard')
 
     form = CartAddProductForm(user=request.user, data=request.POST)
     if form.is_valid():
@@ -121,8 +137,8 @@ def cart_add(request, product_id, type):  # type could be 'lesson' or 'school'
             # BN phase: Always book into next term
             elif phase == 'BN':
                 term = next_term
-            # RB phase: Check if swimling is currently enrolled
-            elif phase == 'RB':
+            # RB (and the PA pause that ends it): Check if swimling is currently enrolled
+            elif phase in ('RB', 'PA'):
                 # Check if swimling has enrollment in current term
                 is_enrolled = LessonEnrollment.objects.filter(
                     swimling_id=swimling_id,
@@ -327,6 +343,13 @@ def payment_process(request):
     cart = Cart(request)
     cart_type = request.session.get(f"{settings.CART_SESSION_ID}_type", None)
     total_price = Decimal('0.00')
+
+    # A lesson cart filled before the pause started must not be checked out
+    # through it. Leave the items in place so the customer can pay once booking
+    # reopens rather than losing their selection.
+    if cart_type == 'lesson' and public_booking_paused(request):
+        messages.error(request, booking_pause_notice())
+        return redirect('shopping_cart:cart_detail')
 
     # Step 1: Create order based on cart type
     if cart_type == 'lesson':
@@ -781,6 +804,13 @@ def confirm_waiting_list_booking(request, swimling_id, product_id):
     """Handles the final order submission and initiates the payment process for waiting list bookings."""
     swimling = get_object_or_404(Swimling, id=swimling_id)
     lesson = get_object_or_404(Product, id=product_id)
+
+    # This path skips the cart entirely — it writes an order and goes straight to
+    # BOIPA — so it needs its own pause gate. Joining a waiting list stays open
+    # throughout; it is turning a place into a paid booking that waits.
+    if public_booking_paused(request):
+        messages.error(request, booking_pause_notice())
+        return redirect('swimling_dashboard:guardian_dashboard')
 
     if request.method == 'POST':
         current_term = get_current_term()

@@ -10,7 +10,11 @@ from django.http import HttpRequest
 from lessons_bookings.models import Term
 from schools.models import ScoSchool
 from schools_bookings.models import ScoTerm
-from utils.terms_utils import get_term_context_data
+from utils.terms_utils import (
+    booking_pause_notice,
+    get_term_context_data,
+    public_booking_paused,
+)
 from utils.constants import PHASE_DETAILS
 
 def get_term_info(request: HttpRequest) -> Dict[str, str]:
@@ -27,9 +31,11 @@ def get_term_info(request: HttpRequest) -> Dict[str, str]:
     start_date = fmt(current_term.start_date) if current_term else None
     end_date = fmt(current_term.end_date) if current_term else None
     rebooking_date = current_term.rebooking_date if current_term else None
+    pause_date = current_term.pause_date if current_term else None
     booking_date = current_term.booking_date if current_term else None
 
     rebooking_date_fmt = fmt(rebooking_date)
+    pause_date_fmt = fmt(pause_date)
     booking_date_fmt = fmt(booking_date)
 
     term_string = current_term.concatenated_term() if current_term else "No current term"
@@ -49,17 +55,28 @@ def get_term_info(request: HttpRequest) -> Dict[str, str]:
     # A missing date leaves active_modes empty, which reads as no phase: banners
     # disappear and the cart gate (which admits 'RB' only) refuses. Incomplete
     # dates therefore close booking rather than open it.
+    #
+    # pause_date is optional. When it is set, rebooking ends there instead of at
+    # the booking date and 'PA' fills the gap: public lesson booking is closed
+    # while classes are finalised. When it is blank, rebooking runs through to
+    # the booking date exactly as it did before.
     if current_term:
+        rebooking_ends = pause_date or booking_date
         if rebooking_date and today < rebooking_date:
             active_modes = ['BK']
-        elif rebooking_date and booking_date and rebooking_date <= today < booking_date:
+        elif rebooking_date and rebooking_ends and rebooking_date <= today < rebooking_ends:
             active_modes = ['BK', 'RB']
+        elif pause_date and booking_date and pause_date <= today < booking_date:
+            # Deliberately not ['BK', 'PA'] — the pause closes booking outright,
+            # so no other mode may stay active alongside it.
+            active_modes = ['PA']
         elif booking_date and current_term.end_date and booking_date <= today <= current_term.end_date:
             active_modes = ['BN']
 
     # 📌 Choose dominant phase for backward compatibility (e.g., RB takes priority over BK)
     current_phase_id = (
         'BN' if 'BN' in active_modes else
+        'PA' if 'PA' in active_modes else
         'RB' if 'RB' in active_modes else
         'BK' if 'BK' in active_modes else
         None
@@ -67,21 +84,26 @@ def get_term_info(request: HttpRequest) -> Dict[str, str]:
     # Add these after computing active_modes and current_phase_id
     current_phase_label = PHASE_DETAILS.get(current_phase_id, {}).get('label', 'Unknown')
     current_phase_end = (
-        booking_date_fmt if current_phase_id in ['BK', 'RB'] else end_date
+        booking_date_fmt if current_phase_id in ['BK', 'RB', 'PA'] else end_date
     )
 
     next_phase_id = None
     if current_phase_id == 'BK':
         next_phase_id = 'RB'
     elif current_phase_id == 'RB':
+        next_phase_id = 'PA' if pause_date else 'BN'
+    elif current_phase_id == 'PA':
         next_phase_id = 'BN'
 
     next_phase_label = PHASE_DETAILS.get(next_phase_id, {}).get('label', '')
     next_phase_start = (
         rebooking_date_fmt if next_phase_id == 'RB'
+        else pause_date_fmt if next_phase_id == 'PA'
         else booking_date_fmt if next_phase_id == 'BN'
         else None
     )
+
+    booking_paused = public_booking_paused(request, phase=current_phase_id)
 
     # Use meta to build display values
     banners = []
@@ -110,8 +132,13 @@ def get_term_info(request: HttpRequest) -> Dict[str, str]:
         'start_date': start_date,
         'end_date': end_date,
         'rebooking_date': rebooking_date_fmt,
+        'pause_date': pause_date_fmt,
         'booking_date': booking_date_fmt,
         'current_phase_id': current_phase_id,
+        # Staff keep booking through the pause, so this is per-requester, not
+        # just a property of the term.
+        'booking_paused': booking_paused,
+        'booking_pause_notice': booking_pause_notice(current_term) if booking_paused else None,
         'active_modes': active_modes,
         'banners': banners,
         'next_term_start': fmt(next_term.start_date) if next_term else None,

@@ -94,6 +94,17 @@ class ClassPrintScopeTests(TestCase):
         self.assertNotIn('lesson_lists', response.context)
         self.assertEqual(response.context['product'], self.mon_late)
 
+    def test_the_sheets_carry_no_stray_template_comment_text(self):
+        # A {# #} comment cannot span lines in Django, and the ones that did were
+        # printing their own source onto the top of the attendance sheet.
+        multi = self._print(term='current', day='0')
+        self.assertNotContains(multi, 'One attendance sheet per class')
+        self.assertNotContains(multi, '#}')
+
+        single = self._print(term='current', day='0', lesson=str(self.mon_early.id))
+        self.assertNotContains(single, 'Attendance sheet as specified by the pool')
+        self.assertNotContains(single, '#}')
+
 
 class FilterOptionTests(TestCase):
     """The day/time/lesson dropdowns have to understand the whole-week option."""

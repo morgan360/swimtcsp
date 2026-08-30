@@ -204,9 +204,13 @@ def enrollment_report_data(request):
 # The pool's term length, and the number of tick columns on a printed sheet.
 TERM_WEEKS = 15
 
+# Every class prints on its own sheet, so a whole-week list is a long print job.
+# Past this many classes the sheet page warns and asks the user to confirm.
+PRINT_WARNING_THRESHOLD = 12
+
 
 def class_print(request):
-    """Print the attendance sheet for a single lesson, or for every lesson at a slot.
+    """Print the attendance sheet for a single lesson, or for a slot, day or week.
 
     The sheet is ticked by hand, so it carries a fixed fifteen week columns — the
     pool's term length — rather than a column per session actually scheduled.
@@ -238,22 +242,48 @@ def class_print(request):
             'weeks': range(1, TERM_WEEKS + 1),
         })
 
-    # Case 2: filter by term + day + time → print all lessons at that time
+    # Case 2: filter by term + day, narrowed by an optional time → print every
+    # class that matches. day='all' widens this to the whole week and leaving the
+    # time blank widens it to the whole day, so the one filter prints a single
+    # slot, a full day or a full week of sheets.
+    from datetime import time as dt_time
+
     products = Product.objects.none()
-    if term and day and time_str:
-        try:
-            from datetime import time as dt_time
-            hh, mm = [int(x) for x in time_str.split(':', 1)]
-            products = Product.objects.filter(
-                day_of_week=int(day),
-                start_time=dt_time(hour=hh, minute=mm),
-                active=True,
-            )
+    scope_label = None
+    if term and day:
+        day_labels = dict(Product.DAY_CHOICES)
+        matched = Product.objects.filter(active=True)
+        valid = True
+
+        if day == 'all':
+            day_part = 'All Days'
+        else:
+            try:
+                day_int = int(day)
+            except (TypeError, ValueError):
+                valid = False
+                day_part = ''
+            else:
+                matched = matched.filter(day_of_week=day_int)
+                day_part = day_labels.get(day_int, '')
+
+        if valid and time_str:
+            try:
+                hh, mm = [int(x) for x in time_str.split(':', 1)]
+            except (TypeError, ValueError):
+                valid = False
+            else:
+                matched = matched.filter(start_time=dt_time(hour=hh, minute=mm))
+
+        if valid:
             if category_id:
-                products = products.filter(category_id=category_id)
-            products = products.select_related('category').order_by('name')
-        except Exception:
-            products = Product.objects.none()
+                matched = matched.filter(category_id=category_id)
+            # Day then time, so a week's sheets come off the printer in the order
+            # they are taught rather than alphabetically by class name.
+            products = matched.select_related('category').order_by(
+                'day_of_week', 'start_time', 'name'
+            )
+            scope_label = f"{day_part} @ {time_str}" if time_str else f"{day_part} · all times"
 
     lesson_lists = []
     for p in products:
@@ -269,8 +299,9 @@ def class_print(request):
         return render(request, 'reports/printable_swimlings_list_multi.html', {
             'lesson_lists': lesson_lists,
             'term_label': term_choice.title() + " Term",
-            'time_label': time_str,
+            'scope_label': scope_label,
             'weeks': range(1, TERM_WEEKS + 1),
+            'print_warning_threshold': PRINT_WARNING_THRESHOLD,
         })
 
     # Fallback: nothing matched; render a simple empty state
@@ -708,8 +739,10 @@ def update_lessons(request):
     day = request.GET.get('day')
     time_str = request.GET.get('time')
     lessons = Product.objects.all()
-    # Day is required to populate lessons list
-    if day not in [None, '', 'null', 'undefined']:
+    # A day (or 'all' for the whole week) is required to populate the lessons list
+    if day == 'all':
+        pass
+    elif day not in [None, '', 'null', 'undefined']:
         try:
             lessons = lessons.filter(day_of_week=int(day))
         except (TypeError, ValueError):
@@ -724,6 +757,7 @@ def update_lessons(request):
             lessons = lessons.filter(start_time=dt_time(hour=hh, minute=mm))
         except Exception:
             pass
+    lessons = lessons.order_by('day_of_week', 'start_time', 'name')
     return render(request, 'reports/partials/lesson_options.html', {'lessons': lessons})
 
 def update_days(request):
@@ -735,7 +769,10 @@ def update_days(request):
 def update_times(request):
     day = request.GET.get('day')
     times = []
-    if day not in [None, '', 'null', 'undefined']:
+    if day == 'all':
+        q = Product.objects.all()
+        times = sorted({p.start_time.strftime('%H:%M') for p in q if p.start_time})
+    elif day not in [None, '', 'null', 'undefined']:
         try:
             q = Product.objects.filter(day_of_week=int(day))
             times = sorted({p.start_time.strftime('%H:%M') for p in q if p.start_time})

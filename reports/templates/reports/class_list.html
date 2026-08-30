@@ -73,7 +73,7 @@
                 <i class="fas fa-chevron-down text-gray-400"></i>
               </div>
             </div>
-            <p class="text-xs text-gray-500 mt-1">Choose specific day of the week</p>
+            <p class="text-xs text-gray-500 mt-1">Pick a day, or All Days to print the whole week</p>
           </div>
 
           <!-- Time Selection (optional) -->
@@ -95,7 +95,7 @@
                 <i class="fas fa-chevron-down text-gray-400"></i>
               </div>
             </div>
-            <p class="text-xs text-gray-500 mt-1">Pick a time to print all classes at that slot</p>
+            <p class="text-xs text-gray-500 mt-1">Pick a time for one slot, or leave on Any Time for every class that day</p>
           </div>
 
           <!-- Lesson Selection -->
@@ -147,27 +147,27 @@
 </section>
 
 <script>
-// A class list needs a term, plus either a specific lesson or a day and a time —
-// the two cases reports.views.class_print knows how to build. Preview and print
-// share the rule so the two buttons can never disagree about what is printable.
+// A class list needs a term, plus either a specific lesson or a day — the two
+// cases reports.views.class_print knows how to build. The time only narrows a
+// day, and day='all' widens it to the week, so neither is required here.
+// Preview and print share the rule so the two buttons can never disagree about
+// what is printable.
 function formIsReady() {
   const term = document.getElementById('id_term').value;
   const day = document.getElementById('id_day').value;
   const lesson = document.getElementById('id_lesson').value;
-  const time = document.getElementById('id_time').value;
 
-  return Boolean((term && lesson) || (term && day && time));
+  return Boolean(term && (lesson || day));
 }
 
 function missingFieldsText() {
   const term = document.getElementById('id_term').value;
   const day = document.getElementById('id_day').value;
   const lesson = document.getElementById('id_lesson').value;
-  const time = document.getElementById('id_time').value;
 
   const missingFields = [];
   if (!term) missingFields.push("Term");
-  if (!(lesson || (day && time))) missingFields.push("Lesson or Day+Time");
+  if (!(lesson || day)) missingFields.push("Day or Lesson");
 
   return `Please select an option for: ${missingFields.join(", ")}`;
 }
@@ -205,7 +205,17 @@ document.addEventListener('DOMContentLoaded', function() {
       field.addEventListener('change', checkFormValidity);
     }
   });
-  
+
+  // Changing the day only refreshes the times; chain a lessons refresh off that
+  // swap so a lesson left selected from the previous day can't be printed — a
+  // specific lesson wins over the day filter in class_print.
+  document.body.addEventListener('htmx:afterSwap', function(evt) {
+    if (evt.target && evt.target.id === 'id_time') {
+      htmx.trigger('#id_time', 'change');
+    }
+    checkFormValidity();
+  });
+
   // Initial check
   checkFormValidity();
 });

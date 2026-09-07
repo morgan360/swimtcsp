@@ -71,6 +71,14 @@ git log --oneline -1
 echo '🐍 Activating virtual environment...'
 source DEV_VENV_PLACEHOLDER/bin/activate
 
+# Dev used to pull code but never touch the venv, so a requirements.txt change
+# deployed as a silent no-op: the files arrived, the packages did not, and dev
+# quietly ran a different dependency set from the one the repo pins. Mirrors
+# STEP 4 of deploy-to-production.sh, in the same position — after the pull, so
+# migrate below runs against the packages this commit actually asks for.
+echo '📦 Installing/updating packages...'
+pip install -r requirements.txt --upgrade --quiet
+
 # Dev has migration branches the repo does not, the same way production does. A
 # migration arriving from the repo alongside one of dev's own leaves two leaf
 # nodes, and migrate then refuses to run at all. Merge only when a conflict is

@@ -65,6 +65,9 @@ else
 fi
 
 echo '⬇️  Pulling latest code from GitHub...'
+# Remember where we were, so the dependency step below can tell whether
+# requirements.txt actually changed in this deploy.
+PRE_PULL_SHA=$(git rev-parse HEAD)
 git pull origin main
 git log --oneline -1
 
@@ -76,8 +79,46 @@ source DEV_VENV_PLACEHOLDER/bin/activate
 # quietly ran a different dependency set from the one the repo pins. Mirrors
 # STEP 4 of deploy-to-production.sh, in the same position — after the pull, so
 # migrate below runs against the packages this commit actually asks for.
-echo '📦 Installing/updating packages...'
-pip install -r requirements.txt --upgrade --quiet
+#
+# Only install when there is something to install. requirements.txt is pinned
+# with == throughout, so a plain `pip install -r` already installs the exact
+# pinned version of anything whose installed version no longer matches, and skips
+# the rest in seconds. `--upgrade` added nothing on top of that: it forced pip to
+# re-resolve and re-download all 200+ pins on every deploy, which is minutes of
+# CPU on a shared host — long enough for the host to kill the run part-way and
+# leave a package half-installed, as happened on production on 2026-09-19.
+#
+# The pip check also repairs a venv left broken by an earlier interrupted run,
+# even when requirements.txt itself is unchanged.
+NEEDS_INSTALL=""
+if ! git diff --quiet "$PRE_PULL_SHA" HEAD -- requirements.txt; then
+    NEEDS_INSTALL="requirements.txt changed in this pull"
+elif ! pip check >/dev/null 2>&1; then
+    NEEDS_INSTALL="the venv has broken or missing packages"
+fi
+
+if [ -n "$NEEDS_INSTALL" ]; then
+    echo "📦 Installing because: ${NEEDS_INSTALL}"
+    git diff --stat "$PRE_PULL_SHA" HEAD -- requirements.txt || true
+    pip install -r requirements.txt
+else
+    echo '📦 requirements.txt unchanged and venv intact — nothing to install'
+fi
+
+# Verify the environment before anything touches the database. An interrupted pip
+# leaves a package half-removed, and that otherwise surfaces much later as an
+# unbootable site rather than here as a failed deploy step.
+echo '🔎 Verifying the environment...'
+python -c "import django; print('   Django ' + django.get_version())" || {
+    echo '❌ Django cannot be imported — the venv is broken'
+    echo '   Repair with: pip install -r requirements.txt'
+    exit 1
+}
+pip check || {
+    echo '❌ pip reports broken requirements — aborting before the schema changes'
+    echo '   Repair with: pip install -r requirements.txt'
+    exit 1
+}
 
 # Dev has migration branches the repo does not, the same way production does. A
 # migration arriving from the repo alongside one of dev's own leaves two leaf
@@ -155,24 +196,50 @@ STAMP=$(date +%Y%m%d-%H%M%S)
 REMOTE_SCRIPT="dev-deploy-run-${STAMP}.sh"
 REMOTE_LOG="dev-deploy-${STAMP}.log"
 REMOTE_STATUS="dev-deploy-${STAMP}.status"
+REMOTE_PID="dev-deploy-${STAMP}.pid"
 SSH_OPTS="-o ServerAliveInterval=30 -o ServerAliveCountMax=6"
+
+# Exit code the follower uses for "the deploy process is gone but never wrote a
+# status file" — i.e. it was killed rather than having failed. Distinct from any
+# exit code the deploy itself can produce.
+VANISHED_EXIT=97
 
 echo "📤 Sending the deploy script to the server..."
 printf '%s\n' "$DEPLOY_SCRIPT" | ssh $SSH_OPTS ${DEV_HOST} "cat > ~/${REMOTE_SCRIPT}"
 
 echo "▶️  Launching it detached (survives a dropped connection)..."
-ssh $SSH_OPTS ${DEV_HOST} "cd ~ && setsid nohup bash -c 'bash ~/${REMOTE_SCRIPT} > ~/${REMOTE_LOG} 2>&1; echo \$? > ~/${REMOTE_STATUS}' < /dev/null > /dev/null 2>&1 &"
+# The PID file is what lets the follower tell "still working" from "killed". A
+# status file only ever appears if the deploy reached the end of its own shell;
+# when the host kills the process outright, nothing is written and the follower
+# would otherwise wait on a file that is never coming.
+ssh $SSH_OPTS ${DEV_HOST} "cd ~ && setsid nohup bash -c 'echo \$\$ > ~/${REMOTE_PID}; bash ~/${REMOTE_SCRIPT} > ~/${REMOTE_LOG} 2>&1; echo \$? > ~/${REMOTE_STATUS}' < /dev/null > /dev/null 2>&1 &"
 
 echo "   If this terminal dies, the deploy continues. Re-attach with:"
 echo "   ssh ${DEV_HOST} 'tail -f ~/${REMOTE_LOG}'"
 echo ""
 
+# Watching the PID as well as the status file is what stops this hanging forever.
+# On 2026-09-19 the production deploy was killed during its dependency step and
+# the equivalent loop there waited on a status file that no longer had anything
+# to write it.
 set +e
 ssh $SSH_OPTS ${DEV_HOST} "
     while [ ! -f ~/${REMOTE_LOG} ]; do sleep 1; done
     tail -n +1 -f ~/${REMOTE_LOG} &
     TAIL_PID=\$!
-    while [ ! -f ~/${REMOTE_STATUS} ]; do sleep 2; done
+    DEPLOY_PID=\$(cat ~/${REMOTE_PID} 2>/dev/null)
+    while [ ! -f ~/${REMOTE_STATUS} ]; do
+        if [ -n \"\$DEPLOY_PID\" ] && ! kill -0 \"\$DEPLOY_PID\" 2>/dev/null; then
+            # The process may have exited a moment ago and still be writing its
+            # status file, so re-check before calling it a kill.
+            sleep 3
+            [ -f ~/${REMOTE_STATUS} ] && break
+            sleep 2  # let tail flush whatever the deploy managed to log
+            kill \$TAIL_PID 2>/dev/null
+            exit ${VANISHED_EXIT}
+        fi
+        sleep 2
+    done
     sleep 2  # let tail flush the last lines before it is killed
     kill \$TAIL_PID 2>/dev/null
     exit \$(cat ~/${REMOTE_STATUS})
@@ -180,8 +247,22 @@ ssh $SSH_OPTS ${DEV_HOST} "
 DEPLOY_STATUS=$?
 set -e
 
-# Tidy the run script; keep the log, which is the record of what happened.
-ssh $SSH_OPTS ${DEV_HOST} "rm -f ~/${REMOTE_SCRIPT}; ls -1t ~/dev-deploy-*.log 2>/dev/null | tail -n +11 | xargs -r rm --" || true
+# Tidy the run script and PID file; keep the log, which is the record of what happened.
+ssh $SSH_OPTS ${DEV_HOST} "rm -f ~/${REMOTE_SCRIPT} ~/${REMOTE_PID}; ls -1t ~/dev-deploy-*.log 2>/dev/null | tail -n +11 | xargs -r rm --" || true
+
+if [ "$DEPLOY_STATUS" -eq "$VANISHED_EXIT" ]; then
+    echo ""
+    echo "❌ The dev deploy process was killed, not failed"
+    echo "   The host killed it part-way through, so it never wrote an exit code."
+    echo "   The last lines of the log above are the last thing it actually did."
+    echo ""
+    echo "   The venv may hold a half-installed package. Check with:"
+    echo "   ssh ${DEV_HOST} 'cd ~/${DEV_DIR} && ${DEV_VENV}/bin/pip check'"
+    echo "   Repair with: ssh ${DEV_HOST} 'cd ~/${DEV_DIR} && ${DEV_VENV}/bin/pip install -r requirements.txt'"
+    echo ""
+    echo "   Full log: ssh ${DEV_HOST} 'less ~/${REMOTE_LOG}'"
+    exit "$DEPLOY_STATUS"
+fi
 
 if [ "$DEPLOY_STATUS" -ne 0 ]; then
     echo ""

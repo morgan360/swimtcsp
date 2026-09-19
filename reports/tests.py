@@ -105,6 +105,28 @@ class ClassPrintScopeTests(TestCase):
         self.assertNotContains(single, 'Attendance sheet as specified by the pool')
         self.assertNotContains(single, '#}')
 
+    def test_the_single_sheet_prints_with_the_pages_own_styles(self):
+        # It used to copy the table into a blank window, which left this page's
+        # stylesheet behind: the teacher notes box is an empty div that is
+        # nothing but its border, so it came out invisible.
+        single = self._print(term='current', day='0', lesson=str(self.mon_early.id))
+        self.assertContains(single, 'teacher-notes-box')
+        self.assertContains(single, 'window.print()')
+        self.assertNotContains(single, 'print_class_list.js')
+
+    def test_the_sheets_leave_the_site_furniture_off_the_paper(self):
+        # Printing the page itself would otherwise put the navbar logo at the top
+        # of the first sheet and the footer at the foot of the last.
+        rule = ('nav, footer, #chatbot-widget, #message-container, '
+                '.print-backdrop { display: none !important; }')
+        for response in (
+            self._print(term='current', day='0'),
+            self._print(term='current', day='0', lesson=str(self.mon_early.id)),
+        ):
+            collapsed = ' '.join(response.content.decode().split())
+            self.assertIn('@media print', collapsed)
+            self.assertIn(rule, collapsed)
+
 
 class FilterOptionTests(TestCase):
     """The day/time/lesson dropdowns have to understand the whole-week option."""

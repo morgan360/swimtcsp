@@ -47,6 +47,24 @@
         [x-cloak] {
             display: none !important;
         }
+
+        /* Site furniture never belongs on paper. The report pages print
+           themselves with window.print(), which prints the whole page, so
+           without this the navbar logo lands at the top of the first sheet and
+           the footer at the foot of the last. .no-print is defined here too so
+           any page can mark its own on-screen-only parts without repeating the
+           rule. */
+        @media print {
+            .no-print { display: none !important; }
+
+            nav,
+            footer,
+            #chatbot-widget,
+            #message-container,
+            .print-backdrop {
+                display: none !important;
+            }
+        }
     </style>
 
     <!-- Favicon -->
@@ -68,7 +86,7 @@
 <div x-data="{ dark: false, drawerOpen: false }" class="relative min-h-screen">
 
     <!-- Background Pattern Overlay -->
-    <div class="fixed inset-0 opacity-10 pointer-events-none">
+    <div class="print-backdrop fixed inset-0 opacity-10 pointer-events-none">
         <div class="absolute inset-0 bg-gradient-to-r from-blue-600/20 to-purple-600/20"></div>
         <div class="absolute inset-0"
              style="background-image: radial-gradient(circle at 20% 50%, rgba(120, 119, 198, 0.3) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 50%), radial-gradient(circle at 40% 80%, rgba(120, 119, 198, 0.2) 0%, transparent 50%);"></div>

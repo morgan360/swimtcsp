@@ -11,11 +11,13 @@ from schools_bookings.models import ScoTerm, ScoEnrollment
 from schools.models import ScoSchool, ScoLessons
 from users.models import Swimling
 from .forms import ClassListForm
+from utils.decorators import staff_or_instructor_required
 
 
 today = date.today()
 
 
+@staff_or_instructor_required
 def enrollment_report(request):
     """Render the enrollment report page"""
     context = {
@@ -26,6 +28,7 @@ def enrollment_report(request):
     return render(request, 'reports/enrollment_report.html', context)
 
 
+@staff_or_instructor_required
 def enrollment_report_data(request):
     """AJAX endpoint for DataTables"""
     draw = int(request.GET.get('draw', 1))
@@ -209,6 +212,7 @@ TERM_WEEKS = 15
 PRINT_WARNING_THRESHOLD = 12
 
 
+@staff_or_instructor_required
 def class_print(request):
     """Print the attendance sheet for a single lesson, or for a slot, day or week.
 
@@ -360,6 +364,7 @@ def _school_filter_context(school_id=None, selected_day=None, selected_time=None
     return context
 
 
+@staff_or_instructor_required
 def school_class_list_view(request):
     selected_school = request.GET.get('school') or ''
     selected_term = request.GET.get('term') or ''
@@ -391,6 +396,7 @@ def school_class_list_view(request):
     return render(request, 'reports/school_class_list.html', context)
 
 
+@staff_or_instructor_required
 def update_school_filters(request):
     """HTMX endpoint to refresh term/day/time/lesson selects when school changes."""
     school_id = request.GET.get('school') or ''
@@ -415,6 +421,7 @@ def update_school_filters(request):
     return render(request, 'reports/partials/school_filter_controls.html', context)
 
 
+@staff_or_instructor_required
 def update_school_times(request):
     school_id = request.GET.get('school') or ''
     selected_day = request.GET.get('day') or ''
@@ -440,6 +447,7 @@ def update_school_times(request):
     })
 
 
+@staff_or_instructor_required
 def update_school_lessons(request):
     school_id = request.GET.get('school') or ''
     selected_day = request.GET.get('day') or ''
@@ -467,6 +475,7 @@ def update_school_lessons(request):
     })
 
 
+@staff_or_instructor_required
 def school_class_print(request):
     school_id = request.GET.get('school')
     term_id = request.GET.get('term')
@@ -668,6 +677,7 @@ def _build_school_enrollment_rows(terms, school_id=None, day=None):
     return rows, summary
 
 
+@staff_or_instructor_required
 def school_enrollment_report(request):
     schools = ScoSchool.objects.filter(school_lessons__isnull=False).distinct().order_by('name')
     day_choices = sorted({
@@ -707,6 +717,7 @@ def school_enrollment_report(request):
     return render(request, 'reports/school_enrollment_report.html', context)
 
 
+@staff_or_instructor_required
 def school_enrollment_report_data(request):
     term_filter = request.GET.get('term_filter', 'current')
     school_id = request.GET.get('school_id', '').strip()
@@ -734,6 +745,7 @@ def school_enrollment_report_data(request):
     })
 
 
+@staff_or_instructor_required
 def update_lessons(request):
     print("update_lessons:", request.GET)
     day = request.GET.get('day')
@@ -760,12 +772,14 @@ def update_lessons(request):
     lessons = lessons.order_by('day_of_week', 'start_time', 'name')
     return render(request, 'reports/partials/lesson_options.html', {'lessons': lessons})
 
+@staff_or_instructor_required
 def update_days(request):
     # Return all distinct days present in lessons (category removed)
     days = Product.objects.values_list('day_of_week', flat=True).distinct()
     day_choices = [(d, dict(Product.DAY_CHOICES)[d]) for d in days]
     return render(request, 'reports/partials/day_options.html', {'days': day_choices})
 
+@staff_or_instructor_required
 def update_times(request):
     day = request.GET.get('day')
     times = []
@@ -781,6 +795,7 @@ def update_times(request):
     return render(request, 'reports/partials/time_options.html', {'times': times})
 
 
+@staff_or_instructor_required
 def class_list_view(request):
     form = ClassListForm(request.GET or None)
     categories = Category.objects.all()
@@ -824,6 +839,7 @@ def class_list_view(request):
     })
 
 
+@staff_or_instructor_required
 def term_information(request):
     unique_schools = ScoSchool.objects.filter(
         id__in=ScoTerm.objects.values_list('school_id', flat=True).distinct()

@@ -53,11 +53,21 @@ admin.site.register(PublicSwimProduct, PublicSwimProductAdmin)
 @admin.register(PriceVariant)
 class PriceVariantAdmin(admin.ModelAdmin):
     list_display = ['product_name', 'variant', 'price']
+    # Every swim carries five variants, so this list is five times the length of
+    # the swims list and the day and category a price belongs to are only
+    # readable inside the product name. Filter on the product's own fields.
+    list_filter = [
+        ('product__day_of_week', ChoiceDropdownFilter),
+        ('product__category', RelatedDropdownFilter),
+    ]
+    # product_name reads through to the product on every row.
+    list_select_related = ('product', 'product__category')
 
     def product_name(self, obj):
         return obj.product.name
 
     product_name.short_description = 'Product'
+    product_name.admin_order_field = 'product__name'
 
 
 swims_admin_site.register(PublicSwimProduct, PublicSwimProductAdmin)

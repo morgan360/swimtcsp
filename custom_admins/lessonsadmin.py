@@ -17,22 +17,14 @@ import csv
 from django.shortcuts import redirect
 from utils.terms_utils import get_current_term
 
-# ✅ Custom Admin Site
-class LessonsAdminSite(AdminSite):
-    site_header = "🏫 Lessons Admin"
-    site_title = "Lessons Admin Portal"
-    index_title = "Manage Lesson Programs and Terms"
+from custom_admins.panels import operations_site
 
-    def each_context(self, request):
-        context = super().each_context(request)
-        context["custom_css"] = "css/shared_admin.css"
-        return context
+# ✅ Custom Admin Site
 
 
 # ✅ Exported instance
-lessons_admin_site = LessonsAdminSite(name="lessonsadmin")
-
-
+# Panel consolidation: this name now points at the shared panel.
+lessons_admin_site = operations_site
 # ✅ Admin for LessonEnrollment
 class LessonEnrollmentAdmin(admin.ModelAdmin):
     list_display = ["swimling", "simple_term", "lesson", "order_link"]
@@ -269,5 +261,5 @@ class SwimlingAutocompleteAdmin(admin.ModelAdmin):
 
 
 # ✅ Register the model to the custom admin site
-lessons_admin_site.register(Swimling, SwimlingAutocompleteAdmin)
+# Swimling is registered once, on Operations, by custom_admins.usersadmin.
 lessons_admin_site.register(LessonEnrollment, LessonEnrollmentAdmin)

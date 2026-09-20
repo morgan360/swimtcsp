@@ -3,14 +3,13 @@ from django.contrib import admin
 from anseo.models import AttendanceRoll, AttendanceEntry
 from utils.admin_filters import SearchableRelatedDropdownFilter
 
-
-class AttendanceAdminSite(AdminSite):
-    site_header = "Attendance Admin"
-    site_title = "Attendance Admin Portal"
-    index_title = "Manage Attendance Records"
+from custom_admins.panels import operations_site
 
 
-attendance_admin_site = AttendanceAdminSite(name='attendanceadmin')
+
+
+# Panel consolidation: this name now points at the shared panel.
+attendance_admin_site = operations_site
 @admin.register(AttendanceRoll, site=attendance_admin_site)
 class AttendanceRollAdmin(admin.ModelAdmin):
     list_display = ('product', 'term', 'window_start', 'window_end', 'created_by', 'created_at')

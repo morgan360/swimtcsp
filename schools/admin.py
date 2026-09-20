@@ -70,6 +70,5 @@ safe_register(schools_admin_site, ScoLessons, ScoLessonsAdmin)
 safe_register(schools_admin_site, ScoCategory, ScoCategoryAdmin)
 safe_register(schools_admin_site, ScoProgram, ScoProgramAdmin)
 safe_register(schools_admin_site, ScoSchool, ScoSchoolAdmin)
-safe_register(schools_admin_site, Order)
-safe_register(schools_admin_site, ScoTerm)
-safe_register(schools_admin_site, ScoEnrollment)
+# Orders live on the Finance panel (custom_admins.financeadmin).
+

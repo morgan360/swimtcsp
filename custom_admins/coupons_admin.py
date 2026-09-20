@@ -8,17 +8,14 @@ from django_admin_listfilter_dropdown.filters import RelatedDropdownFilter
 from django.contrib.auth import get_user_model
 from lessons.models import Product, Category, Program
 
+from custom_admins.panels import finance_site
+
 User = get_user_model()
 
 # ✅ Define the custom admin site *first*
-class CouponsAdminSite(AdminSite):
-    site_header = "Coupons Admin"
-    site_title = "Coupons Admin Portal"
-    index_title = "Manage Coupons"
 
-coupons_admin_site = CouponsAdminSite(name='couponsadmin')
-
-
+# Panel consolidation: this name now points at the shared panel.
+coupons_admin_site = finance_site
 # ✅ Minimal User admin for coupons site autocomplete
 class UserAutocompleteAdmin(admin.ModelAdmin):
     search_fields = ('email', 'first_name', 'last_name')

@@ -2,15 +2,13 @@ from django.contrib.admin import AdminSite
 from django.contrib import admin
 from instructors.models import InstructorAssignment, InstructorProfile
 
+from custom_admins.panels import operations_site
+
 # ✅ Step 1: Create the custom admin site
-class InstructorsAdminSite(AdminSite):
-    site_header = "Instructor Admin"
-    site_title = "Instructor Admin Portal"
-    index_title = "Instructor Management"
 
 # ✅ Step 2: Define the site *before* using it
-instructors_admin_site = InstructorsAdminSite(name='instructorsadmin')
-
+# Panel consolidation: this name now points at the shared panel.
+instructors_admin_site = operations_site
 # ✅ Step 3: Register models to this custom site (not the default one!)
 @admin.register(InstructorAssignment, site=instructors_admin_site)
 class InstructorAssignmentAdmin(admin.ModelAdmin):

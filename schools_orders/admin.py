@@ -18,4 +18,5 @@ class OrderAdmin(admin.ModelAdmin):
 
 
 # Register to Custom Admin
-lessons_admin_site.register(Order, OrderAdmin)
+# School orders live on the Finance panel. This previously registered onto the
+# lessons site, which was a copy-paste from lessons_orders/admin.py.

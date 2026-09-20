@@ -1,5 +1,7 @@
 from django.contrib import messages
-from django.contrib.admin import AdminSite, ModelAdmin, TabularInline, register
+from django.contrib.admin import ModelAdmin, TabularInline, register
+
+from custom_admins.base import MANAGER_AND_FULL_TIMER, TCSPAdminSite
 from django.db.models import Sum
 from django.utils.timezone import localtime
 from django.http import HttpResponse
@@ -42,11 +44,14 @@ from boipa.utils import verify_boipa_transaction
 # ---------------------------
 # Custom Finance Admin Site
 # ---------------------------
-class FinanceAdminSite(AdminSite):
-    site_header = "Finance Admin"
-    site_title = "Finance Admin Portal"
-    index_title = "Finance Overview"
+class FinanceAdminSite(TCSPAdminSite):
+    site_header = "💶 TCSP Finance"
+    site_title = "Finance"
+    index_title = "Orders, coupons, reconciliation and revenue"
     index_template = "admin/financeadmin/index.html"
+    panel_icon = "💶"
+    panel_path = "/finance/"
+    required_groups = MANAGER_AND_FULL_TIMER
 
     def get_urls(self):
         from django.urls import path
@@ -76,12 +81,12 @@ class FinanceAdminSite(AdminSite):
     def each_context(self, request):
         from django.urls import reverse
         context = super().each_context(request)
-        context['revenue_report_url'] = reverse('financeadmin:revenue_report')
-        context['reconciliation_url'] = reverse('financeadmin:reconciliation')
+        context['revenue_report_url'] = reverse('finance:revenue_report')
+        context['reconciliation_url'] = reverse('finance:reconciliation')
         return context
 
 
-finance_admin_site = FinanceAdminSite(name="financeadmin")
+finance_admin_site = FinanceAdminSite(name="finance")
 
 
 # ---------------------------

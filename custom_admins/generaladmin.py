@@ -21,20 +21,12 @@ from django.contrib.admin import SimpleListFilter
 import time
 import logging
 
+from custom_admins.panels import operations_site, settings_site
+
 ### START ###
 logger = logging.getLogger(__name__)
 
-class GeneralAdminSite(AdminSite):
-    site_header = "⚙️ General Admin"
-    site_title = "General Admin Portal"
-    index_title = "Manage Navigation, Timetables, and Settings"
 
-    def each_context(self, request):
-        context = super().each_context(request)
-        context["custom_css"] = "css/shared_admin.css"
-        return context
-
-general_admin_site = GeneralAdminSite(name='generaladmin')
 
 # ✅ Inline: show MenuItems under MenuGroup
 class MenuItemInline(admin.StackedInline):
@@ -214,10 +206,6 @@ class WaitingListAdmin(ExportActionMixin, admin.ModelAdmin):
     has_enrolled_sibling.short_description = "Sibling Enrolled"
     has_enrolled_sibling.boolean = True
 
-try:
-    general_admin_site.unregister(MenuItem)
-except admin.sites.NotRegistered:
-    pass
 
 
 ###### Skills ########
@@ -341,16 +329,16 @@ class AnnouncementAdmin(ModelAdmin):
 
 
 # ✅ Register all skills-related models
-general_admin_site.register(CoreAquaticSkill, CoreAquaticSkillAdmin)
-general_admin_site.register(Skill, SkillAdmin)
-general_admin_site.register(CategorySkill, CategorySkillAdmin)
-general_admin_site.register(SkillAssessment, SkillAssessmentAdmin)
-general_admin_site.register(InstructorNote, InstructorNoteAdmin)
+operations_site.register(CoreAquaticSkill, CoreAquaticSkillAdmin)
+operations_site.register(Skill, SkillAdmin)
+operations_site.register(CategorySkill, CategorySkillAdmin)
+operations_site.register(SkillAssessment, SkillAssessmentAdmin)
+operations_site.register(InstructorNote, InstructorNoteAdmin)
 
 # ✅ Register models to general admin site
-general_admin_site.register(MenuGroup, MenuGroupAdmin)
-general_admin_site.register(WaitingList, WaitingListAdmin)  # ✅ Registered here
-general_admin_site.register(MenuItem, MenuItemAdmin)
-general_admin_site.register(ChatbotQuery, ChatbotQueryAdmin)
-general_admin_site.register(FAQEntry, FAQEntryAdmin)
-general_admin_site.register(Announcement, AnnouncementAdmin)
+settings_site.register(MenuGroup, MenuGroupAdmin)
+operations_site.register(WaitingList, WaitingListAdmin)  # ✅ Registered here
+settings_site.register(MenuItem, MenuItemAdmin)
+settings_site.register(ChatbotQuery, ChatbotQueryAdmin)
+settings_site.register(FAQEntry, FAQEntryAdmin)
+settings_site.register(Announcement, AnnouncementAdmin)

@@ -31,4 +31,4 @@ class OrderAdmin(admin.ModelAdmin):
 
 
 # Register to Custom Admin Site Only
-lessons_admin_site.register(Order, OrderAdmin)
+# Lesson orders live on the Finance panel (custom_admins.financeadmin).

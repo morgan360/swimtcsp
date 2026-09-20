@@ -24,6 +24,9 @@ from users.resources import SwimlingResource, UserResource, GroupResource
 from lessons_bookings.models import LessonEnrollment, Term
 from lessons.models import Product
 
+from custom_admins.base import TCSPModelAdmin
+from custom_admins.panels import operations_site, settings_site
+
 
 
 
@@ -33,20 +36,10 @@ User = get_user_model()
 
 
 # 🔹 Admin site
-class UsersAdminSite(AdminSite):
-    site_header = '👤 Users Admin'
-    site_title = 'Users Admin Portal'
-    index_title = 'Manage Users, Swimlings, and Permissions'
-
-    def each_context(self, request):
-        context = super().each_context(request)
-        context["custom_css"] = "css/shared_admin.css"
-        return context
 
 
-users_admin_site = UsersAdminSite(name='usersadmin')
-
-
+# Panel consolidation: this name now points at the shared panel.
+users_admin_site = settings_site
 # 🔹 Inlines
 class SwimlingInline(admin.StackedInline):
     model = Swimling
@@ -79,8 +72,10 @@ class SwimlingAdmin(ImportExportMixin, admin.ModelAdmin):
     def guardian_link(self, obj):
         if obj.guardian:
             try:
+                # Operations carries a read-only guardian view; Managers get the
+                # editable one on Settings.
                 url = reverse(
-                    "usersadmin:%s_%s_change" % (
+                    "operations:%s_%s_change" % (
                         obj.guardian._meta.app_label,
                         obj.guardian._meta.model_name
                     ),
@@ -194,9 +189,58 @@ class TermAutocompleteAdmin(admin.ModelAdmin):
     def has_module_permission(self, request):
         return False
 
+# 🔹 Guardian lookup for the Operations panel.
+#
+# Desk staff answer the phone and need a parent's number, but editing users —
+# and with it staff status and group membership — belongs on Settings with the
+# Managers. So the same model is registered twice: fully on Settings, and
+# read-only here.
+class GuardianLookupAdmin(TCSPModelAdmin):
+    """Read-only view of a guardian and their swimmers."""
+
+    list_display = ("full_name", "email", "mobile_phone", "swimling_names")
+    search_fields = ("email", "first_name", "last_name", "mobile_phone")
+    list_filter = ("is_active",)
+    ordering = ("last_name", "first_name")
+    inlines = [SwimlingInline]
+
+    def get_queryset(self, request):
+        # Guardians only — the swimmer-less accounts are staff and customers.
+        return super().get_queryset(request).prefetch_related("swimling_set")
+
+    def full_name(self, obj):
+        return f"{obj.first_name} {obj.last_name or ''}".strip() or obj.email
+    full_name.short_description = "Name"
+    full_name.admin_order_field = "last_name"
+
+    def swimling_names(self, obj):
+        names = [f"{s.first_name} {s.last_name or ''}".strip() for s in obj.swimling_set.all()]
+        return ", ".join(names) if names else "—"
+    swimling_names.short_description = "Swimmers"
+
+    # Reaching the Operations panel at all already required is_staff and passing
+    # the panel's own check, so viewing is granted here rather than depending on
+    # per-model Django permissions, which desk accounts do not carry.
+    def has_view_permission(self, request, obj=None):
+        return request.user.is_active and request.user.is_staff
+
+    def has_module_permission(self, request):
+        return self.has_view_permission(request)
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
 # 🔹 Register all
 users_admin_site.register(User, UserAdmin)
-users_admin_site.register(Swimling, SwimlingAdmin)
+operations_site.register(User, GuardianLookupAdmin)
+operations_site.register(Swimling, SwimlingAdmin)
 users_admin_site.register(Group, GroupAdmin)
 users_admin_site.register(Product, ProductAutocompleteAdmin)
 users_admin_site.register(Term, TermAutocompleteAdmin)

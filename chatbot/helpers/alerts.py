@@ -118,7 +118,7 @@ def _admin_url(query, request):
     """
     try:
         path = reverse(
-            "generaladmin:chatbot_chatbotquery_change", args=[query.pk]
+            "settings:chatbot_chatbotquery_change", args=[query.pk]
         )
     except NoReverseMatch:
         return None

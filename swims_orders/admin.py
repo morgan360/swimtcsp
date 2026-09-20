@@ -8,7 +8,7 @@ from django.utils import timezone
 from django.urls import reverse
 from django.utils.safestring import mark_safe
 from django.http import HttpResponse
-from custom_admins.swimsadmin import swims_admin_site
+from custom_admins.panels import finance_site
 from django_admin_listfilter_dropdown.filters import DropdownFilter, RelatedDropdownFilter, ChoiceDropdownFilter
 from import_export.admin import ImportExportModelAdmin
 from .resources import OrderResource, OrderItemResource
@@ -99,7 +99,7 @@ class TodaySwimOrderAdmin(admin.ModelAdmin):
         return False  # Prevent changing orders through this admin
 
 
-swims_admin_site.register(Order, SwimOrderAdmin)
+# Swim orders live on the Finance panel (custom_admins.financeadmin).
 
 
 # Import order items
@@ -108,7 +108,7 @@ class OrderItemAdmin(ImportExportModelAdmin):
     resource_class = OrderItemResource
 
 
-swims_admin_site.register(OrderItem, OrderItemAdmin)
+finance_site.register(OrderItem, OrderItemAdmin)
 
 
 # see next seven days

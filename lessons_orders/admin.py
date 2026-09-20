@@ -11,23 +11,13 @@ class OrderItemInline(admin.TabularInline):
     autocomplete_fields = ['product', 'term']
 
 
-@admin.action(description="Refund selected orders via BOIPA")
-def refund_orders(modeladmin, request, queryset):
-    from boipa.utils import refund_boipa_transaction
-
-    for order in queryset:
-        if order.paid and order.txId:
-            result = refund_boipa_transaction(order.txId, order.amount, order=order)
-            if result["success"]:
-                order.payment_status = "refunded"
-                order.save()
-
+# refund_orders moved to the Finance panel (custom_admins.financeadmin),
+# where it is gated to Manager/Full-Timer and asks for confirmation.
 
 class OrderAdmin(TCSPModelAdmin):
     list_display = ("id", "user", "paid", "payment_status", "amount", "created")
     list_filter = ['paid', 'created', 'updated']
     search_fields = ['user__email', 'user__first_name', 'user__last_name', 'id']
-    actions = [refund_orders]
     inlines = [OrderItemInline]
 
 

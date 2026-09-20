@@ -141,6 +141,17 @@ class UserAdmin(HijackUserAdminMixin, ImportExportMixin, BaseUserAdmin):
     )
 
     readonly_fields = ('user_permissions',)
+
+    def get_readonly_fields(self, request, obj=None):
+        """Only superusers may grant staff or superuser status.
+
+        These fields were editable by anyone who could reach this page, which
+        made the user admin a privilege-escalation route.
+        """
+        fields = list(super().get_readonly_fields(request, obj))
+        if not request.user.is_superuser:
+            fields += ["is_staff", "is_superuser", "groups"]
+        return fields
     add_fieldsets = (
         (None, {
             'classes': ('wide',),

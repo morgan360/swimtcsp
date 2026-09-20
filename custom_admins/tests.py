@@ -190,3 +190,80 @@ class ManagementPageTests(TestCase):
         user = make_user("manager@tcsp.ie", ["Manager"])
         self.client.force_login(user)
         self.assertEqual(self.client.get("/management/").status_code, 200)
+
+
+class DangerousActionTests(TestCase):
+    """Actions that move money or overwrite tables must ask first."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.root = make_user("root@tcsp.ie", superuser=True)
+
+    def setUp(self):
+        self.client.force_login(self.root)
+
+    def test_refund_shows_a_confirmation_page_before_refunding(self):
+        from lessons_orders.models import Order
+
+        order = Order.objects.create(user=self.root, amount=50, paid=True, txId="TX1")
+        response = self.client.post(
+            reverse("finance:lessons_orders_order_changelist"),
+            {"action": "refund_orders", "_selected_action": [str(order.pk)]})
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "cannot be undone")
+        order.refresh_from_db()
+        self.assertNotEqual(order.payment_status, "refunded")
+
+    def test_sync_terms_shows_a_confirmation_page(self):
+        from lessons_bookings.models import Term
+
+        term = Term.objects.create(
+            start_date="2026-01-05", end_date="2026-03-27",
+            rebooking_date="2025-12-01", booking_date="2025-12-08")
+        response = self.client.post(
+            reverse("operations:lessons_bookings_term_changelist"),
+            {"action": "sync_terms_now", "_selected_action": [str(term.pk)]})
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "rewrites all")
+
+
+class PaymentRecordsAreReadOnlyTests(TestCase):
+    """Gateway records were fully editable; staff could rewrite a txId."""
+
+    def test_notification_admins_refuse_edits(self):
+        from django.contrib import admin as dj_admin
+
+        from boipa.models import (LessonOrderPaymentNotification,
+                                  SchoolOrderPaymentNotification,
+                                  SwimOrderPaymentNotification)
+        request = type("R", (), {"user": make_user("root@tcsp.ie", superuser=True)})()
+        for model in (SwimOrderPaymentNotification, LessonOrderPaymentNotification,
+                      SchoolOrderPaymentNotification):
+            with self.subTest(model=model.__name__):
+                ma = dj_admin.site._registry[model]
+                self.assertFalse(ma.has_add_permission(request))
+                self.assertFalse(ma.has_change_permission(request))
+                self.assertFalse(ma.has_delete_permission(request))
+                self.assertIn("txId", ma.get_readonly_fields(request))
+                self.assertIn("amount", ma.get_readonly_fields(request))
+
+
+class StaffFlagsAreSuperuserOnlyTests(TestCase):
+    """The user admin was a privilege-escalation route."""
+
+    def test_non_superuser_cannot_edit_staff_flags(self):
+        from django.contrib import admin as dj_admin
+
+        from custom_admins.panels import settings_site
+        manager = make_user("manager@tcsp.ie", ["Manager"])
+        ma = settings_site._registry[User]
+        readonly = ma.get_readonly_fields(type("R", (), {"user": manager})())
+        for field in ("is_staff", "is_superuser", "groups"):
+            self.assertIn(field, readonly)
+
+    def test_superuser_can_edit_staff_flags(self):
+        from custom_admins.panels import settings_site
+        root = make_user("root@tcsp.ie", superuser=True)
+        ma = settings_site._registry[User]
+        readonly = ma.get_readonly_fields(type("R", (), {"user": root})())
+        self.assertNotIn("is_staff", readonly)

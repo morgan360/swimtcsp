@@ -1,0 +1,45 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls %}
+
+{% block breadcrumbs %}
+  <div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">{% translate 'Home' %}</a>
+    &rsaquo; <a href="../">{{ opts.verbose_name_plural|capfirst }}</a>
+    &rsaquo; Refund orders
+  </div>
+{% endblock %}
+
+{% block content %}
+  <h1>Refund {{ refundable|length }} order{{ refundable|length|pluralize }}?</h1>
+
+  <p><strong>This moves real money and cannot be undone from here.</strong>
+     Each refund is sent to BOIPA immediately.</p>
+
+  {% if refundable %}
+    <ul>
+      {% for order in refundable %}
+        <li>#{{ order.id }} — {{ order.user }} — €{{ order.amount }} — txId {{ order.txId }}</li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+
+  {% if skipped %}
+    <p>{{ skipped|length }} selected order{{ skipped|length|pluralize }} will be
+       skipped — unpaid, already refunded, or with no transaction id:</p>
+    <ul>
+      {% for order in skipped %}<li>#{{ order.id }} — {{ order.user }}</li>{% endfor %}
+    </ul>
+  {% endif %}
+
+  <form method="post">
+    {% csrf_token %}
+    {% for order in queryset %}
+      <input type="hidden" name="_selected_action" value="{{ order.pk }}">
+    {% endfor %}
+    <input type="hidden" name="action" value="refund_orders">
+    <input type="hidden" name="confirmed" value="yes">
+    <input type="submit" value="Yes, refund {{ refundable|length }} order{{ refundable|length|pluralize }}"
+           {% if not refundable %}disabled{% endif %}>
+    <a href="../" class="button cancel-link">Cancel</a>
+  </form>
+{% endblock %}

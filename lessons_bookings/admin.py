@@ -1,4 +1,5 @@
 from django.contrib import admin, messages
+from django.shortcuts import render
 from django.contrib.admin import SimpleListFilter
 from import_export.admin import ImportExportMixin
 from .models import Term, LessonAssignment, LessonEnrollment
@@ -156,6 +157,18 @@ class TermAdmin(ImportExportMixin, TCSPModelAdmin):
 
     @admin.action(description="🔄 Sync Terms from Remote MySQL")
     def sync_terms_now(self, request, queryset):
+        """Overwrite the local Term table from the remote database.
+
+        It ignores the selection — picking one term rewrites all of them — so it
+        asks first.
+        """
+        if request.POST.get("confirmed") != "yes":
+            return render(request, "admin/lessons_bookings/sync_terms_confirmation.html", {
+                **self.admin_site.each_context(request),
+                "opts": self.model._meta,
+                "queryset": queryset,
+                "term_count": self.model.objects.count(),
+            })
         try:
             sync_terms_from_remote()
             self.message_user(request, "✅ Terms successfully synced from remote database.", messages.SUCCESS)

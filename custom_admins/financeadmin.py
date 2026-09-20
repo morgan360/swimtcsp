@@ -1,4 +1,5 @@
-from django.contrib import messages
+from django.contrib import admin, messages
+from django.shortcuts import render
 from django.contrib.admin import ModelAdmin, TabularInline, register
 
 from custom_admins.base import MANAGER_AND_FULL_TIMER, TCSPAdminSite, TCSPModelAdmin
@@ -115,7 +116,7 @@ class BaseOrderAdmin(TCSPModelAdmin):
     )
     search_fields = ("id", "user__email", "txId")
     ordering = ("-created",)
-    actions = ["export_to_csv", "verify_with_boipa"]
+    actions = ["export_to_csv", "verify_with_boipa", "refund_orders"]
 
     # ✅ Default: show only paid orders
     def get_queryset(self, request):
@@ -178,6 +179,57 @@ class BaseOrderAdmin(TCSPModelAdmin):
     boipa_reconciled_display.admin_order_field = "boipa_reconciled"
 
     # ✅ Admin action: Verify with BOIPA
+    @admin.action(description="Refund selected orders via BOIPA")
+    def refund_orders(self, request, queryset):
+        """Refund through BOIPA, behind a confirmation page.
+
+        This previously lived on the lessons panel, reachable by any staff
+        member, and fired the moment you picked it from the dropdown — no
+        confirmation, no error handling, no report of what happened.
+        """
+        from boipa.utils import refund_boipa_transaction
+
+        refundable, skipped = [], []
+        for order in queryset:
+            if order.paid and getattr(order, "txId", None) and order.payment_status != "refunded":
+                refundable.append(order)
+            else:
+                skipped.append(order)
+
+        if request.POST.get("confirmed") != "yes":
+            return render(request, "admin/financeadmin/refund_confirmation.html", {
+                **self.admin_site.each_context(request),
+                "opts": self.model._meta,
+                "queryset": queryset,
+                "refundable": refundable,
+                "skipped": skipped,
+            })
+
+        done, failed = 0, 0
+        for order in refundable:
+            try:
+                result = refund_boipa_transaction(order.txId, order.amount, order=order)
+            except Exception as exc:
+                failed += 1
+                messages.error(request, f"Order #{order.id}: refund raised {exc}")
+                continue
+            if result.get("success"):
+                order.payment_status = "refunded"
+                order.save(update_fields=["payment_status"])
+                done += 1
+            else:
+                failed += 1
+                messages.error(request, f"Order #{order.id}: BOIPA refused the refund "
+                                        f"({result.get('message', 'no reason given')})")
+
+        if done:
+            messages.success(request, f"Refunded {done} order(s).")
+        if skipped:
+            messages.warning(request, f"Skipped {len(skipped)} order(s) — unpaid, "
+                                      "already refunded, or with no transaction id.")
+        if not done and not failed:
+            messages.info(request, "Nothing was refunded.")
+
     def verify_with_boipa(self, request, queryset):
         success, fail = 0, 0
         for order in queryset:

@@ -1,0 +1,21 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block content %}
+  <h1>Sync terms from the remote database?</h1>
+
+  <p><strong>This rewrites all {{ term_count }} local term{{ term_count|pluralize }}</strong>
+     from the remote MySQL database, whatever you selected — the selection is
+     ignored. Booking phases and dates across the site depend on these records.</p>
+
+  <form method="post">
+    {% csrf_token %}
+    {% for obj in queryset %}
+      <input type="hidden" name="_selected_action" value="{{ obj.pk }}">
+    {% endfor %}
+    <input type="hidden" name="action" value="sync_terms_now">
+    <input type="hidden" name="confirmed" value="yes">
+    <input type="submit" value="Yes, overwrite all terms">
+    <a href="../" class="button cancel-link">Cancel</a>
+  </form>
+{% endblock %}

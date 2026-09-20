@@ -1,11 +1,23 @@
 from datetime import date, time, timedelta
 
+from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
 from django.test import TestCase
 from django.urls import reverse
 
 from lessons.models import Category, Product, Program
 from lessons_bookings.models import LessonEnrollment, Term
 from users.models import Swimling
+
+User = get_user_model()
+
+
+def make_staff(email="desk@tcsp.ie"):
+    """create_user hardcodes is_staff=False, so promote afterwards."""
+    user = User.objects.create_user(email=email, password="pw", first_name="Desk")
+    user.is_staff = True
+    user.save(update_fields=["is_staff"])
+    return user
 
 
 class ClassPrintScopeTests(TestCase):
@@ -36,6 +48,9 @@ class ClassPrintScopeTests(TestCase):
             LessonEnrollment.objects.create(
                 lesson=lesson, swimling=cls.swimling, term=cls.term
             )
+
+    def setUp(self):
+        self.client.force_login(make_staff())
 
     @classmethod
     def _make_product(cls, day_of_week, start_time):
@@ -146,6 +161,9 @@ class FilterOptionTests(TestCase):
             start_time=time(18, 30), end_time=time(19, 15), active=True,
         )
 
+    def setUp(self):
+        self.client.force_login(make_staff())
+
     def test_times_for_all_days_span_the_week(self):
         response = self.client.get(reverse('reports:update-times'), {'day': 'all'})
         self.assertEqual(response.context['times'], ['17:00', '18:30'])
@@ -161,3 +179,55 @@ class FilterOptionTests(TestCase):
     def test_day_options_offer_the_whole_week(self):
         response = self.client.get(reverse('reports:update-days'))
         self.assertContains(response, 'value="all"')
+
+
+class ReportAccessTests(TestCase):
+    """The sheets carry children's names beside their medical notes.
+
+    They were reachable anonymously; these tests pin down who may see them.
+    """
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.staff = make_staff()
+        cls.instructor = User.objects.create_user(
+            email="coach@tcsp.ie", password="pw", first_name="Coach"
+        )
+        cls.instructor.groups.add(Group.objects.create(name="instructor"))
+        cls.guardian = User.objects.create_user(
+            email="parent@example.com", password="pw", first_name="Parent"
+        )
+        cls.guardian.groups.add(Group.objects.create(name="Guardian"))
+
+    def test_anonymous_visitors_are_sent_to_log_in(self):
+        response = self.client.get(reverse('reports:class_print'), {'lesson': '1'})
+        self.assertEqual(response.status_code, 302)
+        self.assertIn('/accounts/login/', response['Location'])
+
+    def test_guardians_are_refused(self):
+        self.client.force_login(self.guardian)
+        self.assertEqual(self.client.get(reverse('reports:update-days')).status_code, 403)
+
+    def test_instructors_are_allowed(self):
+        """Instructors are not is_staff, but the sheets are printed for them."""
+        self.client.force_login(self.instructor)
+        self.assertEqual(self.client.get(reverse('reports:update-days')).status_code, 200)
+
+    def test_staff_are_allowed(self):
+        self.client.force_login(self.staff)
+        self.assertEqual(self.client.get(reverse('reports:update-days')).status_code, 200)
+
+    def test_every_routed_report_view_refuses_anonymous_visitors(self):
+        import re
+
+        from reports import urls as report_urls
+
+        names = sorted({p.name for p in report_urls.urlpatterns if p.name})
+        self.assertTrue(names)
+        for name in names:
+            with self.subTest(view=name):
+                response = self.client.get(reverse(f'reports:{name}'))
+                self.assertEqual(
+                    response.status_code, 302,
+                    f"reports:{name} did not redirect an anonymous visitor",
+                )

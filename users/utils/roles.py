@@ -6,6 +6,8 @@ GUARDIAN_GROUPS: tuple[str, ...] = ("guardian", "Guardian")
 CUSTOMER_GROUPS: tuple[str, ...] = ("customer", "Customer")
 # School users currently map to several names in group_filters
 SCHOOL_GROUPS: tuple[str, ...] = ("zion", "bishopgalvin", "bishop_galvin", "Schools")
+# Instructors are not staff, but teach at poolside and need the class sheets
+INSTRUCTOR_GROUPS: tuple[str, ...] = ("instructor", "instructors", "Instructor", "Instructors", "assistant")
 
 
 def is_member_of_any(user, groups: Iterable[str]) -> bool:
@@ -39,3 +41,10 @@ def is_school(user, include_superuser: bool = True) -> bool:
     if include_superuser and getattr(user, "is_superuser", False):
         return True
     return is_member_of_any(user, SCHOOL_GROUPS)
+
+
+def is_instructor(user, include_superuser: bool = True) -> bool:
+    """Instructor role check (supports the several casings in use)."""
+    if include_superuser and getattr(user, "is_superuser", False):
+        return True
+    return is_member_of_any(user, INSTRUCTOR_GROUPS)

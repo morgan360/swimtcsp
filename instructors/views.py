@@ -1,4 +1,6 @@
 from django.contrib.auth.decorators import login_required
+
+from utils.decorators import staff_or_instructor_required
 from django.shortcuts import render, get_object_or_404, redirect
 from types import SimpleNamespace
 from datetime import date as dt_date, time as dt_time
@@ -355,6 +357,7 @@ def evaluate_swimling_progress(request, swimling_id):
         },
     )### Skill Charts ###
 
+@staff_or_instructor_required
 def category_skill_matrix(request):
     # Categories and their skills
     categories = Category.objects.prefetch_related(
@@ -369,6 +372,7 @@ def category_skill_matrix(request):
         'cas_list': cas_list,
     })
 
+@staff_or_instructor_required
 def generate_skill_report(request, swimling_id):
     swimling = get_object_or_404(Swimling, id=swimling_id)
 

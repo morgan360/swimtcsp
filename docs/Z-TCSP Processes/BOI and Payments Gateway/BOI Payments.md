@@ -32,11 +32,13 @@ There are 3 integration modes available for the Hosted Payment Page:
 
 merchant ID: 100121
 
-The Merchant id is 100121, Its Brand id is 1001210000, API password is u0AYACBNI2643G87wk4o
+The Merchant id is 100121, Its Brand id is 1001210000. The API password is not recorded here —
+it lives in `.env` as `BOIPA_PASSWORD`. Never paste a password into this repository: it is public.
 
 New Message UAT Test Mode
 
-MID: 100121 Brand ID: 1001210000 API Password: qWGEJQQAkhROSTGpwS5O
+MID: 100121 Brand ID: 1001210000. The UAT API password is not recorded here — ask BOIPA support
+(reply to the Jira thread from ecommerce@boipa.com, keeping the subject intact).
 
 Please ensure test mode is ticked on the back end. Card Number: 4111 1111 1111 1111 CVV: 111 Expiry: 12/23\
 

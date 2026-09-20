@@ -44,7 +44,7 @@ This guide explains how to test your TCSP payment integration with BOIPA's sandb
 ```bash
 # BOIPA Sandbox Configuration
 BOIPA_MERCHANT_ID=100121
-BOIPA_PASSWORD=qWGEJQQAkhROSTGpwS5O
+BOIPA_PASSWORD=<sandbox password — ask BOIPA support, do not commit it>
 BOIPA_TOKEN_URL=https://apiuat.test.boipapaymentgateway.com/token
 BOIPA_PAYMENT_URL=https://apiuat.test.boipapaymentgateway.com/payments
 HPP_FORM=https://cashierui-apiuat.test.boipapaymentgateway.com/

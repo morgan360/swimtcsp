@@ -14,6 +14,7 @@ from import_export.admin import ImportExportModelAdmin
 from .resources import OrderResource, OrderItemResource
 from django.utils import timezone
 from datetime import timedelta
+from custom_admins.base import TCSPModelAdmin
 
 class SwimOrderItemInline(admin.TabularInline):
     model = OrderItem
@@ -44,7 +45,7 @@ export_to_csv.short_description = 'Export to CSV'
 
 
 @admin.register(Order)
-class SwimOrderAdmin(ImportExportModelAdmin):
+class SwimOrderAdmin(ImportExportModelAdmin, TCSPModelAdmin):
     resource_class = OrderResource
     list_display = ['id', 'get_product_name', 'short_booking_day', 'booking', 'paid', 'user', 'created']
     list_filter = ['booking', 'paid']
@@ -77,7 +78,7 @@ class OrderProxy(Order):
 
 
 @admin.register(OrderProxy)
-class TodaySwimOrderAdmin(admin.ModelAdmin):
+class TodaySwimOrderAdmin(TCSPModelAdmin):
     list_display = ['id', 'booking', 'paid', 'user', 'created']
     list_filter = ['booking', 'paid']
     ordering = ['-created']
@@ -104,7 +105,7 @@ class TodaySwimOrderAdmin(admin.ModelAdmin):
 
 # Import order items
 @admin.register(OrderItem)
-class OrderItemAdmin(ImportExportModelAdmin):
+class OrderItemAdmin(ImportExportModelAdmin, TCSPModelAdmin):
     resource_class = OrderItemResource
 
 
@@ -123,7 +124,7 @@ class OrderNext7DaysProxy(Order):
 
 
 @admin.register(OrderNext7DaysProxy)
-class UpcomingSwimOrderAdmin(admin.ModelAdmin):
+class UpcomingSwimOrderAdmin(TCSPModelAdmin):
     list_display = ['id', 'booking', 'paid', 'user', 'created']
     list_filter = ['booking', 'paid']
     ordering = ['booking']  # Orders are ordered by booking date

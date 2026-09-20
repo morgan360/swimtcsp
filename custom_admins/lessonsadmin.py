@@ -18,6 +18,7 @@ from django.shortcuts import redirect
 from utils.terms_utils import get_current_term
 
 from custom_admins.panels import operations_site
+from custom_admins.base import TCSPModelAdmin
 
 # ✅ Custom Admin Site
 
@@ -26,7 +27,10 @@ from custom_admins.panels import operations_site
 # Panel consolidation: this name now points at the shared panel.
 lessons_admin_site = operations_site
 # ✅ Admin for LessonEnrollment
-class LessonEnrollmentAdmin(admin.ModelAdmin):
+class LessonEnrollmentAdmin(TCSPModelAdmin):
+    # Walked by order_link/simple_term, which list_display cannot reveal.
+    list_select_related_extra = ("order", "term")
+
     list_display = ["swimling", "simple_term", "lesson", "order_link"]
     list_display_links = ("swimling",)
     autocomplete_fields = ["swimling", "lesson"]
@@ -246,18 +250,6 @@ class LessonEnrollmentAdmin(admin.ModelAdmin):
     class Media:
         js = ("js/add_print_button.js",)  # 👈 still adds Print button in admin toolbar
 
-# ✅ Lightweight admin to power Swimling autocomplete while hiding it from the menu
-class SwimlingAutocompleteAdmin(admin.ModelAdmin):
-    search_fields = [
-        "first_name",
-        "last_name",
-        "guardian__first_name",
-        "guardian__last_name",
-        "guardian__email",
-    ]
-
-    def has_module_permission(self, request):  # hide from the left nav
-        return False
 
 
 # ✅ Register the model to the custom admin site

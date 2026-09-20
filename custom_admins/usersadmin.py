@@ -57,7 +57,10 @@ class LessonEnrollmentInline(admin.TabularInline):
 
 
 # 🔹 Swimling Admin
-class SwimlingAdmin(ImportExportMixin, admin.ModelAdmin):
+class SwimlingAdmin(ImportExportMixin, TCSPModelAdmin):
+    # Walked by guardian_link, which list_display cannot reveal.
+    list_select_related_extra = ("guardian",)
+
     resource_class = SwimlingResource
     inlines = [LessonEnrollmentInline]
     list_display = ['first_name', 'last_name', 'guardian_link']
@@ -168,7 +171,7 @@ class UserAdmin(HijackUserAdminMixin, ImportExportMixin, BaseUserAdmin):
 
 
 # 🔹 Group Admin
-class GroupAdmin(BaseGroupAdmin, ImportExportModelAdmin):
+class GroupAdmin(BaseGroupAdmin, ImportExportModelAdmin, TCSPModelAdmin):
     resource_class = GroupResource
 
 
@@ -179,12 +182,12 @@ except admin.sites.AlreadyRegistered:
     pass
 
 # 🔹 Autocomplete support for Product and Term (powers autocomplete_fields in inlines)
-class ProductAutocompleteAdmin(admin.ModelAdmin):
+class ProductAutocompleteAdmin(TCSPModelAdmin):
     search_fields = ['name']
     def has_module_permission(self, request):
         return False
 
-class TermAutocompleteAdmin(admin.ModelAdmin):
+class TermAutocompleteAdmin(TCSPModelAdmin):
     search_fields = ['id']
     def has_module_permission(self, request):
         return False

@@ -1,0 +1,87 @@
+/* Force the top admin header bar to accommodate the logo */
+:root {
+  --primary-color: #00b5ad; /* Teal */
+}
+#header {
+  background-color: var(--primary-color) !important;
+  color: white !important;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  padding-left: 1rem;
+  overflow: visible;
+}
+
+#header img {
+  height: 60px;
+  object-fit: contain;
+}
+.admin-link {
+  display: block;
+  font-size: 1rem; /* Smaller and consistent */
+  padding: 0.4rem 0.75rem;
+  border-radius: 4px;
+  color: var(--text-dark); /* Default text color */
+  text-decoration: none;
+  transition: background-color 0.2s ease;
+}
+
+.admin-link:hover {
+  background-color: #f0f0f0;
+}
+
+.admin-link.is-active {
+  background-color: #e0f7fa; /* Soft highlight */
+  color: var(--primary-color); /* Make text stand out */
+  font-weight: 600;
+}
+/* ------------------------------------------------------------------
+   Panel switcher
+   Replaces the hand-written link list that previously appeared only on
+   index pages. Rendered from TCSPAdminSite.each_context, so it lists only
+   the panels the signed-in user may actually open.
+   ------------------------------------------------------------------ */
+.tcsp-brand {
+  display: flex;
+  align-items: center;
+  padding-left: 1rem;
+  text-decoration: none;
+}
+.tcsp-brand img { height: 60px; margin-right: 1rem; }
+.tcsp-brand span { color: #fff; font-size: 1.5rem; font-weight: 600; }
+
+.tcsp-panels {
+  display: flex;
+  gap: .5rem;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-left: auto;
+  padding-right: 1rem;
+}
+.tcsp-panel {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  padding: .4rem .85rem;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: .95rem;
+  line-height: 1.2;
+  color: #fff;
+  text-decoration: none;
+  background: rgba(255, 255, 255, .16);
+  border: 1px solid rgba(255, 255, 255, .28);
+  white-space: nowrap;
+}
+.tcsp-panel:hover,
+.tcsp-panel:focus-visible { background: rgba(255, 255, 255, .3); color: #fff; }
+.tcsp-panel.is-current {
+  background: #fff;
+  color: #00706c;
+  border-color: #fff;
+}
+
+@media (max-width: 767px) {
+  #header { height: auto; flex-wrap: wrap; padding-bottom: .5rem; }
+  .tcsp-panels { margin-left: 0; padding: .5rem 1rem 0; width: 100%; }
+}

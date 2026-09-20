@@ -1,7 +1,7 @@
 from django.contrib import messages
 from django.contrib.admin import ModelAdmin, TabularInline, register
 
-from custom_admins.base import MANAGER_AND_FULL_TIMER, TCSPAdminSite
+from custom_admins.base import MANAGER_AND_FULL_TIMER, TCSPAdminSite, TCSPModelAdmin
 from django.db.models import Sum
 from django.utils.timezone import localtime
 from django.http import HttpResponse
@@ -92,7 +92,10 @@ finance_admin_site = FinanceAdminSite(name="finance")
 # ---------------------------
 # Base Admin for all Orders
 # ---------------------------
-class BaseOrderAdmin(ModelAdmin):
+class BaseOrderAdmin(TCSPModelAdmin):
+    # Walked by user_email, which list_display cannot reveal.
+    list_select_related_extra = ("user",)
+
     list_display = (
         "order_number",
         'txId',

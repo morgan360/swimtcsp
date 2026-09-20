@@ -146,3 +146,47 @@ class GuardianLookupTests(TestCase):
         self.client.force_login(self.desk)
         self.assertNotEqual(
             self.client.get(reverse("settings:users_user_changelist")).status_code, 200)
+
+
+class PanelSwitcherTests(TestCase):
+    """The switcher appears on every page and lists only reachable panels.
+
+    It previously existed only on index pages, so from a changelist — where
+    staff spend their time — there was no way to reach another panel.
+    """
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.desk = make_user("desk@tcsp.ie", ["Desk"])
+        cls.manager = make_user("manager@tcsp.ie", ["Manager"])
+        # Reaching a changelist needs Django model permissions as well as the
+        # panel's own check, and those are granted per group in production.
+        cls.root = make_user("root@tcsp.ie", superuser=True)
+
+    def test_desk_staff_see_only_operations(self):
+        self.client.force_login(self.desk)
+        html = self.client.get(reverse("operations:index")).content.decode()
+        self.assertIn('href="/operations/"', html)
+        self.assertNotIn('href="/finance/"', html)
+        self.assertNotIn('href="/settings-admin/"', html)
+
+    def test_managers_see_all_three(self):
+        self.client.force_login(self.manager)
+        html = self.client.get(reverse("operations:index")).content.decode()
+        for url in ("/operations/", "/finance/", "/settings-admin/"):
+            self.assertIn(f'href="{url}"', html)
+
+    def test_switcher_is_present_on_a_changelist_not_just_the_index(self):
+        self.client.force_login(self.root)
+        html = self.client.get(reverse("operations:users_swimling_changelist")).content.decode()
+        self.assertIn('class="tcsp-panels"', html)
+        self.assertIn('href="/finance/"', html)
+
+
+class ManagementPageTests(TestCase):
+    """/management/ was linked from every admin index page and raised NoReverseMatch."""
+
+    def test_management_page_loads(self):
+        user = make_user("manager@tcsp.ie", ["Manager"])
+        self.client.force_login(user)
+        self.assertEqual(self.client.get("/management/").status_code, 200)

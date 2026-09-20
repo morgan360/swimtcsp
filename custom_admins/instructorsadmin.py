@@ -3,6 +3,7 @@ from django.contrib import admin
 from instructors.models import InstructorAssignment, InstructorProfile
 
 from custom_admins.panels import operations_site
+from custom_admins.base import TCSPModelAdmin
 
 # ✅ Step 1: Create the custom admin site
 
@@ -11,7 +12,7 @@ from custom_admins.panels import operations_site
 instructors_admin_site = operations_site
 # ✅ Step 3: Register models to this custom site (not the default one!)
 @admin.register(InstructorAssignment, site=instructors_admin_site)
-class InstructorAssignmentAdmin(admin.ModelAdmin):
+class InstructorAssignmentAdmin(TCSPModelAdmin):
     list_display = ('lesson', 'term', 'instructor')
     list_filter = [
         ('term', admin.RelatedOnlyFieldListFilter),        # Custom filter UI for terms
@@ -22,6 +23,6 @@ class InstructorAssignmentAdmin(admin.ModelAdmin):
     # autocomplete_fields = ['lesson', 'term', 'instructor']
 
 @admin.register(InstructorProfile, site=instructors_admin_site)
-class InstructorProfileAdmin(admin.ModelAdmin):
+class InstructorProfileAdmin(TCSPModelAdmin):
     list_display = ('user', 'qualification_level')
     search_fields = ('user__first_name', 'user__last_name', 'user__email')

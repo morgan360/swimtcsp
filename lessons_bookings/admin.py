@@ -12,6 +12,7 @@ from django_admin_listfilter_dropdown.filters import DropdownFilter, RelatedDrop
 from django.utils.html import format_html
 from django.urls import reverse
 from utils.sync_terms import sync_terms_from_remote
+from custom_admins.base import TCSPModelAdmin
 
 # LESSON ENROLLMENT
 # filters for the lesson list
@@ -107,7 +108,7 @@ class CategoryFilter(admin.SimpleListFilter):
 # LESSON ASSIGNMENT
 
 @admin.register(LessonAssignment)
-class LessonAssignmentAdmin(admin.ModelAdmin):
+class LessonAssignmentAdmin(TCSPModelAdmin):
     list_display = ('term', 'instructor', 'display_lessons')
     list_filter = (
         ('term', RelatedDropdownFilter),
@@ -141,7 +142,7 @@ class LessonAssignmentAdmin(admin.ModelAdmin):
 
 # TERM ADMIN
 
-class TermAdmin(ImportExportMixin, admin.ModelAdmin):
+class TermAdmin(ImportExportMixin, TCSPModelAdmin):
     resource_class = TermResource
     list_display = ['id', 'start_date', 'end_date', 'rebooking_date', 'pause_date', 'booking_date', 'assessment_date', 'changed_by']
     exclude = ('changed_by',)

@@ -22,6 +22,7 @@ import time
 import logging
 
 from custom_admins.panels import operations_site, settings_site
+from custom_admins.base import TCSPModelAdmin
 
 ### START ###
 logger = logging.getLogger(__name__)
@@ -37,11 +38,11 @@ class MenuItemInline(admin.StackedInline):
     classes = ['collapse']
 
 # ✅ Custom MenuGroup admin with inlines
-class MenuGroupAdmin(ModelAdmin):
+class MenuGroupAdmin(TCSPModelAdmin):
     list_display = ['name']
     inlines = [MenuItemInline]
 
-class MenuItemAdmin(ModelAdmin):
+class MenuItemAdmin(TCSPModelAdmin):
     list_display = ('label', 'is_active', 'group', 'url_name', 'requires_login', 'requires_staff')
     list_display_links = ('label',)
     list_editable = ('is_active',)
@@ -135,7 +136,10 @@ class WaitingListResource(resources.ModelResource):
     def dehydrate_created_at(self, obj):
         return obj.created_at.strftime('%d %b %Y')
 
-class WaitingListAdmin(ExportActionMixin, admin.ModelAdmin):
+class WaitingListAdmin(ExportActionMixin, TCSPModelAdmin):
+    # Walked by get_guardian/get_guardian_email/get_guardian_phone/get_product, which list_display cannot reveal.
+    list_select_related_extra = ("swimling__guardian", "product")
+
     resource_classes = [WaitingListResource]
     change_list_template = 'admin/waiting_list/waitinglist/change_list.html'
 
@@ -211,16 +215,16 @@ class WaitingListAdmin(ExportActionMixin, admin.ModelAdmin):
 ###### Skills ########
 
 # Optional: Customize how each appears
-class CoreAquaticSkillAdmin(ModelAdmin):
+class CoreAquaticSkillAdmin(TCSPModelAdmin):
     list_display = ['abbreviation', 'name']
     search_fields = ['abbreviation', 'name']
 
-class SkillAdmin(ModelAdmin):
+class SkillAdmin(TCSPModelAdmin):
     list_display = ['code', 'name', 'cas']
     search_fields = ['code', 'name']
     list_filter = ['cas']
 
-class CategorySkillAdmin(ModelAdmin):
+class CategorySkillAdmin(TCSPModelAdmin):
     list_display = ['category', 'skill', 'order', 'get_stage']
     search_fields = ['category__name', 'skill__name']
     list_filter = ['category__stage', 'category']
@@ -233,19 +237,19 @@ class CategorySkillAdmin(ModelAdmin):
         # First by category.stage, then by CategorySkill.order
         return ['category__stage', 'order']
 
-class SkillAssessmentAdmin(ModelAdmin):
+class SkillAssessmentAdmin(TCSPModelAdmin):
     list_display = ['swimling', 'skill', 'term', 'rating', 'instructor']
     list_filter = ['term', 'rating', 'instructor']
     search_fields = ['swimling__first_name', 'swimling__last_name', 'skill__name']
 
-class InstructorNoteAdmin(ModelAdmin):
+class InstructorNoteAdmin(TCSPModelAdmin):
     list_display = ['swimling', 'term', 'instructor', 'created_at']
     search_fields = ['swimling__first_name', 'swimling__last_name', 'note']
     list_filter = ['term', 'instructor']
 
 ######## AI Splash BOT ############
 
-class ChatbotQueryAdmin(admin.ModelAdmin):
+class ChatbotQueryAdmin(TCSPModelAdmin):
     list_display = ("source", "timestamp", "short_message", "short_response", "response_type", "confidence_score")
     readonly_fields = ("user", "session_key", "source", "message", "response", "response_type", "confidence_score", "timestamp")
 
@@ -303,7 +307,7 @@ def generate_embeddings(modeladmin, request, queryset):
 
 
 @admin.register(FAQEntry)
-class FAQEntryAdmin(admin.ModelAdmin):
+class FAQEntryAdmin(TCSPModelAdmin):
     list_display = ("question", "short_answer", "lessons_only", "updated")
     list_filter = ("lessons_only",)
     search_fields = ("question", "answer")
@@ -315,7 +319,7 @@ class FAQEntryAdmin(admin.ModelAdmin):
 
 
 # ✅ HOME PAGE NOTICE
-class AnnouncementAdmin(ModelAdmin):
+class AnnouncementAdmin(TCSPModelAdmin):
     list_display = ("title", "is_active", "expires_on", "showing_now", "updated")
     list_editable = ("is_active",)  # show/hide the notice straight from the list
     list_filter = ("is_active",)

@@ -7,10 +7,11 @@ from django_admin_listfilter_dropdown.filters import RelatedDropdownFilter
 from schools_bookings.models import ScoEnrollment
 from schools_bookings.resources import EnrollmentResource
 from schools_bookings.filters import TermFilter, DayOfWeekFilter
+from custom_admins.base import TCSPModelAdmin
 
 
 @admin.register(ScoEnrollment)
-class LessonEnrollmentAdmin(ImportExportMixin, admin.ModelAdmin):
+class LessonEnrollmentAdmin(ImportExportMixin, TCSPModelAdmin):
     resource_class = EnrollmentResource
     list_display = ['swimling', 'term', 'lesson', 'order_link']
     list_display_links = ('swimling',)

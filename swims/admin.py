@@ -5,6 +5,7 @@ from import_export.admin import ImportExportMixin
 from django import forms
 from custom_admins.swimsadmin import swims_admin_site
 from django_admin_listfilter_dropdown.filters import DropdownFilter, RelatedDropdownFilter, ChoiceDropdownFilter
+from custom_admins.base import TCSPModelAdmin
 
 
 # Prices Inline
@@ -14,7 +15,7 @@ class PriceVariantInline(admin.TabularInline):
 
 
 @admin.register(PublicSwimCategory)
-class CategoryAdmin(ImportExportMixin, admin.ModelAdmin):
+class CategoryAdmin(ImportExportMixin, TCSPModelAdmin):
     resource_class = PublicSwimCategoryResource
     list_display = ['name', 'slug']
     prepopulated_fields = {'slug': ('name',)}
@@ -26,7 +27,7 @@ class PublicSwimProductAdminForm(forms.ModelForm):
         fields = '__all__'  # Include all fields in the form
 
 
-class PublicSwimProductAdmin(ImportExportMixin, admin.ModelAdmin):
+class PublicSwimProductAdmin(ImportExportMixin, TCSPModelAdmin):
     resource_class = PublicSwimProductResource
     form = PublicSwimProductAdminForm
     list_display = ['name', 'available', 'created', 'updated']
@@ -51,7 +52,7 @@ admin.site.register(PublicSwimProduct, PublicSwimProductAdmin)
 
 
 @admin.register(PriceVariant)
-class PriceVariantAdmin(admin.ModelAdmin):
+class PriceVariantAdmin(TCSPModelAdmin):
     list_display = ['product_name', 'variant', 'price']
     # Every swim carries five variants, so this list is five times the length of
     # the swims list and the day and category a price belongs to are only

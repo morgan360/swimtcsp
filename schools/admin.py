@@ -13,6 +13,7 @@ from .resources import CategoryResource, ProductResource, ProgramResource, Schoo
 
 # ✅ Helper to avoid AlreadyRegistered error
 from django.contrib.admin.sites import AlreadyRegistered
+from custom_admins.base import TCSPModelAdmin
 
 def safe_register(site, model, admin_class=None):
     try:
@@ -21,7 +22,7 @@ def safe_register(site, model, admin_class=None):
         pass
 
 
-class ScoLessonsAdmin(ImportExportMixin, admin.ModelAdmin):
+class ScoLessonsAdmin(ImportExportMixin, TCSPModelAdmin):
     resource_class = ProductResource
     list_display = ['name', 'price', 'active', 'school', 'created', 'updated']
     list_filter = [
@@ -47,18 +48,18 @@ class ScoLessonsAdmin(ImportExportMixin, admin.ModelAdmin):
     )
 
 
-class ScoProgramAdmin(ImportExportMixin, admin.ModelAdmin):
+class ScoProgramAdmin(ImportExportMixin, TCSPModelAdmin):
     resource_class = ProgramResource
     list_display = ['id', 'name']
     list_filter = [('name', DropdownFilter)]
 
 
-class ScoCategoryAdmin(ImportExportMixin, admin.ModelAdmin):
+class ScoCategoryAdmin(ImportExportMixin, TCSPModelAdmin):
     resource_class = CategoryResource
     list_display = ['name', 'program', 'slug']
 
 
-class ScoSchoolAdmin(ImportExportMixin, admin.ModelAdmin):
+class ScoSchoolAdmin(ImportExportMixin, TCSPModelAdmin):
     resource_class = SchoolResource
 
     def get_list_display(self, request):

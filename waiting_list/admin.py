@@ -6,10 +6,11 @@ from django.contrib import admin
 from django.utils import timezone
 from .models import WaitingList
 from lessons_bookings.models import LessonEnrollment, Term
+from custom_admins.base import TCSPModelAdmin
 
 
 @admin.register(WaitingList)
-class WaitingListAdmin(admin.ModelAdmin):
+class WaitingListAdmin(TCSPModelAdmin):
     list_display = (
         'swimling', 'product', 'get_guardian', 'is_transfer_request',
         'has_enrolled_sibling', 'is_notified', 'assigned_lesson', 'completed', 'created_at'

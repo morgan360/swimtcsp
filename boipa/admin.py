@@ -1,8 +1,9 @@
 from django.contrib import admin
 from .models import SwimOrderPaymentNotification, LessonOrderPaymentNotification, SchoolOrderPaymentNotification
+from custom_admins.base import TCSPModelAdmin
 
 
-class SwimOrderPaymentNotificationAdmin(admin.ModelAdmin):
+class SwimOrderPaymentNotificationAdmin(TCSPModelAdmin):
     list_display = (
         'txId',  'merchantTxId', 'amount', 'status')
     search_fields = ('txId', 'merchantTxId', 'amount', 'status')
@@ -10,14 +11,14 @@ class SwimOrderPaymentNotificationAdmin(admin.ModelAdmin):
 
 admin.site.register(SwimOrderPaymentNotification, SwimOrderPaymentNotificationAdmin)
 
-class LessonOrderPaymentNotificationAdmin(admin.ModelAdmin):
+class LessonOrderPaymentNotificationAdmin(TCSPModelAdmin):
     list_display = (
         'txId',  'merchantTxId', 'amount', 'status')
     search_fields = ('txId', 'merchantTxId', 'amount', 'status')
 
 admin.site.register(LessonOrderPaymentNotification, LessonOrderPaymentNotificationAdmin)
 
-class SchoolOrderPaymentNotificationAdmin(admin.ModelAdmin):
+class SchoolOrderPaymentNotificationAdmin(TCSPModelAdmin):
     list_display = (
         'txId',  'merchantTxId', 'amount', 'status')
     search_fields = ('txId', 'merchantTxId', 'amount', 'status')

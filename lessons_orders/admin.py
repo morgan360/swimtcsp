@@ -3,6 +3,7 @@ from .models import Order, OrderItem
 from django.utils.safestring import mark_safe
 from custom_admins.lessonsadmin import lessons_admin_site
 from django_admin_listfilter_dropdown.filters import DropdownFilter, RelatedDropdownFilter, ChoiceDropdownFilter
+from custom_admins.base import TCSPModelAdmin
 
 
 class OrderItemInline(admin.TabularInline):
@@ -22,7 +23,7 @@ def refund_orders(modeladmin, request, queryset):
                 order.save()
 
 
-class OrderAdmin(admin.ModelAdmin):
+class OrderAdmin(TCSPModelAdmin):
     list_display = ("id", "user", "paid", "payment_status", "amount", "created")
     list_filter = ['paid', 'created', 'updated']
     search_fields = ['user__email', 'user__first_name', 'user__last_name', 'id']

@@ -280,3 +280,25 @@ table.tcsp-results td, table.tcsp-results th { padding: .5rem .75rem; }
   .tcsp-search { width: 100%; margin: .4rem 0 0; padding: 0; }
   .tcsp-search input[type="search"] { width: 100%; max-width: none; }
 }
+
+/* ------------------------------------------------------------------
+   Header depth
+   With the panel row wrapping below the brand, the bar was not tall enough for
+   it: the pills sat hard against the bottom edge with no breathing room. Give
+   the header real bottom padding and the row a little space of its own, and
+   raise the minimum height so the two-row layout has somewhere to live.
+   ------------------------------------------------------------------ */
+#header {
+  min-height: 96px;
+  padding: .75rem 1.25rem 1rem;
+  row-gap: .65rem;
+}
+
+.tcsp-panels {
+  padding: .6rem 0 .15rem;
+  margin-bottom: .1rem;
+}
+
+@media (max-width: 767px) {
+  #header { padding: .75rem 1rem 1rem; }
+}

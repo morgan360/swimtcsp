@@ -456,3 +456,29 @@ class HeaderSearchTests(TestCase):
         response = self.client.get(reverse("operations:tcsp_search"))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Type a child")
+
+
+class HeaderRendersCleanlyTests(TestCase):
+    """Django's {# #} comment is single-line only.
+
+    A multi-line one is not a comment at all — it renders as literal text, which
+    is how a note about the search box ended up printed across the admin header.
+    """
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.root = make_user("root@tcsp.ie", superuser=True)
+
+    def test_no_raw_template_syntax_reaches_the_page(self):
+        self.client.force_login(self.root)
+        for panel in ("operations", "finance", "settings"):
+            html = self.client.get(reverse(f"{panel}:index")).content.decode()
+            with self.subTest(panel=panel):
+                for token in ("{#", "#}", "{%", "%}"):
+                    self.assertNotIn(token, html, f"raw template syntax {token!r} rendered into the page")
+
+    def test_header_carries_the_search_box_and_switcher(self):
+        self.client.force_login(self.root)
+        html = self.client.get(reverse("operations:index")).content.decode()
+        self.assertIn('class="tcsp-search"', html)
+        self.assertIn('class="tcsp-panels"', html)

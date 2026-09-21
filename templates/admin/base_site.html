@@ -15,13 +15,17 @@
   </a>
 {% endblock %}
 
-{# The switcher lives here rather than on the index, because a changelist is
-   where staff actually are when they need another panel. Panels the user
-   cannot open are left out by TCSPAdminSite.each_context. #}
+{% comment %}
+  The switcher lives here rather than on the index, because a changelist is
+  where staff actually are when they need another panel. Panels the user cannot
+  open are left out by TCSPAdminSite.each_context.
+{% endcomment %}
 {% block nav-global %}
-  {# One lookup box for the job staff do most: find a child, or find that
-     child's parent. Results link into Operations, which any staff member can
-     open, so the search never leads somewhere the user is refused. #}
+  {% comment %}
+    One lookup box for the job staff do most: find a child, or find that
+    child's parent. Results link into Operations, which any staff member can
+    open, so the search never leads somewhere the user is refused.
+  {% endcomment %}
   {% if tcsp_search_url %}
     <form class="tcsp-search" action="{{ tcsp_search_url }}" method="get" role="search">
       <input type="search" name="q" placeholder="Find a swimmer or guardian"

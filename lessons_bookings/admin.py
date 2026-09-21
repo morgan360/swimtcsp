@@ -1,4 +1,5 @@
 from django.contrib import admin, messages
+from django.shortcuts import render
 from django.contrib.admin import SimpleListFilter
 from import_export.admin import ImportExportMixin
 from .models import Term, LessonAssignment, LessonEnrollment
@@ -12,6 +13,7 @@ from django_admin_listfilter_dropdown.filters import DropdownFilter, RelatedDrop
 from django.utils.html import format_html
 from django.urls import reverse
 from utils.sync_terms import sync_terms_from_remote
+from custom_admins.base import TCSPModelAdmin
 
 # LESSON ENROLLMENT
 # filters for the lesson list
@@ -107,7 +109,7 @@ class CategoryFilter(admin.SimpleListFilter):
 # LESSON ASSIGNMENT
 
 @admin.register(LessonAssignment)
-class LessonAssignmentAdmin(admin.ModelAdmin):
+class LessonAssignmentAdmin(TCSPModelAdmin):
     list_display = ('term', 'instructor', 'display_lessons')
     list_filter = (
         ('term', RelatedDropdownFilter),
@@ -141,7 +143,7 @@ class LessonAssignmentAdmin(admin.ModelAdmin):
 
 # TERM ADMIN
 
-class TermAdmin(ImportExportMixin, admin.ModelAdmin):
+class TermAdmin(ImportExportMixin, TCSPModelAdmin):
     resource_class = TermResource
     list_display = ['id', 'start_date', 'end_date', 'rebooking_date', 'pause_date', 'booking_date', 'assessment_date', 'changed_by']
     exclude = ('changed_by',)
@@ -155,6 +157,18 @@ class TermAdmin(ImportExportMixin, admin.ModelAdmin):
 
     @admin.action(description="🔄 Sync Terms from Remote MySQL")
     def sync_terms_now(self, request, queryset):
+        """Overwrite the local Term table from the remote database.
+
+        It ignores the selection — picking one term rewrites all of them — so it
+        asks first.
+        """
+        if request.POST.get("confirmed") != "yes":
+            return render(request, "admin/lessons_bookings/sync_terms_confirmation.html", {
+                **self.admin_site.each_context(request),
+                "opts": self.model._meta,
+                "queryset": queryset,
+                "term_count": self.model.objects.count(),
+            })
         try:
             sync_terms_from_remote()
             self.message_user(request, "✅ Terms successfully synced from remote database.", messages.SUCCESS)

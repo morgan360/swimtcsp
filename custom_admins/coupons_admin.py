@@ -8,36 +8,34 @@ from django_admin_listfilter_dropdown.filters import RelatedDropdownFilter
 from django.contrib.auth import get_user_model
 from lessons.models import Product, Category, Program
 
+from custom_admins.panels import finance_site
+from custom_admins.base import TCSPModelAdmin
+
 User = get_user_model()
 
 # ✅ Define the custom admin site *first*
-class CouponsAdminSite(AdminSite):
-    site_header = "Coupons Admin"
-    site_title = "Coupons Admin Portal"
-    index_title = "Manage Coupons"
 
-coupons_admin_site = CouponsAdminSite(name='couponsadmin')
-
-
+# Panel consolidation: this name now points at the shared panel.
+coupons_admin_site = finance_site
 # ✅ Minimal User admin for coupons site autocomplete
-class UserAutocompleteAdmin(admin.ModelAdmin):
+class UserAutocompleteAdmin(TCSPModelAdmin):
     search_fields = ('email', 'first_name', 'last_name')
     list_display = ('email', 'first_name', 'last_name')  # optional
 
 # ✅ Minimal Product admin for filter_horizontal widget
-class ProductListAdmin(admin.ModelAdmin):
+class ProductListAdmin(TCSPModelAdmin):
     search_fields = ('name', 'category__name')
     list_display = ('name', 'category')
     list_filter = ('category',)
 
 # ✅ Minimal Category admin
-class CategoryListAdmin(admin.ModelAdmin):
+class CategoryListAdmin(TCSPModelAdmin):
     search_fields = ('name', 'program__name')
     list_display = ('name', 'program')
     list_filter = ('program',)
 
 # ✅ Minimal Program admin
-class ProgramListAdmin(admin.ModelAdmin):
+class ProgramListAdmin(TCSPModelAdmin):
     search_fields = ('name',)
     list_display = ('name',)
 
@@ -51,7 +49,7 @@ except admin.sites.AlreadyRegistered:
 
 
 @admin.register(Coupon, site=coupons_admin_site)
-class CouponAdmin(admin.ModelAdmin):
+class CouponAdmin(TCSPModelAdmin):
     list_display = (
         'code',
         'active',
@@ -145,7 +143,7 @@ class CouponAdmin(admin.ModelAdmin):
 
 
 @admin.register(CouponRedemption, site=coupons_admin_site)
-class CouponRedemptionAdmin(admin.ModelAdmin):
+class CouponRedemptionAdmin(TCSPModelAdmin):
     list_display = (
         'coupon',
         'redeemed_amount',

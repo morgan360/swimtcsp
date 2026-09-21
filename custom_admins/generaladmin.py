@@ -18,23 +18,17 @@ from chatbot.helpers.client import embed, embed_model
 from chatbot.helpers.faq_index import embedding_text
 from lessons_bookings.models import LessonEnrollment, Term
 from django.contrib.admin import SimpleListFilter
+from django.db.models import BooleanField, Exists, OuterRef, Value
 import time
 import logging
+
+from custom_admins.panels import operations_site, settings_site
+from custom_admins.base import TCSPModelAdmin
 
 ### START ###
 logger = logging.getLogger(__name__)
 
-class GeneralAdminSite(AdminSite):
-    site_header = "⚙️ General Admin"
-    site_title = "General Admin Portal"
-    index_title = "Manage Navigation, Timetables, and Settings"
 
-    def each_context(self, request):
-        context = super().each_context(request)
-        context["custom_css"] = "css/shared_admin.css"
-        return context
-
-general_admin_site = GeneralAdminSite(name='generaladmin')
 
 # ✅ Inline: show MenuItems under MenuGroup
 class MenuItemInline(admin.StackedInline):
@@ -45,11 +39,11 @@ class MenuItemInline(admin.StackedInline):
     classes = ['collapse']
 
 # ✅ Custom MenuGroup admin with inlines
-class MenuGroupAdmin(ModelAdmin):
+class MenuGroupAdmin(TCSPModelAdmin):
     list_display = ['name']
     inlines = [MenuItemInline]
 
-class MenuItemAdmin(ModelAdmin):
+class MenuItemAdmin(TCSPModelAdmin):
     list_display = ('label', 'is_active', 'group', 'url_name', 'requires_login', 'requires_staff')
     list_display_links = ('label',)
     list_editable = ('is_active',)
@@ -68,25 +62,12 @@ class HasSiblingEnrolledFilter(SimpleListFilter):
         )
 
     def queryset(self, request, queryset):
-        current_term_id = Term.get_current_term_id()
-        if not current_term_id:
-            return queryset
-
-        swimling_ids_with_sibling = set()
-        for obj in queryset.select_related('swimling'):
-            guardian = obj.swimling.guardian
-            has_sibling = LessonEnrollment.objects.filter(
-                swimling__guardian=guardian,
-                term_id=current_term_id
-            ).exclude(swimling=obj.swimling).exists()
-            if has_sibling:
-                swimling_ids_with_sibling.add(obj.id)
-
+        # Reads the _has_sibling annotation from WaitingListAdmin.get_queryset;
+        # this used to loop the rows in Python, one query each.
         if self.value() == 'yes':
-            return queryset.filter(id__in=swimling_ids_with_sibling)
-        elif self.value() == 'no':
-            return queryset.exclude(id__in=swimling_ids_with_sibling)
-
+            return queryset.filter(_has_sibling=True)
+        if self.value() == 'no':
+            return queryset.filter(_has_sibling=False)
         return queryset
 
 class WaitingListResource(resources.ModelResource):
@@ -143,7 +124,15 @@ class WaitingListResource(resources.ModelResource):
     def dehydrate_created_at(self, obj):
         return obj.created_at.strftime('%d %b %Y')
 
-class WaitingListAdmin(ExportActionMixin, admin.ModelAdmin):
+class WaitingListAdmin(ExportActionMixin, TCSPModelAdmin):
+    # Walked by get_guardian/get_guardian_email/get_guardian_phone/get_product, which list_display cannot reveal.
+    # Product.__str__ interpolates its category, so both Product columns
+    # need the category too or each row costs a query.
+    list_select_related_extra = (
+        "swimling__guardian", "product", "product__category",
+        "assigned_lesson__category",
+    )
+
     resource_classes = [WaitingListResource]
     change_list_template = 'admin/waiting_list/waitinglist/change_list.html'
 
@@ -200,39 +189,39 @@ class WaitingListAdmin(ExportActionMixin, admin.ModelAdmin):
     get_created_at.short_description = "Created"
     get_created_at.admin_order_field = 'created_at'
 
-    def has_enrolled_sibling(self, obj):
+    def get_queryset(self, request):
+        """Annotate the sibling check instead of asking once per row."""
+        queryset = super().get_queryset(request)
         current_term_id = Term.get_current_term_id()
         if not current_term_id:
-            return False
+            return queryset.annotate(_has_sibling=Value(False, output_field=BooleanField()))
+        sibling = (
+            LessonEnrollment.objects
+            .filter(swimling__guardian=OuterRef('swimling__guardian'), term_id=current_term_id)
+            .exclude(swimling_id=OuterRef('swimling_id'))
+        )
+        return queryset.annotate(_has_sibling=Exists(sibling))
 
-        return LessonEnrollment.objects.filter(
-            swimling__guardian=obj.swimling.guardian,
-            term_id=current_term_id
-        ).exclude(
-            swimling=obj.swimling
-        ).exists()
+    def has_enrolled_sibling(self, obj):
+        return obj._has_sibling
     has_enrolled_sibling.short_description = "Sibling Enrolled"
     has_enrolled_sibling.boolean = True
 
-try:
-    general_admin_site.unregister(MenuItem)
-except admin.sites.NotRegistered:
-    pass
 
 
 ###### Skills ########
 
 # Optional: Customize how each appears
-class CoreAquaticSkillAdmin(ModelAdmin):
+class CoreAquaticSkillAdmin(TCSPModelAdmin):
     list_display = ['abbreviation', 'name']
     search_fields = ['abbreviation', 'name']
 
-class SkillAdmin(ModelAdmin):
+class SkillAdmin(TCSPModelAdmin):
     list_display = ['code', 'name', 'cas']
     search_fields = ['code', 'name']
     list_filter = ['cas']
 
-class CategorySkillAdmin(ModelAdmin):
+class CategorySkillAdmin(TCSPModelAdmin):
     list_display = ['category', 'skill', 'order', 'get_stage']
     search_fields = ['category__name', 'skill__name']
     list_filter = ['category__stage', 'category']
@@ -245,19 +234,19 @@ class CategorySkillAdmin(ModelAdmin):
         # First by category.stage, then by CategorySkill.order
         return ['category__stage', 'order']
 
-class SkillAssessmentAdmin(ModelAdmin):
+class SkillAssessmentAdmin(TCSPModelAdmin):
     list_display = ['swimling', 'skill', 'term', 'rating', 'instructor']
     list_filter = ['term', 'rating', 'instructor']
     search_fields = ['swimling__first_name', 'swimling__last_name', 'skill__name']
 
-class InstructorNoteAdmin(ModelAdmin):
+class InstructorNoteAdmin(TCSPModelAdmin):
     list_display = ['swimling', 'term', 'instructor', 'created_at']
     search_fields = ['swimling__first_name', 'swimling__last_name', 'note']
     list_filter = ['term', 'instructor']
 
 ######## AI Splash BOT ############
 
-class ChatbotQueryAdmin(admin.ModelAdmin):
+class ChatbotQueryAdmin(TCSPModelAdmin):
     list_display = ("source", "timestamp", "short_message", "short_response", "response_type", "confidence_score")
     readonly_fields = ("user", "session_key", "source", "message", "response", "response_type", "confidence_score", "timestamp")
 
@@ -315,7 +304,7 @@ def generate_embeddings(modeladmin, request, queryset):
 
 
 @admin.register(FAQEntry)
-class FAQEntryAdmin(admin.ModelAdmin):
+class FAQEntryAdmin(TCSPModelAdmin):
     list_display = ("question", "short_answer", "lessons_only", "updated")
     list_filter = ("lessons_only",)
     search_fields = ("question", "answer")
@@ -327,7 +316,7 @@ class FAQEntryAdmin(admin.ModelAdmin):
 
 
 # ✅ HOME PAGE NOTICE
-class AnnouncementAdmin(ModelAdmin):
+class AnnouncementAdmin(TCSPModelAdmin):
     list_display = ("title", "is_active", "expires_on", "showing_now", "updated")
     list_editable = ("is_active",)  # show/hide the notice straight from the list
     list_filter = ("is_active",)
@@ -341,16 +330,16 @@ class AnnouncementAdmin(ModelAdmin):
 
 
 # ✅ Register all skills-related models
-general_admin_site.register(CoreAquaticSkill, CoreAquaticSkillAdmin)
-general_admin_site.register(Skill, SkillAdmin)
-general_admin_site.register(CategorySkill, CategorySkillAdmin)
-general_admin_site.register(SkillAssessment, SkillAssessmentAdmin)
-general_admin_site.register(InstructorNote, InstructorNoteAdmin)
+operations_site.register(CoreAquaticSkill, CoreAquaticSkillAdmin)
+operations_site.register(Skill, SkillAdmin)
+operations_site.register(CategorySkill, CategorySkillAdmin)
+operations_site.register(SkillAssessment, SkillAssessmentAdmin)
+operations_site.register(InstructorNote, InstructorNoteAdmin)
 
 # ✅ Register models to general admin site
-general_admin_site.register(MenuGroup, MenuGroupAdmin)
-general_admin_site.register(WaitingList, WaitingListAdmin)  # ✅ Registered here
-general_admin_site.register(MenuItem, MenuItemAdmin)
-general_admin_site.register(ChatbotQuery, ChatbotQueryAdmin)
-general_admin_site.register(FAQEntry, FAQEntryAdmin)
-general_admin_site.register(Announcement, AnnouncementAdmin)
+settings_site.register(MenuGroup, MenuGroupAdmin)
+operations_site.register(WaitingList, WaitingListAdmin)  # ✅ Registered here
+settings_site.register(MenuItem, MenuItemAdmin)
+settings_site.register(ChatbotQuery, ChatbotQueryAdmin)
+settings_site.register(FAQEntry, FAQEntryAdmin)
+settings_site.register(Announcement, AnnouncementAdmin)

@@ -115,7 +115,7 @@ def build_current_public_classes(swimlings, term_info):
                     continue
                 try:
                     admin_url = reverse(
-                        "lessonsadmin:lessons_bookings_lessonenrollment_change",
+                        "operations:lessons_bookings_lessonenrollment_change",
                         args=[enrollment.id],
                     )
                 except Exception:
@@ -209,7 +209,7 @@ def _build_school_enrollment_snapshot(swimlings):
 
     def admin_link_for(enrollment):
         try:
-            return reverse("schoolsadmin:schools_bookings_scoenrollment_change", args=[enrollment.id])
+            return reverse("operations:schools_bookings_scoenrollment_change", args=[enrollment.id])
         except Exception:
             return f"/schoolsadmin/schools_bookings/scoenrollment/{enrollment.id}/change/"
 

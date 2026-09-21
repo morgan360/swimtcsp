@@ -41,7 +41,7 @@ class PriceVariantFilterTests(TestCase):
         self.client.force_login(self.staff)
 
     def _changelist(self, **params):
-        url = reverse('swimsadmin:swims_pricevariant_changelist')
+        url = reverse('operations:swims_pricevariant_changelist')
         response = self.client.get(url, params)
         self.assertEqual(response.status_code, 200)
         return response

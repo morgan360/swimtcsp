@@ -3,16 +3,16 @@ from django.contrib import admin
 from anseo.models import AttendanceRoll, AttendanceEntry
 from utils.admin_filters import SearchableRelatedDropdownFilter
 
-
-class AttendanceAdminSite(AdminSite):
-    site_header = "Attendance Admin"
-    site_title = "Attendance Admin Portal"
-    index_title = "Manage Attendance Records"
+from custom_admins.panels import operations_site
+from custom_admins.base import TCSPModelAdmin
 
 
-attendance_admin_site = AttendanceAdminSite(name='attendanceadmin')
+
+
+# Panel consolidation: this name now points at the shared panel.
+attendance_admin_site = operations_site
 @admin.register(AttendanceRoll, site=attendance_admin_site)
-class AttendanceRollAdmin(admin.ModelAdmin):
+class AttendanceRollAdmin(TCSPModelAdmin):
     list_display = ('product', 'term', 'window_start', 'window_end', 'created_by', 'created_at')
     search_fields = ('product__name', 'term__label')
     list_filter = [('product', SearchableRelatedDropdownFilter), ('term', SearchableRelatedDropdownFilter)]
@@ -20,7 +20,7 @@ class AttendanceRollAdmin(admin.ModelAdmin):
 
 
 @admin.register(AttendanceEntry, site=attendance_admin_site)
-class AttendanceEntryAdmin(admin.ModelAdmin):
+class AttendanceEntryAdmin(TCSPModelAdmin):
     list_display = ('roll', 'enrollment', 'swimling_id', 'status', 'marked_by', 'marked_at')
     search_fields = ('enrollment__swimling__first_name', 'enrollment__swimling__last_name')
     list_filter = ('status', 'marked_at')

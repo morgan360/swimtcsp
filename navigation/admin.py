@@ -1,5 +1,6 @@
 from django.contrib import admin
 from .models import MenuGroup, MenuItem
+from custom_admins.base import TCSPModelAdmin
 
 
 class MenuItemInline(admin.StackedInline):
@@ -9,14 +10,14 @@ class MenuItemInline(admin.StackedInline):
 
 
 @admin.register(MenuGroup)
-class MenuGroupAdmin(admin.ModelAdmin):
+class MenuGroupAdmin(TCSPModelAdmin):
     list_display = ("name", "slug", "order")
     prepopulated_fields = {"slug": ("name",)}
     inlines = [MenuItemInline]
 
 
 @admin.register(MenuItem)
-class MenuItemAdmin(admin.ModelAdmin):
+class MenuItemAdmin(TCSPModelAdmin):
     list_display = ('label', 'is_active', 'group', 'url_name', 'requires_login', 'requires_staff')
     list_editable = ('is_active',)
     list_display_links = ('label',)

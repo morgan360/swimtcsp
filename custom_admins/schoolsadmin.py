@@ -4,7 +4,6 @@ from schools.models import ScoLessons, ScoCategory, ScoProgram, ScoSchool
 from schools_orders.models import Order, OrderItem
 from schools_bookings.models import ScoTerm, ScoEnrollment
 from users.models import Swimling
-from .lessonsadmin import LessonEnrollmentAdmin, SwimlingAutocompleteAdmin
 from import_export.admin import ImportExportMixin
 from schools_bookings.resources import TermResource  # adjust if needed
 from django.http import HttpResponse
@@ -12,7 +11,10 @@ from django_admin_listfilter_dropdown.filters import RelatedDropdownFilter
 import csv
 from datetime import datetime
 
-class ScoEnrollmentAdmin(admin.ModelAdmin):
+from custom_admins.panels import operations_site
+from custom_admins.base import TCSPModelAdmin
+
+class ScoEnrollmentAdmin(TCSPModelAdmin):
     list_display = ['id', 'swimling_name', 'guardian_name', 'guardian_email', 'lesson', 'term', 'school_name', 'created']
     list_filter = [
         ('term', RelatedDropdownFilter),
@@ -121,7 +123,7 @@ class ScoOrderItemInline(admin.TabularInline):
     raw_id_fields = ['product', 'term', 'swimling']
 
 
-class ScoOrderAdmin(admin.ModelAdmin):
+class ScoOrderAdmin(TCSPModelAdmin):
     """School orders.
 
     Registered bare until now, so the changelist showed only "Order 123" and
@@ -176,7 +178,7 @@ class ScoOrderAdmin(admin.ModelAdmin):
     swimmers.short_description = 'Swimmer(s)'
 
 
-class ScoTermAdmin(ImportExportMixin, admin.ModelAdmin):
+class ScoTermAdmin(ImportExportMixin, TCSPModelAdmin):
     resource_class = TermResource
     list_display = ['id', 'is_active', 'start_date', 'end_date', 'booking_start_date', 'booking_end_date', 'school']
     list_filter = ['is_active', 'school']
@@ -190,26 +192,17 @@ except admin.sites.NotRegistered:
     pass
 
 # ✅ Define your custom admin site
-class SchoolsAdminSite(AdminSite):
-    site_header = "🏫 Schools Admin"
-    site_title = "Schools Admin Portal"
-    index_title = "Manage School Programs and Bookings"
-
-    def each_context(self, request):
-        context = super().each_context(request)
-        context["custom_css"] = "css/shared_admin.css"
-        return context
 
 # ✅ Create instance
-schools_admin_site = SchoolsAdminSite(name='schoolsadmin')
-
+# Panel consolidation: this name now points at the shared panel.
+schools_admin_site = operations_site
 # ✅ Register models to your custom site
 schools_admin_site.register(ScoEnrollment, ScoEnrollmentAdmin)
-schools_admin_site.register(Swimling, SwimlingAutocompleteAdmin)
-schools_admin_site.register(ScoLessons)
-schools_admin_site.register(ScoCategory)
-schools_admin_site.register(ScoProgram)
-schools_admin_site.register(ScoSchool)
+# Swimling is registered once, on Operations, by custom_admins.usersadmin.
+
+
+
+
 # schools_admin_site.register(ScoTerm)
-schools_admin_site.register(Order, ScoOrderAdmin)
+# School orders live on the Finance panel (custom_admins.financeadmin).
 schools_admin_site.register(ScoTerm, ScoTermAdmin)

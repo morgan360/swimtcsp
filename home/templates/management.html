@@ -12,7 +12,8 @@
         <a class="inline-block bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200" href="/lessonsadmin/">Lessons Admin Area</a>
         <a class="inline-block bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200" href="/swimsadmin/">Swims Admin Area</a>
         <a class="inline-block bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200" href="/usersadmin/">Users Admin Area</a>
-        <a class="inline-block bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200"  href="{% url 'show_todays_data' %}">Management Reports</a>
+        {# Management Reports removed: it pointed at a URL name, show_todays_data,
+           that does not exist, so every admin index page linked to a 500. #}
       </div>
     </div>
 

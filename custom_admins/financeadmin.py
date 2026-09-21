@@ -1,5 +1,8 @@
-from django.contrib import messages
-from django.contrib.admin import AdminSite, ModelAdmin, TabularInline, register
+from django.contrib import admin, messages
+from django.shortcuts import render
+from django.contrib.admin import ModelAdmin, TabularInline, register
+
+from custom_admins.base import MANAGER_AND_FULL_TIMER, TCSPAdminSite, TCSPModelAdmin
 from django.db.models import Sum
 from django.utils.timezone import localtime
 from django.http import HttpResponse
@@ -42,11 +45,14 @@ from boipa.utils import verify_boipa_transaction
 # ---------------------------
 # Custom Finance Admin Site
 # ---------------------------
-class FinanceAdminSite(AdminSite):
-    site_header = "Finance Admin"
-    site_title = "Finance Admin Portal"
-    index_title = "Finance Overview"
+class FinanceAdminSite(TCSPAdminSite):
+    site_header = "💶 TCSP Finance"
+    site_title = "Finance"
+    index_title = "Orders, coupons, reconciliation and revenue"
     index_template = "admin/financeadmin/index.html"
+    panel_icon = "💶"
+    panel_path = "/finance/"
+    required_groups = MANAGER_AND_FULL_TIMER
 
     def get_urls(self):
         from django.urls import path
@@ -76,18 +82,21 @@ class FinanceAdminSite(AdminSite):
     def each_context(self, request):
         from django.urls import reverse
         context = super().each_context(request)
-        context['revenue_report_url'] = reverse('financeadmin:revenue_report')
-        context['reconciliation_url'] = reverse('financeadmin:reconciliation')
+        context['revenue_report_url'] = reverse('finance:revenue_report')
+        context['reconciliation_url'] = reverse('finance:reconciliation')
         return context
 
 
-finance_admin_site = FinanceAdminSite(name="financeadmin")
+finance_admin_site = FinanceAdminSite(name="finance")
 
 
 # ---------------------------
 # Base Admin for all Orders
 # ---------------------------
-class BaseOrderAdmin(ModelAdmin):
+class BaseOrderAdmin(TCSPModelAdmin):
+    # Walked by user_email, which list_display cannot reveal.
+    list_select_related_extra = ("user",)
+
     list_display = (
         "order_number",
         'txId',
@@ -107,7 +116,7 @@ class BaseOrderAdmin(ModelAdmin):
     )
     search_fields = ("id", "user__email", "txId")
     ordering = ("-created",)
-    actions = ["export_to_csv", "verify_with_boipa"]
+    actions = ["export_to_csv", "verify_with_boipa", "refund_orders"]
 
     # ✅ Default: show only paid orders
     def get_queryset(self, request):
@@ -170,6 +179,57 @@ class BaseOrderAdmin(ModelAdmin):
     boipa_reconciled_display.admin_order_field = "boipa_reconciled"
 
     # ✅ Admin action: Verify with BOIPA
+    @admin.action(description="Refund selected orders via BOIPA")
+    def refund_orders(self, request, queryset):
+        """Refund through BOIPA, behind a confirmation page.
+
+        This previously lived on the lessons panel, reachable by any staff
+        member, and fired the moment you picked it from the dropdown — no
+        confirmation, no error handling, no report of what happened.
+        """
+        from boipa.utils import refund_boipa_transaction
+
+        refundable, skipped = [], []
+        for order in queryset:
+            if order.paid and getattr(order, "txId", None) and order.payment_status != "refunded":
+                refundable.append(order)
+            else:
+                skipped.append(order)
+
+        if request.POST.get("confirmed") != "yes":
+            return render(request, "admin/financeadmin/refund_confirmation.html", {
+                **self.admin_site.each_context(request),
+                "opts": self.model._meta,
+                "queryset": queryset,
+                "refundable": refundable,
+                "skipped": skipped,
+            })
+
+        done, failed = 0, 0
+        for order in refundable:
+            try:
+                result = refund_boipa_transaction(order.txId, order.amount, order=order)
+            except Exception as exc:
+                failed += 1
+                messages.error(request, f"Order #{order.id}: refund raised {exc}")
+                continue
+            if result.get("success"):
+                order.payment_status = "refunded"
+                order.save(update_fields=["payment_status"])
+                done += 1
+            else:
+                failed += 1
+                messages.error(request, f"Order #{order.id}: BOIPA refused the refund "
+                                        f"({result.get('message', 'no reason given')})")
+
+        if done:
+            messages.success(request, f"Refunded {done} order(s).")
+        if skipped:
+            messages.warning(request, f"Skipped {len(skipped)} order(s) — unpaid, "
+                                      "already refunded, or with no transaction id.")
+        if not done and not failed:
+            messages.info(request, "Nothing was refunded.")
+
     def verify_with_boipa(self, request, queryset):
         success, fail = 0, 0
         for order in queryset:

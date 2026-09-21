@@ -1,22 +1,25 @@
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import include, path, re_path
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib.sessions.models import Session
-from custom_admins.lessonsadmin import lessons_admin_site
-from custom_admins.usersadmin import users_admin_site
-from custom_admins.swimsadmin import swims_admin_site
-from custom_admins.schoolsadmin import schools_admin_site
-from custom_admins.generaladmin import general_admin_site
-from custom_admins.instructorsadmin import instructors_admin_site
-from custom_admins.coupons_admin import coupons_admin_site
-from custom_admins.attendance_admin import attendance_admin_site
+from custom_admins.panels import finance_site, operations_site, settings_site
+
+# custom_admins/ is not an installed app, so Django's autodiscover never imports
+# these modules. Importing them here for their side effects is what puts their
+# models on the panels — without it the panels come up silently half empty.
+import custom_admins.attendance_admin  # noqa: F401
+import custom_admins.coupons_admin  # noqa: F401
+import custom_admins.generaladmin  # noqa: F401
+import custom_admins.instructorsadmin  # noqa: F401
+import custom_admins.lessonsadmin  # noqa: F401
+import custom_admins.schoolsadmin  # noqa: F401
+import custom_admins.usersadmin  # noqa: F401
 from users.views import CustomSignupView
 from waiting_list.views import redirect_to_swimling_waiting_list
-from django.views.generic import TemplateView
+from django.views.generic import RedirectView, TemplateView
 from django.http import HttpResponse
 from django.contrib.auth import views as auth_views
-from custom_admins.financeadmin import finance_admin_site
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -84,19 +87,34 @@ if settings.DEBUG:
         path("dev/status/503/", lambda r: HttpResponse("Service Unavailable", status=503), name="dev-status-503"),
     ]
 
-# Add Admin Sites
+# The three admin panels. Stock admin.site stays at /admin/ for superusers.
 urlpatterns += [
-    path('lessonsadmin/', lessons_admin_site.urls),
-    path('usersadmin/', users_admin_site.urls),
-    path('swimsadmin/', swims_admin_site.urls),
-    path('schoolsadmin/', schools_admin_site.urls),
-    path('generaladmin/', general_admin_site.urls),
-    path('instructorsadmin/', instructors_admin_site.urls),
-    path("couponsadmin/", coupons_admin_site.urls),
-    path("attendanceadmin/", attendance_admin_site.urls),
-    path("finance-admin/", finance_admin_site.urls),
+    path('operations/', operations_site.urls),
+    path('finance/', finance_site.urls),
+    path('settings-admin/', settings_site.urls),
+]
 
-    ]
+# The nine panels these replaced. Staff have these bookmarked and they appear in
+# old emails, so they redirect rather than 404. Safe to drop after a year or so
+# (added September 2026).
+_RETIRED_PANELS = {
+    'lessonsadmin': '/operations/',
+    'swimsadmin': '/operations/',
+    'schoolsadmin': '/operations/',
+    'instructorsadmin': '/operations/',
+    'attendanceadmin': '/operations/',
+    'generaladmin': '/settings-admin/',
+    'usersadmin': '/settings-admin/',
+    'couponsadmin': '/finance/',
+    'finance-admin': '/finance/',
+}
+urlpatterns += [
+    re_path(
+        rf'^{old}/(?P<rest>.*)$',
+        RedirectView.as_view(url=new + '%(rest)s', permanent=False, query_string=True),
+    )
+    for old, new in _RETIRED_PANELS.items()
+]
 if settings.DEBUG:
     # add auto reload (only in development)
     urlpatterns += [path('__reload__/', include('django_browser_reload.urls'))]

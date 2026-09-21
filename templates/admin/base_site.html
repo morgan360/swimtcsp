@@ -1,14 +1,33 @@
 {% extends "admin/base.html" %}
 {% load static %}
+
 {% block extrastyle %}
   {{ block.super }}
   {% if custom_css %}
     <link rel="stylesheet" href="{% static custom_css %}">
   {% endif %}
 {% endblock %}
+
 {% block branding %}
-  <a href="/" style="display: flex; align-items: center; padding-left: 1rem; text-decoration: none;">
-    <img src="{% static 'img/logo.png' %}" alt="TCSP Logo" style="height: 60px; margin-right: 1rem;" />
-    <span style="color: white; font-size: 1.5rem; font-weight: 600;">TCSP Administration</span>
+  <a href="/" class="tcsp-brand">
+    <img src="{% static 'img/logo.png' %}" alt="TCSP" />
+    <span>TCSP Administration</span>
   </a>
+{% endblock %}
+
+{# The switcher lives here rather than on the index, because a changelist is
+   where staff actually are when they need another panel. Panels the user
+   cannot open are left out by TCSPAdminSite.each_context. #}
+{% block nav-global %}
+  {% if tcsp_panels %}
+    <nav class="tcsp-panels" aria-label="Admin panels">
+      {% for panel in tcsp_panels %}
+        <a href="{{ panel.url }}"
+           class="tcsp-panel{% if panel.current %} is-current{% endif %}"
+           {% if panel.current %}aria-current="page"{% endif %}>
+          <span aria-hidden="true">{{ panel.icon }}</span> {{ panel.name }}
+        </a>
+      {% endfor %}
+    </nav>
+  {% endif %}
 {% endblock %}

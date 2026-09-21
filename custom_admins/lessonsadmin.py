@@ -17,24 +17,20 @@ import csv
 from django.shortcuts import redirect
 from utils.terms_utils import get_current_term
 
-# ✅ Custom Admin Site
-class LessonsAdminSite(AdminSite):
-    site_header = "🏫 Lessons Admin"
-    site_title = "Lessons Admin Portal"
-    index_title = "Manage Lesson Programs and Terms"
+from custom_admins.panels import operations_site
+from custom_admins.base import TCSPModelAdmin
 
-    def each_context(self, request):
-        context = super().each_context(request)
-        context["custom_css"] = "css/shared_admin.css"
-        return context
+# ✅ Custom Admin Site
 
 
 # ✅ Exported instance
-lessons_admin_site = LessonsAdminSite(name="lessonsadmin")
-
-
+# Panel consolidation: this name now points at the shared panel.
+lessons_admin_site = operations_site
 # ✅ Admin for LessonEnrollment
-class LessonEnrollmentAdmin(admin.ModelAdmin):
+class LessonEnrollmentAdmin(TCSPModelAdmin):
+    # Walked by order_link/simple_term, which list_display cannot reveal.
+    list_select_related_extra = ("order", "term", "lesson__category")
+
     list_display = ["swimling", "simple_term", "lesson", "order_link"]
     list_display_links = ("swimling",)
     autocomplete_fields = ["swimling", "lesson"]
@@ -254,20 +250,8 @@ class LessonEnrollmentAdmin(admin.ModelAdmin):
     class Media:
         js = ("js/add_print_button.js",)  # 👈 still adds Print button in admin toolbar
 
-# ✅ Lightweight admin to power Swimling autocomplete while hiding it from the menu
-class SwimlingAutocompleteAdmin(admin.ModelAdmin):
-    search_fields = [
-        "first_name",
-        "last_name",
-        "guardian__first_name",
-        "guardian__last_name",
-        "guardian__email",
-    ]
-
-    def has_module_permission(self, request):  # hide from the left nav
-        return False
 
 
 # ✅ Register the model to the custom admin site
-lessons_admin_site.register(Swimling, SwimlingAutocompleteAdmin)
+# Swimling is registered once, on Operations, by custom_admins.usersadmin.
 lessons_admin_site.register(LessonEnrollment, LessonEnrollmentAdmin)

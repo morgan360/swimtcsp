@@ -24,6 +24,10 @@ from users.resources import SwimlingResource, UserResource, GroupResource
 from lessons_bookings.models import LessonEnrollment, Term
 from lessons.models import Product
 
+from custom_admins.base import TCSPModelAdmin
+from utils.admin_filters import SearchableRelatedDropdownFilter
+from custom_admins.panels import operations_site, settings_site
+
 
 
 
@@ -33,20 +37,10 @@ User = get_user_model()
 
 
 # 🔹 Admin site
-class UsersAdminSite(AdminSite):
-    site_header = '👤 Users Admin'
-    site_title = 'Users Admin Portal'
-    index_title = 'Manage Users, Swimlings, and Permissions'
-
-    def each_context(self, request):
-        context = super().each_context(request)
-        context["custom_css"] = "css/shared_admin.css"
-        return context
 
 
-users_admin_site = UsersAdminSite(name='usersadmin')
-
-
+# Panel consolidation: this name now points at the shared panel.
+users_admin_site = settings_site
 # 🔹 Inlines
 class SwimlingInline(admin.StackedInline):
     model = Swimling
@@ -64,14 +58,15 @@ class LessonEnrollmentInline(admin.TabularInline):
 
 
 # 🔹 Swimling Admin
-class SwimlingAdmin(ImportExportMixin, admin.ModelAdmin):
+class SwimlingAdmin(ImportExportMixin, TCSPModelAdmin):
+    # Walked by guardian_link, which list_display cannot reveal.
+    list_select_related_extra = ("guardian",)
+
     resource_class = SwimlingResource
     inlines = [LessonEnrollmentInline]
     list_display = ['first_name', 'last_name', 'guardian_link']
     list_filter = [
-        ('last_name', DropdownFilter),
-        ('first_name', DropdownFilter),
-        ('guardian', RelatedDropdownFilter),
+        ('guardian', SearchableRelatedDropdownFilter),
     ]
     search_fields = ['first_name', 'last_name', 'guardian__email', 'guardian__first_name', 'guardian__last_name']
     ordering = ['guardian__last_name', 'last_name']
@@ -79,8 +74,10 @@ class SwimlingAdmin(ImportExportMixin, admin.ModelAdmin):
     def guardian_link(self, obj):
         if obj.guardian:
             try:
+                # Operations carries a read-only guardian view; Managers get the
+                # editable one on Settings.
                 url = reverse(
-                    "usersadmin:%s_%s_change" % (
+                    "operations:%s_%s_change" % (
                         obj.guardian._meta.app_label,
                         obj.guardian._meta.model_name
                     ),
@@ -143,6 +140,17 @@ class UserAdmin(HijackUserAdminMixin, ImportExportMixin, BaseUserAdmin):
     )
 
     readonly_fields = ('user_permissions',)
+
+    def get_readonly_fields(self, request, obj=None):
+        """Only superusers may grant staff or superuser status.
+
+        These fields were editable by anyone who could reach this page, which
+        made the user admin a privilege-escalation route.
+        """
+        fields = list(super().get_readonly_fields(request, obj))
+        if not request.user.is_superuser:
+            fields += ["is_staff", "is_superuser", "groups"]
+        return fields
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
@@ -159,10 +167,14 @@ class UserAdmin(HijackUserAdminMixin, ImportExportMixin, BaseUserAdmin):
     display_groups.short_description = 'Groups'
 
     list_display = ('get_user_id', 'email', 'username', 'mobile_phone', 'display_groups')
+
+    def get_queryset(self, request):
+        # display_groups walks a m2m, so prefetch rather than one query per row.
+        return super().get_queryset(request).prefetch_related('groups')
     list_filter = [
-        ('last_name', DropdownFilter),
-        ('first_name', DropdownFilter),
         ('groups', RelatedDropdownFilter),
+        'is_active',
+        'is_staff',
     ]
     search_fields = ('email', 'last_name', 'first_name')
     ordering = ('last_name', 'first_name')
@@ -173,7 +185,7 @@ class UserAdmin(HijackUserAdminMixin, ImportExportMixin, BaseUserAdmin):
 
 
 # 🔹 Group Admin
-class GroupAdmin(BaseGroupAdmin, ImportExportModelAdmin):
+class GroupAdmin(BaseGroupAdmin, ImportExportModelAdmin, TCSPModelAdmin):
     resource_class = GroupResource
 
 
@@ -184,19 +196,68 @@ except admin.sites.AlreadyRegistered:
     pass
 
 # 🔹 Autocomplete support for Product and Term (powers autocomplete_fields in inlines)
-class ProductAutocompleteAdmin(admin.ModelAdmin):
+class ProductAutocompleteAdmin(TCSPModelAdmin):
     search_fields = ['name']
     def has_module_permission(self, request):
         return False
 
-class TermAutocompleteAdmin(admin.ModelAdmin):
+class TermAutocompleteAdmin(TCSPModelAdmin):
     search_fields = ['id']
     def has_module_permission(self, request):
         return False
 
+# 🔹 Guardian lookup for the Operations panel.
+#
+# Desk staff answer the phone and need a parent's number, but editing users —
+# and with it staff status and group membership — belongs on Settings with the
+# Managers. So the same model is registered twice: fully on Settings, and
+# read-only here.
+class GuardianLookupAdmin(TCSPModelAdmin):
+    """Read-only view of a guardian and their swimmers."""
+
+    list_display = ("full_name", "email", "mobile_phone", "swimling_names")
+    search_fields = ("email", "first_name", "last_name", "mobile_phone")
+    list_filter = ("is_active",)
+    ordering = ("last_name", "first_name")
+    inlines = [SwimlingInline]
+
+    def get_queryset(self, request):
+        # Guardians only — the swimmer-less accounts are staff and customers.
+        return super().get_queryset(request).prefetch_related("swimling_set")
+
+    def full_name(self, obj):
+        return f"{obj.first_name} {obj.last_name or ''}".strip() or obj.email
+    full_name.short_description = "Name"
+    full_name.admin_order_field = "last_name"
+
+    def swimling_names(self, obj):
+        names = [f"{s.first_name} {s.last_name or ''}".strip() for s in obj.swimling_set.all()]
+        return ", ".join(names) if names else "—"
+    swimling_names.short_description = "Swimmers"
+
+    # Reaching the Operations panel at all already required is_staff and passing
+    # the panel's own check, so viewing is granted here rather than depending on
+    # per-model Django permissions, which desk accounts do not carry.
+    def has_view_permission(self, request, obj=None):
+        return request.user.is_active and request.user.is_staff
+
+    def has_module_permission(self, request):
+        return self.has_view_permission(request)
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
 # 🔹 Register all
 users_admin_site.register(User, UserAdmin)
-users_admin_site.register(Swimling, SwimlingAdmin)
+operations_site.register(User, GuardianLookupAdmin)
+operations_site.register(Swimling, SwimlingAdmin)
 users_admin_site.register(Group, GroupAdmin)
 users_admin_site.register(Product, ProductAutocompleteAdmin)
 users_admin_site.register(Term, TermAutocompleteAdmin)

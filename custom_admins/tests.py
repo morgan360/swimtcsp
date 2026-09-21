@@ -323,3 +323,38 @@ class ChangelistQueryCountTests(TestCase):
             six_rows - one_row, 1,
             f"query count grew from {one_row} to {six_rows} for five more rows — "
             "something is querying per row")
+
+
+class AdminMenuItemTests(TestCase):
+    """The public nav is database-driven and fails silently.
+
+    MenuItem.resolve_url() returns "#" when reverse() fails, so a stale url_name
+    becomes a link that does nothing rather than an error. Renaming the admin
+    namespaces killed six of them.
+    """
+
+    RETIRED = [
+        "swimsadmin:index", "lessonsadmin:index", "schoolsadmin:index",
+        "instructorsadmin:index", "usersadmin:index", "generaladmin:index",
+        "couponsadmin:index", "attendanceadmin:index", "financeadmin:index",
+    ]
+
+    def test_panel_namespaces_the_menu_points_at_resolve(self):
+        from navigation.models import MenuGroup, MenuItem
+
+        group = MenuGroup.objects.create(name="Admin")
+        for url_name in ("operations:index", "finance:index", "settings:index"):
+            item = MenuItem.objects.create(group=group, label=url_name, url_name=url_name)
+            with self.subTest(url_name=url_name):
+                self.assertNotEqual(
+                    item.resolve_url(), "#",
+                    f"{url_name} does not reverse, so the menu item would be a dead link")
+
+    def test_retired_namespaces_no_longer_resolve(self):
+        """If one of these ever reverses again, a panel was resurrected by accident."""
+        from django.urls import NoReverseMatch, reverse
+
+        for url_name in self.RETIRED:
+            with self.subTest(url_name=url_name):
+                with self.assertRaises(NoReverseMatch):
+                    reverse(url_name)

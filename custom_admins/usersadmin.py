@@ -25,6 +25,7 @@ from lessons_bookings.models import LessonEnrollment, Term
 from lessons.models import Product
 
 from custom_admins.base import TCSPModelAdmin
+from utils.admin_filters import SearchableRelatedDropdownFilter
 from custom_admins.panels import operations_site, settings_site
 
 
@@ -65,9 +66,7 @@ class SwimlingAdmin(ImportExportMixin, TCSPModelAdmin):
     inlines = [LessonEnrollmentInline]
     list_display = ['first_name', 'last_name', 'guardian_link']
     list_filter = [
-        ('last_name', DropdownFilter),
-        ('first_name', DropdownFilter),
-        ('guardian', RelatedDropdownFilter),
+        ('guardian', SearchableRelatedDropdownFilter),
     ]
     search_fields = ['first_name', 'last_name', 'guardian__email', 'guardian__first_name', 'guardian__last_name']
     ordering = ['guardian__last_name', 'last_name']
@@ -168,10 +167,14 @@ class UserAdmin(HijackUserAdminMixin, ImportExportMixin, BaseUserAdmin):
     display_groups.short_description = 'Groups'
 
     list_display = ('get_user_id', 'email', 'username', 'mobile_phone', 'display_groups')
+
+    def get_queryset(self, request):
+        # display_groups walks a m2m, so prefetch rather than one query per row.
+        return super().get_queryset(request).prefetch_related('groups')
     list_filter = [
-        ('last_name', DropdownFilter),
-        ('first_name', DropdownFilter),
         ('groups', RelatedDropdownFilter),
+        'is_active',
+        'is_staff',
     ]
     search_fields = ('email', 'last_name', 'first_name')
     ordering = ('last_name', 'first_name')

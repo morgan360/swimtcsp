@@ -267,3 +267,59 @@ class StaffFlagsAreSuperuserOnlyTests(TestCase):
         ma = settings_site._registry[User]
         readonly = ma.get_readonly_fields(type("R", (), {"user": root})())
         self.assertNotIn("is_staff", readonly)
+
+
+class ChangelistQueryCountTests(TestCase):
+    """Query counts must not grow with the number of rows.
+
+    The waiting list ran two extra queries per row — an EXISTS for the sibling
+    column and another for the sibling filter — on top of four guardian columns.
+    """
+
+    @classmethod
+    def setUpTestData(cls):
+        from datetime import date, time, timedelta
+
+        from lessons.models import Category, Product, Program
+        from users.models import Swimling
+        from waiting_list.models import WaitingList
+
+        cls.root = make_user("root@tcsp.ie", superuser=True)
+        program = Program.objects.create(name="Public Lessons")
+        category = Category.objects.create(name="Beginners", slug="beginners", program=program)
+        cls.product = Product.objects.create(
+            category=category, day_of_week=0,
+            start_time=time(17, 0), end_time=time(17, 45), active=True)
+
+        cls.guardians = []
+        for i in range(6):
+            guardian = make_user(f"g{i}@example.com", ["Guardian"], staff=False)
+            swimling = Swimling.objects.create(
+                first_name=f"Child{i}", last_name="Test", guardian=guardian,
+                dob=date.today() - timedelta(days=3000))
+            WaitingList.objects.create(swimling=swimling, product=cls.product)
+            cls.guardians.append(guardian)
+
+    def test_waiting_list_does_not_scale_queries_with_rows(self):
+        from django.db import connection
+        from django.test.utils import CaptureQueriesContext
+
+        self.client.force_login(self.root)
+        url = reverse("operations:waiting_list_waitinglist_changelist")
+
+        with CaptureQueriesContext(connection) as ctx:
+            self.assertEqual(self.client.get(url).status_code, 200)
+        six_rows = len(ctx.captured_queries)
+
+        from waiting_list.models import WaitingList
+        keep = list(WaitingList.objects.values_list("pk", flat=True))[:1]
+        WaitingList.objects.exclude(pk__in=keep).delete()
+
+        with CaptureQueriesContext(connection) as ctx:
+            self.assertEqual(self.client.get(url).status_code, 200)
+        one_row = len(ctx.captured_queries)
+
+        self.assertLessEqual(
+            six_rows - one_row, 1,
+            f"query count grew from {one_row} to {six_rows} for five more rows — "
+            "something is querying per row")

@@ -18,6 +18,7 @@ from chatbot.helpers.client import embed, embed_model
 from chatbot.helpers.faq_index import embedding_text
 from lessons_bookings.models import LessonEnrollment, Term
 from django.contrib.admin import SimpleListFilter
+from django.db.models import BooleanField, Exists, OuterRef, Value
 import time
 import logging
 
@@ -61,25 +62,12 @@ class HasSiblingEnrolledFilter(SimpleListFilter):
         )
 
     def queryset(self, request, queryset):
-        current_term_id = Term.get_current_term_id()
-        if not current_term_id:
-            return queryset
-
-        swimling_ids_with_sibling = set()
-        for obj in queryset.select_related('swimling'):
-            guardian = obj.swimling.guardian
-            has_sibling = LessonEnrollment.objects.filter(
-                swimling__guardian=guardian,
-                term_id=current_term_id
-            ).exclude(swimling=obj.swimling).exists()
-            if has_sibling:
-                swimling_ids_with_sibling.add(obj.id)
-
+        # Reads the _has_sibling annotation from WaitingListAdmin.get_queryset;
+        # this used to loop the rows in Python, one query each.
         if self.value() == 'yes':
-            return queryset.filter(id__in=swimling_ids_with_sibling)
-        elif self.value() == 'no':
-            return queryset.exclude(id__in=swimling_ids_with_sibling)
-
+            return queryset.filter(_has_sibling=True)
+        if self.value() == 'no':
+            return queryset.filter(_has_sibling=False)
         return queryset
 
 class WaitingListResource(resources.ModelResource):
@@ -138,7 +126,12 @@ class WaitingListResource(resources.ModelResource):
 
 class WaitingListAdmin(ExportActionMixin, TCSPModelAdmin):
     # Walked by get_guardian/get_guardian_email/get_guardian_phone/get_product, which list_display cannot reveal.
-    list_select_related_extra = ("swimling__guardian", "product")
+    # Product.__str__ interpolates its category, so both Product columns
+    # need the category too or each row costs a query.
+    list_select_related_extra = (
+        "swimling__guardian", "product", "product__category",
+        "assigned_lesson__category",
+    )
 
     resource_classes = [WaitingListResource]
     change_list_template = 'admin/waiting_list/waitinglist/change_list.html'
@@ -196,17 +189,21 @@ class WaitingListAdmin(ExportActionMixin, TCSPModelAdmin):
     get_created_at.short_description = "Created"
     get_created_at.admin_order_field = 'created_at'
 
-    def has_enrolled_sibling(self, obj):
+    def get_queryset(self, request):
+        """Annotate the sibling check instead of asking once per row."""
+        queryset = super().get_queryset(request)
         current_term_id = Term.get_current_term_id()
         if not current_term_id:
-            return False
+            return queryset.annotate(_has_sibling=Value(False, output_field=BooleanField()))
+        sibling = (
+            LessonEnrollment.objects
+            .filter(swimling__guardian=OuterRef('swimling__guardian'), term_id=current_term_id)
+            .exclude(swimling_id=OuterRef('swimling_id'))
+        )
+        return queryset.annotate(_has_sibling=Exists(sibling))
 
-        return LessonEnrollment.objects.filter(
-            swimling__guardian=obj.swimling.guardian,
-            term_id=current_term_id
-        ).exclude(
-            swimling=obj.swimling
-        ).exists()
+    def has_enrolled_sibling(self, obj):
+        return obj._has_sibling
     has_enrolled_sibling.short_description = "Sibling Enrolled"
     has_enrolled_sibling.boolean = True
 

@@ -29,7 +29,7 @@ lessons_admin_site = operations_site
 # ✅ Admin for LessonEnrollment
 class LessonEnrollmentAdmin(TCSPModelAdmin):
     # Walked by order_link/simple_term, which list_display cannot reveal.
-    list_select_related_extra = ("order", "term")
+    list_select_related_extra = ("order", "term", "lesson__category")
 
     list_display = ["swimling", "simple_term", "lesson", "order_link"]
     list_display_links = ("swimling",)

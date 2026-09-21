@@ -253,3 +253,30 @@ table.tcsp-results td, table.tcsp-results th { padding: .5rem .75rem; }
   .tcsp-brand span { white-space: normal; }
   .tcsp-panels { width: 100%; padding: 0; }
 }
+
+/* ------------------------------------------------------------------
+   Panel row
+   At laptop widths the pills wrap below the brand. That reads well — like a
+   tab bar — but only if it looks deliberate, so give it the full width, the
+   same left gutter as the logo, and a hairline above. Also stop the search
+   input truncating its own placeholder at those widths.
+   ------------------------------------------------------------------ */
+.tcsp-panels {
+  width: 100%;
+  margin: 0;
+  padding: .45rem 0 0;
+  border-top: 1px solid rgba(255, 255, 255, .22);
+  flex-wrap: wrap;
+}
+
+@media (max-width: 1400px) {
+  .tcsp-search input[type="search"] { width: 14rem; }
+}
+@media (max-width: 1100px) {
+  .tcsp-search { margin-left: auto; }
+  .tcsp-search input[type="search"] { width: 11rem; }
+}
+@media (max-width: 767px) {
+  .tcsp-search { width: 100%; margin: .4rem 0 0; padding: 0; }
+  .tcsp-search input[type="search"] { width: 100%; max-width: none; }
+}

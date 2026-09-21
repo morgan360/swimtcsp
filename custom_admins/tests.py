@@ -405,3 +405,54 @@ class DrawerMenuVisibilityTests(TestCase):
 
         desk = make_user("desk@tcsp.ie", ["Desk"])
         self.assertNotIn("Settings", self._menu_labels(desk))
+
+
+class HeaderSearchTests(TestCase):
+    """One lookup box, so finding a person does not start with picking a panel."""
+
+    @classmethod
+    def setUpTestData(cls):
+        from datetime import date, timedelta
+
+        from users.models import Swimling
+
+        cls.desk = make_user("desk@tcsp.ie", ["Desk"])
+        cls.guardian = make_user("bridget.okeeffe@example.com", ["Guardian"], staff=False)
+        cls.guardian.first_name, cls.guardian.last_name = "Bridget", "O'Keeffe"
+        cls.guardian.save()
+        cls.swimling = Swimling.objects.create(
+            first_name="Saoirse", last_name="O'Keeffe", guardian=cls.guardian,
+            dob=date.today() - timedelta(days=3000))
+
+    def _search(self, q, panel="operations"):
+        self.client.force_login(self.desk)
+        return self.client.get(reverse(f"{panel}:tcsp_search"), {"q": q})
+
+    def test_finds_a_child_by_first_name(self):
+        response = self._search("Saoirse")
+        self.assertContains(response, "Saoirse")
+        self.assertContains(response, "bridget.okeeffe@example.com")
+
+    def test_finds_a_child_by_the_parents_email(self):
+        self.assertContains(self._search("bridget.okeeffe@example"), "Saoirse")
+
+    def test_finds_a_guardian_by_surname(self):
+        self.assertContains(self._search("O'Keeffe"), "Bridget")
+
+    def test_search_exists_on_every_panel(self):
+        root = make_user("root@tcsp.ie", superuser=True)
+        self.client.force_login(root)
+        for panel in ("operations", "finance", "settings"):
+            with self.subTest(panel=panel):
+                self.assertEqual(
+                    self.client.get(reverse(f"{panel}:tcsp_search"), {"q": "Saoirse"}).status_code, 200)
+
+    def test_desk_staff_are_not_offered_a_panel_they_cannot_open(self):
+        self.client.force_login(self.desk)
+        self.assertNotEqual(self.client.get(reverse("finance:tcsp_search")).status_code, 200)
+
+    def test_empty_search_renders_a_prompt_not_an_error(self):
+        self.client.force_login(self.desk)
+        response = self.client.get(reverse("operations:tcsp_search"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Type a child")

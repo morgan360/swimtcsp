@@ -15,6 +15,8 @@ Two classes:
 """
 from django.contrib import admin
 from django.contrib.admin import AdminSite
+from django.contrib.auth import get_user_model
+from django.urls import reverse
 
 # Canonical staff groups. These two names are unambiguous in the live data —
 # unlike the instructor/guardian/school groups, which exist in several casings.
@@ -51,9 +53,58 @@ class TCSPAdminSite(AdminSite):
             return True
         return user.groups.filter(name__in=self.required_groups).exists()
 
+    def get_urls(self):
+        from django.urls import path
+
+        return [
+            path("search/", self.admin_view(self.tcsp_search), name="tcsp_search"),
+        ] + super().get_urls()
+
+    def tcsp_search(self, request):
+        """Find a swimmer or a guardian without first choosing a panel.
+
+        Desk staff answering the phone start from a name or a number, not from a
+        model, and the records they need sit on different pages. Results always
+        link into Operations, which every staff member can open.
+        """
+        from django.db.models import Q
+        from django.shortcuts import render
+
+        from users.models import Swimling
+
+        term = (request.GET.get("q") or "").strip()
+        swimlings, guardians = [], []
+        if term:
+            swimlings = list(
+                Swimling.objects.select_related("guardian").filter(
+                    Q(first_name__icontains=term)
+                    | Q(last_name__icontains=term)
+                    | Q(guardian__email__icontains=term)
+                    | Q(guardian__last_name__icontains=term)
+                ).order_by("last_name", "first_name")[:25]
+            )
+            User = get_user_model()
+            guardians = list(
+                User.objects.filter(
+                    Q(email__icontains=term)
+                    | Q(first_name__icontains=term)
+                    | Q(last_name__icontains=term)
+                    | Q(mobile_phone__icontains=term)
+                ).order_by("last_name", "first_name")[:25]
+            )
+
+        return render(request, "admin/tcsp_search.html", {
+            **self.each_context(request),
+            "title": f"Search results for “{term}”" if term else "Search",
+            "query": term,
+            "swimlings": swimlings,
+            "guardians": guardians,
+        })
+
     def each_context(self, request):
         context = super().each_context(request)
         context["custom_css"] = "css/tcsp_admin.css"
+        context["tcsp_search_url"] = reverse(f"{self.name}:tcsp_search")
         # The switcher is rendered on every page, not just the index, because a
         # changelist is where staff actually are when they need another panel.
         context["tcsp_panels"] = [

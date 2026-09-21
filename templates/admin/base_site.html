@@ -19,6 +19,16 @@
    where staff actually are when they need another panel. Panels the user
    cannot open are left out by TCSPAdminSite.each_context. #}
 {% block nav-global %}
+  {# One lookup box for the job staff do most: find a child, or find that
+     child's parent. Results link into Operations, which any staff member can
+     open, so the search never leads somewhere the user is refused. #}
+  {% if tcsp_search_url %}
+    <form class="tcsp-search" action="{{ tcsp_search_url }}" method="get" role="search">
+      <input type="search" name="q" placeholder="Find a swimmer or guardian"
+             aria-label="Find a swimmer or guardian">
+      <button type="submit">Search</button>
+    </form>
+  {% endif %}
   {% if tcsp_panels %}
     <nav class="tcsp-panels" aria-label="Admin panels">
       {% for panel in tcsp_panels %}

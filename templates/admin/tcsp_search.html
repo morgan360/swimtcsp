@@ -1,0 +1,58 @@
+{% extends "admin/base_site.html" %}
+
+{% block breadcrumbs %}
+  <div class="breadcrumbs"><a href="../">Home</a> &rsaquo; Search</div>
+{% endblock %}
+
+{% block content %}
+  <h1>{{ title }}</h1>
+
+  <form method="get" class="tcsp-search-page">
+    <input type="search" name="q" value="{{ query }}" autofocus
+           placeholder="Name, email or phone number"
+           aria-label="Search swimmers and guardians">
+    <input type="submit" value="Search">
+  </form>
+
+  {% if query %}
+    <h2>Swimmers ({{ swimlings|length }})</h2>
+    {% if swimlings %}
+      <table class="tcsp-results">
+        <thead><tr><th>Name</th><th>Guardian</th><th>Email</th><th>Phone</th></tr></thead>
+        <tbody>
+          {% for s in swimlings %}
+            <tr>
+              <td><a href="{% url 'operations:users_swimling_change' s.pk %}">{{ s.first_name }} {{ s.last_name|default_if_none:"" }}</a></td>
+              <td>{% if s.guardian %}<a href="{% url 'operations:users_user_change' s.guardian.pk %}">{{ s.guardian.first_name }} {{ s.guardian.last_name|default_if_none:"" }}</a>{% else %}—{% endif %}</td>
+              <td>{{ s.guardian.email|default_if_none:"—" }}</td>
+              <td>{{ s.guardian.mobile_phone|default:"—" }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p>No swimmers matched.</p>
+    {% endif %}
+
+    <h2>Guardians and other accounts ({{ guardians|length }})</h2>
+    {% if guardians %}
+      <table class="tcsp-results">
+        <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Swimmers</th></tr></thead>
+        <tbody>
+          {% for g in guardians %}
+            <tr>
+              <td><a href="{% url 'operations:users_user_change' g.pk %}">{{ g.first_name }} {{ g.last_name|default_if_none:"" }}</a></td>
+              <td>{{ g.email }}</td>
+              <td>{{ g.mobile_phone|default:"—" }}</td>
+              <td>{% for s in g.swimling_set.all %}{{ s.first_name }}{% if not forloop.last %}, {% endif %}{% empty %}—{% endfor %}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p>No accounts matched.</p>
+    {% endif %}
+  {% else %}
+    <p>Type a child's name, a parent's name, an email address or a phone number.</p>
+  {% endif %}
+{% endblock %}

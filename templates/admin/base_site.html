@@ -1,5 +1,12 @@
 {% extends "admin/base.html" %}
-{% load static %}
+{% load i18n static %}
+
+{% comment %}
+  Django's own base_site.html supplies the page title and, for anonymous
+  visitors, the theme toggle — the login page has no user tools to put it in.
+  Both are reproduced here because this file replaces that one wholesale.
+{% endcomment %}
+{% block title %}{% if subtitle %}{{ subtitle }} | {% endif %}{{ title }} | {{ site_title|default:_('TCSP Administration') }}{% endblock %}
 
 {% block extrastyle %}
   {{ block.super }}
@@ -17,6 +24,9 @@
   <a href="/" class="tcsp-brand">
     <img src="{% static 'img/logo.png' %}" alt="TCSP Administration" />
   </a>
+  {% if user.is_anonymous %}
+    {% include "admin/color_theme_toggle.html" %}
+  {% endif %}
 {% endblock %}
 
 {% comment %}

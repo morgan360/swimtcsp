@@ -482,3 +482,35 @@ class HeaderRendersCleanlyTests(TestCase):
         html = self.client.get(reverse("operations:index")).content.decode()
         self.assertIn('class="tcsp-search"', html)
         self.assertIn('class="tcsp-panels"', html)
+
+
+class AdminPageTitleTests(TestCase):
+    """Every admin page needs a browser-tab title.
+
+    Replacing admin/base_site.html wholesale dropped Django's {% block title %},
+    so every panel page rendered <title></title> and staff with several tabs
+    open could not tell them apart.
+    """
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.root = make_user("root@tcsp.ie", superuser=True)
+
+    def test_panel_pages_have_a_title(self):
+        self.client.force_login(self.root)
+        for panel, site in PANELS.items():
+            html = self.client.get(reverse(f"{panel}:index")).content.decode()
+            with self.subTest(panel=panel):
+                self.assertNotIn("<title></title>", html)
+                self.assertIn(site.site_title, html)
+
+    def test_a_changelist_has_a_title(self):
+        self.client.force_login(self.root)
+        html = self.client.get(reverse("operations:users_swimling_changelist")).content.decode()
+        self.assertNotIn("<title></title>", html)
+
+    def test_the_login_page_has_a_title_and_a_theme_toggle(self):
+        """Anonymous visitors have no user tools, so the toggle lives in branding."""
+        html = self.client.get(reverse("operations:login")).content.decode()
+        self.assertNotIn("<title></title>", html)
+        self.assertIn("theme-toggle", html)

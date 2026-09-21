@@ -280,7 +280,6 @@ MIDDLEWARE = [
     'hijack.middleware.HijackUserMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django_browser_reload.middleware.BrowserReloadMiddleware',
-    'utils.middleware.SetSessionExpiryMiddleware',  # ✅ Your custom one
     'utils.middleware.CustomErrorPageMiddleware',   # Render 401/503 templates
 # Maintanence mode toggle python manage.py maintenance_mode off/on
     "maintenance_mode.middleware.MaintenanceModeMiddleware"
@@ -500,7 +499,11 @@ MAILCHIMP_SERVER_PREFIX = config("MAILCHIMP_SERVER_PREFIX")
 MAILCHIMP_LIST_ID = config("MAILCHIMP_LIST_ID")
 
 # Already done, but double check:
-SESSION_COOKIE_AGE = 86400  # 1 day
+# How long a session survives without activity. SESSION_SAVE_EVERY_REQUEST makes
+# this a rolling window, so the clock restarts on each page view and only idle
+# time counts. This used to be contradicted by SetSessionExpiryMiddleware, which
+# hardcoded 1800 on every request and made this setting a dead letter.
+SESSION_COOKIE_AGE = 7200  # 2 hours idle
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 SESSION_SAVE_EVERY_REQUEST = True
 CSRF_COOKIE_AGE = 86400

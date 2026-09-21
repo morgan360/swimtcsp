@@ -313,3 +313,32 @@ class ReplyToBackendTests(SimpleTestCase):
 
         self.assertEqual(first.reply_to, ['swimming@tcsp.ie'])
         self.assertEqual(second.reply_to, ['swimming@tcsp.ie'])
+
+
+class SessionTimeoutTests(TestCase):
+    """The session timeout should be one honest number in settings.
+
+    SetSessionExpiryMiddleware used to call set_expiry(1800) on every request,
+    which overrode SESSION_COOKIE_AGE and made that setting a dead letter. It
+    also called set_expiry(0) first, a line that could never take effect.
+    """
+
+    def test_timeout_is_two_hours(self):
+        from django.conf import settings
+
+        self.assertEqual(settings.SESSION_COOKIE_AGE, 7200)
+
+    def test_the_expiry_middleware_is_gone(self):
+        from django.conf import settings
+
+        self.assertNotIn(
+            "utils.middleware.SetSessionExpiryMiddleware", settings.MIDDLEWARE,
+            "the middleware is back and will override SESSION_COOKIE_AGE again")
+
+    def test_a_request_does_not_shorten_the_session(self):
+        """A page view must leave the session on the settings value, not 1800."""
+        self.client.get("/")
+        expiry = self.client.session.get_expiry_age()
+        self.assertGreater(
+            expiry, 1800,
+            f"session expires in {expiry}s — something is still overriding SESSION_COOKIE_AGE")

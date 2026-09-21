@@ -85,3 +85,71 @@
   #header { height: auto; flex-wrap: wrap; padding-bottom: .5rem; }
   .tcsp-panels { margin-left: 0; padding: .5rem 1rem 0; width: 100%; }
 }
+
+/* ------------------------------------------------------------------
+   Header link colour
+   Django sets `#header a:link, #header a:visited { color: ... }`, which is
+   more specific than a class selector — so the current panel pill rendered
+   white text on its white background. These rules win it back.
+   ------------------------------------------------------------------ */
+#header .tcsp-panel:link,
+#header .tcsp-panel:visited { color: #fff; }
+
+#header .tcsp-panel.is-current:link,
+#header .tcsp-panel.is-current:visited {
+  color: #05504d;
+  font-weight: 700;
+}
+
+/* ------------------------------------------------------------------
+   Theme toggle
+   Django ships this as a bare 1.5rem icon with screen-reader-only labels,
+   which is easy to miss entirely. Give it the same pill shape as the panel
+   switcher and a visible word. The label is decorative — the real ones are
+   still there for screen readers.
+   ------------------------------------------------------------------ */
+#header .theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  padding: .35rem .8rem;
+  margin-inline-start: .6rem;
+  border: 1px solid rgba(255, 255, 255, .55);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .16);
+  color: #fff;
+  font-size: .95rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+#header .theme-toggle:hover,
+#header .theme-toggle:focus-visible { background: rgba(255, 255, 255, .32); }
+#header .theme-toggle svg { height: 1.15rem; width: 1.15rem; }
+
+#header .theme-toggle::after { content: "Theme"; }
+html[data-theme="auto"]  #header .theme-toggle::after { content: "Auto"; }
+html[data-theme="light"] #header .theme-toggle::after { content: "Light"; }
+html[data-theme="dark"]  #header .theme-toggle::after { content: "Dark"; }
+
+/* ------------------------------------------------------------------
+   Make dark mode look dark
+   shared_admin.css forced the header teal with !important in both themes, so
+   switching to dark changed the page body but left the masthead identical —
+   which is most of why night mode did not read as "on".
+   ------------------------------------------------------------------ */
+html[data-theme="dark"] #header { background-color: #05403d !important; }
+html[data-theme="dark"] .tcsp-panel { border-color: rgba(255, 255, 255, .35); }
+html[data-theme="dark"] #header .tcsp-panel.is-current:link,
+html[data-theme="dark"] #header .tcsp-panel.is-current:visited {
+  background: #7fe3dd;
+  color: #04302e;
+}
+
+@media (prefers-color-scheme: dark) {
+  html[data-theme="auto"] #header { background-color: #05403d !important; }
+  html[data-theme="auto"] #header .tcsp-panel.is-current:link,
+  html[data-theme="auto"] #header .tcsp-panel.is-current:visited {
+    background: #7fe3dd;
+    color: #04302e;
+  }
+}

@@ -358,3 +358,50 @@ class AdminMenuItemTests(TestCase):
             with self.subTest(url_name=url_name):
                 with self.assertRaises(NoReverseMatch):
                     reverse(url_name)
+
+
+class DrawerMenuVisibilityTests(TestCase):
+    """Superusers must see every menu item they can actually open.
+
+    required_groups was checked strictly against user.groups, so a superuser who
+    is not in the named group lost the link even though the panel admits them.
+    """
+
+    def _menu_labels(self, user):
+        from django.template import Context, Template
+
+        request = type("R", (), {"user": user})()
+        template = Template("{% load navigation_tags %}{% drawer_menu as menu %}"
+                            "{% for group, items in menu.items %}"
+                            "{% for i in items %}{{ i.label }}|{% endfor %}{% endfor %}")
+        return template.render(Context({"request": request})).split("|")
+
+    def test_superuser_sees_an_item_gated_on_a_group_they_lack(self):
+        from django.contrib.auth.models import Group
+
+        from navigation.models import MenuGroup, MenuItem
+
+        menu_group = MenuGroup.objects.create(name="Admin")
+        item = MenuItem.objects.create(
+            group=menu_group, label="Settings", url_name="settings:index",
+            requires_login=True, requires_staff=True)
+        item.required_groups.add(Group.objects.create(name="Manager"))
+
+        # A superuser in 'administrator' but not 'Manager' — the real shape of
+        # this site's superuser accounts.
+        root = make_user("root@tcsp.ie", ["administrator"], superuser=True)
+        self.assertIn("Settings", self._menu_labels(root))
+
+    def test_staff_without_the_group_still_do_not_see_it(self):
+        from django.contrib.auth.models import Group
+
+        from navigation.models import MenuGroup, MenuItem
+
+        menu_group = MenuGroup.objects.create(name="Admin")
+        item = MenuItem.objects.create(
+            group=menu_group, label="Settings", url_name="settings:index",
+            requires_login=True, requires_staff=True)
+        item.required_groups.add(Group.objects.create(name="Manager"))
+
+        desk = make_user("desk@tcsp.ie", ["Desk"])
+        self.assertNotIn("Settings", self._menu_labels(desk))

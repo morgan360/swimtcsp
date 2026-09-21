@@ -48,7 +48,6 @@
   text-decoration: none;
 }
 .tcsp-brand img { height: 60px; margin-right: 1rem; }
-.tcsp-brand span { color: #fff; font-size: 1.5rem; font-weight: 600; }
 
 .tcsp-panels {
   display: flex;
@@ -222,9 +221,8 @@ table.tcsp-results td, table.tcsp-results th { padding: .5rem .75rem; }
 }
 
 #branding { flex: 0 0 auto; }
-.tcsp-brand img { height: 44px; margin-right: .75rem; }
-.tcsp-brand span { font-size: 1.2rem; white-space: nowrap; }
-#header img { height: 44px; }
+.tcsp-brand img { height: 52px; margin-right: 0; }
+#header img { height: 52px; }
 
 #user-tools {
   font-size: .78rem;
@@ -239,7 +237,6 @@ table.tcsp-results td, table.tcsp-results th { padding: .5rem .75rem; }
 .tcsp-panels { margin-left: 0; flex-wrap: nowrap; padding-right: 0; }
 
 @media (max-width: 1400px) {
-  .tcsp-brand span { font-size: 1.05rem; }
   .tcsp-search input[type="search"] { width: 12rem; }
 }
 
@@ -250,7 +247,6 @@ table.tcsp-results td, table.tcsp-results th { padding: .5rem .75rem; }
 
 @media (max-width: 767px) {
   #header { padding: .6rem 1rem; }
-  .tcsp-brand span { white-space: normal; }
   .tcsp-panels { width: 100%; padding: 0; }
 }
 

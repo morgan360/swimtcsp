@@ -9,9 +9,13 @@
 {% endblock %}
 
 {% block branding %}
+  {% comment %}
+    Logo only. The wordmark repeated what the logo already says and was the
+    widest thing competing with the search box and the panel switcher. The alt
+    text now carries the accessible name for the link.
+  {% endcomment %}
   <a href="/" class="tcsp-brand">
-    <img src="{% static 'img/logo.png' %}" alt="TCSP" />
-    <span>TCSP Administration</span>
+    <img src="{% static 'img/logo.png' %}" alt="TCSP Administration" />
   </a>
 {% endblock %}
 

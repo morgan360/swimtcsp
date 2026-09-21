@@ -66,6 +66,9 @@ CSRF_TRUSTED_ORIGINS = ['https://www.tcsp.ie', 'https://tcsp.ie']
 # --- Maintenance mode ---
 MAINTENANCE_MODE_IGNORE_URLS = (
     r'^/admin/.*',
+    r'^/operations/.*',
+    r'^/finance/.*',
+    r'^/settings-admin/.*',
     r'^/accounts/login/?$',
     r'^/accounts/logout/?$',
     r'^/accounts/password/reset/.*$',

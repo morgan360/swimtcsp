@@ -507,6 +507,9 @@ CSRF_COOKIE_AGE = 86400
 
 MAINTENANCE_MODE_IGNORE_URLS = (
     r'^/admin/.*',                 # allow all admin pages
+    r'^/operations/.*',            # admin panels
+    r'^/finance/.*',
+    r'^/settings-admin/.*',
     r'^/accounts/login/?$',        # Django default login
     r'^/accounts/logout/?$',       # Django default logout
     r'^/accounts/password_reset/?$',  # Django default password reset

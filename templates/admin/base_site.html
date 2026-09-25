@@ -58,4 +58,19 @@
       {% endfor %}
     </nav>
   {% endif %}
+  {% comment %}
+    Sections of the current panel (Operations only): the old per-area panels
+    as a second, smaller row, so Lessons, Swims and Schools are one click away.
+  {% endcomment %}
+  {% if tcsp_sections %}
+    <nav class="tcsp-sections" aria-label="Sections">
+      {% for section in tcsp_sections %}
+        <a href="{{ section.url }}"
+           class="tcsp-section{% if section.current %} is-current{% endif %}"
+           {% if section.current %}aria-current="page"{% endif %}>
+          <span aria-hidden="true">{{ section.icon }}</span> {{ section.name }}
+        </a>
+      {% endfor %}
+    </nav>
+  {% endif %}
 {% endblock %}

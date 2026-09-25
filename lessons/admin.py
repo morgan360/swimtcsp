@@ -5,7 +5,6 @@ from .models import Program, Category, Product
 from .resources import CategoryResource, ProductResource, ProgramResource
 from import_export.admin import ImportExportMixin
 from django_admin_listfilter_dropdown.filters import DropdownFilter, RelatedDropdownFilter, ChoiceDropdownFilter
-from boipa.models import Refund  # 👈 Import the model
 from custom_admins.base import TCSPModelAdmin
 
 
@@ -57,25 +56,7 @@ class CategoryAdmin(ImportExportMixin, TCSPModelAdmin):
     resource_class = CategoryResource
     list_display = ['name', 'program', 'slug', 'stage']
 
-class RefundAdmin(TCSPModelAdmin):
-    """Read-only: a refund record is written by the gateway callback."""
-
-    list_display = ['id', 'order', 'tx_id', 'amount', 'created']
-    search_fields = ['tx_id', 'order__id']
-    list_filter = ['created']
-
-    def get_readonly_fields(self, request, obj=None):
-        return [f.name for f in self.model._meta.fields]
-
-    def has_add_permission(self, request):
-        return False
-
-    def has_change_permission(self, request, obj=None):
-        return False
-
-
 # ✅ Register only to your custom admin site
-lessons_admin_site.register(Refund, RefundAdmin)
 lessons_admin_site.register(Product, ProductAdmin)
 lessons_admin_site.register(Program, ProgramAdmin)
 lessons_admin_site.register(Category, CategoryAdmin)

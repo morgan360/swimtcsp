@@ -98,6 +98,8 @@
                                 <span>Lessons</span>
                             </button>
                         </li>
+                        {# Staff only: the public found the calendar confusing (Esther, Sep 2026). #}
+                        {% if user.is_staff %}
                         <li class="w-full sm:w-auto">
                             <button @click.prevent="switchTab('calendar')"
                                 :class="currentTab === 'calendar' ?
@@ -108,6 +110,7 @@
                                 <span>Calendar</span>
                             </button>
                         </li>
+                        {% endif %}
                     </ul>
                 </nav>
             </div>
@@ -421,12 +424,14 @@
                 </div>
             </div>
 
+            {% if user.is_staff %}
             <!-- Calendar Overview Tab -->
             <div x-show="currentTab === 'calendar'" class="w-full">
                 <div class="bg-white/90 rounded-xl shadow-lg p-6 backdrop-blur-sm">
                     <div id="calendar" class="text-sm text-blue-900"></div>
                 </div>
             </div>
+            {% endif %}
 
             <!-- Include Modals -->
             {% include 'timetable/modals/lessons_faq_modal.html' %}

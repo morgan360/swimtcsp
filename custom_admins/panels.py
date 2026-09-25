@@ -25,6 +25,16 @@ class OperationsAdminSite(TCSPAdminSite):
     panel_icon = "🏊"
     panel_path = "/operations/"
     required_groups = ()  # any staff member
+    # Operations holds most of the models, so it is split into the areas staff
+    # used to have as separate panels. Every registered app should appear in
+    # one section — the tests check — or its models are only on "All".
+    sections = (
+        ("lessons", "Lessons", "📚", ("lessons", "lessons_bookings", "waiting_list")),
+        ("swims", "Swims", "🏊", ("swims",)),
+        ("schools", "Schools", "🏫", ("schools", "schools_bookings")),
+        ("members", "Members", "👪", ("users",)),
+        ("instructors", "Instructors & attendance", "📋", ("instructors", "anseo", "progress")),
+    )
 
 
 class SettingsAdminSite(TCSPAdminSite):

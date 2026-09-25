@@ -183,6 +183,48 @@ class PanelSwitcherTests(TestCase):
         self.assertIn('href="/finance/"', html)
 
 
+class OperationsSectionTests(TestCase):
+    """Operations split into sections, so Lessons, Swims and Schools are one click away."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.root = make_user("root@tcsp.ie", superuser=True)
+
+    def test_every_operations_app_belongs_to_a_section(self):
+        # An app left out would only be reachable from the unfiltered index.
+        covered = {label for *_rest, apps in operations_site.sections for label in apps}
+        registered = {model._meta.app_label for model in operations_site._registry}
+        self.assertEqual(registered - covered, set())
+
+    def test_section_shows_only_its_own_apps(self):
+        self.client.force_login(self.root)
+        response = self.client.get(reverse("operations:section", args=["swims"]))
+        self.assertEqual(response.status_code, 200)
+        labels = {app["app_label"] for app in response.context["app_list"]}
+        self.assertEqual(labels, {"swims"})
+
+    def test_unknown_section_is_404(self):
+        self.client.force_login(self.root)
+        response = self.client.get(reverse("operations:section", args=["nope"]))
+        self.assertEqual(response.status_code, 404)
+
+    def test_changelist_highlights_its_section(self):
+        self.client.force_login(self.root)
+        response = self.client.get(reverse("operations:lessons_bookings_term_changelist"))
+        current = [s["name"] for s in response.context["tcsp_sections"] if s["current"]]
+        self.assertEqual(current, ["Lessons"])
+
+    def test_other_panels_have_no_section_row(self):
+        self.client.force_login(self.root)
+        html = self.client.get(reverse("finance:index")).content.decode()
+        self.assertNotIn('class="tcsp-sections"', html)
+
+    def test_refunds_are_on_finance_not_operations(self):
+        from boipa.models import Refund
+        self.assertIn(Refund, finance_site._registry)
+        self.assertNotIn(Refund, operations_site._registry)
+
+
 class ManagementPageTests(TestCase):
     """/management/ was linked from every admin index page and raised NoReverseMatch."""
 

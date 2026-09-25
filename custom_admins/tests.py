@@ -481,6 +481,27 @@ class HeaderSearchTests(TestCase):
     def test_finds_a_guardian_by_surname(self):
         self.assertContains(self._search("O'Keeffe"), "Bridget")
 
+    def test_finds_a_child_by_full_name(self):
+        # The whole phrase used to be matched against one field at a time.
+        self.assertContains(self._search("Saoirse O'Kee"), "bridget.okeeffe@example.com")
+
+    def test_every_word_must_match(self):
+        self.assertContains(self._search("Saoirse Murphy"), "No swimmers matched")
+
+    def test_says_when_there_are_more_matches_than_shown(self):
+        from datetime import date
+
+        from custom_admins.base import TCSPAdminSite
+        from users.models import Swimling
+
+        for i in range(TCSPAdminSite.SEARCH_LIMIT + 5):
+            Swimling.objects.create(first_name="Ciara", last_name=f"Surname{i:03}",
+                                    guardian=self.guardian, dob=date(2015, 1, 1))
+        response = self._search("Ciara")
+        self.assertEqual(len(response.context["swimlings"]), TCSPAdminSite.SEARCH_LIMIT)
+        self.assertEqual(response.context["swimling_total"], TCSPAdminSite.SEARCH_LIMIT + 5)
+        self.assertContains(response, "Showing the first")
+
     def test_search_exists_on_every_panel(self):
         root = make_user("root@tcsp.ie", superuser=True)
         self.client.force_login(root)

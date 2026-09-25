@@ -97,6 +97,10 @@ class TCSPAdminSite(AdminSite):
                 return slug
         return None
 
+    #: Results shown per list. A common first name runs past this, so the page
+    #: says how many matched in all and suggests adding the surname.
+    SEARCH_LIMIT = 100
+
     def tcsp_search(self, request):
         """Find a swimmer or a guardian without first choosing a panel.
 
@@ -110,25 +114,30 @@ class TCSPAdminSite(AdminSite):
         from users.models import Swimling
 
         term = (request.GET.get("q") or "").strip()
+        # Each word must match somewhere, so "Ciara Tuc" finds Ciara Tucker:
+        # matching the whole phrase against one field at a time found nothing,
+        # because no single field holds a first name and a surname together.
+        words = term.split()
+        swimling_fields = ("first_name", "last_name", "guardian__email", "guardian__last_name")
+        guardian_fields = ("email", "first_name", "last_name", "mobile_phone")
+
+        def matching(queryset, fields):
+            for word in words:
+                any_field = Q()
+                for field in fields:
+                    any_field |= Q(**{f"{field}__icontains": word})
+                queryset = queryset.filter(any_field)
+            return queryset
+
         swimlings, guardians = [], []
-        if term:
-            swimlings = list(
-                Swimling.objects.select_related("guardian").filter(
-                    Q(first_name__icontains=term)
-                    | Q(last_name__icontains=term)
-                    | Q(guardian__email__icontains=term)
-                    | Q(guardian__last_name__icontains=term)
-                ).order_by("last_name", "first_name")[:25]
-            )
-            User = get_user_model()
-            guardians = list(
-                User.objects.filter(
-                    Q(email__icontains=term)
-                    | Q(first_name__icontains=term)
-                    | Q(last_name__icontains=term)
-                    | Q(mobile_phone__icontains=term)
-                ).order_by("last_name", "first_name")[:25]
-            )
+        swimling_total = guardian_total = 0
+        if words:
+            found = matching(Swimling.objects.select_related("guardian"), swimling_fields)
+            swimling_total = found.count()
+            swimlings = list(found.order_by("last_name", "first_name")[:self.SEARCH_LIMIT])
+            found = matching(get_user_model().objects.prefetch_related("swimling_set"), guardian_fields)
+            guardian_total = found.count()
+            guardians = list(found.order_by("last_name", "first_name")[:self.SEARCH_LIMIT])
 
         return render(request, "admin/tcsp_search.html", {
             **self.each_context(request),
@@ -136,6 +145,8 @@ class TCSPAdminSite(AdminSite):
             "query": term,
             "swimlings": swimlings,
             "guardians": guardians,
+            "swimling_total": swimling_total,
+            "guardian_total": guardian_total,
         })
 
     def each_context(self, request):

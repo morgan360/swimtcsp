@@ -15,7 +15,10 @@
   </form>
 
   {% if query %}
-    <h2>Swimmers ({{ swimlings|length }})</h2>
+    <h2>Swimmers ({{ swimling_total }})</h2>
+    {% if swimling_total > swimlings|length %}
+      <p class="help">Showing the first {{ swimlings|length }}. Add more of the name — “Ciara Tuc” rather than “Ciara” — to narrow it down.</p>
+    {% endif %}
     {% if swimlings %}
       <table class="tcsp-results">
         <thead><tr><th>Name</th><th>Guardian</th><th>Email</th><th>Phone</th></tr></thead>
@@ -34,7 +37,10 @@
       <p>No swimmers matched.</p>
     {% endif %}
 
-    <h2>Guardians and other accounts ({{ guardians|length }})</h2>
+    <h2>Guardians and other accounts ({{ guardian_total }})</h2>
+    {% if guardian_total > guardians|length %}
+      <p class="help">Showing the first {{ guardians|length }}. Add more of the name to narrow it down.</p>
+    {% endif %}
     {% if guardians %}
       <table class="tcsp-results">
         <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Swimmers</th></tr></thead>

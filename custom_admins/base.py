@@ -44,6 +44,10 @@ class TCSPAdminSite(AdminSite):
     #: Where this panel is mounted. Kept separate from ``name`` (the URL
     #: namespace) so a panel can be renamed without breaking every reverse.
     panel_path = "/"
+    #: Optional sub-sections of a big panel, shown as a second row of buttons:
+    #: ``(slug, label, icon, app_labels)``. Each is the panel index filtered to
+    #: those apps, so the models themselves stay where they are registered.
+    sections: tuple = ()
 
     def has_permission(self, request):
         user = request.user
@@ -56,9 +60,42 @@ class TCSPAdminSite(AdminSite):
     def get_urls(self):
         from django.urls import path
 
-        return [
+        urls = [
             path("search/", self.admin_view(self.tcsp_search), name="tcsp_search"),
-        ] + super().get_urls()
+        ]
+        if self.sections:
+            urls.append(path("section/<slug:section>/",
+                             self.admin_view(self.section_index), name="section"))
+        return urls + super().get_urls()
+
+    def section_index(self, request, section):
+        """The panel index, cut down to one section's apps."""
+        from django.http import Http404
+
+        match = next((s for s in self.sections if s[0] == section), None)
+        if match is None:
+            raise Http404("No such section")
+        _slug, label, _icon, app_labels = match
+        app_list = [app for app in self.get_app_list(request)
+                    if app["app_label"] in app_labels]
+        return self.index(request, extra_context={"title": label, "app_list": app_list})
+
+    def _current_section(self, request):
+        """The section a page belongs to, read from its URL.
+
+        Section pages are /<panel>/section/<slug>/; model pages are
+        /<panel>/<app_label>/..., so a changelist lights up its section too.
+        """
+        rest = request.path[len(self.panel_path):] if request.path.startswith(self.panel_path) else ""
+        parts = [p for p in rest.split("/") if p]
+        if not parts:
+            return None
+        if parts[0] == "section" and len(parts) > 1:
+            return parts[1]
+        for slug, _label, _icon, app_labels in self.sections:
+            if parts[0] in app_labels:
+                return slug
+        return None
 
     def tcsp_search(self, request):
         """Find a swimmer or a guardian without first choosing a panel.
@@ -117,6 +154,17 @@ class TCSPAdminSite(AdminSite):
             for site in _PANELS
             if site.has_permission(request)
         ]
+        if self.sections:
+            current = self._current_section(request)
+            context["tcsp_sections"] = [
+                {
+                    "name": label,
+                    "icon": icon,
+                    "url": reverse(f"{self.name}:section", args=[slug]),
+                    "current": slug == current,
+                }
+                for slug, label, icon, _apps in self.sections
+            ]
         return context
 
 

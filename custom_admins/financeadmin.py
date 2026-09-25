@@ -12,6 +12,7 @@ import csv
 from swims_orders.models import Order as SwimOrder, OrderItem as SwimOrderItem
 from lessons_orders.models import Order as LessonOrder, OrderItem as LessonOrderItem
 from schools_orders.models import Order as SchoolOrder, OrderItem as SchoolOrderItem
+from boipa.models import Refund
 
 # Date range filter
 from rangefilter.filters import DateRangeFilter
@@ -341,3 +342,23 @@ class LessonOrderAdmin(BaseOrderAdmin):
 @register(SchoolOrder, site=finance_admin_site)
 class SchoolOrderAdmin(BaseOrderAdmin):
     inlines = [SchoolOrderItemInline]
+
+
+# Refunds sit with the orders they reverse. They were on Operations under a
+# "Boipa" heading, which staff reasonably read as the reconciliation tools.
+@register(Refund, site=finance_admin_site)
+class RefundAdmin(TCSPModelAdmin):
+    """Read-only: a refund record is written by the gateway callback."""
+
+    list_display = ['id', 'order', 'tx_id', 'amount', 'created']
+    search_fields = ['tx_id', 'order__id']
+    list_filter = ['created']
+
+    def get_readonly_fields(self, request, obj=None):
+        return [f.name for f in self.model._meta.fields]
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False

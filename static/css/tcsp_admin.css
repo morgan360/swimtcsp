@@ -298,3 +298,42 @@ table.tcsp-results td, table.tcsp-results th { padding: .5rem .75rem; }
 @media (max-width: 767px) {
   #header { padding: .75rem 1rem 1rem; }
 }
+
+/* ------------------------------------------------------------------
+   Section row
+   Operations' sections, under the panel row: smaller, flatter pills so the
+   two rows read as panel then section rather than as one long list.
+   ------------------------------------------------------------------ */
+/* The header is a flex item of Django's column-flex #container, and the
+   explicit min-height above replaces the automatic "no smaller than my
+   content" minimum — so it shrank to 96px and a third row spilled out over
+   the page title. */
+#header { flex-shrink: 0; }
+
+.tcsp-sections {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem;
+  width: 100%;
+}
+#header .tcsp-section:link,
+#header .tcsp-section:visited {
+  display: inline-flex;
+  align-items: center;
+  gap: .3rem;
+  padding: .25rem .7rem;
+  border-radius: 6px;
+  font-size: .85rem;
+  font-weight: 600;
+  color: #fff;
+  text-decoration: none;
+  background: rgba(0, 0, 0, .12);
+  white-space: nowrap;
+}
+#header .tcsp-section:hover,
+#header .tcsp-section:focus-visible { background: rgba(255, 255, 255, .25); }
+#header .tcsp-section.is-current:link,
+#header .tcsp-section.is-current:visited {
+  background: #fff;
+  color: #05504d;
+}

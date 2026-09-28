@@ -1,4 +1,5 @@
 {% extends "admin/base_site.html" %}
+{% load hijack %}
 
 {% block breadcrumbs %}
   <div class="breadcrumbs"><a href="../">Home</a> &rsaquo; Search</div>
@@ -21,7 +22,7 @@
     {% endif %}
     {% if swimlings %}
       <table class="tcsp-results">
-        <thead><tr><th>Name</th><th>Guardian</th><th>Email</th><th>Phone</th></tr></thead>
+        <thead><tr><th>Name</th><th>Guardian</th><th>Email</th><th>Phone</th><th></th></tr></thead>
         <tbody>
           {% for s in swimlings %}
             <tr>
@@ -29,6 +30,7 @@
               <td>{% if s.guardian %}<a href="{% url 'operations:users_user_change' s.guardian.pk %}">{{ s.guardian.first_name }} {{ s.guardian.last_name|default_if_none:"" }}</a>{% else %}—{% endif %}</td>
               <td>{{ s.guardian.email|default_if_none:"—" }}</td>
               <td>{{ s.guardian.mobile_phone|default:"—" }}</td>
+              <td>{% if s.guardian and request.user|can_hijack:s.guardian %}{% include "admin/_tcsp_hijack_button.html" with target=s.guardian label="Hijack parent" %}{% endif %}</td>
             </tr>
           {% endfor %}
         </tbody>
@@ -43,7 +45,7 @@
     {% endif %}
     {% if guardians %}
       <table class="tcsp-results">
-        <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Swimmers</th></tr></thead>
+        <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Swimmers</th><th></th></tr></thead>
         <tbody>
           {% for g in guardians %}
             <tr>
@@ -51,6 +53,7 @@
               <td>{{ g.email }}</td>
               <td>{{ g.mobile_phone|default:"—" }}</td>
               <td>{% for s in g.swimling_set.all %}{{ s.first_name }}{% if not forloop.last %}, {% endif %}{% empty %}—{% endfor %}</td>
+              <td>{% if request.user|can_hijack:g %}{% include "admin/_tcsp_hijack_button.html" with target=g label="Hijack" %}{% endif %}</td>
             </tr>
           {% endfor %}
         </tbody>

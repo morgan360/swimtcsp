@@ -556,6 +556,35 @@ class HeaderSearchTests(TestCase):
         self.client.force_login(self.desk)
         self.assertNotEqual(self.client.get(reverse("finance:tcsp_search")).status_code, 200)
 
+    def _hijack_input(self, user):
+        return f'name="user_pk" value="{user.pk}"'
+
+    def test_guardian_results_offer_a_hijack_button(self):
+        response = self._search("bridget.okeeffe@example")
+        self.assertContains(response, reverse("hijack:acquire"))
+        self.assertContains(response, self._hijack_input(self.guardian))
+
+    def test_swimmer_results_offer_to_hijack_the_parent(self):
+        # Searched by the child's name alone, so the guardian table does not match
+        # and any button on the page must come from the swimmer row.
+        response = self._search("Saoirse")
+        self.assertEqual(response.context["guardian_total"], 0)
+        self.assertContains(response, "Hijack parent")
+        self.assertContains(response, self._hijack_input(self.guardian))
+
+    def test_staff_accounts_get_no_hijack_button(self):
+        colleague = make_user("colleague@tcsp.ie", ["Desk"])
+        colleague.last_name = "Kavanagh"
+        colleague.save()
+        response = self._search("Kavanagh")
+        self.assertContains(response, "colleague@tcsp.ie")
+        self.assertNotContains(response, self._hijack_input(colleague))
+
+    def test_hijack_button_from_search_hijacks_the_parent(self):
+        self.client.force_login(self.desk)
+        self.client.post(reverse("hijack:acquire"), {"user_pk": self.guardian.pk})
+        self.assertEqual(int(self.client.session["_auth_user_id"]), self.guardian.pk)
+
     def test_empty_search_renders_a_prompt_not_an_error(self):
         self.client.force_login(self.desk)
         response = self.client.get(reverse("operations:tcsp_search"))

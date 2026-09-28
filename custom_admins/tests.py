@@ -1,11 +1,12 @@
 """Access rules and health of the three admin panels."""
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import Group
+from django.contrib.auth.models import Group, Permission
 from django.test import TestCase
 from django.urls import reverse
 
 import core.urls  # noqa: F401  — registers the panels' models
 from custom_admins.panels import finance_site, operations_site, settings_site
+from users.models import Swimling
 
 User = get_user_model()
 
@@ -160,6 +161,33 @@ class GuardianLookupTests(TestCase):
         self.client.force_login(self.desk)
         self.client.post(reverse("hijack:acquire"), {"user_pk": self.guardian.pk, "next": "/"})
         self.assertEqual(int(self.client.session["_auth_user_id"]), self.guardian.pk)
+
+
+class StaffPageAdminLinkTests(TestCase):
+    """Staff pages outside the admin must link into the panel that holds the model.
+
+    The Swimlings page hard-coded /usersadmin/ edit links. After consolidation
+    those redirected to Settings, which has no Swimling page and turns non-Managers
+    away, so staff could no longer edit a swimmer from it.
+    """
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.desk = make_user("desk@tcsp.ie", ["Desk"])
+        cls.desk.user_permissions.add(Permission.objects.get(codename="change_swimling"))
+        cls.guardian = make_user("parent@example.com", ["Guardian"], staff=False)
+        cls.swimling = Swimling.objects.create(guardian=cls.guardian, first_name="Aodhan", last_name="Toole")
+
+    def test_swimlings_page_edit_link_opens_an_editable_swimling(self):
+        self.client.force_login(self.desk)
+        page = self.client.get(reverse("users:swimlings_list")).content.decode()
+        edit_url = reverse("operations:users_swimling_change", args=[self.swimling.pk])
+        self.assertIn(f'href="{edit_url}"', page)
+        self.assertNotIn("/usersadmin/", page)
+
+        response = self.client.get(edit_url)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('name="_save"', response.content.decode())
 
 
 class PanelSwitcherTests(TestCase):

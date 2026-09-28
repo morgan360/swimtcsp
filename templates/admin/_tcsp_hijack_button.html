@@ -1,0 +1,8 @@
+{% load l10n %}
+{# A plain POST form rather than the changelist's JS button, so no extra script is needed. #}
+{# Callers check can_hijack first; the view checks HIJACK_PERMISSION_CHECK again anyway. #}
+<form method="post" action="{% url 'hijack:acquire' %}" class="tcsp-hijack">
+  {% csrf_token %}
+  <input type="hidden" name="user_pk" value="{{ target.pk|unlocalize }}">
+  <button type="submit" class="button">{{ label }}</button>
+</form>

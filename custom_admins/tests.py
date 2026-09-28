@@ -147,6 +147,20 @@ class GuardianLookupTests(TestCase):
         self.assertNotEqual(
             self.client.get(reverse("settings:users_user_changelist")).status_code, 200)
 
+    def test_desk_staff_get_a_hijack_button_on_customers_only(self):
+        # Hijack used to be offered only on the Settings user admin, so the
+        # consolidation silently took it away from everyone but Managers.
+        colleague = make_user("colleague@tcsp.ie", ["Desk"])
+        self.client.force_login(self.desk)
+        page = self.client.get(reverse("operations:users_user_changelist")).content.decode()
+        self.assertIn(f'data-hijack-user="{self.guardian.pk}"', page)
+        self.assertNotIn(f'data-hijack-user="{colleague.pk}"', page)
+
+    def test_desk_staff_can_hijack_a_customer(self):
+        self.client.force_login(self.desk)
+        self.client.post(reverse("hijack:acquire"), {"user_pk": self.guardian.pk, "next": "/"})
+        self.assertEqual(int(self.client.session["_auth_user_id"]), self.guardian.pk)
+
 
 class PanelSwitcherTests(TestCase):
     """The switcher appears on every page and lists only reachable panels.

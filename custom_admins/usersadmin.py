@@ -212,7 +212,11 @@ class TermAutocompleteAdmin(TCSPModelAdmin):
 # and with it staff status and group membership — belongs on Settings with the
 # Managers. So the same model is registered twice: fully on Settings, and
 # read-only here.
-class GuardianLookupAdmin(TCSPModelAdmin):
+#
+# Hijack lives here too, not only on Settings: every staff member logs in as a
+# parent to see what they see. HIJACK_PERMISSION_CHECK still decides each row,
+# so staff get the button on customers only, never on other staff.
+class GuardianLookupAdmin(HijackUserAdminMixin, TCSPModelAdmin):
     """Read-only view of a guardian and their swimmers."""
 
     list_display = ("full_name", "email", "mobile_phone", "swimling_names")

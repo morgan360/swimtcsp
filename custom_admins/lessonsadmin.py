@@ -2,7 +2,7 @@
 from django.contrib import admin
 from django.utils.html import format_html
 from django.contrib.admin import AdminSite
-from django.urls import path
+from django.urls import path, reverse
 from django_admin_listfilter_dropdown.filters import RelatedDropdownFilter
 from utils.admin_filters import SearchableRelatedDropdownFilter
 
@@ -60,9 +60,11 @@ class LessonEnrollmentAdmin(TCSPModelAdmin):
     # ✅ Pretty link to related order
     def order_link(self, obj):
         if hasattr(obj, "order") and obj.order:
+            # Orders live on Finance; the old /lessonsadmin/ link redirected to
+            # Operations, which has no order page.
             return format_html(
-                '<a href="/lessonsadmin/lessons_orders/order/{}/change/">Order #{}</a>',
-                obj.order.id,
+                '<a href="{}">Order #{}</a>',
+                reverse("finance:lessons_orders_order_change", args=[obj.order.id]),
                 obj.order.id,
             )
         return "-"

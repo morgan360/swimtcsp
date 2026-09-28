@@ -63,7 +63,7 @@
         <div class="mt-4">
             <p class="text-xs font-medium uppercase text-gray-500 mb-2">Actions</p>
             <div class="flex flex-wrap gap-2">
-                <a href="/usersadmin/users/swimling/{{ s.id }}/change/"
+                <a href="{% url 'operations:users_swimling_change' s.id %}"
                     class="inline-flex items-center px-3 py-1.5 bg-green-600 text-white text-xs font-medium rounded-lg hover:bg-green-700 transition-colors">
                     <i class="fas fa-edit mr-1"></i>Edit Swimling Details
                 </a>

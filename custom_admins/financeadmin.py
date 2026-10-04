@@ -77,6 +77,7 @@ class FinanceAdminSite(TCSPAdminSite):
             path('reconciliation/details/<str:order_type>/<int:order_id>/',
                  self.admin_view(fv.reconciliation_details), name='reconciliation_details'),
             path('reconciliation/export/csv/', self.admin_view(fv.reconciliation_export_csv), name='reconciliation_export_csv'),
+            path('lesson-enrollments/', self.admin_view(fv.lesson_enrollments), name='lesson_enrollments'),
         ]
         return custom_urls + super().get_urls()
 
@@ -85,6 +86,7 @@ class FinanceAdminSite(TCSPAdminSite):
         context = super().each_context(request)
         context['revenue_report_url'] = reverse('finance:revenue_report')
         context['reconciliation_url'] = reverse('finance:reconciliation')
+        context['lesson_enrollments_url'] = reverse('finance:lesson_enrollments')
         return context
 
 

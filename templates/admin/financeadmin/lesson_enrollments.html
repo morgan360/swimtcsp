@@ -1,0 +1,125 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block title %}Lesson Enrollments{% endblock %}
+{% block content_title %}<h1>Lesson Enrollments</h1>{% endblock %}
+
+{% block extrahead %}
+{{ block.super }}
+<link href="{% static 'css/styles.css' %}" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+{% endblock %}
+
+{% block content %}
+{% if not term_summaries %}
+  <div class="bg-white rounded-lg shadow p-4 mb-6 text-gray-600">
+    No terms found — create a term to see enrollments here.
+  </div>
+{% else %}
+
+  <!-- Term totals -->
+  <div class="flex flex-wrap gap-4 mb-6">
+    {% for s in term_summaries %}
+    <div class="bg-white rounded-lg shadow p-4 flex-1" style="min-width: 14rem;">
+      <div class="text-sm font-medium text-gray-600">{{ s.label }}</div>
+      <div class="text-xs text-gray-500 mb-2">
+        {% if s.term.start_date %}{{ s.term.start_date|date:"j M" }} – {{ s.term.end_date|date:"j M Y" }}{% else %}{{ s.term }}{% endif %}
+      </div>
+      <div class="text-2xl font-bold text-gray-900">{{ s.enrolled }}</div>
+      <div class="text-sm text-gray-600">
+        of {{ s.places }} places{% if s.pct is not None %} · {{ s.pct }}% full{% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Chart -->
+  <div class="bg-white rounded-lg shadow p-4 mb-6">
+    <canvas id="enrollmentChart" height="90"></canvas>
+  </div>
+
+  <!-- Fill per lesson -->
+  <div class="bg-white rounded-lg shadow p-4 mb-6">
+    <h2 class="text-lg font-semibold text-gray-900 mb-1">Fill by lesson</h2>
+    <p class="text-sm text-gray-500 mb-4">
+      Enrolled swimmers against places available. Lessons that are no longer active
+      only appear where they had swimmers.
+    </p>
+    <div style="overflow-x: auto;">
+      <table class="enrol-table">
+        <thead>
+          <tr>
+            <th>Lesson</th>
+            {% for s in term_summaries %}<th>{{ s.label }}</th>{% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in rows %}
+          <tr>
+            <td style="white-space: nowrap;">
+              <strong>{{ row.day }} {{ row.time }}</strong> — {{ row.category }}
+              {% if not row.active %}<span class="text-xs text-gray-500">(inactive)</span>{% endif %}
+            </td>
+            {% for cell in row.cells %}
+            <td style="min-width: 12rem;">
+              {% if not cell.running %}
+                <span class="text-gray-500">—</span>
+              {% elif cell.pct is None %}
+                <span class="text-sm text-gray-600">{{ cell.enrolled }} enrolled · no places set</span>
+              {% else %}
+                <div class="enrol-bar" title="{{ cell.enrolled }} of {{ cell.places }}">
+                  <div class="enrol-bar-fill {% if cell.pct >= 90 %}is-high{% elif cell.pct < 50 %}is-low{% endif %}"
+                       style="width: {{ cell.bar_width }}%;"></div>
+                </div>
+                <div class="text-xs text-gray-600">{{ cell.enrolled }}/{{ cell.places }} · {{ cell.pct }}%</div>
+              {% endif %}
+            </td>
+            {% endfor %}
+          </tr>
+          {% empty %}
+          <tr><td colspan="{{ term_summaries|length|add:1 }}" class="text-gray-500">No lessons.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <p class="text-xs text-gray-500 mt-2">
+      <span class="enrol-key is-high"></span> 90%+ &nbsp;
+      <span class="enrol-key"></span> 50–89% &nbsp;
+      <span class="enrol-key is-low"></span> under 50%
+    </p>
+  </div>
+
+  {{ chart_data|json_script:"enrollment-chart-data" }}
+  <script>
+  (function () {
+    const data = JSON.parse(document.getElementById('enrollment-chart-data').textContent);
+    new Chart(document.getElementById('enrollmentChart').getContext('2d'), {
+      type: 'bar',
+      data: {
+        labels: data.labels,
+        datasets: [
+          { label: 'Enrolled', data: data.enrolled, backgroundColor: 'rgba(37, 99, 235, 0.7)', borderColor: 'rgba(37, 99, 235, 1)', borderWidth: 1 },
+          { label: 'Places', data: data.places, backgroundColor: 'rgba(156, 163, 175, 0.35)', borderColor: 'rgba(156, 163, 175, 1)', borderWidth: 1 },
+        ]
+      },
+      options: {
+        responsive: true,
+        interaction: { intersect: false, mode: 'index' },
+        plugins: { legend: { position: 'top' } },
+        scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+      }
+    });
+  })();
+  </script>
+{% endif %}
+
+<style>
+  .enrol-table { width: 100%; border-collapse: collapse; }
+  .enrol-table th, .enrol-table td { padding: 0.5rem 0.75rem; border-bottom: 1px solid #e5e7eb; text-align: left; vertical-align: middle; }
+  .enrol-bar { height: 0.6rem; background: #e5e7eb; border-radius: 9999px; overflow: hidden; margin-bottom: 0.2rem; }
+  .enrol-bar-fill { height: 100%; background: #2563eb; }
+  .enrol-bar-fill.is-high, .enrol-key.is-high { background: #16a34a; }
+  .enrol-bar-fill.is-low, .enrol-key.is-low { background: #f59e0b; }
+  .enrol-key { display: inline-block; width: 0.75rem; height: 0.75rem; border-radius: 2px; background: #2563eb; vertical-align: middle; }
+</style>
+{% endblock %}

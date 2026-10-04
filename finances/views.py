@@ -654,3 +654,106 @@ def reconciliation_export_csv(request):
             'Yes' if r['reconciled'] else 'No',
         ])
     return response
+
+# ---------------------------------------------------------------------------
+# Lesson enrollments
+# ---------------------------------------------------------------------------
+
+def _fill_pct(enrolled, places):
+    """Whole-number fill percentage, or None when the lesson has no capacity set."""
+    if not places:
+        return None
+    return round(enrolled * 100 / places)
+
+
+def _enrollment_terms():
+    """Last, this and next term — whichever of them exist.
+
+    Between terms there is no current term, and the next one may not have been
+    created yet, so the list can hold anywhere from zero to three entries.
+    """
+    from lessons_bookings.models import Term
+
+    candidates = [
+        ('Last term', Term.get_previous_term()),
+        ('This term', Term.get_current_term()),
+        ('Next term', Term.get_next_term()),
+    ]
+    return [(label, term) for label, term in candidates if term]
+
+
+@staff_member_required
+def lesson_enrollments(request, template_name='admin/financeadmin/lesson_enrollments.html'):
+    """Enrollment totals per term, and how full each lesson is in each term."""
+    from lessons.models import Product
+    from lessons_bookings.models import LessonEnrollment
+
+    terms = _enrollment_terms()
+    term_ids = [term.id for _, term in terms]
+
+    counts = defaultdict(int)  # (lesson_id, term_id) -> enrolled
+    for row in (LessonEnrollment.objects.filter(term_id__in=term_ids)
+                .values('lesson_id', 'term_id').annotate(n=Count('id'))):
+        counts[(row['lesson_id'], row['term_id'])] = row['n']
+
+    # Active lessons, plus any since-retired lesson that still had swimmers in
+    # one of these terms — otherwise last term's numbers would not add up.
+    enrolled_lesson_ids = {lesson_id for lesson_id, _ in counts}
+    lessons = (Product.objects.filter(active=True) | Product.objects.filter(id__in=enrolled_lesson_ids))
+    lessons = lessons.select_related('category').distinct().order_by('day_of_week', 'start_time', 'category__name')
+
+    rows = []
+    totals = {term.id: {'enrolled': 0, 'places': 0} for _, term in terms}
+    for lesson in lessons:
+        cells = []
+        for _, term in terms:
+            enrolled = counts[(lesson.id, term.id)]
+            # A lesson counts towards a term's capacity if it was running then:
+            # it is active, or it has swimmers in that term.
+            running = lesson.active or enrolled > 0
+            places = lesson.num_places or 0
+            if running:
+                totals[term.id]['enrolled'] += enrolled
+                totals[term.id]['places'] += places
+            pct = _fill_pct(enrolled, places) if running else None
+            cells.append({
+                'enrolled': enrolled,
+                'places': lesson.num_places,
+                'running': running,
+                'pct': pct,
+                'bar_width': min(pct or 0, 100),
+            })
+        rows.append({
+            'lesson': lesson,
+            'category': lesson.category.short_name or lesson.category.name,
+            'day': lesson.get_day_of_week_display(),
+            'time': lesson.start_time.strftime('%H:%M') if lesson.start_time else '',
+            'active': lesson.active,
+            'cells': cells,
+        })
+
+    term_summaries = []
+    for label, term in terms:
+        t = totals[term.id]
+        term_summaries.append({
+            'label': label,
+            'term': term,
+            'enrolled': t['enrolled'],
+            'places': t['places'],
+            'pct': _fill_pct(t['enrolled'], t['places']),
+        })
+
+    chart_data = {
+        'labels': [f"{s['label']} ({s['term'].start_date:%d %b} – {s['term'].end_date:%d %b %Y})"
+                   if s['term'].start_date and s['term'].end_date else s['label']
+                   for s in term_summaries],
+        'enrolled': [s['enrolled'] for s in term_summaries],
+        'places': [s['places'] for s in term_summaries],
+    }
+
+    context = {
+        'term_summaries': term_summaries,
+        'rows': rows,
+        'chart_data': chart_data,
+    }
+    return render(request, template_name, context)

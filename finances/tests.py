@@ -1,4 +1,5 @@
 from datetime import timedelta
+from decimal import Decimal
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
@@ -74,3 +75,64 @@ class LessonEnrollmentsReportTests(TestCase):
         last_cell, this_cell = rows[self.retired]["cells"]
         self.assertEqual(last_cell["pct"], 10)
         self.assertFalse(this_cell["running"])
+
+
+class ActivityReportTests(TestCase):
+    """The finance panel's today / yesterday / this-week activity page."""
+
+    @classmethod
+    def setUpTestData(cls):
+        from swims_orders.models import Order as SwimOrder
+        from users.models import LoginEvent
+
+        cls.manager = User.objects.create_user(email="manager@tcsp.ie", password="pw", first_name="M")
+        cls.manager.is_staff = True
+        cls.manager.save(update_fields=["is_staff"])
+        cls.manager.groups.add(Group.objects.get_or_create(name="Manager")[0])
+        cls.customer = User.objects.create_user(email="parent@example.com", password="pw", first_name="P")
+
+        now = timezone.localtime()
+        cls.yesterday_noon = now.replace(hour=12, minute=0, second=0, microsecond=0) - timedelta(days=1)
+        cls.yesterday_in_week = now.weekday() > 0
+
+        SwimOrder.objects.create(user=cls.customer, paid=True, amount="6.50")
+        SwimOrder.objects.create(user=cls.customer, paid=True, amount="5.00", payment_status="refunded")
+        SwimOrder.objects.create(user=cls.customer, paid=False, amount="9.00")
+        old = SwimOrder.objects.create(user=cls.customer, paid=True, amount="4.00")
+        SwimOrder.objects.filter(pk=old.pk).update(created=cls.yesterday_noon)
+
+        LoginEvent.objects.create(user=cls.customer)
+        LoginEvent.objects.create(user=cls.customer)
+        LoginEvent.objects.create(user=cls.manager)
+
+    def rows(self):
+        self.client.force_login(self.manager)  # itself logs a staff login
+        response = self.client.get(reverse("finance:activity_report"))
+        self.assertEqual(response.status_code, 200)
+        return {(heading, row["label"]): row["values"] for heading, rows in response.context["sections"] for row in rows}
+
+    def test_index_links_to_the_report(self):
+        self.client.force_login(self.manager)
+        self.assertContains(self.client.get(reverse("finance:index")), reverse("finance:activity_report"))
+
+    def test_paid_swim_orders_by_period(self):
+        rows = self.rows()
+        week = 2 if self.yesterday_in_week else 1
+        # Unpaid and refunded orders are left out.
+        self.assertEqual(rows[("🏊 Public swims", "Paid orders")], [1, 1, week])
+        today, yesterday, _ = rows[("🏊 Public swims", "Revenue")]
+        self.assertEqual((today, yesterday), (Decimal("6.50"), Decimal("4.00")))
+        self.assertEqual(rows[("💶 All orders", "Paid orders")], [1, 1, week])
+
+    def test_logins_split_staff_and_customers(self):
+        rows = self.rows()
+        self.assertEqual(rows[("👪 Customers", "Logins")][0], 2)
+        self.assertEqual(rows[("👪 Customers", "Customers who logged in")][0], 1)
+        # The one created above, plus force_login in rows().
+        self.assertEqual(rows[("🧑‍💼 Staff", "Logins")][0], 2)
+        self.assertEqual(rows[("🧑‍💼 Staff", "Staff who logged in")][0], 1)
+
+    def test_panel_context_is_present(self):
+        self.client.force_login(self.manager)
+        response = self.client.get(reverse("finance:activity_report"))
+        self.assertIn("tcsp_panels", response.context)

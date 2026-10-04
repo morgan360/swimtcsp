@@ -247,3 +247,27 @@ class MyBookingsQueryCountTests(TestCase):
         for_eight = self._query_count()
 
         self.assertEqual(for_eight, for_two)
+
+
+class LoginEventTests(TestCase):
+    """Each login is recorded, for the activity report's login counts."""
+
+    def test_login_records_an_event(self):
+        from users.models import LoginEvent
+
+        user = User.objects.create_user(email="logger@test.com", password="pw", first_name="L")
+        self.assertTrue(self.client.login(email="logger@test.com", password="pw"))
+        self.assertEqual(LoginEvent.objects.filter(user=user).count(), 1)
+
+    def test_hijack_is_not_counted_as_a_login(self):
+        from users.models import LoginEvent
+
+        admin = User.objects.create_superuser(email="boss@test.com", password="pw", first_name="B")
+        customer = User.objects.create_user(email="parent@test.com", password="pw", first_name="P")
+        self.client.force_login(admin)
+        LoginEvent.objects.all().delete()
+
+        response = self.client.post(reverse("hijack:acquire"), {"user_pk": customer.pk})
+        self.assertEqual(response.status_code, 302)
+        self.client.post(reverse("hijack:release"))
+        self.assertFalse(LoginEvent.objects.exists())

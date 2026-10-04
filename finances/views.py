@@ -757,3 +757,106 @@ def lesson_enrollments(request, template_name='admin/financeadmin/lesson_enrollm
         'chart_data': chart_data,
     }
     return render(request, template_name, context)
+
+
+# ---------------------------------------------------------------------------
+# Daily activity
+# ---------------------------------------------------------------------------
+
+def _activity_periods(today=None):
+    """(label, start, end) for today, yesterday and this week (Monday to today), in local time."""
+    today = today or localtime(now()).date()
+
+    def start_of(day):
+        return make_aware(datetime.datetime.combine(day, datetime.time.min))
+
+    tomorrow = today + timedelta(days=1)
+    return [
+        ('Today', start_of(today), start_of(tomorrow)),
+        ('Yesterday', start_of(today - timedelta(days=1)), start_of(today)),
+        ('This week', start_of(today - timedelta(days=today.weekday())), start_of(tomorrow)),
+    ]
+
+
+@staff_member_required
+def activity_report(request, template_name='admin/financeadmin/activity_report.html'):
+    """What happened on the site today, yesterday and this week."""
+    from django.contrib.auth import get_user_model
+    from custom_admins.financeadmin import finance_admin_site
+    from lessons_bookings.models import LessonEnrollment
+    from schools_bookings.models import ScoEnrollment
+    from users.models import LoginEvent
+
+    User = get_user_model()
+    periods = _activity_periods()
+
+    def counts(queryset, field='created', distinct=None):
+        values = []
+        for _, start, end in periods:
+            qs = queryset.filter(**{f'{field}__gte': start, f'{field}__lt': end})
+            values.append(qs.values(distinct).distinct().count() if distinct else qs.count())
+        return values
+
+    def paid_orders(model):
+        # A refund leaves paid=True, so it is excluded by status.
+        qs = model.objects.filter(paid=True).exclude(payment_status='refunded')
+        orders, revenue = [], []
+        for _, start, end in periods:
+            agg = qs.filter(created__gte=start, created__lt=end).aggregate(n=Count('id'), total=Sum('amount'))
+            orders.append(agg['n'])
+            revenue.append(agg['total'] or Decimal('0'))
+        return orders, revenue
+
+    def row(label, values, money=False, hint=''):
+        return {'label': label, 'values': values, 'money': money, 'hint': hint}
+
+    order_rows = {key: paid_orders(model) for key, (model, _) in ORDER_MODELS.items()}
+
+    def total(index):
+        return [sum(col) for col in zip(*(order_rows[key][index] for key in order_rows))]
+
+    logins = LoginEvent.objects.all()
+    staff_changes = {'changed_by__is_staff': True}
+    sections = [
+        ('🏊 Public swims', [
+            row('Paid orders', order_rows['swim'][0]),
+            row('Revenue', order_rows['swim'][1], money=True),
+            row('Check-ins', counts(Order.objects.all(), field='checked_in_at')),
+        ]),
+        ('📚 Lessons', [
+            row('Paid orders', order_rows['lesson'][0]),
+            row('Revenue', order_rows['lesson'][1], money=True),
+            row('New enrollments', counts(LessonEnrollment.objects.all())),
+        ]),
+        ('🏫 Schools', [
+            row('Paid orders', order_rows['school'][0]),
+            row('Revenue', order_rows['school'][1], money=True),
+            row('New enrollments', counts(ScoEnrollment.objects.all())),
+        ]),
+        ('💶 All orders', [
+            row('Paid orders', total(0)),
+            row('Revenue', total(1), money=True, hint='Refunded orders are left out'),
+        ]),
+        ('👪 Customers', [
+            row('Logins', counts(logins.filter(user__is_staff=False))),
+            row('Customers who logged in', counts(logins.filter(user__is_staff=False), distinct='user')),
+            row('New sign-ups', counts(User.objects.filter(is_staff=False), field='date_joined')),
+        ]),
+        ('🧑‍💼 Staff', [
+            row('Logins', counts(logins.filter(user__is_staff=True))),
+            row('Staff who logged in', counts(logins.filter(user__is_staff=True), distinct='user')),
+            row('Lesson enrollments changed', counts(LessonEnrollment.objects.filter(**staff_changes), field='updated'),
+                hint='Added, moved or edited by a staff member'),
+            row('School enrollments changed', counts(ScoEnrollment.objects.filter(**staff_changes), field='updated')),
+        ]),
+    ]
+
+    first_login = LoginEvent.objects.order_by('created').values_list('created', flat=True).first()
+    context = {
+        **finance_admin_site.each_context(request),
+        'title': 'Daily Activity',
+        'periods': periods,
+        'sections': sections,
+        'logins_since': first_login,
+    }
+    return render(request, template_name, context)

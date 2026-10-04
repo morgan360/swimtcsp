@@ -83,6 +83,21 @@ class LoginEvent(models.Model):
     def __str__(self):
         return f"{self.user} at {self.created:%Y-%m-%d %H:%M}"
 
+
+# One row per user per day they loaded any page while logged in. Sessions last
+# while people keep using the site, so most visits never involve a login;
+# written by utils.middleware.ActiveUserMiddleware.
+class ActiveDay(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="active_days")
+    date = models.DateField(db_index=True)
+
+    class Meta:
+        ordering = ["-date"]
+        constraints = [models.UniqueConstraint(fields=["user", "date"], name="unique_user_active_day")]
+
+    def __str__(self):
+        return f"{self.user} on {self.date}"
+
 # Stores the swimmer details with link to guardians
 class Swimling(models.Model):
     guardian = models.ForeignKey(User, on_delete=models.CASCADE, blank=True,

@@ -342,3 +342,33 @@ class SessionTimeoutTests(TestCase):
         self.assertGreater(
             expiry, 1800,
             f"session expires in {expiry}s — something is still overriding SESSION_COOKIE_AGE")
+
+
+class ActiveUserMiddlewareTests(TestCase):
+    """Logged-in page views are recorded once per user per day, for the activity report."""
+
+    def setUp(self):
+        from django.contrib.auth import get_user_model
+        self.User = get_user_model()
+        self.user = self.User.objects.create_user(email="active@test.com", password="pw", first_name="A")
+
+    def test_records_one_row_per_day(self):
+        from users.models import ActiveDay
+
+        self.client.get("/")
+        self.assertFalse(ActiveDay.objects.exists())  # anonymous
+
+        self.client.force_login(self.user)
+        self.client.get("/")
+        self.client.get("/")
+        self.assertEqual(list(ActiveDay.objects.values_list("user", flat=True)), [self.user.pk])
+
+    def test_hijacked_requests_are_not_counted(self):
+        from django.urls import reverse
+        from users.models import ActiveDay
+
+        admin = self.User.objects.create_superuser(email="boss@test.com", password="pw", first_name="B")
+        self.client.force_login(admin)
+        self.client.post(reverse("hijack:acquire"), {"user_pk": self.user.pk})
+        self.client.get("/")
+        self.assertFalse(ActiveDay.objects.filter(user=self.user).exists())

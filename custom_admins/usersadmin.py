@@ -19,7 +19,7 @@ from django.utils.encoding import force_bytes
 from django.core.mail import send_mail
 from django.conf import settings
 
-from users.models import LoginEvent, Swimling
+from users.models import ActiveDay, LoginEvent, Swimling
 from users.resources import SwimlingResource, UserResource, GroupResource
 from lessons_bookings.models import LessonEnrollment, Term
 from lessons.models import Product
@@ -276,11 +276,19 @@ class LoginEventAdmin(TCSPModelAdmin):
         return False
 
 
+class ActiveDayAdmin(LoginEventAdmin):
+    """Read-only log of the days each user used the site, written by ActiveUserMiddleware."""
+    list_display = ("date", "user", "is_staff")
+    list_filter = ("user__is_staff", "date")
+    date_hierarchy = "date"
+
+
 # 🔹 Register all
 users_admin_site.register(User, UserAdmin)
 operations_site.register(User, GuardianLookupAdmin)
 operations_site.register(Swimling, SwimlingAdmin)
 users_admin_site.register(Group, GroupAdmin)
 users_admin_site.register(LoginEvent, LoginEventAdmin)
+users_admin_site.register(ActiveDay, ActiveDayAdmin)
 users_admin_site.register(Product, ProductAutocompleteAdmin)
 users_admin_site.register(Term, TermAutocompleteAdmin)

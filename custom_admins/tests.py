@@ -390,6 +390,9 @@ class ChangelistQueryCountTests(TestCase):
 
         self.client.force_login(self.root)
         url = reverse("operations:waiting_list_waitinglist_changelist")
+        # The first page view of the day records the user as active; keep that
+        # one-off write out of the count.
+        self.client.get(url)
 
         with CaptureQueriesContext(connection) as ctx:
             self.assertEqual(self.client.get(url).status_code, 200)

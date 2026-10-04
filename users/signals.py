@@ -6,7 +6,7 @@ from django.contrib.auth.signals import user_logged_in
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.contrib.auth import get_user_model
-from django.utils.timezone import now
+from django.urls import reverse
 
 User = get_user_model()
 
@@ -22,9 +22,10 @@ def add_default_group_to_user(sender, instance, created, **kwargs):
 
 @receiver(user_logged_in)
 def log_successful_login(sender, request, user, **kwargs):
-    User = get_user_model()
-    # Determine the identifier field dynamically
-    identifier_field = getattr(User, 'USERNAME_FIELD', 'username')
-    identifier = getattr(user, identifier_field, 'Unknown')
+    from users.models import LoginEvent
 
-    print(f"Successful login for: {identifier} at {now()}")
+    # Hijack logs staff in as a customer (and back out) through login(), which
+    # would otherwise count as that customer — and the staff member — logging in.
+    if request is not None and request.path in (reverse('hijack:acquire'), reverse('hijack:release')):
+        return
+    LoginEvent.objects.create(user=user)

@@ -70,6 +70,19 @@ class User(AbstractBaseUser, PermissionsMixin):
     def get_absolute_url(self):
         return "/users/%i/" % (self.pk)
 
+
+# One row per successful login. Django keeps only last_login, which cannot say
+# how many people logged in yesterday or this week; the activity report needs this.
+class LoginEvent(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="login_events")
+    created = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        ordering = ["-created"]
+
+    def __str__(self):
+        return f"{self.user} at {self.created:%Y-%m-%d %H:%M}"
+
 # Stores the swimmer details with link to guardians
 class Swimling(models.Model):
     guardian = models.ForeignKey(User, on_delete=models.CASCADE, blank=True,

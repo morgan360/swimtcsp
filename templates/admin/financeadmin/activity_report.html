@@ -1,0 +1,64 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block title %}Daily Activity{% endblock %}
+{% block content_title %}<h1>Daily Activity</h1>{% endblock %}
+
+{% block extrahead %}
+{{ block.super }}
+<link href="{% static 'css/styles.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="bg-white rounded-lg shadow p-4 mb-6">
+  <div style="overflow-x: auto;">
+    <table class="activity-table">
+      <thead>
+        <tr>
+          <th></th>
+          {% for label, start, end in periods %}
+          <th class="num">
+            {{ label }}
+            <div class="text-xs text-gray-500" style="font-weight: normal;">
+              {% if label == "This week" %}{{ start|date:"D j M" }} – today{% else %}{{ start|date:"D j M" }}{% endif %}
+            </div>
+          </th>
+          {% endfor %}
+        </tr>
+      </thead>
+      {% for heading, rows in sections %}
+      <tbody>
+        <tr class="section"><th colspan="{{ periods|length|add:1 }}">{{ heading }}</th></tr>
+        {% for row in rows %}
+        <tr>
+          <td>
+            {{ row.label }}
+            {% if row.hint %}<div class="text-xs text-gray-500">{{ row.hint }}</div>{% endif %}
+          </td>
+          {% for value in row.values %}
+          <td class="num{% if not value %} is-zero{% endif %}">
+            {% if row.money %}€{{ value|floatformat:"2g" }}{% else %}{{ value }}{% endif %}
+          </td>
+          {% endfor %}
+        </tr>
+        {% endfor %}
+      </tbody>
+      {% endfor %}
+    </table>
+  </div>
+  <p class="text-xs text-gray-500 mt-2">
+    Orders count when they were placed. Logins are
+    {% if logins_since %}recorded since {{ logins_since|date:"j M Y" }}{% else %}recorded from now on — none yet{% endif %};
+    "Log in as" from the admin is not counted.
+  </p>
+</div>
+
+<style>
+  .activity-table { width: 100%; border-collapse: collapse; }
+  .activity-table th, .activity-table td { padding: 0.5rem 0.75rem; border-bottom: 1px solid #e5e7eb; text-align: left; vertical-align: middle; }
+  .activity-table .num { text-align: right; white-space: nowrap; min-width: 8rem; }
+  .activity-table td.num { font-variant-numeric: tabular-nums; font-size: 1.05em; }
+  .activity-table td.is-zero { color: #9ca3af; }
+  .activity-table tr.section th { background: #f3f4f6; font-size: 1.05em; padding-top: 0.75rem; }
+</style>
+{% endblock %}

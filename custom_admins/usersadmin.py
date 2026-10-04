@@ -19,7 +19,7 @@ from django.utils.encoding import force_bytes
 from django.core.mail import send_mail
 from django.conf import settings
 
-from users.models import Swimling
+from users.models import LoginEvent, Swimling
 from users.resources import SwimlingResource, UserResource, GroupResource
 from lessons_bookings.models import LessonEnrollment, Term
 from lessons.models import Product
@@ -258,10 +258,29 @@ class GuardianLookupAdmin(HijackUserAdminMixin, TCSPModelAdmin):
         return False
 
 
+class LoginEventAdmin(TCSPModelAdmin):
+    """Read-only log of logins, written by the user_logged_in signal."""
+    list_display = ("created", "user", "is_staff")
+    list_filter = ("user__is_staff", ("created", admin.DateFieldListFilter))
+    search_fields = ("user__email", "user__first_name", "user__last_name")
+    date_hierarchy = "created"
+
+    @admin.display(boolean=True, description="Staff", ordering="user__is_staff")
+    def is_staff(self, obj):
+        return obj.user.is_staff
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+
 # 🔹 Register all
 users_admin_site.register(User, UserAdmin)
 operations_site.register(User, GuardianLookupAdmin)
 operations_site.register(Swimling, SwimlingAdmin)
 users_admin_site.register(Group, GroupAdmin)
+users_admin_site.register(LoginEvent, LoginEventAdmin)
 users_admin_site.register(Product, ProductAutocompleteAdmin)
 users_admin_site.register(Term, TermAutocompleteAdmin)

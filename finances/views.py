@@ -785,7 +785,7 @@ def activity_report(request, template_name='admin/financeadmin/activity_report.h
     from custom_admins.financeadmin import finance_admin_site
     from lessons_bookings.models import LessonEnrollment
     from schools_bookings.models import ScoEnrollment
-    from users.models import LoginEvent
+    from users.models import ActiveDay, LoginEvent
 
     User = get_user_model()
     periods = _activity_periods()
@@ -816,6 +816,7 @@ def activity_report(request, template_name='admin/financeadmin/activity_report.h
         return [sum(col) for col in zip(*(order_rows[key][index] for key in order_rows))]
 
     logins = LoginEvent.objects.all()
+    active = ActiveDay.objects.all()
     staff_changes = {'changed_by__is_staff': True}
     sections = [
         ('🏊 Public swims', [
@@ -838,11 +839,15 @@ def activity_report(request, template_name='admin/financeadmin/activity_report.h
             row('Revenue', total(1), money=True, hint='Refunded orders are left out'),
         ]),
         ('👪 Customers', [
+            row('Active customers', counts(active.filter(user__is_staff=False), field='date', distinct='user'),
+                hint='Used the site while logged in'),
             row('Logins', counts(logins.filter(user__is_staff=False))),
             row('Customers who logged in', counts(logins.filter(user__is_staff=False), distinct='user')),
             row('New sign-ups', counts(User.objects.filter(is_staff=False), field='date_joined')),
         ]),
         ('🧑‍💼 Staff', [
+            row('Active staff', counts(active.filter(user__is_staff=True), field='date', distinct='user'),
+                hint='Used the site while logged in'),
             row('Logins', counts(logins.filter(user__is_staff=True))),
             row('Staff who logged in', counts(logins.filter(user__is_staff=True), distinct='user')),
             row('Lesson enrollments changed', counts(LessonEnrollment.objects.filter(**staff_changes), field='updated'),
@@ -852,11 +857,13 @@ def activity_report(request, template_name='admin/financeadmin/activity_report.h
     ]
 
     first_login = LoginEvent.objects.order_by('created').values_list('created', flat=True).first()
+    first_active = ActiveDay.objects.order_by('date').values_list('date', flat=True).first()
     context = {
         **finance_admin_site.each_context(request),
         'title': 'Daily Activity',
         'periods': periods,
         'sections': sections,
         'logins_since': first_login,
+        'active_since': first_active,
     }
     return render(request, template_name, context)

@@ -234,6 +234,9 @@ class MyBookingsQueryCountTests(TestCase):
 
         client = Client()
         client.force_login(self.user)
+        # The first page view of the day records the user as active; keep that
+        # one-off write out of the count.
+        client.get(reverse("users:my_bookings"))
         with CaptureQueriesContext(connection) as ctx:
             response = client.get(reverse("users:my_bookings"))
         self.assertEqual(response.status_code, 200)

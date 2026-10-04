@@ -105,6 +105,10 @@ class ActivityReportTests(TestCase):
         LoginEvent.objects.create(user=cls.customer)
         LoginEvent.objects.create(user=cls.manager)
 
+        from users.models import ActiveDay
+        ActiveDay.objects.create(user=cls.customer, date=now.date())
+        ActiveDay.objects.create(user=cls.customer, date=cls.yesterday_noon.date())
+
     def rows(self):
         self.client.force_login(self.manager)  # itself logs a staff login
         response = self.client.get(reverse("finance:activity_report"))
@@ -131,6 +135,13 @@ class ActivityReportTests(TestCase):
         # The one created above, plus force_login in rows().
         self.assertEqual(rows[("🧑‍💼 Staff", "Logins")][0], 2)
         self.assertEqual(rows[("🧑‍💼 Staff", "Staff who logged in")][0], 1)
+
+    def test_active_users(self):
+        rows = self.rows()
+        week = 1  # the same customer on two days is one person this week
+        self.assertEqual(rows[("👪 Customers", "Active customers")], [1, 1, week])
+        # rows() itself was a staff page view today.
+        self.assertEqual(rows[("🧑‍💼 Staff", "Active staff")][0], 1)
 
     def test_panel_context_is_present(self):
         self.client.force_login(self.manager)

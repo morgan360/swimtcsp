@@ -1,4 +1,5 @@
-from django.utils.timezone import now
+from django.db import IntegrityError
+from django.utils.timezone import localdate, now
 from datetime import timedelta
 from django.shortcuts import render
 from django.http import HttpResponse
@@ -43,6 +44,36 @@ class CustomErrorPageMiddleware:
             return rendered
 
         return response
+
+
+class ActiveUserMiddleware:
+    """
+    Record each day a logged-in user loads a page, for the activity report.
+
+    The session remembers the last day recorded, so this touches the database
+    once per user per day rather than on every request. Requests made while
+    hijacked are skipped: they are staff, not the customer, using the site.
+
+    Must come after AuthenticationMiddleware.
+    """
+
+    SESSION_KEY = "active_day"
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        user = getattr(request, "user", None)
+        if user is not None and user.is_authenticated and not request.session.get("hijack_history"):
+            today = localdate().isoformat()
+            if request.session.get(self.SESSION_KEY) != today:
+                from users.models import ActiveDay
+                try:
+                    ActiveDay.objects.get_or_create(user=user, date=today)
+                except IntegrityError:
+                    pass  # another request for the same user got there first
+                request.session[self.SESSION_KEY] = today
+        return self.get_response(request)
 
 
 class PaymentGatewaySessionMiddleware:

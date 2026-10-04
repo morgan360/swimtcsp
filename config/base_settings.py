@@ -278,6 +278,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'hijack.middleware.HijackUserMiddleware',
+    'utils.middleware.ActiveUserMiddleware',  # After auth; records daily activity
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django_browser_reload.middleware.BrowserReloadMiddleware',
     'utils.middleware.CustomErrorPageMiddleware',   # Render 401/503 templates

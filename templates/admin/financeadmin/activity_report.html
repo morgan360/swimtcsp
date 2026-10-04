@@ -50,6 +50,9 @@
     Orders count when they were placed. Logins are
     {% if logins_since %}recorded since {{ logins_since|date:"j M Y" }}{% else %}recorded from now on — none yet{% endif %};
     "Log in as" from the admin is not counted.
+    Active users are
+    {% if active_since %}recorded since {{ active_since|date:"j M Y" }}{% else %}recorded from now on — none yet{% endif %}:
+    people stay logged in while they keep using the site, so most visits involve no login.
   </p>
 </div>
 

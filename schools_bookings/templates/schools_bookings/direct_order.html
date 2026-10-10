@@ -108,7 +108,8 @@
                                     <td class="px-4 py-5">
                                         <input type="radio" name="lesson" value="{{ lesson.id }}"
                                             class="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300"
-                                            {% if form.lesson.value and lesson.id == form.lesson.value|add:0 %}checked{% endif %}>
+                                            {% if form.lesson.value and lesson.id == form.lesson.value|add:0 %}checked{% endif %}
+                                            {% if lesson.places_left is not None and lesson.places_left <= 0 %}disabled{% endif %}>
                                     </td>
                                     <td class="px-4 py-5 font-semibold">{{ lesson.name }}</td>
                                     <td class="px-4 py-5">
@@ -122,10 +123,17 @@
                                         {{ lesson.start_time|time:"g:i A" }} - {{ lesson.end_time|time:"g:i A" }}
                                     </td>
                                     <td class="px-4 py-5">
+                                        {% if lesson.places_left is not None and lesson.places_left <= 0 %}
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                            <i class="fas fa-ban mr-1"></i>
+                                            Full
+                                        </span>
+                                        {% else %}
                                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
                                             <i class="fas fa-users mr-1"></i>
-                                            {{ lesson.num_places }} spaces
+                                            {% if lesson.places_left is None %}{{ lesson.num_places }} spaces{% else %}{{ lesson.places_left }} of {{ lesson.num_places }} left{% endif %}
                                         </span>
+                                        {% endif %}
                                     </td>
                                     <td class="px-4 py-5">
                                         <span class="text-lg font-bold text-green-600">€{{ lesson.price }}</span>
@@ -153,7 +161,8 @@
                                     <label class="flex items-center justify-center space-x-3 cursor-pointer">
                                         <input type="radio" name="lesson" value="{{ lesson.id }}"
                                             class="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300"
-                                            {% if form.lesson.value and lesson.id == form.lesson.value|add:0 %}checked{% endif %}>
+                                            {% if form.lesson.value and lesson.id == form.lesson.value|add:0 %}checked{% endif %}
+                                            {% if lesson.places_left is not None and lesson.places_left <= 0 %}disabled{% endif %}>
                                         <span class="text-lg font-semibold text-green-900">{{ lesson.name }}</span>
                                     </label>
                                 </div>
@@ -174,7 +183,7 @@
                                 <div class="grid grid-cols-2 gap-3">
                                     <div class="bg-gray-50 rounded p-3 text-center">
                                         <div class="text-sm text-green-900 font-semibold">Capacity</div>
-                                        <div class="font-medium text-green-600">{{ lesson.num_places }} spaces</div>
+                                        {% if lesson.places_left is not None and lesson.places_left <= 0 %}<div class="font-medium text-red-700">Full</div>{% elif lesson.places_left is None %}<div class="font-medium text-green-600">{{ lesson.num_places }} spaces</div>{% else %}<div class="font-medium text-green-600">{{ lesson.places_left }} of {{ lesson.num_places }} left</div>{% endif %}
                                     </div>
                                     <div class="bg-gray-50 rounded p-3 text-center">
                                         <div class="text-sm text-green-900 font-semibold">Price</div>

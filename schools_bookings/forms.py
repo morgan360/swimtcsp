@@ -13,10 +13,22 @@ class DirectOrderForm(forms.Form):
         widget=forms.Select(attrs={'class': 'select is-primary'})
     )
 
-    def __init__(self, *args, lessons=None, **kwargs):
+    def __init__(self, *args, lessons=None, term=None, **kwargs):
         super().__init__(*args, **kwargs)
+        self.term = term
         if lessons is not None:
             self.fields['lesson'].queryset = lessons
+
+    def clean_lesson(self):
+        # Checked before the order is created, so a full class is refused before
+        # payment. Once a parent has paid, the enrolment is honoured regardless.
+        lesson = self.cleaned_data['lesson']
+        if self.term is not None and lesson.is_full_in(self.term):
+            raise forms.ValidationError(
+                f"Sorry, {lesson} is full this term. Please choose another class, "
+                f"or contact the pool."
+            )
+        return lesson
 
 
 # Define a form to ask if the user wants to add another swimling

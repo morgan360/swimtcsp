@@ -536,6 +536,8 @@ def process_order_items(cart, OrderItemModel, order, ProductModel, get_term_func
         term = get_term_func()
         if term is None:
             raise ValueError("We couldn't determine which term to book for right now. Please try again later.")
+        if ProductModel is ScoLessons and product.is_full_in(term):
+            raise ValueError(f"Sorry, {product} is full this term. Please remove it and choose another class.")
 
         OrderItemModel.objects.create(
             order=order,

@@ -34,10 +34,12 @@ def school_checkout(request, swimling_id, term_id):
     term = get_object_or_404(ScoTerm, id=term_id)
     school = get_object_or_404(ScoSchool, sco_role_num=swimling.sco_role_num)
 
-    lessons = ScoLessons.objects.filter(school=school, active=True).order_by('day_of_week', 'start_time')
+    lessons = ScoLessons.with_places_left(
+        ScoLessons.objects.filter(school=school, active=True), term
+    ).order_by('day_of_week', 'start_time')
 
     if request.method == 'POST':
-        form = DirectOrderForm(request.POST, lessons=lessons)
+        form = DirectOrderForm(request.POST, lessons=lessons, term=term)
         if form.is_valid():
             lesson = form.cleaned_data['lesson']
 
@@ -105,7 +107,7 @@ def school_checkout(request, swimling_id, term_id):
                 })
 
     else:
-        form = DirectOrderForm(lessons=lessons)
+        form = DirectOrderForm(lessons=lessons, term=term)
 
     return render(request, 'schools_bookings/direct_order.html', {
         'form': form,

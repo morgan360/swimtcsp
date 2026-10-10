@@ -99,3 +99,23 @@ class SchoolClassCapacityTests(TestCase):
         with self.assertRaisesMessage(ValueError, "is full this term"):
             process_order_items(cart, OrderItem, order, ScoLessons, lambda: self.term)
         self.assertFalse(OrderItem.objects.exists())
+
+    @patch("schools_orders.tasks.send_school_order_email")
+    @patch("schools_bookings.views.initiate_boipa_payment_session", return_value=HttpResponse("to BOIPA"))
+    def test_coupon_covering_full_price_confirms_without_payment(self, pay, email):
+        # BOIPA refuses a €0 payment link; parents used to see "Unable to create payment link".
+        from coupons.models import Coupon
+        now = timezone.now()
+        Coupon.objects.create(
+            code="CREDIT64", discount_type="fixed", discount_value=Decimal("64.00"),
+            balance_remaining=Decimal("64.00"), valid_from=now - timedelta(days=1),
+            valid_to=now + timedelta(days=30), active=True,
+        )
+        response = self.client.post(self.url, {"lesson": self.roomy.id, "code": "CREDIT64"})
+        pay.assert_not_called()
+        order = Order.objects.get()
+        self.assertTrue(order.paid)
+        self.assertEqual(order.amount, Decimal("0.00"))
+        self.assertTrue(ScoEnrollment.objects.filter(swimling=self.swimling, lesson=self.roomy, term=self.term).exists())
+        email.assert_called_once_with(order.id)
+        self.assertEqual(response.status_code, 200)

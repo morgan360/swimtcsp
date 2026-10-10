@@ -99,6 +99,20 @@ def book_lesson(request, swimling_id, term_id):
             print(f"DISCOUNT AMOUNT: €{order.discount_amount}", file=sys.stderr)
             print(f"COUPON USED: {order.coupon.code if order.coupon else 'None'}", file=sys.stderr)
 
+            # BOIPA refuses a €0 payment link, so an order fully covered by a
+            # coupon is confirmed here, as school_checkout and the cart do.
+            if order.amount <= 0:
+                from schools_bookings.utils.enrollment import handle_schools_enrollment
+                from schools_orders.tasks import send_school_order_email
+                order.paid = True
+                order.save()
+                handle_schools_enrollment(order)
+                send_school_order_email(order.id)
+                return render(request, 'orders/order/created.html', {
+                    'order': order,
+                    'order_items': order.items.all(),
+                })
+
             order_ref = f"school_{order.id}"
             return initiate_boipa_payment_session(request, order_ref, order.amount)
 

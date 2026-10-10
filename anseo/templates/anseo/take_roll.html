@@ -124,7 +124,10 @@
 </div>
 
 <script>
-document.addEventListener("DOMContentLoaded", function () {
+// Runs as soon as the page reaches this point, not on DOMContentLoaded: that
+// event waits for the deferred CDN scripts (HTMX, Alpine), so on a slow
+// connection the buttons sat visible but dead until a refresh cached them.
+(function () {
     const rows = Array.from(document.querySelectorAll("[data-row]"));
 
     function setRowStatus(row, value) {
@@ -147,7 +150,7 @@ document.addEventListener("DOMContentLoaded", function () {
     document.getElementById("clearAll")?.addEventListener("click", () => {
         rows.forEach(row => setRowStatus(row, "unknown"));
     });
-});
+})();
 </script>
 
 {% endblock %}

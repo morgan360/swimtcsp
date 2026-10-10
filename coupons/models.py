@@ -174,5 +174,12 @@ class CouponRedemption(models.Model):
     object_id = models.PositiveIntegerField()
     redeemed_object = GenericForeignKey('content_type', 'object_id')
 
+    # False while the order is awaiting payment: the discount is priced in, but
+    # the coupon's balance and usage are only taken once the order is paid
+    # (see coupons.services.confirm_pending_redemptions). An abandoned or failed
+    # checkout therefore leaves the coupon untouched.
+    confirmed = models.BooleanField(default=True)
+
     def __str__(self):
-        return f"{self.coupon.code} redeemed {self.redeemed_amount} on {self.redeemed_object}"
+        state = "" if self.confirmed else " (pending payment)"
+        return f"{self.coupon.code} redeemed {self.redeemed_amount} on {self.redeemed_object}{state}"

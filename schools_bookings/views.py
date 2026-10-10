@@ -68,7 +68,8 @@ def book_lesson(request, swimling_id, term_id):
                 try:
                     coupon = Coupon.objects.get(code=coupon_code)
                     service = CouponService(coupon)
-                    discount = service.apply(
+                    # Taken from the coupon only once the order is paid.
+                    discount = service.reserve(
                         purchase_obj=order,
                         amount=lesson.price,
                         user=request.user

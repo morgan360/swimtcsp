@@ -149,10 +149,11 @@ class CouponRedemptionAdmin(TCSPModelAdmin):
         'redeemed_amount',
         'redeemed_at',
         'redeemed_object_display',
+        'confirmed',
     )
-    readonly_fields = ('coupon', 'redeemed_amount', 'redeemed_at', 'redeemed_object')
+    readonly_fields = ('coupon', 'redeemed_amount', 'redeemed_at', 'redeemed_object', 'confirmed')
     search_fields = ('coupon__code',)
-    list_filter = ('redeemed_at', 'coupon__code')
+    list_filter = ('confirmed', 'redeemed_at', 'coupon__code')
     actions = ['export_as_csv']
 
     def redeemed_object_display(self, obj):

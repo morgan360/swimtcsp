@@ -617,11 +617,20 @@ class CheckoutCouponFailureTests(TestCase):
         self.assertEqual(order.total_discount, Decimal("40.00"))
         self.assertEqual(CouponRedemption.objects.count(), 2)
 
+        # Nothing is spent until the €60 is paid, so an abandoned payment keeps both.
+        for code, value in (("PAIR-A", "25.00"), ("PAIR-B", "15.00")):
+            coupon = self.Coupon.objects.get(code=code)
+            self.assertEqual((coupon.times_used, coupon.balance_remaining), (0, Decimal(value)), code)
+
+        order.paid = True
+        order.save()
+
         # Both are spent, not just the one recorded on the legacy order.coupon.
         for code, value in (("PAIR-A", "25.00"), ("PAIR-B", "15.00")):
             coupon = self.Coupon.objects.get(code=code)
             self.assertEqual(coupon.times_used, 1, code)
             self.assertEqual(coupon.balance_remaining, Decimal("0.00"), code)
+        self.assertFalse(CouponRedemption.objects.filter(confirmed=False).exists())
 
     def test_two_coupons_worth_more_than_the_cart_leave_nothing_to_pay(self):
         """A pair over the cart value must land on zero, never a negative charge."""

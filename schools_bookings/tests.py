@@ -119,3 +119,24 @@ class SchoolClassCapacityTests(TestCase):
         self.assertTrue(ScoEnrollment.objects.filter(swimling=self.swimling, lesson=self.roomy, term=self.term).exists())
         email.assert_called_once_with(order.id)
         self.assertEqual(response.status_code, 200)
+        self.assertEqual(Coupon.objects.get(code="CREDIT64").times_used, 1)  # paid in full by coupon
+
+    @patch("schools_bookings.views.initiate_boipa_payment_session", return_value=HttpResponse("to BOIPA"))
+    def test_coupon_is_not_spent_until_the_booking_is_paid(self, pay):
+        from coupons.models import Coupon
+        now = timezone.now()
+        coupon = Coupon.objects.create(
+            code="PART20", discount_type="fixed", discount_value=Decimal("20.00"),
+            balance_remaining=Decimal("20.00"), valid_from=now - timedelta(days=1),
+            valid_to=now + timedelta(days=30), active=True,
+        )
+        self.client.post(self.url, {"lesson": self.roomy.id, "code": "PART20"})
+        order = Order.objects.get()
+        self.assertEqual(order.amount, Decimal("44.00"))
+        coupon.refresh_from_db()
+        self.assertEqual(coupon.times_used, 0)  # parent abandons BOIPA: coupon still usable
+
+        order.paid = True  # what BOIPA's confirmation does
+        order.save()
+        coupon.refresh_from_db()
+        self.assertEqual((coupon.times_used, coupon.balance_remaining), (1, Decimal("0.00")))

@@ -35,12 +35,13 @@ def book_lesson(request, swimling_id, term_id):
     if not term:
         return HttpResponse("No active term available for this school.", status=400)
 
-    lessons = ScoLessons.objects.filter(
-        school=school
+    # Active only, matching the class list the parent was shown.
+    lessons = ScoLessons.with_places_left(
+        ScoLessons.objects.filter(school=school, active=True), term
     ).order_by('day_of_week', 'start_time')
 
     if request.method == 'POST':
-        form = DirectOrderForm(request.POST, lessons=lessons)
+        form = DirectOrderForm(request.POST, lessons=lessons, term=term)
         print("📥 POST received", file=sys.stderr)
 
         if not form.is_valid():
@@ -102,7 +103,7 @@ def book_lesson(request, swimling_id, term_id):
             return initiate_boipa_payment_session(request, order_ref, order.amount)
 
     else:
-        form = DirectOrderForm(lessons=lessons)
+        form = DirectOrderForm(lessons=lessons, term=term)
 
     return render(request, 'schools_bookings/direct_order.html', {
         'form': form,

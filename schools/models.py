@@ -133,6 +133,26 @@ class ScoLessons(models.Model):
     def is_full(self):
         return self.remaining_spaces() == 0
 
+    # The helpers above count enrolments from every term. Capacity is per term,
+    # so booking checks use these instead.
+    def places_left_in(self, term):
+        """Places left in this class for `term`, or None if no limit is set."""
+        if self.num_places is None:
+            return None
+        taken = self.scoenrollment_set.filter(term=term).count()
+        return max(self.num_places - taken, 0)
+
+    def is_full_in(self, term):
+        return self.places_left_in(term) == 0
+
+    @staticmethod
+    def with_places_left(lessons, term):
+        """Annotate a ScoLessons queryset with `places_left` for `term`."""
+        from django.db.models import Count, F, Q
+        return lessons.annotate(
+            taken=Count('scoenrollment', filter=Q(scoenrollment__term=term)),
+        ).annotate(places_left=F('num_places') - F('taken'))
+
 
 # update name everytime fields are changed
 @receiver(pre_save, sender=ScoLessons)

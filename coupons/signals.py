@@ -3,12 +3,14 @@ from django.dispatch import receiver
 
 from lessons_orders.models import Order as LessonOrder
 from schools_orders.models import Order as SchoolOrder
+from swims_orders.models import Order as SwimOrder
 
 from .services import confirm_pending_redemptions
 
 
 @receiver(post_save, sender=LessonOrder)
 @receiver(post_save, sender=SchoolOrder)
+@receiver(post_save, sender=SwimOrder)
 def confirm_coupons_when_paid(sender, instance, **kwargs):
     # Every route that marks an order paid — BOIPA's return page and webhook,
     # zero-balance checkouts, staff in the admin — saves it, so confirming here

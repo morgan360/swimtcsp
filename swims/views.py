@@ -14,6 +14,15 @@ from boipa.views import initiate_boipa_payment_session
 from coupons.models import Coupon
 from django.utils.timezone import now as tz_now
 from swims_orders.tasks import send_order_email
+from coupons.services import CouponService
+from decimal import Decimal
+from django.contrib import messages
+from django.core.exceptions import ValidationError
+
+
+def _forget_swim_coupon(request):
+    request.session.pop('applied_coupon', None)
+    request.session.pop('swim_coupon_discount', None)
 
 
 def product_list(request, category_slug=None):
@@ -69,28 +78,21 @@ def product_detail(request, id, slug):
                 total_amount += quantity * variant.price
                 order_items.append((variant, quantity))
 
-        # Apply coupon
+        # The coupon is checked before the order exists, so a refused one sends
+        # the parent back here with the reason instead of on to pay full price.
         applied_coupon = None
-        discount_amount = 0
+        discount_amount = Decimal('0.00')
         coupon_code = request.session.get('applied_coupon', '')
-        if coupon_code:
+        coupon = None
+        if coupon_code and order_items:
             try:
                 coupon = Coupon.objects.get(code__iexact=coupon_code)
-                if coupon.is_valid():
-                    applied_coupon = coupon
-                    if coupon.discount_type == 'fixed':
-                        discount_amount = min(coupon.discount_value, coupon.balance_remaining, total_amount)
-                    elif coupon.discount_type == 'percent':
-                        discount_amount = total_amount * coupon.discount_value / 100
-                        # For percentage coupons, balance_remaining doesn't apply
-
-                    coupon.balance_remaining -= discount_amount
-                    coupon.save()
-                    total_amount -= discount_amount
-                else:
-                    print(f">>> DEBUG: Coupon {coupon_code} is not valid.")
-            except Coupon.DoesNotExist:
-                print(f">>> DEBUG: Coupon {coupon_code} not found.")
+                CouponService(coupon).validate(user=request.user, amount=total_amount, context='swims')
+            except (Coupon.DoesNotExist, ValidationError) as exc:
+                _forget_swim_coupon(request)
+                reason = exc.messages[0] if isinstance(exc, ValidationError) else "Invalid coupon code."
+                messages.error(request, f"Coupon {coupon_code} could not be applied: {reason} You have not been charged.")
+                return redirect(request.path)
 
         if order_items:
             next_occurrence_date = get_next_occurrence(product.day_of_week)
@@ -100,11 +102,24 @@ def product_detail(request, id, slug):
                 booking=next_occurrence_date,
                 paid=False,
                 amount=total_amount,
-                coupon=applied_coupon,       # ✅ included
-                discount_amount=discount_amount,  # ✅ included
             )
             for variant, quantity in order_items:
                 OrderItem.objects.create(order=order, variant=variant, quantity=quantity)
+
+            if coupon:
+                # Priced in now, taken from the coupon only once the order is paid
+                # (coupons.signals), so an abandoned payment leaves it untouched.
+                discount_amount = CouponService(coupon).reserve(
+                    purchase_obj=order, amount=total_amount, user=request.user, context='swims',
+                )
+                applied_coupon = coupon
+                total_amount -= discount_amount
+                order.amount = total_amount
+                order.coupon = applied_coupon
+                order.discount_amount = discount_amount
+                order.save()
+                # One booking per coupon entry; it is not carried to the next swim.
+                _forget_swim_coupon(request)
 
             if total_amount > 0:
                 order_ref = f"swims_{order.id}_{int(time.time())}"

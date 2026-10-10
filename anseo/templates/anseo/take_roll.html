@@ -51,10 +51,12 @@
     <form method="post" class="rounded-2xl bg-white shadow" id="attendanceForm">
         {% csrf_token %}
         
-        <!-- Desktop Table View -->
-        <div class="hidden md:block overflow-x-auto rounded-2xl">
-            <table class="min-w-full divide-y divide-gray-200 rounded-2xl overflow-hidden">
-                <thead class="bg-gray-50">
+        <!-- One set of inputs per swimling: a table on desktop, stacked cards on mobile.
+             Rendering the inputs twice put both copies in the same radio group and
+             submitted the hidden copy's note. -->
+        <div class="md:overflow-x-auto rounded-2xl">
+            <table class="block md:table min-w-full md:divide-y md:divide-gray-200 rounded-2xl overflow-hidden">
+                <thead class="hidden md:table-header-group bg-gray-50">
                     <tr>
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-600">#</th>
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-600">Swimling</th>
@@ -62,21 +64,23 @@
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-600">Note</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-100 bg-white">
+                <tbody class="block md:table-row-group p-4 md:p-0 space-y-4 md:space-y-0 md:divide-y md:divide-gray-100 bg-white">
         {% for e in enrolments %}
             {% with existing_entry=existing|get_item:e.id %}
-            <tr data-row data-enrolment="{{ e.id }}">
-                <td class="px-4 py-3 text-sm text-gray-500">{{ forloop.counter }}</td>
-                <td class="px-4 py-3">
-                    <div class="font-medium text-gray-900">
+            <tr class="block md:table-row bg-gray-50 md:bg-white rounded-xl md:rounded-none p-4 md:p-0 border border-gray-200 md:border-0"
+                data-row data-enrolment="{{ e.id }}">
+                <td class="hidden md:table-cell px-4 py-3 text-sm text-gray-500">{{ forloop.counter }}</td>
+                <td class="block md:table-cell mb-3 md:mb-0 md:px-4 md:py-3">
+                    <div class="font-semibold md:font-medium text-gray-900">
                         {{ e.swimling.first_name }} {{ e.swimling.last_name }}
                     </div>
-                    <div class="text-xs text-gray-500">#{{ e.id }}</div>
+                    <div class="text-sm md:text-xs text-gray-500">#{{ e.id }}<span class="md:hidden"> • Student {{ forloop.counter }}</span></div>
                 </td>
-                <td class="px-4 py-3">
-                    <div class="flex flex-wrap gap-2">
+                <td class="block md:table-cell mb-4 md:mb-0 md:px-4 md:py-3">
+                    <span class="md:hidden block text-sm font-medium text-gray-700 mb-2">Attendance Status</span>
+                    <div class="grid grid-cols-3 gap-2 md:flex md:flex-wrap">
                         {% for status in status_choices %}
-                            <label class="inline-flex items-center text-sm whitespace-nowrap">
+                            <label class="flex md:inline-flex items-center justify-center md:justify-start p-2 md:p-0 bg-white md:bg-transparent rounded-lg md:rounded-none border border-gray-300 md:border-0 cursor-pointer hover:bg-gray-50 md:hover:bg-transparent transition-colors text-sm whitespace-nowrap">
                                 <input type="radio"
                                        class="form-radio text-indigo-600 mr-1"
                                        name="status_{{ e.id }}"
@@ -86,80 +90,29 @@
                                        {% elif not existing_entry and status.0 == "unknown" %}
                                            checked
                                        {% endif %}>
-                                <span class="ml-1">{{ status.1 }}</span>
+                                <span class="ml-1 font-medium md:font-normal">{{ status.1 }}</span>
                             </label>
                         {% endfor %}
                     </div>
                 </td>
-                <td class="px-4 py-3">
-                    <input type="text" name="note_{{ e.id }}"
+                <td class="block md:table-cell md:px-4 md:py-3">
+                    <label for="note_{{ e.id }}" class="md:hidden block text-sm font-medium text-gray-700 mb-1">Note</label>
+                    <input type="text" name="note_{{ e.id }}" id="note_{{ e.id }}"
                            value="{{ existing_entry.note|default:'' }}"
-                           class="w-full rounded border px-3 py-2 text-sm">
+                           placeholder="Add a note..."
+                           class="w-full rounded-lg md:rounded border border-gray-300 px-3 py-2 text-sm">
                 </td>
             </tr>
             {% endwith %}
         {% empty %}
-            <tr>
-                <td colspan="4" class="text-center px-4 py-6 text-gray-500">
+            <tr class="block md:table-row">
+                <td colspan="4" class="block md:table-cell text-center px-4 py-6 text-gray-500">
                     No enrolments for this lesson & term.
                 </td>
             </tr>
         {% endfor %}
-        </tbody>
+                </tbody>
             </table>
-        </div>
-
-        <!-- Mobile Card View -->
-        <div class="md:hidden p-4 space-y-4">
-        {% for e in enrolments %}
-            {% with existing_entry=existing|get_item:e.id %}
-            <div class="bg-gray-50 rounded-xl p-4 border border-gray-200" data-row data-enrolment="{{ e.id }}">
-                <!-- Student Info -->
-                <div class="flex items-center justify-between mb-3">
-                    <div>
-                        <h3 class="font-semibold text-gray-900">
-                            {{ e.swimling.first_name }} {{ e.swimling.last_name }}
-                        </h3>
-                        <p class="text-sm text-gray-500">#{{ e.id }} • Student {{ forloop.counter }}</p>
-                    </div>
-                </div>
-                
-                <!-- Status Options -->
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Attendance Status</label>
-                    <div class="grid grid-cols-3 gap-2">
-                        {% for status in status_choices %}
-                            <label class="flex items-center justify-center p-2 bg-white rounded-lg border border-gray-300 cursor-pointer hover:bg-gray-50 transition-colors">
-                                <input type="radio"
-                                       class="form-radio text-indigo-600 mr-2"
-                                       name="status_{{ e.id }}"
-                                       value="{{ status.0 }}"
-                                       {% if existing_entry and existing_entry.status == status.0 %}
-                                           checked
-                                       {% elif not existing_entry and status.0 == "unknown" %}
-                                           checked
-                                       {% endif %}>
-                                <span class="text-sm font-medium">{{ status.1 }}</span>
-                            </label>
-                        {% endfor %}
-                    </div>
-                </div>
-                
-                <!-- Note Input -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Note</label>
-                    <input type="text" name="note_{{ e.id }}"
-                           value="{{ existing_entry.note|default:'' }}"
-                           placeholder="Add a note..."
-                           class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                </div>
-            </div>
-            {% endwith %}
-        {% empty %}
-            <div class="text-center py-8 text-gray-500">
-                No enrolments for this lesson & term.
-            </div>
-        {% endfor %}
         </div>
 
         <div class="mt-4 text-right">
@@ -173,7 +126,6 @@
 <script>
 document.addEventListener("DOMContentLoaded", function () {
     const rows = Array.from(document.querySelectorAll("[data-row]"));
-    console.log("Found rows:", rows.length);
 
     function setRowStatus(row, value) {
         const radios = row.querySelectorAll(`input[type="radio"][name^="status_"]`);

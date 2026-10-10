@@ -417,13 +417,14 @@ def payment_process(request):
             return redirect('shopping_cart:cart_detail')
 
         try:
-            # One transaction: apply() writes a redemption and deducts balance as
-            # it goes, so without this a failure on the second coupon would leave
-            # the first one already spent against an order that never happened.
+            # reserve() prices each coupon in as a pending redemption; the
+            # balance is only taken once the order is paid (coupons.signals).
+            # One transaction so a failure on the second coupon leaves no stray
+            # reservation from the first.
             with transaction.atomic():
                 for code in applied_codes:
                     coupon = Coupon.objects.get(code=code)
-                    discount = CouponService(coupon).apply(
+                    discount = CouponService(coupon).reserve(
                         purchase_obj=order,
                         amount=subtotal,
                         user=request.user,

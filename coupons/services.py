@@ -123,26 +123,47 @@ class CouponService:
         basis for percentage discounts. `discount_cap`, if provided, limits the
         actual discount taken — used when stacking coupons so each redemption
         only takes what remains of the cart.
+
+        Takes the coupon's balance and usage immediately. Checkouts that still
+        have to be paid for use reserve() instead.
         """
         self.validate(user=user, amount=amount, product=product, context=context)
+        discount = self._discount(amount, discount_cap)
+        self._take(discount, user)
+        self._record(purchase_obj, discount, confirmed=True)
+        return discount
+
+    def reserve(self, *, purchase_obj, amount: Decimal, user=None, product=None, context='any', discount_cap: Decimal = None) -> Decimal:
+        """
+        Price this coupon into an order that is about to go to payment.
+
+        Same checks and discount as apply(), but the coupon's balance and usage
+        are left alone: the redemption is written as pending and only taken by
+        confirm_pending_redemptions() once the order is paid. A parent who
+        abandons or fails payment keeps their coupon.
+        """
+        self.validate(user=user, amount=amount, product=product, context=context)
+        discount = self._discount(amount, discount_cap)
+        self._record(purchase_obj, discount, confirmed=False)
+        return discount
+
+    def _discount(self, amount, discount_cap=None):
         cap = amount if discount_cap is None else discount_cap
         if self.coupon.discount_type == 'fixed':
             if self.coupon.multi_use:
                 # Multi-use coupons: apply discount_value each time without depleting balance
-                discount = min(cap, self.coupon.discount_value)
-            else:
-                # Single-use coupons: deplete from remaining balance
-                discount = min(cap, self.coupon.balance_remaining)
-        elif self.coupon.discount_type == 'percent':
-            discount = amount * (self.coupon.discount_value / Decimal('100'))
-            discount = min(discount, cap)
-        else:
-            raise ValidationError("Unknown discount type.")
+                return min(cap, self.coupon.discount_value)
+            # Single-use coupons: deplete from remaining balance
+            return min(cap, self.coupon.balance_remaining)
+        if self.coupon.discount_type == 'percent':
+            return min(amount * (self.coupon.discount_value / Decimal('100')), cap)
+        raise ValidationError("Unknown discount type.")
 
+    def _take(self, discount, user=None):
         # For single-use coupons, deduct balance
         # For multi-use coupons, don't touch balance (it stays at discount_value)
         if not self.coupon.multi_use:
-            self.coupon.balance_remaining -= discount
+            self.coupon.balance_remaining = max(self.coupon.balance_remaining - discount, Decimal('0.00'))
 
         # Increment usage counter for all coupons
         self.coupon.times_used += 1
@@ -152,12 +173,34 @@ class CouponService:
         if user and not self.coupon.multi_use:
             self.coupon.used_by_users.add(user)
 
-        # Log redemption
+    def _record(self, purchase_obj, discount, *, confirmed):
         CouponRedemption.objects.create(
             coupon=self.coupon,
             redeemed_amount=discount,
             content_type=ContentType.objects.get_for_model(purchase_obj),
-            object_id=purchase_obj.id
+            object_id=purchase_obj.id,
+            confirmed=confirmed,
         )
 
-        return discount
+
+def confirm_pending_redemptions(purchase_obj):
+    """
+    Take the coupons reserved on a now-paid order. Safe to call repeatedly:
+    BOIPA's return page and webhook can both report the same payment, and only
+    redemptions still pending are processed.
+    """
+    from django.db import transaction
+
+    pending = CouponRedemption.objects.filter(
+        content_type=ContentType.objects.get_for_model(purchase_obj),
+        object_id=purchase_obj.id,
+        confirmed=False,
+    )
+    if not pending.exists():
+        return
+    with transaction.atomic():
+        for redemption in pending.select_for_update():
+            coupon = Coupon.objects.select_for_update().get(pk=redemption.coupon_id)
+            CouponService(coupon)._take(redemption.redeemed_amount, getattr(purchase_obj, 'user', None))
+            redemption.confirmed = True
+            redemption.save(update_fields=['confirmed'])

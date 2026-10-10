@@ -160,3 +160,45 @@ class StackedApplyTests(TestCase):
             [r.redeemed_amount for r in redemptions],
             [Decimal("20.00"), Decimal("15.00")],
         )
+
+
+class RedeemOnPaymentTests(TestCase):
+    """
+    A coupon is only spent when the order it was used on is paid. Until then the
+    redemption is pending, so a failed or abandoned payment leaves it untouched.
+    """
+
+    def setUp(self):
+        from schools_orders.models import Order as SchoolOrder
+        self.user = User.objects.create_user(email="parent@example.com", password="pw")
+        self.coupon = make_coupon("CREDIT64", "64.00")
+        self.order = SchoolOrder.objects.create(user=self.user, amount=Decimal("0.00"))
+
+    def reserve(self, order=None):
+        return CouponService(self.coupon).reserve(
+            purchase_obj=order or self.order, amount=Decimal("64.00"), user=self.user,
+        )
+
+    def test_reserve_prices_the_coupon_in_without_spending_it(self):
+        self.assertEqual(self.reserve(), Decimal("64.00"))
+        self.coupon.refresh_from_db()
+        self.assertEqual((self.coupon.times_used, self.coupon.balance_remaining), (0, Decimal("64.00")))
+        self.assertFalse(self.coupon.used_by_users.exists())
+        self.assertFalse(CouponRedemption.objects.get().confirmed)
+
+    def test_unpaid_order_leaves_the_coupon_usable_again(self):
+        # Order 316 on 30 Sept: the payment failed, and the parent's retry was refused.
+        from schools_orders.models import Order as SchoolOrder
+        self.reserve()
+        retry = SchoolOrder.objects.create(user=self.user, amount=Decimal("0.00"))
+        self.assertEqual(self.reserve(order=retry), Decimal("64.00"))
+
+    def test_paying_the_order_spends_the_coupon_once(self):
+        self.reserve()
+        self.order.paid = True
+        self.order.save()
+        self.order.save()  # BOIPA's return page and webhook can both report the payment
+        self.coupon.refresh_from_db()
+        self.assertEqual((self.coupon.times_used, self.coupon.balance_remaining), (1, Decimal("0.00")))
+        self.assertTrue(self.coupon.used_by_users.filter(pk=self.user.pk).exists())
+        self.assertTrue(CouponRedemption.objects.get().confirmed)

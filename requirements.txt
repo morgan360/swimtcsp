@@ -60,6 +60,7 @@ et-xmlfile==1.1.0
 exceptiongroup==1.2.0
 executing==2.0.1
 fastjsonschema==2.19.0
+fido2==1.2.0
 filelock==3.13.1
 fonttools==4.59.0
 fqdn==1.5.1
@@ -148,6 +149,7 @@ python3-openid==3.2.0
 pytz==2023.3
 PyYAML==6.0.1
 pyzmq==25.1.2
+qrcode==8.2
 qtconsole==5.5.1
 QtPy==2.4.1
 redis==6.2.0

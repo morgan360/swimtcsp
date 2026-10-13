@@ -648,6 +648,10 @@ class AdminPageTitleTests(TestCase):
 
     def test_the_login_page_has_a_title_and_a_theme_toggle(self):
         """Anonymous visitors have no user tools, so the toggle lives in branding."""
+        from django.apps import apps
+
+        if apps.is_installed("allauth.mfa"):
+            self.skipTest("with two-factor on, the admin login page redirects to allauth's")
         html = self.client.get(reverse("operations:login")).content.decode()
         self.assertNotIn("<title></title>", html)
         self.assertIn("theme-toggle", html)

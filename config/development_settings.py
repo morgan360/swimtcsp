@@ -100,3 +100,6 @@ SECURE_HSTS_PRELOAD   = False
 
 SITE_ID = 3
 FOOTER_MESSAGE = "Development Version"
+
+# Two-factor authentication: required for staff, optional for everyone else.
+INSTALLED_APPS, MIDDLEWARE = enable_mfa(INSTALLED_APPS, MIDDLEWARE)

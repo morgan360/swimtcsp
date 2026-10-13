@@ -96,6 +96,16 @@
                                     Change Password
                                 </a>
                             </li>
+                            {% url 'mfa_index' as mfa_url %}
+                            {% if mfa_url %}
+                            <li>
+                                <a href="{{ mfa_url }}"
+                                   class="block px-4 py-3 hover:bg-blue-50 rounded-xl transition-colors">
+                                    <i class="fas fa-shield-alt mr-3 text-blue-600 w-5"></i>
+                                    Two-Factor Login
+                                </a>
+                            </li>
+                            {% endif %}
                             <li>
                                 <a href="#"
                                    @click.prevent="$dispatch('show-logout-modal'); open = false"

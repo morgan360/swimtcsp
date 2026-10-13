@@ -61,7 +61,7 @@
         </div>
         {% endif %}
 
-        <main class="section">
+        <main class="section {% block main_class %}{% endblock %}">
             <div>
                 {% block content %}{% endblock %}
             </div>

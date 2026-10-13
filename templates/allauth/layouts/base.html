@@ -1,0 +1,36 @@
+{% extends "account/base.html" %}
+{% comment %}
+Every allauth page we have not restyled ourselves — the two-factor pages above
+all — extends this. allauth's own version is a bare unstyled page; this puts
+those pages inside the site layout on a white card.
+
+The styles are plain CSS rather than Tailwind classes: allauth renders its
+markup through {% element %} tags that carry no classes, so there is nothing for
+Tailwind to find and these rules work without a CSS rebuild.
+{% endcomment %}
+{% block title %}{% block head_title %}{% endblock head_title %} | TCSP{% endblock title %}
+{% block main_class %}allauth-page{% endblock %}
+{% block subhead %}
+<style>
+  .allauth-page > div { max-width: 34rem; margin: 2.5rem auto; padding: 2rem; background: #fff;
+    border-radius: 1rem; box-shadow: 0 10px 25px rgba(0,0,0,.15); color: #1f2937; }
+  .allauth-page h1 { font-size: 1.5rem; font-weight: 600; margin-bottom: 1rem; color: #1e3a8a; }
+  .allauth-page h2 { font-size: 1.15rem; font-weight: 600; margin: 1.5rem 0 .5rem; color: #1e3a8a; }
+  .allauth-page p { margin-bottom: .9rem; line-height: 1.5; }
+  .allauth-page label { display: block; font-weight: 500; margin-bottom: .25rem; }
+  .allauth-page input[type=text], .allauth-page input[type=password], .allauth-page input[type=email],
+  .allauth-page input:not([type]), .allauth-page textarea {
+    width: 100%; padding: .55rem .75rem; border: 1px solid #d1d5db; border-radius: .5rem; font-family: monospace; }
+  .allauth-page input:disabled, .allauth-page textarea:disabled { background: #f3f4f6; }
+  .allauth-page p > span { display: block; font-size: .85rem; color: #6b7280; margin-top: .25rem; }
+  .allauth-page img { width: 12rem; height: 12rem; margin: 0 auto 1rem; display: block; }
+  .allauth-page button, .allauth-page a[href]:not(p a) { display: inline-block; margin: .25rem .5rem .25rem 0;
+    padding: .55rem 1.1rem; border-radius: .6rem; background: #1d4ed8; color: #fff; font-weight: 500; }
+  .allauth-page button:hover, .allauth-page a[href]:not(p a):hover { background: #1e40af; }
+  .allauth-page p a { color: #1d4ed8; text-decoration: underline; }
+  .allauth-page ul.errorlist { color: #b91c1c; margin-bottom: .5rem; }
+  .allauth-page section, .allauth-page fieldset { margin-bottom: 1rem; }
+</style>
+{% block extra_head %}{% endblock extra_head %}
+{% endblock subhead %}
+{% block scripts %}{% block extra_body %}{% endblock extra_body %}{% endblock scripts %}

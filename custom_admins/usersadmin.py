@@ -1,3 +1,4 @@
+from django.apps import apps
 from django.contrib import admin  # ✅ Needed for admin.StackedInline, admin.ModelAdmin
 from django.contrib.admin import AdminSite
 from django.contrib.auth import get_user_model
@@ -127,6 +128,29 @@ def send_password_reset_email(modeladmin, request, queryset):
 
         messages.success(request, f"✅ Password reset email sent to {user.email}")
 
+# 🔹 Admin action: Reset two-factor authentication
+@admin.action(description="🔓 Reset two-factor authentication")
+def reset_two_factor(modeladmin, request, queryset):
+    """Remove a user's authenticator app and recovery codes.
+
+    For someone who has lost their phone and their recovery codes. They sign in
+    with their password alone next time and, if staff, are asked to set two-factor
+    up again straight away. Only a superuser may reset a staff account, so one
+    compromised staff password cannot strip another account's second factor.
+    """
+    from allauth.mfa.models import Authenticator
+
+    for user in queryset:
+        if user.is_staff and not request.user.is_superuser:
+            messages.error(request, f"Only a superuser can reset two-factor for staff account {user.email}.")
+            continue
+        deleted, _ = Authenticator.objects.filter(user=user).delete()
+        if deleted:
+            messages.success(request, f"Two-factor authentication reset for {user.email}.")
+        else:
+            messages.info(request, f"{user.email} did not have two-factor authentication set up.")
+
+
 # 🔹 User Admin
 class UserAdmin(HijackUserAdminMixin, ImportExportMixin, BaseUserAdmin):
     resource_class = UserResource
@@ -182,6 +206,8 @@ class UserAdmin(HijackUserAdminMixin, ImportExportMixin, BaseUserAdmin):
 
     # 🔹 Register the password reset action
     actions = [send_password_reset_email]
+    if apps.is_installed("allauth.mfa"):
+        actions.append(reset_two_factor)
 
 
 # 🔹 Group Admin

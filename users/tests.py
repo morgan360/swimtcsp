@@ -12,12 +12,14 @@ general notes box has years of unrelated content in it, and it is deliberately
 left alone rather than migrated or cleared.
 """
 import itertools
+from unittest import skipUnless
 from unittest.mock import patch
 
 from allauth.socialaccount.models import SocialAccount, SocialLogin
 from allauth.socialaccount.views import SignupView
+from django.apps import apps
 from django.contrib.auth import get_user_model
-from django.test import Client, RequestFactory, TestCase
+from django.test import Client, RequestFactory, TestCase, modify_settings
 from django.urls import reverse
 from django.utils import timezone
 
@@ -274,3 +276,133 @@ class LoginEventTests(TestCase):
         self.assertEqual(response.status_code, 302)
         self.client.post(reverse("hijack:release"))
         self.assertFalse(LoginEvent.objects.exists())
+
+
+@skipUnless(apps.is_installed("allauth.mfa"), "two-factor authentication is not installed")
+@modify_settings(MIDDLEWARE={"append": "utils.middleware.StaffMFARequiredMiddleware"})
+class StaffTwoFactorTests(TestCase):
+    """Two-factor authentication: required for staff, optional for everyone else.
+
+    Staff can open every family's records and hijack any account, so a staff
+    password alone must not be enough. The failure modes worth guarding are the
+    quiet ones: a login route that skips the second factor, and a redirect loop
+    that locks staff out of the site entirely.
+    """
+
+    def setUp(self):
+        self.staff = User.objects.create_superuser(email="staff@test.com", password="pw", first_name="S")
+
+    def enrol(self, user):
+        from allauth.mfa.totp.internal.auth import TOTP, generate_totp_secret
+
+        TOTP.activate(user, generate_totp_secret())
+
+    def test_staff_without_two_factor_are_sent_to_set_it_up(self):
+        self.client.force_login(self.staff)
+        response = self.client.get("/finance/")
+        self.assertRedirects(response, reverse("mfa_activate_totp"), fetch_redirect_response=False)
+
+    def test_the_setup_page_itself_is_reachable(self):
+        """The page they are sent to must not redirect again."""
+        # A real sign-in, not force_login: allauth asks for the password again
+        # unless it has seen one recently.
+        self.client.post(reverse("account_login"), {"login": "staff@test.com", "password": "pw"})
+        response = self.client.get(reverse("mfa_activate_totp"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "data:image/svg+xml")  # the QR code
+
+    def test_unverified_email_is_sent_to_verify_first(self):
+        """allauth refuses to activate while an unverified address exists, so
+        sending these staff to the setup page would bounce them forever."""
+        from allauth.account.models import EmailAddress
+
+        EmailAddress.objects.create(user=self.staff, email=self.staff.email, verified=False, primary=True)
+        self.client.force_login(self.staff)
+        response = self.client.get("/finance/")
+        self.assertRedirects(response, reverse("account_email"), fetch_redirect_response=False)
+
+    def test_staff_with_two_factor_get_through(self):
+        self.enrol(self.staff)
+        self.client.force_login(self.staff)
+        self.assertEqual(self.client.get("/finance/").status_code, 200)
+
+    def test_customers_are_not_made_to_set_it_up(self):
+        User.objects.create_user(email="parent@test.com", password="pw", first_name="P")
+        self.client.login(email="parent@test.com", password="pw")
+        response = self.client.get(reverse("users:my_bookings"))
+        self.assertNotEqual(response.get("Location"), reverse("mfa_activate_totp"))
+
+    def test_hijacked_session_is_not_redirected(self):
+        """The person at the keyboard already passed their own second factor."""
+        other = User.objects.create_user(email="staff2@test.com", password="pw", first_name="T")
+        User.objects.filter(pk=other.pk).update(is_staff=True)
+        self.enrol(self.staff)
+        self.client.force_login(self.staff)
+        self.client.post(reverse("hijack:acquire"), {"user_pk": other.pk})
+        response = self.client.get(reverse("users:my_bookings"))
+        self.assertNotEqual(response.get("Location"), reverse("mfa_activate_totp"))
+
+    def test_admin_login_form_hands_over_to_allauth(self):
+        """The admin's own form checks a password only."""
+        for path in ("/admin/login/", "/finance/login/", "/operations/login/", "/settings-admin/login/"):
+            response = self.client.get(path)
+            self.assertEqual(response.status_code, 302, path)
+            self.assertTrue(response["Location"].startswith(reverse("account_login")), path)
+
+    def test_password_login_stops_at_the_code_prompt(self):
+        self.enrol(self.staff)
+        response = self.client.post(reverse("account_login"), {"login": "staff@test.com", "password": "pw"})
+        self.assertRedirects(response, reverse("mfa_authenticate"), fetch_redirect_response=False)
+        self.assertNotIn("_auth_user_id", self.client.session)
+
+    def test_google_login_stops_at_the_code_prompt(self):
+        """The adapter used to throw away perform_login's response and send the
+        user to "/" — logged out, with no explanation."""
+        from allauth.core import context
+        from allauth.core.exceptions import ImmediateHttpResponse
+        from django.contrib.auth.models import AnonymousUser
+        from django.contrib.messages.storage.fallback import FallbackStorage
+        from django.contrib.sessions.middleware import SessionMiddleware
+
+        from users.adapters import AutoLinkSocialAccountAdapter
+
+        self.enrol(self.staff)
+        request = RequestFactory().get("/accounts/google/login/callback/")
+        SessionMiddleware(lambda r: None).process_request(request)
+        request._messages = FallbackStorage(request)
+        request.user = AnonymousUser()
+
+        sociallogin = make_sociallogin(email="staff@test.com")
+        # AccountMiddleware sets this context on a real request.
+        with context.request_context(request), self.assertRaises(ImmediateHttpResponse) as caught:
+            AutoLinkSocialAccountAdapter().pre_social_login(request, sociallogin)
+        self.assertEqual(caught.exception.response["Location"], reverse("mfa_authenticate"))
+
+    def test_reset_action_removes_the_authenticator(self):
+        from allauth.mfa.models import Authenticator
+
+        customer = User.objects.create_user(email="parent@test.com", password="pw", first_name="P")
+        self.enrol(customer)
+        self.enrol(self.staff)
+        self.client.force_login(self.staff)
+        self.client.post(
+            reverse("settings:users_user_changelist"),
+            {"action": "reset_two_factor", "_selected_action": [customer.pk]},
+        )
+        self.assertFalse(Authenticator.objects.filter(user=customer).exists())
+
+    def test_only_a_superuser_can_reset_a_staff_account(self):
+        from django.contrib.messages.storage.fallback import FallbackStorage
+
+        from allauth.mfa.models import Authenticator
+        from custom_admins.usersadmin import reset_two_factor
+
+        manager = User.objects.create_user(email="mgr@test.com", password="pw", first_name="M")
+        manager.is_staff = True
+        self.enrol(self.staff)
+        request = RequestFactory().post("/")
+        request.user = manager
+        request.session = {}
+        request._messages = FallbackStorage(request)
+        reset_two_factor(None, request, User.objects.filter(pk=self.staff.pk))
+        self.assertTrue(Authenticator.objects.filter(user=self.staff).exists())

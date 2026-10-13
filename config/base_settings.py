@@ -403,6 +403,29 @@ ACCOUNT_USER_MODEL_USERNAME_FIELD = None
 # Disable Sites framework requirement for allauth
 ALLAUTH_USESITES = False
 
+# Two-factor authentication (allauth.mfa). Not installed here, so production is
+# unchanged until the rollout is agreed with the pool manager; the dev and local
+# settings add it through enable_mfa(). Everything else in the project checks
+# apps.is_installed("allauth.mfa") rather than a flag of its own.
+MFA_SUPPORTED_TYPES = ["totp", "recovery_codes"]
+MFA_TOTP_ISSUER = "TCSP"
+
+
+def enable_mfa(installed_apps, middleware):
+    """Return INSTALLED_APPS and MIDDLEWARE with two-factor authentication on.
+
+    The middleware sends staff without an authenticator to set one up. It goes
+    last: it needs the user (AuthenticationMiddleware) and the hijack flag.
+
+    It is left out of test runs, where it would bounce every test that signs in
+    as staff to the setup page; the two-factor tests add it back themselves.
+    """
+    import sys
+
+    if "test" not in sys.argv:
+        middleware = [*middleware, "utils.middleware.StaffMFARequiredMiddleware"]
+    return [*installed_apps, "allauth.mfa"], middleware
+
 #  Allauth social accounts
 SOCIALACCOUNT_PROVIDERS = {
     'google': {

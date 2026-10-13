@@ -1,3 +1,5 @@
+from allauth.account.decorators import secure_admin_login
+from django.apps import apps
 from django.contrib import admin
 from django.urls import include, path, re_path
 from django.conf import settings
@@ -20,6 +22,14 @@ from waiting_list.views import redirect_to_swimling_waiting_list
 from django.views.generic import RedirectView, TemplateView
 from django.http import HttpResponse
 from django.contrib.auth import views as auth_views
+
+# The admin's own login form authenticates with a password alone, which would
+# let staff skip their second factor. With two-factor on, every panel's login
+# page hands over to allauth's instead. This has to run before the sites' urls
+# are read below, which is when each site's login view is looked up.
+if apps.is_installed("allauth.mfa"):
+    for _site in (admin.site, operations_site, finance_site, settings_site):
+        _site.login = secure_admin_login(_site.login)
 
 urlpatterns = [
     path('admin/', admin.site.urls),

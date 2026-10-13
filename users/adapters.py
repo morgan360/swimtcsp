@@ -3,7 +3,6 @@
 from allauth.socialaccount.adapter import DefaultSocialAccountAdapter
 from allauth.account.utils import perform_login
 from allauth.core.exceptions import ImmediateHttpResponse
-from django.http import HttpResponseRedirect
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
@@ -21,7 +20,11 @@ class AutoLinkSocialAccountAdapter(DefaultSocialAccountAdapter):
             user = User.objects.get(email=email)
             # Link and log in
             sociallogin.connect(request, user)
-            perform_login(request, user, email_verification='optional')
-            raise ImmediateHttpResponse(HttpResponseRedirect("/"))  # Or wherever you want
+            # Hand back perform_login's own response: when the account has
+            # two-factor on, it is the redirect to the code prompt, and the user
+            # is not logged in until they get past it. Redirecting to "/" here
+            # instead would drop them there silently logged out.
+            response = perform_login(request, user, email_verification='optional')
+            raise ImmediateHttpResponse(response)
         except User.DoesNotExist:
             pass

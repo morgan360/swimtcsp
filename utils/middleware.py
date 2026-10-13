@@ -153,3 +153,67 @@ class PaymentGatewaySessionMiddleware:
                 return HttpResponse(html, status=200)
             # Re-raise if it's not a payment callback
             raise
+
+
+class StaffMFARequiredMiddleware:
+    """
+    Send staff who have no authenticator app to set one up.
+
+    Staff accounts open the admin panels, which hold every family's contact
+    details and children's medical notes, and can hijack any customer. Until a
+    staff member has two-factor set up, every page outside the account pages
+    redirects to the setup page.
+
+    allauth refuses to activate an authenticator while the account has an
+    unverified email address (otherwise someone could sign up with another
+    person's email and lock them out). ACCOUNT_EMAIL_VERIFICATION is "none", so
+    most accounts carry one; those staff are sent to verify it first, or the
+    redirect would loop between setup and refusal.
+
+    Hijacked sessions are skipped: the person at the keyboard is the staff member
+    who already signed in with their own second factor.
+
+    Installed only by config.base_settings.enable_mfa().
+    """
+
+    EXEMPT_PREFIXES = ("/accounts/", "/static/", "/media/", "/hijack/", "/__reload__/")
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        user = getattr(request, "user", None)
+        if (
+            user is not None
+            and user.is_authenticated
+            and user.is_staff
+            and not request.session.get("hijack_history")
+            and not request.path.startswith(self.EXEMPT_PREFIXES)
+        ):
+            redirect = self._setup_redirect(request, user)
+            if redirect is not None:
+                return redirect
+        return self.get_response(request)
+
+    def _setup_redirect(self, request, user):
+        from allauth.account.models import EmailAddress
+        from allauth.mfa.models import Authenticator
+        from allauth.mfa.utils import is_mfa_enabled
+        from django.contrib import messages
+        from django.shortcuts import redirect
+
+        if is_mfa_enabled(user, [Authenticator.Type.TOTP]):
+            return None
+        if EmailAddress.objects.filter(user=user, verified=False).exists():
+            messages.warning(
+                request,
+                "Staff accounts need two-factor authentication. First verify your "
+                "email address: click Re-send Verification and follow the link we email you.",
+            )
+            return redirect("account_email")
+        messages.warning(
+            request,
+            "Staff accounts need two-factor authentication. Scan the code with an "
+            "authenticator app (Google Authenticator, Microsoft Authenticator, 1Password…) to continue.",
+        )
+        return redirect("mfa_activate_totp")

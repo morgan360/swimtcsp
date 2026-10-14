@@ -164,6 +164,11 @@ def footer_message(request):
     }
 
 
+def two_factor(request):
+    """Whether two-factor is switched on, for the menu link to it."""
+    return {'TCSP_MFA_ON': settings.TCSP_MFA_ON}
+
+
 def term_status_for_active_schools(request):
     today = timezone.now().date()
     terms = ScoTerm.objects.filter(

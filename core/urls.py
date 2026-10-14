@@ -1,5 +1,4 @@
 from allauth.account.decorators import secure_admin_login
-from django.apps import apps
 from django.contrib import admin
 from django.urls import include, path, re_path
 from django.conf import settings
@@ -25,11 +24,19 @@ from django.contrib.auth import views as auth_views
 
 # The admin's own login form authenticates with a password alone, which would
 # let staff skip their second factor. With two-factor on, every panel's login
-# page hands over to allauth's instead. This has to run before the sites' urls
-# are read below, which is when each site's login view is looked up.
-if apps.is_installed("allauth.mfa"):
-    for _site in (admin.site, operations_site, finance_site, settings_site):
-        _site.login = secure_admin_login(_site.login)
+# page hands over to allauth's instead. The setting is read per request, so tests
+# can switch it; the wrapping has to happen before the sites' urls are read below,
+# which is when each site's login view is looked up.
+def _two_factor_admin_login(login_view):
+    secured = secure_admin_login(login_view)
+
+    def view(request, *args, **kwargs):
+        return (secured if settings.TCSP_MFA_ON else login_view)(request, *args, **kwargs)
+    return view
+
+
+for _site in (admin.site, operations_site, finance_site, settings_site):
+    _site.login = _two_factor_admin_login(_site.login)
 
 urlpatterns = [
     path('admin/', admin.site.urls),

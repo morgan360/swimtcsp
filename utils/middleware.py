@@ -173,7 +173,7 @@ class StaffMFARequiredMiddleware:
     Hijacked sessions are skipped: the person at the keyboard is the staff member
     who already signed in with their own second factor.
 
-    Installed only by config.base_settings.enable_mfa().
+    Does nothing unless settings.TCSP_MFA_ON.
     """
 
     EXEMPT_PREFIXES = ("/accounts/", "/static/", "/media/", "/hijack/", "/__reload__/")
@@ -182,9 +182,12 @@ class StaffMFARequiredMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
+        from django.conf import settings
+
         user = getattr(request, "user", None)
         if (
-            user is not None
+            settings.TCSP_MFA_ON
+            and user is not None
             and user.is_authenticated
             and user.is_staff
             and not request.session.get("hijack_history")

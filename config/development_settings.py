@@ -1,6 +1,7 @@
 from config.base_settings import *
 from decouple import config
 import os
+import sys
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -102,4 +103,6 @@ SITE_ID = 3
 FOOTER_MESSAGE = "Development Version"
 
 # Two-factor authentication: required for staff, optional for everyone else.
-INSTALLED_APPS, MIDDLEWARE = enable_mfa(INSTALLED_APPS, MIDDLEWARE)
+# Off during test runs, where it would bounce every test that signs in as staff
+# to the setup page; the two-factor tests switch it back on for themselves.
+TCSP_MFA_ON = "test" not in sys.argv

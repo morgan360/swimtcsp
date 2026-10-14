@@ -1,0 +1,7 @@
+{% comment %}
+The logout confirmation. The navbar's Logout dispatches show-logout-modal and
+this listens for it, so every base template that includes the navbar must
+include this too: account/base.html did not, and Logout silently did nothing on
+the sign-in, password, email and two-factor pages.
+{% endcomment %}
+<!-- In _base.html, add this right before the closing 

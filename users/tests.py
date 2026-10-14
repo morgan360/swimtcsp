@@ -447,3 +447,16 @@ class TwoFactorSwitchedOffTests(TestCase):
         html = self.client.get(reverse("users:my_bookings")).content.decode()
         self.assertNotIn(reverse("mfa_index"), html)
 
+
+class LogoutOnAccountPagesTests(TestCase):
+    """The navbar's Logout only opens a confirmation box, which has to be on the
+    page. Account pages use their own base template, which had none, so Logout
+    did nothing there — including on the two-factor setup page."""
+
+    def test_account_pages_carry_the_logout_confirmation(self):
+        User.objects.create_user(email="parent@test.com", password="pw", first_name="P")
+        self.client.login(email="parent@test.com", password="pw")
+        html = self.client.get(reverse("account_change_password")).content.decode()
+        self.assertIn("show-logout-modal.window", html)
+        self.assertIn(reverse("account_logout"), html)
+

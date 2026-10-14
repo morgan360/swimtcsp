@@ -3,6 +3,7 @@
 from allauth.socialaccount.adapter import DefaultSocialAccountAdapter
 from allauth.account.utils import perform_login
 from allauth.core.exceptions import ImmediateHttpResponse
+from allauth.socialaccount.internal.flows.login import record_authentication
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
@@ -24,6 +25,11 @@ class AutoLinkSocialAccountAdapter(DefaultSocialAccountAdapter):
             # two-factor on, it is the redirect to the code prompt, and the user
             # is not logged in until they get past it. Redirecting to "/" here
             # instead would drop them there silently logged out.
+            # allauth's own social login records "signed in with Google just
+            # now" before logging in; going straight to perform_login skipped
+            # that, so allauth treated every Google login as stale and asked for
+            # the password again before letting anyone set up two-factor.
+            record_authentication(request, sociallogin)
             response = perform_login(request, user, email_verification='optional')
             raise ImmediateHttpResponse(response)
         except User.DoesNotExist:

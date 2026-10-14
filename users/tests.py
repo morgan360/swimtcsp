@@ -375,6 +375,28 @@ class StaffTwoFactorTests(TestCase):
             AutoLinkSocialAccountAdapter().pre_social_login(request, sociallogin)
         self.assertEqual(caught.exception.response["Location"], reverse("mfa_authenticate"))
 
+    def test_google_login_counts_as_a_recent_sign_in(self):
+        """Otherwise the 2FA setup page asks for a password straight after a
+        Google login, and Google-only staff have none to give."""
+        from allauth.account.authentication import get_authentication_records
+        from allauth.core import context
+        from allauth.core.exceptions import ImmediateHttpResponse
+        from django.contrib.auth.models import AnonymousUser
+        from django.contrib.messages.storage.fallback import FallbackStorage
+        from django.contrib.sessions.middleware import SessionMiddleware
+
+        from users.adapters import AutoLinkSocialAccountAdapter
+
+        request = RequestFactory().get("/accounts/google/login/callback/")
+        SessionMiddleware(lambda r: None).process_request(request)
+        request._messages = FallbackStorage(request)
+        request.user = AnonymousUser()
+
+        with context.request_context(request), self.assertRaises(ImmediateHttpResponse):
+            AutoLinkSocialAccountAdapter().pre_social_login(request, make_sociallogin(email="staff@test.com"))
+        records = get_authentication_records(request)
+        self.assertEqual([r["method"] for r in records], ["socialaccount"])
+
     def test_reset_action_removes_the_authenticator(self):
         from allauth.mfa.models import Authenticator
 

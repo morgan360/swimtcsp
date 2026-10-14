@@ -256,7 +256,8 @@
      the full-page chat share one implementation; it binds to whichever
      #chat-container the page has, and each page has at most one. -->
 <script src="{% static 'chatbot/chat.js' %}"></script>
-<!-- In _base.html, add this right before the closing </body> tag -->
+{% include "partials/_logout_modal.html" %}
+</body> tag -->
 <div x-data="{ showLogoutModal: false }"
      x-on:show-logout-modal.window="showLogoutModal = true">
     <div x-show="showLogoutModal" x-cloak x-transition

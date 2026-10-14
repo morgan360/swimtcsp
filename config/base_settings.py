@@ -219,6 +219,7 @@ INSTALLED_APPS = [
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
+    'allauth.mfa',  # two-factor; installed everywhere, switched on by TCSP_MFA_ON
 
     # Providers (optional)
     'allauth.socialaccount.providers.google',
@@ -283,7 +284,8 @@ MIDDLEWARE = [
     'django_browser_reload.middleware.BrowserReloadMiddleware',
     'utils.middleware.CustomErrorPageMiddleware',   # Render 401/503 templates
 # Maintanence mode toggle python manage.py maintenance_mode off/on
-    "maintenance_mode.middleware.MaintenanceModeMiddleware"
+    "maintenance_mode.middleware.MaintenanceModeMiddleware",
+    'utils.middleware.StaffMFARequiredMiddleware',  # no-op unless TCSP_MFA_ON
 
 ]
 
@@ -316,6 +318,7 @@ TEMPLATES = [
                 'utils.context_processors.get_term_info',
                 'utils.context_processors.term_status_for_active_schools',
                 'utils.context_processors.footer_message',
+                'utils.context_processors.two_factor',
                 # 'utils.context_processors.current_term',
             ],
         },
@@ -403,28 +406,19 @@ ACCOUNT_USER_MODEL_USERNAME_FIELD = None
 # Disable Sites framework requirement for allauth
 ALLAUTH_USESITES = False
 
-# Two-factor authentication (allauth.mfa). Not installed here, so production is
-# unchanged until the rollout is agreed with the pool manager; the dev and local
-# settings add it through enable_mfa(). Everything else in the project checks
-# apps.is_installed("allauth.mfa") rather than a flag of its own.
+# Two-factor authentication (allauth.mfa). The app is installed everywhere so
+# production has its tables: the nightly copy of production over dev would
+# otherwise leave dev with the table but no record of its migrations, and the
+# next dev deploy would fail creating it again.
+#
+# TCSP_MFA_ON is the switch for everything people see: staff being made to set
+# it up, the admin login handing over to allauth's, and the menu link. Off here,
+# so production behaves as before until the rollout is agreed with the pool
+# manager; the dev and local settings turn it on. With it off, /accounts/2fa/
+# still answers, but nothing links to it.
+TCSP_MFA_ON = False
 MFA_SUPPORTED_TYPES = ["totp", "recovery_codes"]
 MFA_TOTP_ISSUER = "TCSP"
-
-
-def enable_mfa(installed_apps, middleware):
-    """Return INSTALLED_APPS and MIDDLEWARE with two-factor authentication on.
-
-    The middleware sends staff without an authenticator to set one up. It goes
-    last: it needs the user (AuthenticationMiddleware) and the hijack flag.
-
-    It is left out of test runs, where it would bounce every test that signs in
-    as staff to the setup page; the two-factor tests add it back themselves.
-    """
-    import sys
-
-    if "test" not in sys.argv:
-        middleware = [*middleware, "utils.middleware.StaffMFARequiredMiddleware"]
-    return [*installed_apps, "allauth.mfa"], middleware
 
 #  Allauth social accounts
 SOCIALACCOUNT_PROVIDERS = {

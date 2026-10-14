@@ -12,14 +12,12 @@ general notes box has years of unrelated content in it, and it is deliberately
 left alone rather than migrated or cleared.
 """
 import itertools
-from unittest import skipUnless
 from unittest.mock import patch
 
 from allauth.socialaccount.models import SocialAccount, SocialLogin
 from allauth.socialaccount.views import SignupView
-from django.apps import apps
 from django.contrib.auth import get_user_model
-from django.test import Client, RequestFactory, TestCase, modify_settings
+from django.test import Client, RequestFactory, TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 
@@ -278,8 +276,7 @@ class LoginEventTests(TestCase):
         self.assertFalse(LoginEvent.objects.exists())
 
 
-@skipUnless(apps.is_installed("allauth.mfa"), "two-factor authentication is not installed")
-@modify_settings(MIDDLEWARE={"append": "utils.middleware.StaffMFARequiredMiddleware"})
+@override_settings(TCSP_MFA_ON=True)
 class StaffTwoFactorTests(TestCase):
     """Two-factor authentication: required for staff, optional for everyone else.
 
@@ -406,3 +403,25 @@ class StaffTwoFactorTests(TestCase):
         request._messages = FallbackStorage(request)
         reset_two_factor(None, request, User.objects.filter(pk=self.staff.pk))
         self.assertTrue(Authenticator.objects.filter(user=self.staff).exists())
+
+
+@override_settings(TCSP_MFA_ON=False)
+class TwoFactorSwitchedOffTests(TestCase):
+    """Production until the rollout is agreed: installed, but nobody notices."""
+
+    def setUp(self):
+        self.staff = User.objects.create_superuser(email="staff@test.com", password="pw", first_name="S")
+
+    def test_staff_are_not_made_to_set_it_up(self):
+        self.client.force_login(self.staff)
+        self.assertEqual(self.client.get("/finance/").status_code, 200)
+
+    def test_admin_login_form_is_the_admin_s_own(self):
+        response = self.client.get("/finance/login/")
+        self.assertEqual(response.status_code, 200)
+
+    def test_the_menu_does_not_link_to_it(self):
+        self.client.force_login(self.staff)
+        html = self.client.get(reverse("users:my_bookings")).content.decode()
+        self.assertNotIn(reverse("mfa_index"), html)
+

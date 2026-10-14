@@ -1,4 +1,3 @@
-from django.apps import apps
 from django.contrib import admin  # ✅ Needed for admin.StackedInline, admin.ModelAdmin
 from django.contrib.admin import AdminSite
 from django.contrib.auth import get_user_model
@@ -205,9 +204,7 @@ class UserAdmin(HijackUserAdminMixin, ImportExportMixin, BaseUserAdmin):
     filter_horizontal = ('groups',)
 
     # 🔹 Register the password reset action
-    actions = [send_password_reset_email]
-    if apps.is_installed("allauth.mfa"):
-        actions.append(reset_two_factor)
+    actions = [send_password_reset_email, reset_two_factor]
 
 
 # 🔹 Group Admin

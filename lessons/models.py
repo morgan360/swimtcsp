@@ -263,6 +263,12 @@ class Product(models.Model):
         # Count lessons remaining from next occurrence of this class day
         lessons_remaining = self.count_lessons_remaining(term, from_date=today)
 
+        # The count above is calendar weeks to the term end, which ignores
+        # breaks (and a wrong end date), so never charge for more lessons than
+        # the class actually has — i.e. never more than the full term price.
+        if self.num_weeks:
+            lessons_remaining = min(lessons_remaining, self.num_weeks)
+
         # Ensure minimum of 1 lesson
         if lessons_remaining < 1:
             lessons_remaining = 1

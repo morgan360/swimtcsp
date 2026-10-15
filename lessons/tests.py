@@ -117,3 +117,18 @@ class ProratedPricingTestCase(TestCase):
         prorated_price = self.product.get_prorated_price(term)
         # Should be approximately €50.00 (5 weeks out of 10 remaining)
         self.assertAlmostEqual(float(prorated_price), 50.00, delta=5.00)
+
+    def test_never_more_than_full_term_price(self):
+        """A term with more calendar weeks than lessons (a mid-term break, or a
+        wrong end date) must not charge more than the full term price"""
+        today = timezone.now().date()
+        # Term has started, and 13 weeks remain on the calendar — but the
+        # class only has 10 lessons
+        term = Term.objects.create(
+            start_date=today - timedelta(days=1),
+            end_date=today + timedelta(weeks=13),
+            rebooking_date=today - timedelta(days=14),
+            booking_date=today - timedelta(days=7)
+        )
+
+        self.assertEqual(self.product.get_prorated_price(term), Decimal('100.00'))

@@ -9,6 +9,13 @@ DEBUG = False
 # --- Core secrets/env (prod reads from real env) ---
 SECRET_KEY = config('SECRET_KEY')
 
+# Two-factor is on in production. If it causes trouble, put TCSP_MFA_ON=False in
+# .env and reload the web app: no deploy needed. Staff who already set it up are
+# still asked for their code at the main login (allauth does that whenever an
+# account has an authenticator); a lost phone is fixed with the "reset 2FA" action
+# in the users admin.
+TCSP_MFA_ON = config('TCSP_MFA_ON', default=True, cast=bool)
+
 # OpenAI settings live in base_settings.py — see the OpenAI/chatbot block there.
 
 # --- BOIPA Configuration ---

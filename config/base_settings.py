@@ -412,10 +412,10 @@ ALLAUTH_USESITES = False
 # next dev deploy would fail creating it again.
 #
 # TCSP_MFA_ON is the switch for everything people see: staff being made to set
-# it up, the admin login handing over to allauth's, and the menu link. Off here,
-# so production behaves as before until the rollout is agreed with the pool
-# manager; the dev and local settings turn it on. With it off, /accounts/2fa/
-# still answers, but nothing links to it.
+# it up, the admin login handing over to allauth's, and the menu link. Off here;
+# the dev and local settings turn it on, and production reads it from .env
+# (default on) so it can be switched off there without a deploy. With it off,
+# /accounts/2fa/ still answers, but nothing links to it.
 TCSP_MFA_ON = False
 MFA_SUPPORTED_TYPES = ["totp", "recovery_codes"]
 MFA_TOTP_ISSUER = "TCSP"

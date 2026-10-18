@@ -38,8 +38,9 @@ class WaitingList(models.Model):
         unique_together = ('swimling', 'product')
 
     def clean(self):
-        if self.swimling and self.product:
-            if WaitingList.objects.filter(swimling=self.swimling, product=self.product).exclude(id=self.id).exists():
+        # _id, not the relation: reading an unset FK raises instead of returning None.
+        if self.swimling_id and self.product_id:
+            if WaitingList.objects.filter(swimling_id=self.swimling_id, product_id=self.product_id).exclude(id=self.id).exists():
                 raise ValidationError('This swimling is already on the waiting list for this lesson.')
 
     def check_sibling_bookings(self):

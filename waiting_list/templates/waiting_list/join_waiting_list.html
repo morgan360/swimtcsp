@@ -96,6 +96,12 @@
                 <form method="POST" class="p-6">
                     {% csrf_token %}
 
+                    {% for error in form.non_field_errors %}
+                    <p class="text-sm text-red-600 mb-4 flex items-center">
+                        <i class="fas fa-exclamation-circle mr-1"></i>{{ error }}
+                    </p>
+                    {% endfor %}
+
                     <div class="space-y-6">
                         {% for field in form %}
                         <div>

@@ -32,6 +32,9 @@ class PublicWaitingListForm(forms.ModelForm):
         self.swimling = kwargs.pop('swimling', None)
         super().__init__(*args, **kwargs)
 
+        # The first choice becomes the entry's product, so it can't be left blank.
+        self.fields['preferred_lesson_1'].required = True
+
         if self.swimling:
             # Ensure no duplicate waiting list entry
             self.fields['preferred_lesson_1'].queryset = Product.objects.all()

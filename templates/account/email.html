@@ -17,8 +17,7 @@
     <fieldset class="space-y-4">
       {% for emailaddress in user.emailaddress_set.all %}
       <div class="flex items-start">
-        <input id="email_radio_{{ forloop.counter }}" type="radio" name="email" value="{{ emailaddress.email }}" {% if
-          emailaddress.primary or user.emailaddress_set.count==1 %}checked{% endif %}
+        <input id="email_radio_{{ forloop.counter }}" type="radio" name="email" value="{{ emailaddress.email }}" {% if emailaddress.primary or user.emailaddress_set.count == 1 %}checked{% endif %}
           class="mt-1 mr-3 border-gray-300 text-blue-600 focus:ring-blue-500">
 
         <label for="email_radio_{{ forloop.counter }}" class="flex-1 text-gray-800">
@@ -38,10 +37,8 @@
       {% endfor %}
 
       <div class="flex flex-wrap gap-2 pt-4">
-        <button type="submit" name="action_primary" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-sm rounded">{%
-          trans 'Make Primary' %}</button>
-        <button type="submit" name="action_send" class="px-4 py-2 bg-yellow-100 hover:bg-yellow-200 text-sm rounded">{%
-          trans 'Re-send Verification' %}</button>
+        <button type="submit" name="action_primary" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-sm rounded">{% trans 'Make Primary' %}</button>
+        <button type="submit" name="action_send" class="px-4 py-2 bg-yellow-100 hover:bg-yellow-200 text-sm rounded">{% trans 'Re-send Verification' %}</button>
         <button type="submit" name="action_remove"
           class="px-4 py-2 bg-red-100 hover:bg-red-200 text-sm text-red-700 rounded">{% trans 'Remove' %}</button>
       </div>
@@ -51,8 +48,7 @@
   {% else %}
   <p class="text-sm text-red-600 mt-4">
     <strong>{% trans 'Warning:' %}</strong>
-    {% trans "You currently do not have any e-mail address set up. You should really add an e-mail address so you can
-    receive notifications, reset your password, etc." %}
+    {% trans "You currently do not have any e-mail address set up. You should really add an e-mail address so you can receive notifications, reset your password, etc." %}
   </p>
   {% endif %}
 

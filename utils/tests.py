@@ -372,3 +372,33 @@ class ActiveUserMiddlewareTests(TestCase):
         self.client.post(reverse("hijack:acquire"), {"user_pk": self.user.pk})
         self.client.get("/")
         self.assertFalse(ActiveDay.objects.filter(user=self.user).exists())
+
+
+class TemplatesCompileTests(SimpleTestCase):
+    """Every project template must parse.
+
+    A formatter once wrapped template tags across lines ({%\\n endif %}), which
+    Django can't parse. The pages kept failing unnoticed until 2FA sent staff to
+    /accounts/email/, one of them, and locked them out on 2026-10-18.
+    """
+
+    SKIP_DIRS = {'.venv', 'venv', 'node_modules', 'static_files', '.git'}
+
+    def test_every_template_parses(self):
+        from pathlib import Path
+
+        from django.conf import settings
+        from django.template import TemplateSyntaxError, engines
+
+        engine = engines['django'].engine
+        base = Path(settings.BASE_DIR)
+        failures = []
+        for path in base.rglob('*.html'):
+            parts = path.relative_to(base).parts
+            if self.SKIP_DIRS.intersection(parts) or 'templates' not in parts:
+                continue
+            try:
+                engine.from_string(path.read_text(encoding='utf-8'))
+            except TemplateSyntaxError as e:
+                failures.append(f'{path.relative_to(base)}: {e}')
+        self.assertEqual(failures, [], '\n'.join(failures))

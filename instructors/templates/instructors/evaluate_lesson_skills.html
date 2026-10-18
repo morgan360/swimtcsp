@@ -44,8 +44,7 @@
                       name="level_{{ swimling.id }}_{{ skill.id }}">
                       <option value="">–</option>
                       {% for i in "12345" %}
-                      <option value="{{ i }}" {% if assessment and assessment.level|stringformat:"s"==i %}selected{%
-                        endif %}>
+                      <option value="{{ i }}" {% if assessment and assessment.level|stringformat:"s" == i %}selected{% endif %}>
                         {{ i }}
                       </option>
                       {% endfor %}
@@ -54,7 +53,7 @@
                   <input
                     class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     type="text" name="notes_{{ swimling.id }}_{{ skill.id }}" placeholder="Optional note"
-                    value="{{ assessment.notes|default_if_none:'' if assessment }}">
+                    value="{% if assessment %}{{ assessment.notes|default_if_none:'' }}{% endif %}">
                 </div>
               </td>
               {% endwith %}

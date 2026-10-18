@@ -318,6 +318,22 @@ class StaffTwoFactorTests(TestCase):
         response = self.client.get("/finance/")
         self.assertRedirects(response, reverse("account_email"), fetch_redirect_response=False)
 
+    def test_the_verify_page_itself_works(self):
+        """The page they are sent to must render and let them re-send the link.
+        It didn't on 2026-10-18 (a template error), which locked staff out."""
+        from allauth.account.models import EmailAddress
+
+        EmailAddress.objects.create(user=self.staff, email=self.staff.email, verified=False, primary=True)
+        self.client.force_login(self.staff)
+        response = self.client.get(reverse("account_email"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Re-send Verification")
+
+        response = self.client.post(
+            reverse("account_email"), {"email": self.staff.email, "action_send": ""}
+        )
+        self.assertEqual(response.status_code, 302)
+
     def test_staff_with_two_factor_get_through(self):
         self.enrol(self.staff)
         self.client.force_login(self.staff)

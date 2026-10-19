@@ -83,10 +83,10 @@
                                     </label>
                                     <input
                                             class="w-full px-4 py-2 border border-gray-300 bg-white/70 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600/50 focus:bg-white {% if field.errors %}border-red-500 focus:ring-red-500{% endif %}"
-                                            type="{{ field.widget.input_type }}" name="{{ field.name }}"
+                                            type="{{ field.field.widget.input_type }}" name="{{ field.name }}"
                                             id="{{ field.id_for_label }}"
                                             placeholder="{{ field.label }}"
-                                            value="{{ request.GET.email|default:field.value|default_if_none:'' }}"
+                                            {% if field.field.widget.input_type != "password" %}value="{{ request.GET.email|default:field.value|default_if_none:'' }}"{% endif %}
                                             {% if field.field.required %}required{% endif %}>
                                 {% endif %}
 

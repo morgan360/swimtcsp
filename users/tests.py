@@ -390,6 +390,46 @@ class StaffTwoFactorTests(TestCase):
         self.assertRedirects(response, reverse("mfa_authenticate"), fetch_redirect_response=False)
         self.assertNotIn("_auth_user_id", self.client.session)
 
+    def sign_in_with_code(self):
+        """Password, then the current code; returns the response to the code."""
+        from allauth.mfa.models import Authenticator
+        from allauth.mfa.totp.internal.auth import (
+            format_hotp_value, hotp_value, yield_hotp_counters_from_time,
+        )
+        from allauth.mfa.utils import decrypt
+
+        self.client.post(reverse("account_login"), {"login": "staff@test.com", "password": "pw"})
+        secret = decrypt(Authenticator.objects.get(user=self.staff, type="totp").data["secret"])
+        code = format_hotp_value(hotp_value(secret, next(yield_hotp_counters_from_time())))
+        return self.client.post(reverse("mfa_authenticate"), {"code": code})
+
+    def test_a_trusted_browser_skips_the_code_for_a_week(self):
+        self.enrol(self.staff)
+        response = self.sign_in_with_code()
+        self.assertRedirects(response, reverse("mfa_trust"), fetch_redirect_response=False)
+        page = self.client.get(reverse("mfa_trust"))
+        self.assertContains(page, "Trust for 1")  # "Trust for 1 week"
+
+        response = self.client.post(reverse("mfa_trust"), {"action": "trust"})
+        self.assertIn("_auth_user_id", self.client.session)
+        cookie = response.cookies["mfa_trusted"]
+        self.assertEqual(int(cookie["max-age"]), 7 * 24 * 3600)
+
+        self.client.post(reverse("account_logout"))
+        response = self.client.post(reverse("account_login"), {"login": "staff@test.com", "password": "pw"})
+        self.assertNotEqual(response.get("Location"), reverse("mfa_authenticate"))
+        self.assertIn("_auth_user_id", self.client.session)
+
+    def test_not_trusting_asks_for_the_code_next_time(self):
+        self.enrol(self.staff)
+        self.sign_in_with_code()
+        self.client.post(reverse("mfa_trust"), {"action": "skip"})
+        self.assertIn("_auth_user_id", self.client.session)
+
+        self.client.post(reverse("account_logout"))
+        response = self.client.post(reverse("account_login"), {"login": "staff@test.com", "password": "pw"})
+        self.assertRedirects(response, reverse("mfa_authenticate"), fetch_redirect_response=False)
+
     def test_google_login_stops_at_the_code_prompt(self):
         """The adapter used to throw away perform_login's response and send the
         user to "/" — logged out, with no explanation."""

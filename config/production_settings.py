@@ -10,7 +10,12 @@ DEBUG = False
 SECRET_KEY = config('SECRET_KEY')
 
 # Two-factor is on in production. If it causes trouble, put TCSP_MFA_ON=False in
-# .env and reload the web app: no deploy needed. Staff who already set it up are
+# .env and reload the web app: no deploy needed. To turn it back on, change the
+# line to TCSP_MFA_ON=True and reload. Deleting the line is not enough: the WSGI
+# file loads .env into os.environ, which can set a variable but not remove one,
+# and the reload keeps the old environment, so the False stays in force. A Django
+# shell starts fresh and will say True regardless, so check the access log for a
+# staff page redirecting to /accounts/2fa/ instead. Staff who already set it up are
 # still asked for their code at the main login (allauth does that whenever an
 # account has an authenticator); a lost phone is fixed with the "reset 2FA" action
 # in the users admin.

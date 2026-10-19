@@ -3,6 +3,7 @@ BASE SETTINGS
 """
 import os
 import subprocess
+from datetime import timedelta
 from pathlib import Path
 from decouple import config
 
@@ -419,6 +420,12 @@ ALLAUTH_USESITES = False
 TCSP_MFA_ON = False
 MFA_SUPPORTED_TYPES = ["totp", "recovery_codes"]
 MFA_TOTP_ISSUER = "TCSP"
+# After the code, allauth offers "Trust this browser": that browser then skips
+# the code (not the password) for a week. Turned on 2026-10-19, because a
+# code at every login is tedious with the 2-hour idle logout. Staff should be
+# asked not to trust shared machines such as the office PC.
+MFA_TRUST_ENABLED = True
+MFA_TRUST_COOKIE_AGE = timedelta(days=7)
 
 #  Allauth social accounts
 SOCIALACCOUNT_PROVIDERS = {

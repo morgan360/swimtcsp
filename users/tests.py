@@ -276,6 +276,28 @@ class LoginEventTests(TestCase):
         self.assertFalse(LoginEvent.objects.exists())
 
 
+class LoginPagePasswordTests(TestCase):
+    """The login page must mask the password and never send it back.
+
+    Until 2026-10-19 the template read field.widget.input_type, which is empty
+    on a bound field, so every input rendered as type="" (plain text), and a
+    failed login echoed the typed password back into the page.
+    """
+
+    def test_the_password_box_is_masked(self):
+        response = self.client.get(reverse("account_login"))
+        self.assertContains(response, 'type="password" name="password"')
+        self.assertContains(response, 'type="email" name="login"')
+
+    def test_a_failed_login_does_not_echo_the_password(self):
+        response = self.client.post(
+            reverse("account_login"), {"login": "nobody@test.com", "password": "S3cret-typed-pw"}
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, "S3cret-typed-pw")
+        self.assertContains(response, 'value="nobody@test.com"')
+
+
 @override_settings(TCSP_MFA_ON=True)
 class StaffTwoFactorTests(TestCase):
     """Two-factor authentication: required for staff, optional for everyone else.

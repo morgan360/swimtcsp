@@ -538,3 +538,55 @@ class LogoutOnAccountPagesTests(TestCase):
         self.assertIn("show-logout-modal.window", html)
         self.assertIn(reverse("account_logout"), html)
 
+
+
+@override_settings(TCSP_EMAIL_VERIFICATION_FROM=timezone.now() - timezone.timedelta(days=1))
+class NewAccountEmailVerificationTests(TestCase):
+    """Accounts created from TCSP_EMAIL_VERIFICATION_FROM onwards must confirm
+    their email before they can sign in; older accounts, most of which never
+    verified, must keep signing in as before."""
+
+    def setUp(self):
+        self.user = User.objects.create_user(email="new@test.com", password="pw", first_name="N")
+
+    def sign_in(self):
+        return self.client.post(reverse("account_login"), {"login": "new@test.com", "password": "pw"})
+
+    def test_new_unverified_account_is_stopped_and_sent_a_link(self):
+        from django.core import mail
+
+        response = self.sign_in()
+        self.assertRedirects(response, reverse("account_email_verification_sent"), fetch_redirect_response=False)
+        self.assertNotIn("_auth_user_id", self.client.session)
+        self.assertEqual([m.to for m in mail.outbox], [["new@test.com"]])
+        # The page it lands on must render: a broken account page locked staff
+        # out on 2026-10-18.
+        self.assertEqual(self.client.get(response.url).status_code, 200)
+
+    def test_following_the_link_finishes_signing_in(self):
+        from allauth.account.models import EmailAddress, EmailConfirmationHMAC
+
+        self.sign_in()
+        confirmation = EmailConfirmationHMAC(EmailAddress.objects.get(email="new@test.com"))
+        url = reverse("account_confirm_email", args=[confirmation.key])
+        self.assertEqual(self.client.get(url).status_code, 200)
+        self.client.post(url)
+        self.assertTrue(EmailAddress.objects.get(email="new@test.com").verified)
+        self.assertEqual(self.client.session["_auth_user_id"], str(self.user.pk))
+
+    def test_new_verified_account_signs_in(self):
+        from allauth.account.models import EmailAddress
+
+        EmailAddress.objects.create(user=self.user, email=self.user.email, verified=True, primary=True)
+        self.sign_in()
+        self.assertEqual(self.client.session["_auth_user_id"], str(self.user.pk))
+
+    def test_older_unverified_account_still_signs_in(self):
+        User.objects.filter(pk=self.user.pk).update(date_joined=timezone.now() - timezone.timedelta(days=30))
+        self.sign_in()
+        self.assertEqual(self.client.session["_auth_user_id"], str(self.user.pk))
+
+    @override_settings(TCSP_EMAIL_VERIFICATION_FROM=None)
+    def test_the_requirement_can_be_switched_off(self):
+        self.sign_in()
+        self.assertEqual(self.client.session["_auth_user_id"], str(self.user.pk))

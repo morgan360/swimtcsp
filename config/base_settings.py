@@ -3,7 +3,8 @@ BASE SETTINGS
 """
 import os
 import subprocess
-from datetime import timedelta
+import sys
+from datetime import datetime, timedelta, timezone as dt_timezone
 from pathlib import Path
 from decouple import config
 
@@ -397,6 +398,18 @@ ACCOUNT_RATE_LIMITS = {
 
 ACCOUNT_EMAIL_UNIQUE = True
 ACCOUNT_EMAIL_VERIFICATION = "none"
+# Accounts created from this moment on must verify their email before they can
+# sign in (users.adapters.NewAccountEmailVerificationStage); older accounts are
+# left alone, as most of them never verified. None turns the requirement off;
+# test runs do, since their accounts are all brand new, and the tests of the
+# requirement turn it back on.
+TCSP_EMAIL_VERIFICATION_FROM = (
+    None if "test" in sys.argv else datetime(2026, 10, 23, tzinfo=dt_timezone.utc)
+)
+# Clicking the link in the same browser finishes the sign-in, rather than
+# sending them back to the login page.
+ACCOUNT_LOGIN_ON_EMAIL_CONFIRMATION = True
+ACCOUNT_ADAPTER = "users.adapters.AccountAdapter"
 SOCIALACCOUNT_AUTO_SIGNUP = False
 ACCOUNT_LOGOUT_REDIRECT_URL = "/"
 ACCOUNT_SIGNUP_REQUIRED_FIELDS = ['first_name']

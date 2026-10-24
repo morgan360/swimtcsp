@@ -190,7 +190,7 @@ Content-Type: application/json
 |---------|----------------------|----------------------------------|
 | **Authentication** | `merchantId` + `password` in body | OAuth2 access token via signed request |
 | **Merchant ID** | `100121` (sandbox) | `IE7200018387978` (production) |
-| **API Keys** | Password: `qWGEJQQAkhROSTGpwS5O` | App ID + App Key |
+| **API Keys** | Password: _(held in `.env`, not recorded here)_ | App ID + App Key |
 | **Token Endpoint** | `https://apiuat.test.boipapaymentgateway.com/token` | `https://apis.boipagateway.com/ucp/accesstoken` |
 | **Security** | Direct password transmission | HMAC-SHA512 signing |
 | **Token Lifetime** | Unknown | 3600 seconds (1 hour) |

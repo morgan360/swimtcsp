@@ -1,0 +1,208 @@
+{% extends "admin/base_site.html" %}
+
+{% block title %}Live Dashboard{% endblock %}
+{% block content_title %}<h1>Live Dashboard</h1>{% endblock %}
+{% block nav-sidebar %}{% endblock %}
+
+{% block extrahead %}
+{{ block.super }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<p class="dash-sub">
+  {{ today|date:"l j F Y" }}{% if term %} · term {{ term.start_date|date:"j M" }} – {{ term.end_date|date:"j M" }}{% endif %}
+  · <a href="{{ activity_report_url }}">exact figures in Daily Activity</a>
+</p>
+
+<div class="dash-dials">
+  {% for dial in dials %}
+  <div class="dash-card dash-dial is-{{ dial.level }}">
+    <h2>{{ dial.title }}</h2>
+    <svg viewBox="0 0 200 118" role="img"
+         aria-label="{{ dial.title }}: {% if dial.pct is None %}{{ dial.empty }}{% else %}{{ dial.pct }}%{% endif %}">
+      {# Zone ring: under 50%, 50–89%, 90%+ — the same key as Lesson Enrollments #}
+      <path class="zone zone-low"  d="M 4 100 A 96 96 0 0 1 100 4" />
+      <path class="zone zone-mid"  d="M 100 4 A 96 96 0 0 1 191.3 70.3" />
+      <path class="zone zone-high" d="M 191.3 70.3 A 96 96 0 0 1 196 100" />
+      <path class="track" d="M 10 100 A 90 90 0 0 1 190 100" />
+      {% if dial.arc %}<path class="fill" d="M 10 100 A 90 90 0 0 1 190 100"
+            style="stroke-dasharray: {{ dial.arc }} 283;" />{% endif %}
+      <g class="needle" style="--angle: {{ dial.angle }}deg;">
+        <line x1="100" y1="100" x2="100" y2="24" />
+      </g>
+      <circle class="hub" cx="100" cy="100" r="7" />
+      <text class="ends" x="10" y="116">0</text>
+      <text class="ends" x="190" y="116" text-anchor="end">{{ dial.max }}</text>
+    </svg>
+    {% if dial.pct is None %}
+    <div class="dash-big is-muted">—</div>
+    <div class="dash-caption">{{ dial.empty }}</div>
+    {% else %}
+    <div class="dash-big">{{ dial.pct }}%</div>
+    <div class="dash-caption">{{ dial.value }} of {{ dial.max }} {{ dial.caption }}</div>
+    {% endif %}
+  </div>
+  {% endfor %}
+</div>
+
+<div class="dash-tiles">
+  {% for tile in tiles %}
+  <div class="dash-card dash-tile">
+    <div class="dash-tile-label">{{ tile.label }}</div>
+    <div class="dash-tile-values">
+      <div>
+        <span class="dash-tile-num{% if not tile.today %} is-muted{% endif %}">{% if tile.money %}€{{ tile.today|floatformat:"0g" }}{% else %}{{ tile.today }}{% endif %}</span>
+        <span class="dash-tile-when">today</span>
+      </div>
+      <div>
+        <span class="dash-tile-num is-week{% if not tile.week %} is-muted{% endif %}">{% if tile.money %}€{{ tile.week|floatformat:"0g" }}{% else %}{{ tile.week }}{% endif %}</span>
+        <span class="dash-tile-when">since {{ week_start|date:"D" }}</span>
+      </div>
+    </div>
+    {% if tile.hint %}<div class="dash-hint">{{ tile.hint }}</div>{% endif %}
+  </div>
+  {% endfor %}
+</div>
+
+<div class="dash-charts">
+  <div class="dash-card">
+    <h2>Logins and sign-ups · last 14 days</h2>
+    <div class="dash-chart"><canvas id="loginsChart"></canvas></div>
+  </div>
+  <div class="dash-card">
+    <h2>Revenue by type · last 14 days</h2>
+    <div class="dash-chart"><canvas id="revenueChart"></canvas></div>
+  </div>
+  {% if term_fill %}
+  <div class="dash-card dash-wide">
+    <h2>How full each level is this term</h2>
+    <p class="dash-hint">
+      <strong>{{ term_fill.full }}</strong> class{{ term_fill.full|pluralize:"es" }} full,
+      <strong>{{ term_fill.nearly_full }}</strong> nearly full (90%+) ·
+      <a href="{{ lesson_enrollments_url }}">see every class</a>
+    </p>
+    <div class="dash-chart" style="height: {{ term_fill.categories|length|add:2 }}rem; min-height: 12rem;">
+      <canvas id="fillChart"></canvas>
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+{{ chart_data|json_script:"dashboard-data" }}
+<script>
+(function () {
+  if (!window.Chart) return;  // CDN blocked: the dials and tiles still work
+  const data = JSON.parse(document.getElementById('dashboard-data').textContent);
+  // Mid-grey axes read on both admin themes.
+  Chart.defaults.color = '#6b7280';
+  Chart.defaults.borderColor = 'rgba(128, 128, 128, 0.2)';
+  Chart.defaults.font.family = getComputedStyle(document.body).fontFamily;
+  const colours = { blue: '#2563eb', green: '#16a34a', amber: '#f59e0b', teal: '#0d9488', purple: '#7c3aed' };
+  const tight = { responsive: true, maintainAspectRatio: false, interaction: { intersect: false, mode: 'index' } };
+
+  new Chart(document.getElementById('loginsChart'), {
+    type: 'line',
+    data: {
+      labels: data.days,
+      datasets: [
+        { label: 'Customer logins', data: data.customer_logins, borderColor: colours.blue, backgroundColor: colours.blue, cubicInterpolationMode: 'monotone' },
+        { label: 'Staff logins', data: data.staff_logins, borderColor: colours.teal, backgroundColor: colours.teal, cubicInterpolationMode: 'monotone' },
+        { label: 'New sign-ups', data: data.signups, borderColor: colours.purple, backgroundColor: colours.purple, cubicInterpolationMode: 'monotone' },
+      ]
+    },
+    options: { ...tight, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }
+  });
+
+  const revenueColours = { Lesson: colours.blue, Swim: colours.teal, School: colours.amber };
+  new Chart(document.getElementById('revenueChart'), {
+    type: 'bar',
+    data: {
+      labels: data.days,
+      datasets: Object.entries(data.revenue).map(([label, values]) => ({
+        label, data: values, backgroundColor: revenueColours[label],
+      }))
+    },
+    options: {
+      ...tight,
+      plugins: { tooltip: { callbacks: { label: c => `${c.dataset.label}: €${c.parsed.y.toFixed(2)}` } } },
+      scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true, ticks: { callback: v => '€' + v } } }
+    }
+  });
+
+  const fill = document.getElementById('fillChart');
+  if (fill) {
+    const cats = data.categories;
+    new Chart(fill, {
+      type: 'bar',
+      data: {
+        labels: cats.map(c => c.name),
+        datasets: [{
+          label: 'Full',
+          data: cats.map(c => c.pct),
+          backgroundColor: cats.map(c => c.pct >= 90 ? colours.green : c.pct >= 50 ? colours.blue : colours.amber),
+        }]
+      },
+      options: {
+        ...tight,
+        indexAxis: 'y',
+        plugins: {
+          legend: { display: false },
+          tooltip: { callbacks: { label: c => `${cats[c.dataIndex].enrolled} of ${cats[c.dataIndex].places} places (${c.parsed.x}%)` } }
+        },
+        scales: { x: { beginAtZero: true, suggestedMax: 100, ticks: { callback: v => v + '%' } } }
+      }
+    });
+  }
+})();
+</script>
+
+<style>
+  #content { min-width: 0; }  /* a flex item: let the grids below shrink to the screen */
+  .dash-sub { color: var(--body-quiet-color); margin: 0 0 1rem; }
+  .dash-card { min-width: 0; background: var(--body-bg); border: 1px solid var(--hairline-color); border-radius: 10px; padding: 1rem; }
+  .dash-card h2 { font-size: 0.95rem; margin: 0 0 0.5rem; color: var(--body-fg); background: none; padding: 0; text-transform: none; letter-spacing: 0; }
+  .dash-hint, .dash-caption { color: var(--body-quiet-color); font-size: 0.8rem; }
+
+  .dash-dials { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(210px, 100%), 1fr)); gap: 1rem; margin-bottom: 1rem; }
+  .dash-dial { text-align: center; }
+  .dash-dial svg { width: 100%; max-width: 240px; display: block; margin: 0 auto; overflow: visible; }
+  .dash-dial .zone { fill: none; stroke-width: 4; }
+  .dash-dial .zone-low { stroke: #f59e0b; }
+  .dash-dial .zone-mid { stroke: #2563eb; }
+  .dash-dial .zone-high { stroke: #16a34a; }
+  .dash-dial .track, .dash-dial .fill { fill: none; stroke-width: 14; stroke-linecap: round; }
+  .dash-dial .track { stroke: var(--darkened-bg); }
+  .dash-dial .fill { animation: dash-arc 1.2s ease-out; }
+  .dash-dial.is-low .fill { stroke: #f59e0b; }
+  .dash-dial.is-mid .fill { stroke: #2563eb; }
+  .dash-dial.is-high .fill { stroke: #16a34a; }
+  .dash-dial.is-none .fill { stroke: none; }
+  .dash-dial .needle { transform-origin: 100px 100px; transform: rotate(var(--angle)); animation: dash-needle 1.2s cubic-bezier(.3, 1.4, .5, 1); }
+  .dash-dial .needle line { stroke: var(--body-fg); stroke-width: 3.5; stroke-linecap: round; }
+  .dash-dial.is-none .needle { opacity: 0.25; }
+  .dash-dial .hub { fill: var(--body-fg); }
+  .dash-dial .ends { fill: var(--body-quiet-color); font-size: 11px; }
+  .dash-big { font-size: 2rem; font-weight: 700; color: var(--body-fg); font-variant-numeric: tabular-nums; line-height: 1.1; margin-top: 0.25rem; }
+  @keyframes dash-needle { from { transform: rotate(-90deg); } }
+  @keyframes dash-arc { from { stroke-dasharray: 0 283; } }
+  @media (prefers-reduced-motion: reduce) { .dash-dial .needle, .dash-dial .fill { animation: none; } }
+
+  .dash-tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(150px, 100%), 1fr)); gap: 0.75rem; margin-bottom: 1rem; }
+  .dash-tile-label { font-weight: 600; color: var(--body-fg); margin-bottom: 0.4rem; }
+  .dash-tile-values { display: flex; justify-content: space-between; align-items: baseline; gap: 0.5rem; }
+  .dash-tile-num { font-size: 1.6rem; font-weight: 700; color: var(--body-fg); font-variant-numeric: tabular-nums; }
+  .dash-tile-num.is-week { font-size: 1.1rem; font-weight: 600; }
+  .dash-tile-when { display: block; color: var(--body-quiet-color); font-size: 0.75rem; }
+  .is-muted { color: var(--body-quiet-color) !important; }
+
+  .dash-charts { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr)); gap: 1rem; }
+  .dash-wide { grid-column: 1 / -1; }
+  .dash-chart { position: relative; height: 16rem; }
+
+  @media (max-width: 480px) {
+    .dash-charts { grid-template-columns: 1fr; }
+    .dash-tiles { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+{% endblock %}

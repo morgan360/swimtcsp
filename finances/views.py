@@ -778,6 +778,27 @@ def _activity_periods(today=None):
     ]
 
 
+def _period_counts(queryset, periods, field='created', distinct=None):
+    """How many rows fall in each period, or how many distinct ``distinct`` values."""
+    values = []
+    for _, start, end in periods:
+        qs = queryset.filter(**{f'{field}__gte': start, f'{field}__lt': end})
+        values.append(qs.values(distinct).distinct().count() if distinct else qs.count())
+    return values
+
+
+def _paid_orders(model, periods):
+    """([order count], [revenue]) per period for one order model."""
+    # A refund leaves paid=True, so it is excluded by status.
+    qs = model.objects.filter(paid=True).exclude(payment_status='refunded')
+    orders, revenue = [], []
+    for _, start, end in periods:
+        agg = qs.filter(created__gte=start, created__lt=end).aggregate(n=Count('id'), total=Sum('amount'))
+        orders.append(agg['n'])
+        revenue.append(agg['total'] or Decimal('0'))
+    return orders, revenue
+
+
 @staff_member_required
 def activity_report(request, template_name='admin/financeadmin/activity_report.html'):
     """What happened on the site today, yesterday and this week."""
@@ -791,26 +812,12 @@ def activity_report(request, template_name='admin/financeadmin/activity_report.h
     periods = _activity_periods()
 
     def counts(queryset, field='created', distinct=None):
-        values = []
-        for _, start, end in periods:
-            qs = queryset.filter(**{f'{field}__gte': start, f'{field}__lt': end})
-            values.append(qs.values(distinct).distinct().count() if distinct else qs.count())
-        return values
-
-    def paid_orders(model):
-        # A refund leaves paid=True, so it is excluded by status.
-        qs = model.objects.filter(paid=True).exclude(payment_status='refunded')
-        orders, revenue = [], []
-        for _, start, end in periods:
-            agg = qs.filter(created__gte=start, created__lt=end).aggregate(n=Count('id'), total=Sum('amount'))
-            orders.append(agg['n'])
-            revenue.append(agg['total'] or Decimal('0'))
-        return orders, revenue
+        return _period_counts(queryset, periods, field, distinct)
 
     def row(label, values, money=False, hint=''):
         return {'label': label, 'values': values, 'money': money, 'hint': hint}
 
-    order_rows = {key: paid_orders(model) for key, (model, _) in ORDER_MODELS.items()}
+    order_rows = {key: _paid_orders(model, periods) for key, (model, _) in ORDER_MODELS.items()}
 
     def total(index):
         return [sum(col) for col in zip(*(order_rows[key][index] for key in order_rows))]
@@ -865,5 +872,205 @@ def activity_report(request, template_name='admin/financeadmin/activity_report.h
         'sections': sections,
         'logins_since': first_login,
         'active_since': first_active,
+    }
+    return render(request, template_name, context)
+
+
+# ---------------------------------------------------------------------------
+# Live dashboard
+# ---------------------------------------------------------------------------
+
+DASHBOARD_DAYS = 14
+NEARLY_FULL_PCT = 90
+
+
+def _term_fill(term):
+    """How full a term's lessons are, overall and per category.
+
+    Uses the Lesson Enrollments report's rule: a lesson is running in a term if
+    it is active or has swimmers in it, and only running lessons count places.
+    """
+    from lessons.models import Product
+    from lessons_bookings.models import LessonEnrollment
+
+    counts = dict(LessonEnrollment.objects.filter(term=term)
+                  .values_list('lesson_id').annotate(n=Count('id')))
+    lessons = (Product.objects.filter(active=True) | Product.objects.filter(id__in=list(counts)))
+    lessons = lessons.select_related('category').distinct()
+
+    enrolled_total = places_total = full = nearly_full = 0
+    categories = defaultdict(lambda: {'enrolled': 0, 'places': 0})
+    for lesson in lessons:
+        enrolled = counts.get(lesson.id, 0)
+        if not (lesson.active or enrolled):
+            continue
+        places = lesson.num_places or 0
+        enrolled_total += enrolled
+        places_total += places
+        category = categories[lesson.category.short_name or lesson.category.name]
+        category['enrolled'] += enrolled
+        category['places'] += places
+        pct = _fill_pct(enrolled, places)
+        if pct is not None and pct >= 100:
+            full += 1
+        elif pct is not None and pct >= NEARLY_FULL_PCT:
+            nearly_full += 1
+
+    by_category = sorted(
+        ({'name': name, **c, 'pct': _fill_pct(c['enrolled'], c['places'])}
+         for name, c in categories.items() if c['places']),
+        key=lambda c: -c['pct'],
+    )
+    return {
+        'enrolled': enrolled_total,
+        'places': places_total,
+        'pct': _fill_pct(enrolled_total, places_total),
+        'categories': by_category,
+        'full': full,
+        'nearly_full': nearly_full,
+    }
+
+
+def _daily_series(queryset, field, days, amount=None):
+    """Per local day over ``days``: row counts, or the sum of ``amount``."""
+    start = make_aware(datetime.datetime.combine(days[0], datetime.time.min))
+    totals = defaultdict(int)
+    columns = [field, amount] if amount else [field]
+    for row in queryset.filter(**{f'{field}__gte': start}).values_list(*columns):
+        day = localtime(row[0]).date()
+        totals[day] += (row[1] or 0) if amount else 1
+    return [totals[day] for day in days]
+
+
+DIAL_ARC_LENGTH = 282.74  # the dial's semicircle: pi * radius 90
+
+
+def _dial(title, value, maximum, caption, empty='No data yet'):
+    """One half-circle gauge. The needle stops at full; the label shows the real %."""
+    pct = _fill_pct(value, maximum)
+    shown = min(pct or 0, 100)
+    if pct is None:
+        level = 'none'
+    elif pct >= NEARLY_FULL_PCT:
+        level = 'high'
+    elif pct >= 50:
+        level = 'mid'
+    else:
+        level = 'low'
+    return {
+        'title': title,
+        'value': value,
+        'max': maximum,
+        'pct': pct,
+        'level': level,
+        'angle': round(-90 + 1.8 * shown, 1),
+        'arc': round(DIAL_ARC_LENGTH * shown / 100, 2),
+        'caption': caption,
+        'empty': empty,
+    }
+
+
+@staff_member_required
+def dashboard(request, template_name='admin/financeadmin/dashboard.html'):
+    """Live numbers for today and this week, as dials, tiles and charts."""
+    from django.contrib.auth import get_user_model
+    from anseo.models import AttendanceEntry
+    from custom_admins.financeadmin import finance_admin_site
+    from lessons_bookings.models import LessonEnrollment, Term
+    from schools_bookings.models import ScoEnrollment
+    from swims.models import PublicSwimProduct
+    from swims_orders.models import OrderItem as SwimOrderItem
+    from users.models import ActiveDay, LoginEvent
+    from waiting_list.models import WaitingList
+
+    User = get_user_model()
+    today = localtime(now()).date()
+    today_period, _, week_period = _activity_periods(today)
+    periods = [today_period, week_period]  # tiles show today and this week
+
+    # --- Dials -------------------------------------------------------------
+    dials = []
+
+    current_term = Term.get_current_term()
+    this_fill = _term_fill(current_term) if current_term else None
+    if this_fill:
+        dials.append(_dial('This term’s lessons', this_fill['enrolled'], this_fill['places'],
+                           'places filled'))
+
+    swim_places = (PublicSwimProduct.objects.filter(available=True, day_of_week=today.weekday())
+                   .aggregate(n=Sum('num_places'))['n'] or 0)
+    swimmers_booked = (SwimOrderItem.objects.filter(order__paid=True, order__booking=today)
+                       .exclude(order__payment_status='refunded')
+                       .aggregate(n=Sum('quantity'))['n'] or 0)
+    dials.append(_dial('Today’s public swims', swimmers_booked, swim_places,
+                       'swim places paid for', empty='No public swims today'))
+
+    marked = (AttendanceEntry.objects
+              .filter(roll__window_start__gte=today_period[1], roll__window_start__lt=today_period[2])
+              .exclude(status=AttendanceEntry.UNKNOWN))
+    attended = marked.filter(status__in=[AttendanceEntry.PRESENT, AttendanceEntry.LATE]).count()
+    dials.append(_dial('Today’s class attendance', attended, marked.count(),
+                       'marked present or late', empty='No registers taken yet'))
+
+    next_term = Term.get_next_term()
+    if next_term:
+        next_fill = _term_fill(next_term)
+        dials.append(_dial('Next term booked', next_fill['enrolled'], next_fill['places'],
+                           f'places booked · starts {next_term.start_date.day} {next_term.start_date:%b}'))
+
+    # --- Tiles -------------------------------------------------------------
+    order_rows = [_paid_orders(model, periods) for model, _ in ORDER_MODELS.values()]
+    customers = {'user__is_staff': False}
+    staff = {'user__is_staff': True}
+
+    def tile(label, values, money=False, hint=''):
+        return {'label': label, 'today': values[0], 'week': values[1], 'money': money, 'hint': hint}
+
+    tiles = [
+        tile('Revenue', [sum(col) for col in zip(*(r[1] for r in order_rows))], money=True,
+             hint='Refunds left out'),
+        tile('Paid orders', [sum(col) for col in zip(*(r[0] for r in order_rows))]),
+        tile('New customers', _period_counts(User.objects.filter(is_staff=False), periods, 'date_joined')),
+        tile('Customers logged in', _period_counts(LoginEvent.objects.filter(**customers), periods,
+                                                   distinct='user')),
+        tile('Customers active', _period_counts(ActiveDay.objects.filter(**customers), periods, 'date',
+                                                distinct='user'), hint='Used the site while logged in'),
+        tile('Staff logged in', _period_counts(LoginEvent.objects.filter(**staff), periods, distinct='user')),
+        tile('Staff active', _period_counts(ActiveDay.objects.filter(**staff), periods, 'date',
+                                            distinct='user')),
+        tile('New enrolments', [a + b for a, b in zip(
+            _period_counts(LessonEnrollment.objects.all(), periods),
+            _period_counts(ScoEnrollment.objects.all(), periods))], hint='Lessons and schools'),
+        tile('Swim check-ins', _period_counts(Order.objects.all(), periods, 'checked_in_at')),
+        tile('Joined waiting list', _period_counts(WaitingList.objects.all(), periods, 'created_at'),
+             hint=f'{WaitingList.objects.filter(completed=False).count()} waiting now'),
+    ]
+
+    # --- Charts ------------------------------------------------------------
+    days = [today - timedelta(days=n) for n in range(DASHBOARD_DAYS - 1, -1, -1)]
+    logins = LoginEvent.objects.all()
+    chart_data = {
+        'days': [f'{day:%a} {day.day}' for day in days],
+        'customer_logins': _daily_series(logins.filter(**customers), 'created', days),
+        'staff_logins': _daily_series(logins.filter(**staff), 'created', days),
+        'signups': _daily_series(User.objects.filter(is_staff=False), 'date_joined', days),
+        'revenue': {
+            label: [float(v) for v in _daily_series(
+                model.objects.filter(paid=True).exclude(payment_status='refunded'), 'created', days, 'amount')]
+            for model, label in ORDER_MODELS.values()
+        },
+        'categories': this_fill['categories'] if this_fill else [],
+    }
+
+    context = {
+        **finance_admin_site.each_context(request),
+        'title': 'Live Dashboard',
+        'today': today,
+        'week_start': week_period[1],
+        'dials': dials,
+        'tiles': tiles,
+        'term': current_term,
+        'term_fill': this_fill,
+        'chart_data': chart_data,
     }
     return render(request, template_name, context)

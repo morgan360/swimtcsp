@@ -15,6 +15,8 @@ Finance keeps its own class in ``financeadmin`` because it carries ten custom
 URLs for the revenue and reconciliation dashboards; it is registered as a panel
 from here so the switcher lists all three in a sensible order.
 """
+from django.urls import reverse
+
 from custom_admins.base import MANAGER_ONLY, TCSPAdminSite, register_panel
 
 
@@ -35,6 +37,28 @@ class OperationsAdminSite(TCSPAdminSite):
         ("members", "Members", "👪", ("users",)),
         ("instructors", "Instructors & attendance", "📋", ("instructors", "anseo", "progress")),
     )
+    index_template = "admin/operations/index.html"
+
+    def index(self, request, extra_context=None):
+        """The panel's home, with a strip of today's dials across the top.
+
+        Section pages reuse ``index`` with their own context and go without it,
+        so the strip is on the one page staff land on rather than on every list.
+        Only figures any staff member may see: no money, which stays in Finance.
+        """
+        if extra_context is None:
+            from django.utils.timezone import localtime, now
+
+            from custom_admins.financeadmin import finance_admin_site
+            from finances.views import _live_dials
+
+            live = _live_dials(localtime(now()).date())
+            extra_context = {
+                "dial_strip": [live[key] for key in ("swims", "registers", "attendance", "term") if live[key]],
+                "live_dashboard_url": (reverse("finance:dashboard")
+                                       if finance_admin_site.has_permission(request) else None),
+            }
+        return super().index(request, extra_context)
 
 
 class SettingsAdminSite(TCSPAdminSite):

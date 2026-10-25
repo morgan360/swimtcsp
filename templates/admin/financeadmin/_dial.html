@@ -1,0 +1,27 @@
+{# One half-circle gauge, from finances.views._dial. Styles: _dial_styles.html #}
+<div class="dash-card dash-dial is-{{ dial.level }}">
+  <h2>{{ dial.title }}</h2>
+  <svg viewBox="0 0 200 118" role="img"
+       aria-label="{{ dial.title }}: {% if dial.pct is None %}{{ dial.empty }}{% else %}{{ dial.pct }}%{% endif %}">
+    {# Zone ring: under 50%, 50–89%, 90%+ — the same key as Lesson Enrollments #}
+    <path class="zone zone-low"  d="M 4 100 A 96 96 0 0 1 100 4" />
+    <path class="zone zone-mid"  d="M 100 4 A 96 96 0 0 1 191.3 70.3" />
+    <path class="zone zone-high" d="M 191.3 70.3 A 96 96 0 0 1 196 100" />
+    <path class="track" d="M 10 100 A 90 90 0 0 1 190 100" />
+    {% if dial.arc %}<path class="fill" d="M 10 100 A 90 90 0 0 1 190 100"
+          style="stroke-dasharray: {{ dial.arc }} 283;" />{% endif %}
+    <g class="needle" style="--angle: {{ dial.angle }}deg;">
+      <line x1="100" y1="100" x2="100" y2="24" />
+    </g>
+    <circle class="hub" cx="100" cy="100" r="7" />
+    <text class="ends" x="10" y="116">0</text>
+    <text class="ends" x="190" y="116" text-anchor="end">{{ dial.max }}</text>
+  </svg>
+  {% if dial.pct is None %}
+  <div class="dash-big is-muted">—</div>
+  <div class="dash-caption">{{ dial.empty }}</div>
+  {% else %}
+  <div class="dash-big">{{ dial.pct }}%</div>
+  <div class="dash-caption">{{ dial.value }} of {{ dial.max }} {{ dial.caption }}</div>
+  {% endif %}
+</div>

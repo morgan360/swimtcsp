@@ -1040,8 +1040,67 @@ def _dial(title, value, maximum, caption, empty='No data yet'):
     }
 
 
+def _live_dials(today):
+    """The dashboard's dials, keyed so a page can show just some of them.
+
+    Each is a dial, or None when it does not apply (no current or next term).
+    Also returns the current term and its fill, which the dashboard reuses.
+    """
+    from anseo.models import AttendanceEntry
+    from lessons_bookings.models import LessonEnrollment, Term
+    from swims.models import PublicSwimProduct
+    from swims_orders.models import OrderItem as SwimOrderItem
+
+    today_period, _, week_period = _activity_periods(today)
+    live = {'term': None, 'registers': None, 'next_term': None}
+
+    current_term = Term.get_current_term()
+    this_fill = _term_fill(current_term) if current_term else None
+    if this_fill:
+        live['term'] = _dial('This term’s lessons', this_fill['enrolled'], this_fill['places'],
+                             'places filled')
+
+    swim_places = (PublicSwimProduct.objects.filter(available=True, day_of_week=today.weekday())
+                   .aggregate(n=Sum('num_places'))['n'] or 0)
+    swimmers_booked = (SwimOrderItem.objects.filter(order__paid=True, order__booking=today)
+                       .exclude(order__payment_status='refunded')
+                       .aggregate(n=Sum('quantity'))['n'] or 0)
+    live['swims'] = _dial('Today’s public swims', swimmers_booked, swim_places,
+                          'swim places paid for', empty='No public swims today')
+
+    # A register is dated when it is marked, not by the class it is for (see
+    # AttendanceRoll.get_or_create_current), so a catch-up on Sunday counts on Sunday.
+    marked_entries = AttendanceEntry.objects.exclude(status=AttendanceEntry.UNKNOWN)
+    marked = marked_entries.filter(roll__window_start__gte=today_period[1],
+                                   roll__window_start__lt=today_period[2])
+    attended = marked.filter(status__in=[AttendanceEntry.PRESENT, AttendanceEntry.LATE]).count()
+    live['attendance'] = _dial('Attendance marked today', attended, marked.count(),
+                               'present or late', empty='No registers marked yet today')
+
+    if current_term:
+        # Lessons with swimmers whose class day has come round so far this week.
+        due = set(LessonEnrollment.objects
+                  .filter(term=current_term, lesson__day_of_week__lte=today.weekday())
+                  .values_list('lesson_id', flat=True))
+        taken = set(marked_entries
+                    .filter(roll__product_id__in=due, roll__window_start__gte=week_period[1],
+                            roll__window_start__lt=week_period[2])
+                    .values_list('roll__product_id', flat=True))
+        live['registers'] = _dial('Registers taken this week', len(taken), len(due),
+                                  'classes so far', empty='No classes yet this week')
+
+    next_term = Term.get_next_term()
+    if next_term:
+        next_fill = _term_fill(next_term)
+        live['next_term'] = _dial('Next term booked', next_fill['enrolled'], next_fill['places'],
+                                  f'places booked · starts {next_term.start_date.day} {next_term.start_date:%b}')
+
+    live.update(current_term=current_term, this_fill=this_fill)
+    return live
+
+
 @staff_member_required
-def dashboard(request, template_name='admin/financeadmin/dashboard.html'):
+def live_dashboard(request, template_name='admin/financeadmin/dashboard.html'):
     """Live numbers for today and this week, as dials, tiles and charts."""
     from django.contrib.auth import get_user_model
     from django.urls import reverse
@@ -1062,48 +1121,9 @@ def dashboard(request, template_name='admin/financeadmin/dashboard.html'):
     periods = [today_period, week_period]  # tiles show today and this week
 
     # --- Dials -------------------------------------------------------------
-    dials = []
-
-    current_term = Term.get_current_term()
-    this_fill = _term_fill(current_term) if current_term else None
-    if this_fill:
-        dials.append(_dial('This term’s lessons', this_fill['enrolled'], this_fill['places'],
-                           'places filled'))
-
-    swim_places = (PublicSwimProduct.objects.filter(available=True, day_of_week=today.weekday())
-                   .aggregate(n=Sum('num_places'))['n'] or 0)
-    swimmers_booked = (SwimOrderItem.objects.filter(order__paid=True, order__booking=today)
-                       .exclude(order__payment_status='refunded')
-                       .aggregate(n=Sum('quantity'))['n'] or 0)
-    dials.append(_dial('Today’s public swims', swimmers_booked, swim_places,
-                       'swim places paid for', empty='No public swims today'))
-
-    # A register is dated when it is marked, not by the class it is for (see
-    # AttendanceRoll.get_or_create_current), so a catch-up on Sunday counts on Sunday.
-    marked_entries = AttendanceEntry.objects.exclude(status=AttendanceEntry.UNKNOWN)
-    marked = marked_entries.filter(roll__window_start__gte=today_period[1],
-                                   roll__window_start__lt=today_period[2])
-    attended = marked.filter(status__in=[AttendanceEntry.PRESENT, AttendanceEntry.LATE]).count()
-    dials.append(_dial('Attendance marked today', attended, marked.count(),
-                       'present or late', empty='No registers marked yet today'))
-
-    if current_term:
-        # Lessons with swimmers whose class day has come round so far this week.
-        due = set(LessonEnrollment.objects
-                  .filter(term=current_term, lesson__day_of_week__lte=today.weekday())
-                  .values_list('lesson_id', flat=True))
-        taken = set(marked_entries
-                    .filter(roll__product_id__in=due, roll__window_start__gte=week_period[1],
-                            roll__window_start__lt=week_period[2])
-                    .values_list('roll__product_id', flat=True))
-        dials.append(_dial('Registers taken this week', len(taken), len(due),
-                           'classes so far', empty='No classes yet this week'))
-
-    next_term = Term.get_next_term()
-    if next_term:
-        next_fill = _term_fill(next_term)
-        dials.append(_dial('Next term booked', next_fill['enrolled'], next_fill['places'],
-                           f'places booked · starts {next_term.start_date.day} {next_term.start_date:%b}'))
+    live = _live_dials(today)
+    current_term, this_fill = live['current_term'], live['this_fill']
+    dials = [live[key] for key in ('term', 'swims', 'attendance', 'registers', 'next_term') if live[key]]
 
     # --- Tiles -------------------------------------------------------------
     order_rows = [_paid_orders(model, periods) for model, _ in ORDER_MODELS.values()]

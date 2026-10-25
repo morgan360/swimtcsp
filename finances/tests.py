@@ -287,6 +287,26 @@ class DashboardTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertNotIn("dial_strip", response.context)
 
+    def test_two_factor_dials(self):
+        from allauth.mfa.models import Authenticator
+        Authenticator.objects.create(user=self.manager, type=Authenticator.Type.TOTP, data={})
+        Authenticator.objects.create(user=self.manager, type=Authenticator.Type.RECOVERY_CODES, data={})
+        # Recovery codes on their own are not an authenticator app.
+        Authenticator.objects.create(user=self.staff, type=Authenticator.Type.RECOVERY_CODES, data={})
+        guardian = Swimling.objects.first().guardian
+        Authenticator.objects.create(user=guardian, type=Authenticator.Type.TOTP, data={})
+        # A customer with no swimmer is not counted as a guardian.
+        User.objects.create_user(email="swimmer@example.com", password="pw", first_name="S")
+
+        dials = self.dials()
+        self.assertEqual((dials["Staff with 2FA"]["value"], dials["Staff with 2FA"]["max"]), (1, 2))
+        self.assertEqual((dials["Guardians with 2FA"]["value"], dials["Guardians with 2FA"]["max"]), (1, 1))
+
+    def test_two_factor_dials_stay_off_the_operations_strip(self):
+        self.client.force_login(self.staff)
+        titles = [d["title"] for d in self.client.get(reverse("operations:index")).context["dial_strip"]]
+        self.assertNotIn("Staff with 2FA", titles)
+
     def test_no_next_term_hides_its_dial(self):
         self.assertNotIn("Next term booked", self.dials())
 

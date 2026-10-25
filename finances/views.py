@@ -1095,6 +1095,19 @@ def _live_dials(today):
         live['next_term'] = _dial('Next term booked', next_fill['enrolled'], next_fill['places'],
                                   f'places booked · starts {next_term.start_date.day} {next_term.start_date:%b}')
 
+    # Two-factor: an authenticator app counts; recovery codes alone come with one anyway.
+    from allauth.mfa.models import Authenticator
+    from django.contrib.auth import get_user_model
+
+    active = get_user_model().objects.filter(is_active=True)
+    with_app = set(Authenticator.objects.filter(type=Authenticator.Type.TOTP).values_list('user_id', flat=True))
+    staff_ids = set(active.filter(is_staff=True).values_list('id', flat=True))
+    guardian_ids = set(active.filter(is_staff=False, swimling__isnull=False).values_list('id', flat=True))
+    live['staff_2fa'] = _dial('Staff with 2FA', len(staff_ids & with_app), len(staff_ids),
+                              'active staff accounts')
+    live['guardian_2fa'] = _dial('Guardians with 2FA', len(guardian_ids & with_app), len(guardian_ids),
+                                 'accounts with a swimmer', empty='No guardian accounts')
+
     live.update(current_term=current_term, this_fill=this_fill)
     return live
 
@@ -1123,7 +1136,8 @@ def live_dashboard(request, template_name='admin/financeadmin/dashboard.html'):
     # --- Dials -------------------------------------------------------------
     live = _live_dials(today)
     current_term, this_fill = live['current_term'], live['this_fill']
-    dials = [live[key] for key in ('term', 'swims', 'attendance', 'registers', 'next_term') if live[key]]
+    dials = [live[key] for key in ('term', 'swims', 'attendance', 'registers', 'next_term',
+                                   'staff_2fa', 'guardian_2fa') if live[key]]
 
     # --- Tiles -------------------------------------------------------------
     order_rows = [_paid_orders(model, periods) for model, _ in ORDER_MODELS.values()]

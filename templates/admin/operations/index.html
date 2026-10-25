@@ -1,0 +1,38 @@
+{% extends "admin/index.html" %}
+
+{% block extrahead %}
+{{ block.super }}
+{% if dial_strip %}
+{% include "admin/financeadmin/_dial_styles.html" %}
+<style>
+  /* A slim version of the Live Dashboard's dials: one row, out of the way of the lists. */
+  .dash-strip { margin: 0 0 1em; }
+  .dash-strip-head { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; margin-bottom: 0.5rem; }
+  .dash-strip-head h2 { margin: 0; font-size: 1rem; color: var(--body-fg); background: none; padding: 0; text-transform: none; letter-spacing: 0; }
+  .dash-strip .dash-dials { grid-template-columns: repeat(auto-fit, minmax(min(130px, 100%), 1fr)); gap: 0.75rem; margin-bottom: 0; }
+  .dash-strip .dash-card { padding: 0.6rem 0.75rem; }
+  .dash-strip .dash-card h2 { font-size: 0.8rem; margin-bottom: 0.25rem; }
+  .dash-strip .dash-dial svg { max-width: 130px; }
+  .dash-strip .dash-big { font-size: 1.3rem; }
+  .dash-strip .dash-caption { font-size: 0.75rem; }
+  @media (max-width: 480px) { .dash-strip .dash-dials { grid-template-columns: 1fr 1fr; } }
+</style>
+{% endif %}
+{% endblock %}
+
+{% block content %}
+{% if dial_strip %}
+<section class="dash-strip" aria-label="Today at the pool">
+  <div class="dash-strip-head">
+    <h2>Today at the pool</h2>
+    {% if live_dashboard_url %}<a href="{{ live_dashboard_url }}">Full dashboard →</a>{% endif %}
+  </div>
+  <div class="dash-dials">
+    {% for dial in dial_strip %}
+    {% include "admin/financeadmin/_dial.html" %}
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+{{ block.super }}
+{% endblock %}

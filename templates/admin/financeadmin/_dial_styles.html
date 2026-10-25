@@ -1,0 +1,32 @@
+{# Styles for _dial.html, shared by the Live Dashboard and the Operations strip. #}
+<style>
+  #content { min-width: 0; }  /* a flex item: let the grids below shrink to the screen */
+  .dash-card { min-width: 0; background: var(--body-bg); border: 1px solid var(--hairline-color); border-radius: 10px; padding: 1rem; }
+  .dash-card h2 { font-size: 0.95rem; margin: 0 0 0.5rem; color: var(--body-fg); background: none; padding: 0; text-transform: none; letter-spacing: 0; }
+  .dash-hint, .dash-caption { color: var(--body-quiet-color); font-size: 0.8rem; }
+  .is-muted { color: var(--body-quiet-color) !important; }
+
+  .dash-dials { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(210px, 100%), 1fr)); gap: 1rem; margin-bottom: 1rem; }
+  .dash-dial { text-align: center; }
+  .dash-dial svg { width: 100%; max-width: 240px; display: block; margin: 0 auto; overflow: visible; }
+  .dash-dial .zone { fill: none; stroke-width: 4; }
+  .dash-dial .zone-low { stroke: #f59e0b; }
+  .dash-dial .zone-mid { stroke: #2563eb; }
+  .dash-dial .zone-high { stroke: #16a34a; }
+  .dash-dial .track, .dash-dial .fill { fill: none; stroke-width: 14; stroke-linecap: round; }
+  .dash-dial .track { stroke: var(--darkened-bg); }
+  .dash-dial .fill { animation: dash-arc 1.2s ease-out; }
+  .dash-dial.is-low .fill { stroke: #f59e0b; }
+  .dash-dial.is-mid .fill { stroke: #2563eb; }
+  .dash-dial.is-high .fill { stroke: #16a34a; }
+  .dash-dial.is-none .fill { stroke: none; }
+  .dash-dial .needle { transform-origin: 100px 100px; transform: rotate(var(--angle)); animation: dash-needle 1.2s cubic-bezier(.3, 1.4, .5, 1); }
+  .dash-dial .needle line { stroke: var(--body-fg); stroke-width: 3.5; stroke-linecap: round; }
+  .dash-dial.is-none .needle { opacity: 0.25; }
+  .dash-dial .hub { fill: var(--body-fg); }
+  .dash-dial .ends { fill: var(--body-quiet-color); font-size: 11px; }
+  .dash-big { font-size: 2rem; font-weight: 700; color: var(--body-fg); font-variant-numeric: tabular-nums; line-height: 1.1; margin-top: 0.25rem; }
+  @keyframes dash-needle { from { transform: rotate(-90deg); } }
+  @keyframes dash-arc { from { stroke-dasharray: 0 283; } }
+  @media (prefers-reduced-motion: reduce) { .dash-dial .needle, .dash-dial .fill { animation: none; } }
+</style>

@@ -255,6 +255,38 @@ class DashboardTests(TestCase):
         dial = self.dials()["Registers taken this week"]
         self.assertEqual((dial["value"], dial["max"]), (0, 1))
 
+    def test_old_finances_dashboard_url_is_not_the_live_dashboard(self):
+        # The live dashboard once shared the name ``dashboard`` with the older view
+        # behind /finances/dashboard/, replacing it there without the Finance panel's
+        # Manager/Full-Timer check.
+        from django.urls import resolve
+        from finances import views
+        self.assertIs(resolve("/finances/dashboard/").func, views.dashboard)
+        self.assertIsNot(views.dashboard, views.live_dashboard)
+
+    def test_operations_home_shows_the_strip_to_any_staff(self):
+        self.client.force_login(self.staff)
+        response = self.client.get(reverse("operations:index"))
+        self.assertEqual(response.status_code, 200)
+        titles = [d["title"] for d in response.context["dial_strip"]]
+        self.assertEqual(titles, ["Today’s public swims", "Registers taken this week",
+                                  "Attendance marked today", "This term’s lessons"])
+        # Plain staff cannot open Finance, so no link to it and no money on the page.
+        self.assertIsNone(response.context["live_dashboard_url"])
+        self.assertNotContains(response, "Full dashboard")
+        self.assertNotContains(response, "€")
+
+    def test_operations_strip_links_finance_users_to_the_dashboard(self):
+        self.client.force_login(self.manager)
+        response = self.client.get(reverse("operations:index"))
+        self.assertContains(response, reverse("finance:dashboard"))
+
+    def test_operations_section_pages_go_without_the_strip(self):
+        self.client.force_login(self.staff)
+        response = self.client.get(reverse("operations:section", args=["lessons"]))
+        self.assertEqual(response.status_code, 200)
+        self.assertNotIn("dial_strip", response.context)
+
     def test_no_next_term_hides_its_dial(self):
         self.assertNotIn("Next term booked", self.dials())
 

@@ -7,6 +7,70 @@
 {% block extrahead %}
 {{ block.super }}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+{# In the head, so the charts measure their containers with the grid already applied. #}
+<style>
+  #content { min-width: 0; }  /* a flex item: let the grids below shrink to the screen */
+  .dash-sub { color: var(--body-quiet-color); margin: 0 0 1rem; }
+  .dash-card { min-width: 0; background: var(--body-bg); border: 1px solid var(--hairline-color); border-radius: 10px; padding: 1rem; }
+  .dash-card h2 { font-size: 0.95rem; margin: 0 0 0.5rem; color: var(--body-fg); background: none; padding: 0; text-transform: none; letter-spacing: 0; }
+  .dash-hint, .dash-caption { color: var(--body-quiet-color); font-size: 0.8rem; }
+
+  .dash-dials { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(210px, 100%), 1fr)); gap: 1rem; margin-bottom: 1rem; }
+  .dash-dial { text-align: center; }
+  .dash-dial svg { width: 100%; max-width: 240px; display: block; margin: 0 auto; overflow: visible; }
+  .dash-dial .zone { fill: none; stroke-width: 4; }
+  .dash-dial .zone-low { stroke: #f59e0b; }
+  .dash-dial .zone-mid { stroke: #2563eb; }
+  .dash-dial .zone-high { stroke: #16a34a; }
+  .dash-dial .track, .dash-dial .fill { fill: none; stroke-width: 14; stroke-linecap: round; }
+  .dash-dial .track { stroke: var(--darkened-bg); }
+  .dash-dial .fill { animation: dash-arc 1.2s ease-out; }
+  .dash-dial.is-low .fill { stroke: #f59e0b; }
+  .dash-dial.is-mid .fill { stroke: #2563eb; }
+  .dash-dial.is-high .fill { stroke: #16a34a; }
+  .dash-dial.is-none .fill { stroke: none; }
+  .dash-dial .needle { transform-origin: 100px 100px; transform: rotate(var(--angle)); animation: dash-needle 1.2s cubic-bezier(.3, 1.4, .5, 1); }
+  .dash-dial .needle line { stroke: var(--body-fg); stroke-width: 3.5; stroke-linecap: round; }
+  .dash-dial.is-none .needle { opacity: 0.25; }
+  .dash-dial .hub { fill: var(--body-fg); }
+  .dash-dial .ends { fill: var(--body-quiet-color); font-size: 11px; }
+  .dash-big { font-size: 2rem; font-weight: 700; color: var(--body-fg); font-variant-numeric: tabular-nums; line-height: 1.1; margin-top: 0.25rem; }
+  @keyframes dash-needle { from { transform: rotate(-90deg); } }
+  @keyframes dash-arc { from { stroke-dasharray: 0 283; } }
+  @media (prefers-reduced-motion: reduce) { .dash-dial .needle, .dash-dial .fill { animation: none; } }
+
+  .dash-tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(150px, 100%), 1fr)); gap: 0.75rem; margin-bottom: 1rem; }
+  .dash-tile-label { font-weight: 600; color: var(--body-fg); margin-bottom: 0.4rem; }
+  .dash-tile-values { display: flex; justify-content: space-between; align-items: baseline; gap: 0.5rem; }
+  .dash-tile-num { font-size: 1.6rem; font-weight: 700; color: var(--body-fg); font-variant-numeric: tabular-nums; }
+  .dash-tile-num.is-week { font-size: 1.1rem; font-weight: 600; }
+  .dash-tile-when { display: block; color: var(--body-quiet-color); font-size: 0.75rem; }
+  .is-muted { color: var(--body-quiet-color) !important; }
+
+  .dash-charts { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(480px, 100%), 1fr)); gap: 1rem; }
+  .dash-wide { grid-column: 1 / -1; }
+  .dash-card h2.dash-subhead { font-size: 0.85rem; margin-top: 0.75rem; }
+  .dash-topics { margin: 0.5rem 0; padding: 0; list-style: none; }
+  .dash-topics li { list-style: none; margin-bottom: 0.5rem; }
+  .dash-topic-row { display: flex; justify-content: space-between; gap: 0.5rem; color: var(--body-fg); font-size: 0.85rem; }
+  .dash-topic-row span:last-child { color: var(--body-quiet-color); white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .dash-topic-bar { height: 0.5rem; background: var(--darkened-bg); border-radius: 9999px; overflow: hidden; margin-top: 0.2rem; }
+  .dash-topic-bar div { height: 100%; background: #7c3aed; }
+  .dash-chats { list-style: none; margin: 0; padding: 0; max-height: 16rem; overflow-y: auto; margin-bottom: 0.5rem; }
+  .dash-chats li { list-style: none; padding: 0.45rem 0; border-bottom: 1px solid var(--hairline-color); }
+  .dash-chat-meta { color: var(--body-quiet-color); font-size: 0.75rem; }
+  .dash-chat-text { color: var(--body-fg); margin-top: 0.15rem; overflow-wrap: anywhere; }
+  .dash-badge { display: inline-block; padding: 0 0.4rem; border-radius: 9999px; font-size: 0.7rem; font-weight: 600; color: #fff; background: #0d9488; margin-right: 0.25rem; }
+  .dash-badge.is-faq_hedged { background: #d97706; }
+  .dash-badge.is-gpt { background: #7c3aed; }
+  .dash-badge.is-blocked { background: #dc2626; }
+  .dash-chart { position: relative; height: 16rem; width: 100%; overflow: hidden; }
+
+  @media (max-width: 480px) {
+    .dash-charts { grid-template-columns: 1fr; }
+    .dash-tiles { grid-template-columns: 1fr 1fr; }
+  }
+</style>
 {% endblock %}
 
 {% block content %}
@@ -74,6 +138,46 @@
     <h2>Revenue by type · last 14 days</h2>
     <div class="dash-chart"><canvas id="revenueChart"></canvas></div>
   </div>
+  <div class="dash-card">
+    <h2>AI chat questions</h2>
+    {% if chat_summary %}
+    <p class="dash-hint">
+      <strong>{{ chat_summary.total }}</strong> since {{ chat_summary.since|date:"M Y" }} ·
+      {{ chat_summary.faq_pct }}% answered from the FAQ
+    </p>
+    <ol class="dash-topics">
+      {% for topic in chat_summary.top %}
+      <li>
+        <div class="dash-topic-row"><span>{{ topic.name }}</span><span>{{ topic.count }} · {{ topic.pct }}%</span></div>
+        <div class="dash-topic-bar"><div style="width: {{ topic.bar }}%;"></div></div>
+      </li>
+      {% endfor %}
+    </ol>
+    <p class="dash-hint">Top topics, sorted by keyword · {{ chat_summary.unsorted_pct }}% didn’t fit one</p>
+    {% endif %}
+    <h2 class="dash-subhead">Last 14 days</h2>
+    <div class="dash-chart"><canvas id="chatChart"></canvas></div>
+  </div>
+  <div class="dash-card">
+    <h2>Latest AI chat questions</h2>
+    {% if recent_chats %}
+    <ul class="dash-chats">
+      {% for chat in recent_chats %}
+      <li>
+        <div class="dash-chat-meta">
+          <span class="dash-badge is-{{ chat.type|lower }}">{{ chat.kind }}</span>
+          {{ chat.when|date:"D j M, H:i" }} · {% if chat.lessons %}lessons page{% else %}swims page{% endif %}{% if chat.customer %} · logged in{% endif %}
+        </div>
+        {% if chat.message %}<div class="dash-chat-text">{{ chat.message|truncatechars:140 }}</div>
+        {% else %}<div class="dash-chat-text is-muted">Message hidden: refused as abusive</div>{% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+    {% if chat_log_url %}<p class="dash-hint"><a href="{{ chat_log_url }}">Full chat log in Settings</a></p>{% endif %}
+    {% else %}
+    <p class="dash-hint">No questions yet.</p>
+    {% endif %}
+  </div>
   {% if term_fill %}
   <div class="dash-card dash-wide">
     <h2>How full each level is this term</h2>
@@ -130,6 +234,18 @@
     }
   });
 
+  const chatColours = { 'FAQ answer': colours.teal, 'FAQ, unsure': colours.amber, 'AI model': colours.purple, 'Blocked': '#dc2626' };
+  new Chart(document.getElementById('chatChart'), {
+    type: 'bar',
+    data: {
+      labels: data.days,
+      datasets: Object.entries(data.chats).map(([label, values]) => ({
+        label, data: values, backgroundColor: chatColours[label],
+      }))
+    },
+    options: { ...tight, scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true, ticks: { precision: 0 } } } }
+  });
+
   const fill = document.getElementById('fillChart');
   if (fill) {
     const cats = data.categories;
@@ -157,52 +273,4 @@
 })();
 </script>
 
-<style>
-  #content { min-width: 0; }  /* a flex item: let the grids below shrink to the screen */
-  .dash-sub { color: var(--body-quiet-color); margin: 0 0 1rem; }
-  .dash-card { min-width: 0; background: var(--body-bg); border: 1px solid var(--hairline-color); border-radius: 10px; padding: 1rem; }
-  .dash-card h2 { font-size: 0.95rem; margin: 0 0 0.5rem; color: var(--body-fg); background: none; padding: 0; text-transform: none; letter-spacing: 0; }
-  .dash-hint, .dash-caption { color: var(--body-quiet-color); font-size: 0.8rem; }
-
-  .dash-dials { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(210px, 100%), 1fr)); gap: 1rem; margin-bottom: 1rem; }
-  .dash-dial { text-align: center; }
-  .dash-dial svg { width: 100%; max-width: 240px; display: block; margin: 0 auto; overflow: visible; }
-  .dash-dial .zone { fill: none; stroke-width: 4; }
-  .dash-dial .zone-low { stroke: #f59e0b; }
-  .dash-dial .zone-mid { stroke: #2563eb; }
-  .dash-dial .zone-high { stroke: #16a34a; }
-  .dash-dial .track, .dash-dial .fill { fill: none; stroke-width: 14; stroke-linecap: round; }
-  .dash-dial .track { stroke: var(--darkened-bg); }
-  .dash-dial .fill { animation: dash-arc 1.2s ease-out; }
-  .dash-dial.is-low .fill { stroke: #f59e0b; }
-  .dash-dial.is-mid .fill { stroke: #2563eb; }
-  .dash-dial.is-high .fill { stroke: #16a34a; }
-  .dash-dial.is-none .fill { stroke: none; }
-  .dash-dial .needle { transform-origin: 100px 100px; transform: rotate(var(--angle)); animation: dash-needle 1.2s cubic-bezier(.3, 1.4, .5, 1); }
-  .dash-dial .needle line { stroke: var(--body-fg); stroke-width: 3.5; stroke-linecap: round; }
-  .dash-dial.is-none .needle { opacity: 0.25; }
-  .dash-dial .hub { fill: var(--body-fg); }
-  .dash-dial .ends { fill: var(--body-quiet-color); font-size: 11px; }
-  .dash-big { font-size: 2rem; font-weight: 700; color: var(--body-fg); font-variant-numeric: tabular-nums; line-height: 1.1; margin-top: 0.25rem; }
-  @keyframes dash-needle { from { transform: rotate(-90deg); } }
-  @keyframes dash-arc { from { stroke-dasharray: 0 283; } }
-  @media (prefers-reduced-motion: reduce) { .dash-dial .needle, .dash-dial .fill { animation: none; } }
-
-  .dash-tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(150px, 100%), 1fr)); gap: 0.75rem; margin-bottom: 1rem; }
-  .dash-tile-label { font-weight: 600; color: var(--body-fg); margin-bottom: 0.4rem; }
-  .dash-tile-values { display: flex; justify-content: space-between; align-items: baseline; gap: 0.5rem; }
-  .dash-tile-num { font-size: 1.6rem; font-weight: 700; color: var(--body-fg); font-variant-numeric: tabular-nums; }
-  .dash-tile-num.is-week { font-size: 1.1rem; font-weight: 600; }
-  .dash-tile-when { display: block; color: var(--body-quiet-color); font-size: 0.75rem; }
-  .is-muted { color: var(--body-quiet-color) !important; }
-
-  .dash-charts { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr)); gap: 1rem; }
-  .dash-wide { grid-column: 1 / -1; }
-  .dash-chart { position: relative; height: 16rem; }
-
-  @media (max-width: 480px) {
-    .dash-charts { grid-template-columns: 1fr; }
-    .dash-tiles { grid-template-columns: 1fr 1fr; }
-  }
-</style>
 {% endblock %}

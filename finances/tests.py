@@ -230,7 +230,7 @@ class DashboardTests(TestCase):
         self.assertEqual((dial["value"], dial["max"], dial["pct"]), (3, 20, 15))
 
     def test_attendance_ignores_unmarked_entries(self):
-        dial = self.dials()["Today’s class attendance"]
+        dial = self.dials()["Attendance marked today"]
         self.assertEqual((dial["value"], dial["max"], dial["pct"]), (3, 4, 75))
         self.assertEqual(dial["level"], "mid")
 
@@ -243,6 +243,17 @@ class DashboardTests(TestCase):
         # 5 of 5: the needle is at full and the class counts as full.
         self.assertEqual((dial["pct"], dial["angle"], dial["level"]), (100, 90.0, "high"))
         self.assertEqual(self.get().context["term_fill"]["full"], 1)
+
+    def test_registers_taken_this_week(self):
+        dial = self.dials()["Registers taken this week"]
+        # The one Monday lesson is always due by today, and today's register for it is marked.
+        self.assertEqual((dial["value"], dial["max"]), (1, 1))
+
+    def test_registers_dial_ignores_registers_nobody_marked(self):
+        from anseo.models import AttendanceEntry
+        AttendanceEntry.objects.update(status=AttendanceEntry.UNKNOWN)
+        dial = self.dials()["Registers taken this week"]
+        self.assertEqual((dial["value"], dial["max"]), (0, 1))
 
     def test_no_next_term_hides_its_dial(self):
         self.assertNotIn("Next term booked", self.dials())
@@ -262,3 +273,109 @@ class DashboardTests(TestCase):
         self.assertEqual(set(data["revenue"]), {"Lesson", "Swim", "School"})
         # Today's paid, non-refunded swim orders: the 3-swimmer order and next week's booking (both placed today).
         self.assertEqual(data["revenue"]["Swim"][-1], 16.0)
+
+
+class DashboardChatTests(TestCase):
+    """The AI chat figures on the live dashboard."""
+
+    @classmethod
+    def setUpTestData(cls):
+        from chatbot.models import ChatbotQuery
+
+        def staff_member(email, group):
+            user = User.objects.create_user(email=email, password="pw", first_name="S")
+            user.is_staff = True
+            user.save(update_fields=["is_staff"])
+            user.groups.add(Group.objects.get_or_create(name=group)[0])
+            return user
+
+        cls.manager = staff_member("manager@tcsp.ie", "Manager")
+        cls.full_timer = staff_member("full@tcsp.ie", "Full-Timer")
+        customer = User.objects.create_user(email="parent@example.com", password="pw", first_name="P")
+
+        def chat(response_type, message="When is the next lane swim?", **kwargs):
+            return ChatbotQuery.objects.create(source="public_swim", message=message,
+                                               response_type=response_type, **kwargs)
+
+        chat("FAQ")
+        chat("FAQ_HEDGED")
+        chat("GPT", user=customer)
+        chat("GPT")
+        chat("BLOCKED", message="something abusive")
+        old = chat("GPT")
+        ChatbotQuery.objects.filter(pk=old.pk).update(timestamp=timezone.now() - timedelta(days=30))
+
+    def get(self, user=None):
+        self.client.force_login(user or self.manager)
+        response = self.client.get(reverse("finance:dashboard"))
+        self.assertEqual(response.status_code, 200)
+        return response
+
+    def test_tile_counts_questions_by_period(self):
+        tile = next(t for t in self.get().context["tiles"] if t["label"] == "AI chat questions")
+        self.assertEqual(tile["today"], 5)
+        self.assertEqual(tile["hint"], "This week: 2 by the AI model, 2 from the FAQ")
+
+    def test_chart_splits_by_answer_type(self):
+        chats = self.get().context["chart_data"]["chats"]
+        self.assertEqual({label: values[-1] for label, values in chats.items()},
+                         {"FAQ answer": 1, "FAQ, unsure": 1, "AI model": 2, "Blocked": 1})
+
+    def test_recent_questions_hide_blocked_text(self):
+        response = self.get()
+        recent = response.context["recent_chats"]
+        self.assertEqual(len(recent), 6)
+        self.assertEqual([c["message"] for c in recent if c["type"] == "BLOCKED"], [""])
+        self.assertNotContains(response, "something abusive")
+
+    def test_chat_log_link_only_for_settings_users(self):
+        self.assertIsNotNone(self.get().context["chat_log_url"])
+        self.assertIsNone(self.get(self.full_timer).context["chat_log_url"])
+
+
+class ChatTopicTests(TestCase):
+    """Sorting AI chat questions into topics for the dashboard."""
+
+    def test_topics_by_keyword(self):
+        from finances.views import _chat_topic
+        cases = {
+            "How much is public swim": "Prices & discounts",
+            "is there a student rate": "Prices & discounts",
+            "When are master classes on": "Masters, aqua & other classes",
+            "Do I need a swim hat": "Pool, facilities & what to bring",
+            "How do I rebook?": "Booking & changes",
+            "what's the difference between beginner 1 and beginner 2": "Lesson levels & ages",
+            "When is the next lane swim?": "Swim times & opening",
+            "Hello": None,
+        }
+        for message, topic in cases.items():
+            with self.subTest(message=message):
+                self.assertEqual(_chat_topic(message), topic)
+
+    def test_keywords_match_word_starts_only(self):
+        from finances.views import _chat_topic
+        # "page" must not count as "age", nor "separate" as "rate".
+        self.assertIsNone(_chat_topic("separate page"))
+
+    def test_summary_top_three(self):
+        from chatbot.models import ChatbotQuery
+        from finances.views import _chat_summary
+        messages = (["How much is it"] * 3 + ["How do I book"] * 2 + ["Are there lockers"] * 2
+                    + ["What time today"] + ["Hi"] * 2)
+        for message in messages:
+            ChatbotQuery.objects.create(source="public_swim", message=message, response_type="FAQ")
+        ChatbotQuery.objects.create(source="public_swim", message="how much abuse", response_type="BLOCKED")
+        summary = _chat_summary(ChatbotQuery.objects.all())
+        self.assertEqual(summary["total"], 11)
+        self.assertEqual(summary["faq_pct"], 91)  # 10 of 11; the blocked one is not an FAQ answer
+        # Blocked messages are not sorted into topics.
+        self.assertEqual([(t["name"], t["count"]) for t in summary["top"]],
+                         [("Prices & discounts", 3), ("Booking & changes", 2),
+                          ("Pool, facilities & what to bring", 2)])
+        self.assertEqual([t["bar"] for t in summary["top"]], [100, 67, 67])
+        self.assertEqual(summary["unsorted_pct"], 20)
+
+    def test_no_questions_no_summary(self):
+        from chatbot.models import ChatbotQuery
+        from finances.views import _chat_summary
+        self.assertIsNone(_chat_summary(ChatbotQuery.objects.all()))

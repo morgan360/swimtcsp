@@ -1,4 +1,5 @@
 import logging
+import re
 from collections import defaultdict
 from decimal import Decimal
 
@@ -882,6 +883,75 @@ def activity_report(request, template_name='admin/financeadmin/activity_report.h
 
 DASHBOARD_DAYS = 14
 NEARLY_FULL_PCT = 90
+RECENT_CHAT_QUESTIONS = 8
+
+# ChatbotQuery.response_type, in the order the chart stacks them.
+CHAT_TYPES = {
+    'FAQ': 'FAQ answer',
+    'FAQ_HEDGED': 'FAQ, unsure',
+    'GPT': 'AI model',
+    'BLOCKED': 'Blocked',
+}
+
+# What chat questions are about, by keyword: the first topic whose words appear
+# wins, so the specific topics come before the catch-all "when/today" one.
+# Keywords match at the start of a word, so "book" also catches "booking".
+CHAT_TOPICS = [
+    ('Prices & discounts', ('price', 'cost', 'how much', 'fee', 'euro', 'discount', 'student', 'oap',
+                            'senior', 'half price', 'rate', 'pay', 'cheap', 'free')),
+    ('Masters, aqua & other classes', ('master', 'aqua', 'lifeguard', 'life guard', 'party', 'parties',
+                                       'club', 'coached', 'intens', 'training', 'team')),
+    ('Pool, facilities & what to bring', ('locker', 'shower', 'changing', 'water', 'warm', 'heat', 'facilit',
+                                          'parking', 'towel', 'goggle', 'trunks', 'baby', 'toilet', 'hair',
+                                          'hat', 'swim cap', 'wear', 'bring', 'length', 'width',
+                                          'busy', 'busiest')),
+    ('Booking & changes', ('book', 'rebook', 'cancel', 'change', 'wait list', 'waiting list', 'waitlist',
+                           'register', 'sign up', 'sign my', 'enrol', 'order', 'refund', 'login', 'log in',
+                           'account', 'pause', 'holiday', 'member')),
+    ('Lesson levels & ages', ('level', 'beginner', 'improver', 'prover', 'stage', 'year old', 'age', 'kids',
+                              'child', 'adult', 'learn', 'difference')),
+    ('Swim times & opening', ('time', 'today', 'tomorrow', 'tonight', 'open', 'closed', 'timetable',
+                              'schedule', 'when', 'available', 'availability', 'walk in', 'monday',
+                              'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday', 'weekend',
+                              'christmas', 'term', 'session')),
+]
+CHAT_TOPIC_PATTERNS = [
+    (name, re.compile(r'\b(?:' + '|'.join(re.escape(word) for word in words) + ')', re.IGNORECASE))
+    for name, words in CHAT_TOPICS
+]
+TOP_CHAT_TOPICS = 3
+
+
+def _chat_topic(message):
+    for name, pattern in CHAT_TOPIC_PATTERNS:
+        if pattern.search(message):
+            return name
+    return None
+
+
+def _chat_summary(chats):
+    """All-time totals and the most common topics. Blocked messages are left out of the topics."""
+    from collections import Counter
+
+    types = dict(chats.values_list('response_type').annotate(n=Count('id')))
+    total = sum(types.values())
+    if not total:
+        return None
+    messages = chats.exclude(response_type='BLOCKED').values_list('message', flat=True)
+    topics = Counter(_chat_topic(message) for message in messages)
+    asked = sum(topics.values()) or 1
+    unsorted = topics.pop(None, 0)
+    faq = types.get('FAQ', 0) + types.get('FAQ_HEDGED', 0)
+    top = topics.most_common(TOP_CHAT_TOPICS)
+    return {
+        'total': total,
+        'since': chats.order_by('timestamp').values_list('timestamp', flat=True).first(),
+        'faq_pct': round(faq * 100 / total),
+        # The bar is scaled to the most common topic, so the three are easy to compare.
+        'top': [{'name': name, 'count': n, 'pct': round(n * 100 / asked), 'bar': round(n * 100 / top[0][1])}
+                for name, n in top],
+        'unsorted_pct': round(unsorted * 100 / asked),
+    }
 
 
 def _term_fill(term):
@@ -974,8 +1044,11 @@ def _dial(title, value, maximum, caption, empty='No data yet'):
 def dashboard(request, template_name='admin/financeadmin/dashboard.html'):
     """Live numbers for today and this week, as dials, tiles and charts."""
     from django.contrib.auth import get_user_model
+    from django.urls import reverse
     from anseo.models import AttendanceEntry
+    from chatbot.models import ChatbotQuery
     from custom_admins.financeadmin import finance_admin_site
+    from custom_admins.panels import settings_site
     from lessons_bookings.models import LessonEnrollment, Term
     from schools_bookings.models import ScoEnrollment
     from swims.models import PublicSwimProduct
@@ -1005,12 +1078,26 @@ def dashboard(request, template_name='admin/financeadmin/dashboard.html'):
     dials.append(_dial('Today’s public swims', swimmers_booked, swim_places,
                        'swim places paid for', empty='No public swims today'))
 
-    marked = (AttendanceEntry.objects
-              .filter(roll__window_start__gte=today_period[1], roll__window_start__lt=today_period[2])
-              .exclude(status=AttendanceEntry.UNKNOWN))
+    # A register is dated when it is marked, not by the class it is for (see
+    # AttendanceRoll.get_or_create_current), so a catch-up on Sunday counts on Sunday.
+    marked_entries = AttendanceEntry.objects.exclude(status=AttendanceEntry.UNKNOWN)
+    marked = marked_entries.filter(roll__window_start__gte=today_period[1],
+                                   roll__window_start__lt=today_period[2])
     attended = marked.filter(status__in=[AttendanceEntry.PRESENT, AttendanceEntry.LATE]).count()
-    dials.append(_dial('Today’s class attendance', attended, marked.count(),
-                       'marked present or late', empty='No registers taken yet'))
+    dials.append(_dial('Attendance marked today', attended, marked.count(),
+                       'present or late', empty='No registers marked yet today'))
+
+    if current_term:
+        # Lessons with swimmers whose class day has come round so far this week.
+        due = set(LessonEnrollment.objects
+                  .filter(term=current_term, lesson__day_of_week__lte=today.weekday())
+                  .values_list('lesson_id', flat=True))
+        taken = set(marked_entries
+                    .filter(roll__product_id__in=due, roll__window_start__gte=week_period[1],
+                            roll__window_start__lt=week_period[2])
+                    .values_list('roll__product_id', flat=True))
+        dials.append(_dial('Registers taken this week', len(taken), len(due),
+                           'classes so far', empty='No classes yet this week'))
 
     next_term = Term.get_next_term()
     if next_term:
@@ -1046,6 +1133,28 @@ def dashboard(request, template_name='admin/financeadmin/dashboard.html'):
              hint=f'{WaitingList.objects.filter(completed=False).count()} waiting now'),
     ]
 
+    chats = ChatbotQuery.objects.all()
+    week_chats = dict(chats.filter(timestamp__gte=week_period[1], timestamp__lt=week_period[2])
+                      .values_list('response_type').annotate(n=Count('id')))
+    tiles.append(tile(
+        'AI chat questions', _period_counts(chats, periods, 'timestamp'),
+        hint=(f"This week: {week_chats.get('GPT', 0)} by the AI model, "
+              f"{week_chats.get('FAQ', 0) + week_chats.get('FAQ_HEDGED', 0)} from the FAQ"),
+    ))
+    chat_summary = _chat_summary(chats)
+    recent_chats = [
+        {
+            'when': chat.timestamp,
+            'kind': CHAT_TYPES.get(chat.response_type, chat.response_type),
+            'type': chat.response_type,
+            # Blocked messages are abusive by definition; the full text is in the admin.
+            'message': '' if chat.response_type == 'BLOCKED' else chat.message,
+            'lessons': chat.source == 'public_lesson',
+            'customer': bool(chat.user_id),
+        }
+        for chat in chats.order_by('-timestamp')[:RECENT_CHAT_QUESTIONS]
+    ]
+
     # --- Charts ------------------------------------------------------------
     days = [today - timedelta(days=n) for n in range(DASHBOARD_DAYS - 1, -1, -1)]
     logins = LoginEvent.objects.all()
@@ -1060,6 +1169,10 @@ def dashboard(request, template_name='admin/financeadmin/dashboard.html'):
             for model, label in ORDER_MODELS.values()
         },
         'categories': this_fill['categories'] if this_fill else [],
+        'chats': {
+            label: _daily_series(chats.filter(response_type=key), 'timestamp', days)
+            for key, label in CHAT_TYPES.items()
+        },
     }
 
     context = {
@@ -1071,6 +1184,11 @@ def dashboard(request, template_name='admin/financeadmin/dashboard.html'):
         'tiles': tiles,
         'term': current_term,
         'term_fill': this_fill,
+        'recent_chats': recent_chats,
+        'chat_summary': chat_summary,
+        # The chat log lives in Settings, which Full-Timers cannot open.
+        'chat_log_url': (reverse('settings:chatbot_chatbotquery_changelist')
+                         if settings_site.has_permission(request) else None),
         'chart_data': chart_data,
     }
     return render(request, template_name, context)

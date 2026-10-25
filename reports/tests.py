@@ -231,3 +231,81 @@ class ReportAccessTests(TestCase):
                     response.status_code, 302,
                     f"reports:{name} did not redirect an anonymous visitor",
                 )
+
+
+class LogDigestTests(TestCase):
+    """email_log_digest lists real errors and only counts the noise."""
+
+    def setUp(self):
+        import tempfile
+        self.dir = tempfile.mkdtemp()
+
+    def write(self, name, text):
+        import os
+        path = os.path.join(self.dir, name)
+        with open(path, "w") as fh:
+            fh.write(text)
+        return path
+
+    def digest(self, **paths):
+        from datetime import datetime
+        from reports.management.commands.email_log_digest import build_digest
+        defaults = {
+            "web_log": self.write("empty-web.log", ""),
+            "server_log": self.write("empty-server.log", ""),
+            "app_logs": [],
+            "schedule_logs": self.dir + "/schedule-log-*.log",
+        }
+        defaults.update(paths)
+        return build_digest(datetime(2026, 10, 25, 0, 0), **defaults)
+
+    def test_web_noise_counted_real_errors_grouped(self):
+        web = self.write("web.log", "\n".join([
+            "2026-10-24 23:00:00,000: Internal Server Error: /too-old/",
+            "2026-10-25 09:00:00,000: Not Found: /wp-login.php",
+            "2026-10-25 09:01:00,000: Not Found: /wp-login.php",
+            "2026-10-25 09:02:00,000: OSError: write error",
+            "2026-10-25 10:00:00,000: Internal Server Error: /basket/",
+            "2026-10-25 10:00:00,001: Traceback (most recent call last):",
+            "2026-10-25 11:00:00,000: Internal Server Error: /basket/",
+        ]) + "\n")
+        items, body = self.digest(web_log=web)
+        self.assertIn("[2× 10:00–11:00] Internal Server Error: /basket/", body)
+        self.assertIn("Traceback (most recent call last):", body)
+        self.assertNotIn("/too-old/", body)
+        self.assertIn("404 Not Found: 2", body)
+        self.assertIn("/wp-login.php (2)", body)
+        self.assertNotIn("Not Found: /wp-login.php\n", body.split("=== Counted")[0])
+        self.assertEqual(items, 2)
+
+    def test_app_log_warnings_keep_their_traceback(self):
+        app = self.write("boipa.log", "\n".join([
+            "2026-10-25 08:00:00,000 INFO views Order 1 marked paid",
+            "2026-10-25 08:05:00,000 ERROR views Failed to create HPP link",
+            "Traceback (most recent call last):",
+            '  File "boipa/views.py", line 9',
+        ]) + "\n")
+        items, body = self.digest(app_logs=[app])
+        self.assertIn("boipa.log: ERROR views Failed to create HPP link", body)
+        self.assertIn('File "boipa/views.py", line 9', body)
+        self.assertNotIn("marked paid", body)
+        self.assertEqual(items, 1)
+
+    def test_failed_scheduled_task_shows_its_output(self):
+        self.write("schedule-log-1.log", "\n".join([
+            "2026-10-25 02:00:09 -- Started task",
+            "bash: /home/x/daily.log: No such file or directory",
+            "2026-10-25 02:01:08 -- Completed task, took 59.45 seconds, return code was 1.",
+        ]) + "\n")
+        self.write("schedule-log-2.log",
+                   "2026-10-25 03:00:00 -- Completed task, took 1.00 seconds, return code was 0.\n")
+        items, body = self.digest()
+        self.assertIn("FAILED. schedule-log-1.log", body)
+        self.assertIn("No such file or directory", body)
+        self.assertIn("OK. schedule-log-2.log", body)
+        self.assertEqual(items, 1)
+
+    def test_quiet_day_still_reports(self):
+        items, body = self.digest(web_log="/nonexistent.log")
+        self.assertEqual(items, 0)
+        self.assertIn("Nothing.", body)

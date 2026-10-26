@@ -1015,8 +1015,11 @@ def _daily_series(queryset, field, days, amount=None):
 DIAL_ARC_LENGTH = 282.74  # the dial's semicircle: pi * radius 90
 
 
-def _dial(title, value, maximum, caption, empty='No data yet'):
-    """One half-circle gauge. The needle stops at full; the label shows the real %."""
+def _dial(title, value, maximum, caption, empty='No data yet', target=None, target_label=''):
+    """One half-circle gauge. The needle stops at full; the label shows the real %.
+
+    ``target`` is a percentage to mark on the ring, e.g. last term's fill.
+    """
     pct = _fill_pct(value, maximum)
     shown = min(pct or 0, 100)
     if pct is None:
@@ -1037,6 +1040,9 @@ def _dial(title, value, maximum, caption, empty='No data yet'):
         'arc': round(DIAL_ARC_LENGTH * shown / 100, 2),
         'caption': caption,
         'empty': empty,
+        'target': target,
+        'target_label': target_label,
+        'target_angle': None if target is None else round(-90 + 1.8 * min(target, 100), 1),
     }
 
 
@@ -1057,8 +1063,13 @@ def _live_dials(today):
     current_term = Term.get_current_term()
     this_fill = _term_fill(current_term) if current_term else None
     if this_fill:
+        # Marked with last term's fill. Its places are counted the same way, so a
+        # lesson added since counts against last term too.
+        previous_term = Term.get_previous_term()
+        last_pct = _term_fill(previous_term)['pct'] if previous_term else None
         live['term'] = _dial('This term’s lessons', this_fill['enrolled'], this_fill['places'],
-                             'places filled')
+                             'places filled', target=last_pct,
+                             target_label=f'Last term: {last_pct}%' if last_pct is not None else '')
 
     swim_places = (PublicSwimProduct.objects.filter(available=True, day_of_week=today.weekday())
                    .aggregate(n=Sum('num_places'))['n'] or 0)
@@ -1070,12 +1081,15 @@ def _live_dials(today):
 
     # A register is dated when it is marked, not by the class it is for (see
     # AttendanceRoll.get_or_create_current), so a catch-up on Sunday counts on Sunday.
+    # Swimmers left as Not Marked count too, so a half-done register shows.
     marked_entries = AttendanceEntry.objects.exclude(status=AttendanceEntry.UNKNOWN)
-    marked = marked_entries.filter(roll__window_start__gte=today_period[1],
-                                   roll__window_start__lt=today_period[2])
-    attended = marked.filter(status__in=[AttendanceEntry.PRESENT, AttendanceEntry.LATE]).count()
-    live['attendance'] = _dial('Attendance marked today', attended, marked.count(),
-                               'present or late', empty='No registers marked yet today')
+    on_today = AttendanceEntry.objects.filter(roll__window_start__gte=today_period[1],
+                                              roll__window_start__lt=today_period[2])
+    attended = on_today.filter(status__in=[AttendanceEntry.PRESENT, AttendanceEntry.LATE]).count()
+    unmarked = on_today.filter(status=AttendanceEntry.UNKNOWN).count()
+    live['attendance'] = _dial('Swimmers’ attendance today', attended, on_today.count(),
+                               f'present or late · {unmarked} not marked',
+                               empty='No registers marked yet today')
 
     if current_term:
         # Lessons with swimmers whose class day has come round so far this week.
@@ -1086,7 +1100,7 @@ def _live_dials(today):
                     .filter(roll__product_id__in=due, roll__window_start__gte=week_period[1],
                             roll__window_start__lt=week_period[2])
                     .values_list('roll__product_id', flat=True))
-        live['registers'] = _dial('Registers taken this week', len(taken), len(due),
+        live['registers'] = _dial('Classes’ attendance recorded this week', len(taken), len(due),
                                   'classes so far', empty='No classes yet this week')
 
     next_term = Term.get_next_term()

@@ -229,10 +229,26 @@ class DashboardTests(TestCase):
         # Refunded, unpaid and next week's bookings are left out; so is the other day's session.
         self.assertEqual((dial["value"], dial["max"], dial["pct"]), (3, 20, 15))
 
-    def test_attendance_ignores_unmarked_entries(self):
-        dial = self.dials()["Attendance marked today"]
-        self.assertEqual((dial["value"], dial["max"], dial["pct"]), (3, 4, 75))
+    def test_attendance_counts_unmarked_entries(self):
+        dial = self.dials()["Swimmers’ attendance today"]
+        self.assertEqual((dial["value"], dial["max"], dial["pct"]), (3, 5, 60))
+        self.assertEqual(dial["caption"], "present or late · 1 not marked")
         self.assertEqual(dial["level"], "mid")
+
+    def test_term_dial_has_no_target_without_a_previous_term(self):
+        dial = self.dials()["This term’s lessons"]
+        self.assertIsNone(dial["target_angle"])
+        self.assertNotContains(self.get(), 'class="target"')
+
+    def test_term_dial_marks_last_terms_fill(self):
+        today = timezone.localdate()
+        last = Term.objects.create(start_date=today - timedelta(days=80), end_date=today - timedelta(days=20))
+        for kid in Swimling.objects.all()[:2]:
+            LessonEnrollment.objects.create(lesson=self.lesson, swimling=kid, term=last)
+        dial = self.dials()["This term’s lessons"]
+        # 2 of 5 places last term: 40%, so the marker sits at -90 + 1.8 * 40 degrees.
+        self.assertEqual((dial["target"], dial["target_angle"]), (40, -18.0))
+        self.assertContains(self.get(), "Last term: 40%")
 
     def test_term_dial_matches_lesson_enrollments(self):
         self.client.force_login(self.manager)
@@ -245,14 +261,14 @@ class DashboardTests(TestCase):
         self.assertEqual(self.get().context["term_fill"]["full"], 1)
 
     def test_registers_taken_this_week(self):
-        dial = self.dials()["Registers taken this week"]
+        dial = self.dials()["Classes’ attendance recorded this week"]
         # The one Monday lesson is always due by today, and today's register for it is marked.
         self.assertEqual((dial["value"], dial["max"]), (1, 1))
 
     def test_registers_dial_ignores_registers_nobody_marked(self):
         from anseo.models import AttendanceEntry
         AttendanceEntry.objects.update(status=AttendanceEntry.UNKNOWN)
-        dial = self.dials()["Registers taken this week"]
+        dial = self.dials()["Classes’ attendance recorded this week"]
         self.assertEqual((dial["value"], dial["max"]), (0, 1))
 
     def test_old_finances_dashboard_url_is_not_the_live_dashboard(self):
@@ -269,8 +285,8 @@ class DashboardTests(TestCase):
         response = self.client.get(reverse("operations:index"))
         self.assertEqual(response.status_code, 200)
         titles = [d["title"] for d in response.context["dial_strip"]]
-        self.assertEqual(titles, ["Today’s public swims", "Registers taken this week",
-                                  "Attendance marked today", "This term’s lessons"])
+        self.assertEqual(titles, ["Today’s public swims", "Classes’ attendance recorded this week",
+                                  "Swimmers’ attendance today", "This term’s lessons"])
         # Plain staff cannot open Finance, so no link to it and no money on the page.
         self.assertIsNone(response.context["live_dashboard_url"])
         self.assertNotContains(response, "Full dashboard")

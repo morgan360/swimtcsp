@@ -10,6 +10,10 @@
     <path class="track" d="M 10 100 A 90 90 0 0 1 190 100" />
     {% if dial.arc %}<path class="fill" d="M 10 100 A 90 90 0 0 1 190 100"
           style="stroke-dasharray: {{ dial.arc }} 283;" />{% endif %}
+    {% if dial.target_angle is not None %}<g class="target" style="--angle: {{ dial.target_angle }}deg;">
+      <title>{{ dial.target_label }}</title>
+      <line x1="100" y1="0" x2="100" y2="20" />
+    </g>{% endif %}
     <g class="needle" style="--angle: {{ dial.angle }}deg;">
       <line x1="100" y1="100" x2="100" y2="24" />
     </g>
@@ -24,4 +28,5 @@
   <div class="dash-big">{{ dial.pct }}%</div>
   <div class="dash-caption">{{ dial.value }} of {{ dial.max }} {{ dial.caption }}</div>
   {% endif %}
+  {% if dial.target_label %}<div class="dash-caption"><span class="dash-target-key"></span>{{ dial.target_label }}</div>{% endif %}
 </div>

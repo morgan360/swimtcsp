@@ -23,6 +23,9 @@
   .dash-dial .needle { transform-origin: 100px 100px; transform: rotate(var(--angle)); animation: dash-needle 1.2s cubic-bezier(.3, 1.4, .5, 1); }
   .dash-dial .needle line { stroke: var(--body-fg); stroke-width: 3.5; stroke-linecap: round; }
   .dash-dial.is-none .needle { opacity: 0.25; }
+  .dash-dial .target { transform-origin: 100px 100px; transform: rotate(var(--angle)); }
+  .dash-dial .target line { stroke: #dc2626; stroke-width: 3; stroke-linecap: round; }
+  .dash-target-key { display: inline-block; width: 3px; height: 0.8em; background: #dc2626; border-radius: 2px; margin-right: 0.35em; vertical-align: -0.05em; }
   .dash-dial .hub { fill: var(--body-fg); }
   .dash-dial .ends { fill: var(--body-quiet-color); font-size: 11px; }
   .dash-big { font-size: 2rem; font-weight: 700; color: var(--body-fg); font-variant-numeric: tabular-nums; line-height: 1.1; margin-top: 0.25rem; }

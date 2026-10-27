@@ -54,8 +54,76 @@ def get_upcoming_terms():
 def get_active_lessons():
     return Product.objects.filter(active=True).order_by("day_of_week", "start_time")
 
+# How Product.get_price_for_term charges, in words. Without it the bots could
+# only quote a full-term price to someone joining mid-term, who pays less.
+PRICING_NOTE = (
+    "- Prices are per swimmer. Booking after a term has started, you pay only for "
+    "the lessons left in the term, at the per-lesson price, and never more than "
+    "the full-term price."
+)
+
+
+def _euro(amount):
+    return f"€{amount:.0f}" if amount == amount.to_integral_value() else f"€{amount:.2f}"
+
+
+def _price(lesson):
+    """'€12 a lesson, €132 a full term', or '' when the class has no price set."""
+    parts = []
+    if lesson.weekly_price:
+        parts.append(f"{_euro(lesson.weekly_price)} a lesson")
+    if lesson.price:
+        parts.append(f"{_euro(lesson.price)} a full term")
+    return ", ".join(parts)
+
+
 def format_lesson_list(lessons):
-    return "\n".join([
-        f"- **{lesson.category.name}**: {lesson.get_day_of_week_display()} {lesson.start_time.strftime('%H:%M')}–{lesson.end_time.strftime('%H:%M')} ({lesson.num_places} places)"
-        for lesson in lessons
-    ])
+    lines = []
+    for lesson in lessons:
+        price = _price(lesson)
+        lines.append(
+            f"- **{lesson.category.name}**: {lesson.get_day_of_week_display()} "
+            f"{lesson.start_time.strftime('%H:%M')}–{lesson.end_time.strftime('%H:%M')} "
+            f"({lesson.num_places} places{', ' + price if price else ''})"
+        )
+    return "\n".join(lines + [PRICING_NOTE]) if lines else ""
+
+
+def format_lesson_summary(lessons):
+    """One line per level: the days it runs, its times and its price.
+
+    The chat on every page of the site is the swims bot, so most lesson
+    questions arrive there, and it was given no lessons at all: asked "Price
+    for lessons?", it could only say it didn't know. A line per class (over 150)
+    would swamp its prompt, so it gets this summary instead.
+    """
+    levels = {}
+    for lesson in lessons:
+        level = levels.setdefault(lesson.category.name, {
+            'days': set(), 'starts': [], 'ends': [], 'weekly': set(), 'term': set()})
+        level['days'].add(lesson.day_of_week)
+        level['starts'].append(lesson.start_time)
+        level['ends'].append(lesson.end_time)
+        if lesson.weekly_price:
+            level['weekly'].add(lesson.weekly_price)
+        if lesson.price:
+            level['term'].add(lesson.price)
+
+    def span(values):
+        low, high = min(values), max(values)
+        return _euro(low) if low == high else f"{_euro(low)}–{_euro(high)}"
+
+    lines = []
+    for name, level in sorted(levels.items()):
+        days = ", ".join(dict(Product.DAY_CHOICES)[day][:3] for day in sorted(level['days']))
+        prices = []
+        if level['weekly']:
+            prices.append(f"{span(level['weekly'])} a lesson")
+        if level['term']:
+            prices.append(f"{span(level['term'])} a full term")
+        lines.append(
+            f"- **{name}**: {days}, {min(level['starts']).strftime('%H:%M')}–"
+            f"{max(level['ends']).strftime('%H:%M')}"
+            + (f" · {', '.join(prices)}" if prices else "")
+        )
+    return "\n".join(lines + [PRICING_NOTE]) if lines else ""

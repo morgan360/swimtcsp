@@ -810,3 +810,70 @@ class PromptConductTests(TestCase):
             prompt.index("Children are taught here"),
             prompt.index("<<<VISITOR_MESSAGE>>>"),
         )
+
+
+class LessonPricesTests(TestCase):
+    """Asked "Price for lessons?", the bots said they didn't know: neither prompt
+    carried a lesson price, and the chat on every page (the swims bot) carried no
+    lessons at all. These cover the prices reaching both prompts."""
+
+    @classmethod
+    def setUpTestData(cls):
+        from decimal import Decimal
+
+        from lessons.models import Category, Product, Program
+        from lessons_bookings.models import Term
+
+        program = Program.objects.create(name="P")
+        beginners = Category.objects.create(name="Beginners(1)", program=program)
+        adults = Category.objects.create(name="Adult Begin & Improvers", program=program)
+        # weekly_price × num_weeks sets the full-term price on save.
+        for day, start, weeks in ((0, time(16, 0), 11), (5, time(10, 0), 12)):
+            Product.objects.create(category=beginners, day_of_week=day, start_time=start,
+                                   end_time=time(start.hour, 30), num_places=6, num_weeks=weeks,
+                                   weekly_price=Decimal("12.00"), active=True)
+        Product.objects.create(category=adults, day_of_week=2, start_time=time(20, 10),
+                               end_time=time(20, 55), num_places=8, num_weeks=10,
+                               weekly_price=Decimal("12.50"), active=True)
+        today = datetime.now().date()
+        cls.term = Term.objects.create(start_date=today, end_date=today.replace(year=today.year + 1))
+
+    def test_summary_gives_each_level_its_days_and_prices(self):
+        from chatbot.helpers.lesson import PRICING_NOTE, format_lesson_summary, get_active_lessons
+
+        lines = format_lesson_summary(get_active_lessons()).splitlines()
+        self.assertEqual(lines, [
+            "- **Adult Begin & Improvers**: Wed, 20:10–20:55 · €12.50 a lesson, €125 a full term",
+            "- **Beginners(1)**: Mon, Sat, 10:00–16:30 · €12 a lesson, €132–€144 a full term",
+            PRICING_NOTE,
+        ])
+
+    def test_lesson_bot_list_carries_each_class_price(self):
+        from chatbot.helpers.lesson import format_lesson_list, get_active_lessons
+
+        listing = format_lesson_list(get_active_lessons())
+        self.assertIn("(6 places, €12 a lesson, €132 a full term)", listing)
+        self.assertIn("never more than the full-term price", listing)
+
+    def _ask_swims_bot(self, message):
+        clean = moderation.ModerationResult(flagged=False)
+        miss = faq_helper.FAQResult(faq_helper.MISS, score=0.1)
+        with patch("chatbot.helpers.moderation.check", return_value=clean), \
+                patch("chatbot.views.faq_helper.match_faq", return_value=miss) as match, \
+                patch("chatbot.views.ask_openai", return_value=("Lessons are €12.", None)) as ask:
+            response = self.client.post(reverse("chatbot:public-swim-chat"),
+                                        data=json.dumps({"message": message}),
+                                        content_type="application/json")
+        self.assertEqual(response.status_code, 200)
+        return match, ask.call_args.args[0][1]["content"]
+
+    def test_swims_bot_prompt_has_lesson_prices_and_no_term_ids(self):
+        _, prompt = self._ask_swims_bot("Price for lessons")
+        self.assertIn("Lessons by level, with prices:", prompt)
+        self.assertIn("€132–€144 a full term", prompt)
+        # Customers were told "Current term (ID 60)".
+        self.assertNotIn("(ID ", prompt)
+
+    def test_swims_bot_searches_the_lessons_only_faqs(self):
+        match, _ = self._ask_swims_bot("How many levels are there")
+        self.assertTrue(match.call_args.kwargs["lessons_mode"])

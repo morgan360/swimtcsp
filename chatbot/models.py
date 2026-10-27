@@ -13,6 +13,11 @@ class ChatbotQuery(models.Model):
     response_type = models.CharField(max_length=20)  # 'FAQ', 'GPT' or 'BLOCKED'
     confidence_score = models.FloatField(null=True, blank=True, help_text="Embedding match confidence (0.0–1.0)")
     timestamp = models.DateTimeField(auto_now_add=True)
+    # The visitor's thumbs up or down on the answer, from the buttons under it.
+    HELPFUL, UNHELPFUL = 1, -1
+    RATING_CHOICES = [(HELPFUL, "👍 Helpful"), (UNHELPFUL, "👎 Not helpful")]
+    rating = models.SmallIntegerField(null=True, blank=True, choices=RATING_CHOICES)
+    rated_at = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
         return f"{self.source} query at {self.timestamp:%Y-%m-%d %H:%M}"

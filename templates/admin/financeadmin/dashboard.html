@@ -115,7 +115,7 @@
       <li>
         <div class="dash-chat-meta">
           <span class="dash-badge is-{{ chat.type|lower }}">{{ chat.kind }}</span>
-          {{ chat.when|date:"D j M, H:i" }} · {% if chat.lessons %}lessons page{% else %}swims page{% endif %}{% if chat.customer %} · logged in{% endif %}
+          {{ chat.when|date:"D j M, H:i" }} · {% if chat.lessons %}lessons page{% else %}swims page{% endif %}{% if chat.customer %} · logged in{% endif %}{% if chat.rating == 1 %} · <span title="Rated helpful">👍</span>{% elif chat.rating == -1 %} · <span title="Rated not helpful">👎</span>{% endif %}
         </div>
         {% if chat.message %}<div class="dash-chat-text">{{ chat.message|truncatechars:140 }}</div>
         {% else %}<div class="dash-chat-text is-muted">Message hidden: refused as abusive</div>{% endif %}
@@ -125,6 +125,34 @@
     {% if chat_log_url %}<p class="dash-hint"><a href="{{ chat_log_url }}">Full chat log in Settings</a></p>{% endif %}
     {% else %}
     <p class="dash-hint">No questions yet.</p>
+    {% endif %}
+  </div>
+  <div class="dash-card">
+    <h2>Answer ratings · last {{ chat_ratings.days|default:"30" }} days</h2>
+    {% if chat_ratings %}
+    <p class="dash-hint">
+      <strong>👍 {{ chat_ratings.all.helpful }} · 👎 {{ chat_ratings.all.unhelpful }}</strong>
+      {% if chat_ratings.all.pct is not None %}· {{ chat_ratings.all.pct }}% helpful{% endif %}
+    </p>
+    <ul class="dash-topics">
+      <li><div class="dash-topic-row"><span>FAQ answers</span><span>👍 {{ chat_ratings.faq.helpful }} · 👎 {{ chat_ratings.faq.unhelpful }}{% if chat_ratings.faq.pct is not None %} · {{ chat_ratings.faq.pct }}%{% endif %}</span></div></li>
+      <li><div class="dash-topic-row"><span>AI model answers</span><span>👍 {{ chat_ratings.ai.helpful }} · 👎 {{ chat_ratings.ai.unhelpful }}{% if chat_ratings.ai.pct is not None %} · {{ chat_ratings.ai.pct }}%{% endif %}</span></div></li>
+    </ul>
+    {% if chat_ratings.unhelpful %}
+    <h2 class="dash-subhead">Latest marked not helpful</h2>
+    <ul class="dash-chats">
+      {% for chat in chat_ratings.unhelpful %}
+      <li>
+        <div class="dash-chat-meta"><span class="dash-badge is-{{ chat.type|lower }}">{{ chat.kind }}</span>{{ chat.when|date:"D j M, H:i" }}</div>
+        <div class="dash-chat-text">{{ chat.message|truncatechars:120 }}</div>
+        <div class="dash-chat-meta">Answer: {{ chat.response|striptags|truncatechars:160 }}</div>
+      </li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+    {% if chat_log_url %}<p class="dash-hint"><a href="{{ chat_log_url }}?rating__exact=-1">Every 👎 answer in the chat log</a></p>{% endif %}
+    {% else %}
+    <p class="dash-hint">No answers rated yet. Visitors rate them with 👍 / 👎 under each reply.</p>
     {% endif %}
   </div>
   {% if term_fill %}

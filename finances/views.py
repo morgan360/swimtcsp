@@ -975,6 +975,42 @@ def _chat_summary(chats):
     }
 
 
+CHAT_RATING_DAYS = 30
+RECENT_UNHELPFUL = 5
+
+
+def _chat_ratings(chats, today):
+    """Visitors' thumbs up and down over the last CHAT_RATING_DAYS, or None if none.
+
+    Split by where the answer came from, since a poor FAQ answer is fixed by
+    editing the FAQ and a poor AI answer usually by adding one.
+    """
+    from chatbot.models import ChatbotQuery
+
+    since = make_aware(datetime.datetime.combine(today - timedelta(days=CHAT_RATING_DAYS - 1), datetime.time.min))
+    rated = chats.filter(rating__isnull=False, rated_at__gte=since)
+    if not rated.exists():
+        return None
+
+    def counts(qs):
+        helpful = qs.filter(rating=ChatbotQuery.HELPFUL).count()
+        unhelpful = qs.filter(rating=ChatbotQuery.UNHELPFUL).count()
+        total = helpful + unhelpful
+        return {'helpful': helpful, 'unhelpful': unhelpful,
+                'pct': round(helpful * 100 / total) if total else None}
+
+    unhelpful = rated.filter(rating=ChatbotQuery.UNHELPFUL).order_by('-rated_at')[:RECENT_UNHELPFUL]
+    return {
+        'days': CHAT_RATING_DAYS,
+        'all': counts(rated),
+        'faq': counts(rated.filter(response_type__in=['FAQ', 'FAQ_HEDGED'])),
+        'ai': counts(rated.filter(response_type='GPT')),
+        'unhelpful': [{'when': chat.rated_at, 'kind': CHAT_TYPES.get(chat.response_type, chat.response_type),
+                       'type': chat.response_type, 'message': chat.message, 'response': chat.response}
+                      for chat in unhelpful],
+    }
+
+
 def _term_fill(term):
     """How full a term's lessons are, overall and per category.
 
@@ -1300,9 +1336,11 @@ def live_dashboard(request, template_name='admin/financeadmin/dashboard.html'):
             'message': '' if chat.response_type == 'BLOCKED' else chat.message,
             'lessons': chat.source == 'public_lesson',
             'customer': bool(chat.user_id),
+            'rating': chat.rating,
         }
         for chat in chats.order_by('-timestamp')[:RECENT_CHAT_QUESTIONS]
     ]
+    chat_ratings = _chat_ratings(chats, today)
 
     # --- Charts ------------------------------------------------------------
     days = [today - timedelta(days=n) for n in range(DASHBOARD_DAYS - 1, -1, -1)]
@@ -1336,6 +1374,7 @@ def live_dashboard(request, template_name='admin/financeadmin/dashboard.html'):
         'term_fill': this_fill,
         'recent_chats': recent_chats,
         'chat_summary': chat_summary,
+        'chat_ratings': chat_ratings,
         # The chat log lives in Settings, which Full-Timers cannot open.
         'chat_log_url': (reverse('settings:chatbot_chatbotquery_changelist')
                          if settings_site.has_permission(request) else None),

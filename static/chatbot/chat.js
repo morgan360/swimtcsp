@@ -3,14 +3,16 @@
  * ~95% identical copies of this, which drifted.
  *
  * The container element supplies its configuration:
- *   data-endpoint  URL to POST to
- *   data-bot-name  label prefixed to each reply
+ *   data-endpoint       URL to POST to
+ *   data-rate-endpoint  URL for the thumbs up / down under each answer
+ *   data-bot-name       label prefixed to each reply
  */
 document.addEventListener("DOMContentLoaded", () => {
   const container = document.getElementById("chat-container");
   if (!container) return;
 
   const endpoint = container.dataset.endpoint;
+  const rateEndpoint = container.dataset.rateEndpoint;
   const botName = container.dataset.botName || "Bot";
 
   const input = document.getElementById("chat-input");
@@ -55,6 +57,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Server-side: FAQ answers are admin-authored, model output is sanitised.
     div.innerHTML = `<strong>${botName}:</strong> ${html}`;
     log.scrollTop = log.scrollHeight;
+    return div;
   }
 
   function typeBotMessage(message, delay = 15) {
@@ -74,6 +77,55 @@ document.addEventListener("DOMContentLoaded", () => {
         setTimeout(type, delay);
       }
     })();
+    return div;
+  }
+
+  // Thumbs up or down under an answer. Only answers the server recorded come
+  // with an id, so refusals and "too many messages" get no buttons.
+  function addRating(bubble, id) {
+    if (!rateEndpoint || !id) return;
+    const bar = document.createElement("div");
+    bar.className = "mt-2 flex items-center gap-2 text-sm";
+    const label = document.createElement("span");
+    label.className = "text-blue-700";
+    label.textContent = "Was this helpful?";
+    bar.appendChild(label);
+
+    const buttons = [[1, "👍", "Helpful"], [-1, "👎", "Not helpful"]].map(([rating, icon, name]) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "px-2 py-0.5 rounded border border-blue-300 hover:bg-blue-200";
+      button.textContent = icon;
+      button.title = name;
+      button.setAttribute("aria-label", name);
+      button.setAttribute("aria-pressed", "false");
+      button.addEventListener("click", async () => {
+        try {
+          const response = await fetch(rateEndpoint, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-CSRFToken": getCookie("csrftoken"),
+            },
+            body: JSON.stringify({ id, rating }),
+          });
+          if (!response.ok) return;
+          buttons.forEach((other) => {
+            const chosen = other === button;
+            other.setAttribute("aria-pressed", String(chosen));
+            other.classList.toggle("bg-blue-300", chosen);
+          });
+          label.textContent = "Thanks for the feedback";
+        } catch (err) {
+          console.error(err);
+        }
+      });
+      bar.appendChild(button);
+      return button;
+    });
+
+    bubble.appendChild(bar);
+    log.scrollTop = log.scrollHeight;
   }
 
   async function sendMessage() {
@@ -99,11 +151,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const data = await response.json();
       if (data.reply) {
-        if (/<[a-z][\s\S]*>/i.test(data.reply)) {
-          appendBotHTMLMessage(data.reply);
-        } else {
-          typeBotMessage(data.reply);
-        }
+        const bubble = /<[a-z][\s\S]*>/i.test(data.reply)
+          ? appendBotHTMLMessage(data.reply)
+          : typeBotMessage(data.reply);
+        addRating(bubble, data.id);
       } else if (data.error) {
         typeBotMessage(data.error);
       } else {

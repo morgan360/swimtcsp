@@ -31,6 +31,7 @@ standalone chat pages override {% block chat_widget %} to leave this out.
 
     <div id="chat-container"
          data-endpoint="{% url 'chatbot:public-swim-chat' %}"
+         data-rate-endpoint="{% url 'chatbot:rate-answer' %}"
          data-bot-name="SplashBot"
          class="flex flex-col p-3 gap-3">
 

@@ -568,7 +568,9 @@ class WhatsOnTodayTests(TestCase):
         self.assertEqual([(s["start"], s["booked"], s["places"]) for s in on["swims"]], [(time(7), 2, 20)])
         lessons = on["lessons"]
         # Tomorrow's class is left out; the 18:00 class has nobody teaching it.
-        self.assertEqual((lessons["classes"], lessons["swimmers"], lessons["no_instructor"]), (2, 4, 1))
+        self.assertEqual((lessons["classes"], lessons["swimmers"]), (2, 4))
+        self.assertEqual([(u["start"], u["name"], u["swimmers"]) for u in lessons["unstaffed"]],
+                         [(time(18), "Beginners 1", 1)])
         self.assertEqual((lessons["start"], lessons["end"]), (time(16), time(18, 45)))
         self.assertTrue(lessons["url"].endswith(f"?day={self.weekday}"))
         self.assertEqual([(s["name"], s["swimmers"]) for s in on["schools"]], [("St Mary's", 2)])
@@ -587,3 +589,49 @@ class WhatsOnTodayTests(TestCase):
             self.assertContains(response, "What’s on today")
             self.assertContains(response, "1 with no instructor")
             self.assertContains(response, "St Mary&#x27;s")
+
+
+
+class PeopleTilesTests(TestCase):
+    """The live dashboard's counts of managers and other staff active, and of new
+    customers who have gone on to add a swimmer."""
+
+    @classmethod
+    def setUpTestData(cls):
+        from users.models import ActiveDay
+
+        def staff(email, manager=False):
+            user = User.objects.create_user(email=email, password="pw", first_name="S")
+            user.is_staff = True
+            user.save(update_fields=["is_staff"])
+            if manager:
+                user.groups.add(Group.objects.get_or_create(name="Manager")[0])
+            return user
+
+        cls.manager = staff("manager@tcsp.ie", manager=True)
+        today = timezone.localdate()
+        ActiveDay.objects.create(user=staff("manager2@tcsp.ie", manager=True), date=today)
+        ActiveDay.objects.create(user=staff("desk@tcsp.ie"), date=today)
+        ActiveDay.objects.create(user=staff("old@tcsp.ie"), date=today - timedelta(days=8))
+
+        guardian = User.objects.create_user(email="parent@example.com", password="pw", first_name="P")
+        Swimling.objects.create(guardian=guardian, first_name="Kid1", last_name="T")
+        Swimling.objects.create(guardian=guardian, first_name="Kid2", last_name="T")
+        User.objects.create_user(email="browser@example.com", password="pw", first_name="B")
+
+    def tiles(self):
+        self.client.force_login(self.manager)  # itself marks the manager active today
+        response = self.client.get(reverse("finance:dashboard"))
+        return {t["label"]: (t["today"], t["week"]) for t in response.context["tiles"]}
+
+    def test_managers_and_other_staff_counted_apart(self):
+        tiles = self.tiles()
+        self.assertEqual(tiles["Managers active"][0], 2)
+        self.assertEqual(tiles["Other staff active"][0], 1)
+        self.assertNotIn("Staff logged in", tiles)
+
+    def test_new_guardians_are_new_customers_with_a_swimmer(self):
+        tiles = self.tiles()
+        self.assertEqual(tiles["New customers"][0], 2)
+        # Two swimmers on one account is still one guardian.
+        self.assertEqual(tiles["New guardians"][0], 1)

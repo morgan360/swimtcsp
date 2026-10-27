@@ -7,6 +7,10 @@
   .dash-whats-on .dash-what { color: var(--body-quiet-color); font-weight: 600; }
   .dash-whats-on .dash-time { font-variant-numeric: tabular-nums; white-space: nowrap; }
   .dash-whats-on .is-warn { color: #b45309; }
+  .dash-unstaffed { display: inline; }
+  .dash-unstaffed summary { display: inline; cursor: pointer; text-decoration: underline dotted; }
+  .dash-unstaffed ul { margin-top: 0.3rem; }
+  .dash-unstaffed li { grid-template-columns: 6.5rem 1fr; border-top: none; padding: 0.1rem 0; }
 </style>
 <div class="dash-card dash-whats-on">
   <h2>What’s on today <span class="dash-caption">as timetabled</span></h2>
@@ -27,7 +31,16 @@
         <a href="{{ lessons.url }}">{{ lessons.classes }} class{{ lessons.classes|pluralize:"es" }}</a>
         · <span class="dash-time">{{ lessons.start|time:"H:i" }}–{{ lessons.end|time:"H:i" }}</span>
         · {{ lessons.swimmers }} swimmer{{ lessons.swimmers|pluralize }}
-        {% if lessons.no_instructor %}· <span class="is-warn">{{ lessons.no_instructor }} with no instructor</span>{% endif %}
+        {% if lessons.unstaffed %}·
+        <details class="dash-unstaffed">
+          <summary class="is-warn">{{ lessons.unstaffed|length }} with no instructor</summary>
+          <ul>
+            {% for lesson in lessons.unstaffed %}
+            <li><span class="dash-time">{{ lesson.start|time:"H:i" }}–{{ lesson.end|time:"H:i" }}</span><span>{{ lesson.name }} · {{ lesson.swimmers }} swimmer{{ lesson.swimmers|pluralize }}</span></li>
+            {% endfor %}
+          </ul>
+        </details>
+        {% endif %}
       </span>
     </li>
     {% endwith %}{% elif whats_on.no_term %}

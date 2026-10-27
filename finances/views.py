@@ -804,23 +804,21 @@ def _checkout_funnel(start, end):
     """Customers who reached the payment page between ``start`` and ``end``, and how it ended.
 
     Checkout creates the order and then sends the customer to BOIPA, so an order is
-    a visit to the payment page. Counted in people, not orders: a declined card and
-    a successful retry is one finished checkout. Orders for €0 (fully couponed) never
-    reach BOIPA and are left out, as are orders staff placed for a customer.
+    a visit to the payment page. Counted in people, not orders: an unpaid attempt and
+    a successful retry is one finished checkout, and also counts as a retry. Declines
+    are not split out: BOIPA does not report them back, so they would always read 0.
+    Orders for €0 (fully couponed) never reach BOIPA and are left out, as are orders
+    staff placed for a customer.
     """
-    started, finished, declined = set(), set(), set()
+    started, finished, unpaid = set(), set(), set()
     for model, _ in ORDER_MODELS.values():
         orders = model.objects.filter(created__gte=start, created__lt=end, amount__gt=0,
                                       user__is_staff=False)
         started.update(orders.values_list('user_id', flat=True))
         finished.update(orders.filter(paid=True).values_list('user_id', flat=True))
-        # BOIPA's notification of a failed payment is kept against the order.
-        declined.update(orders.filter(paid=False, notifications__isnull=False)
-                        .exclude(notifications__status='CAPTURED')
-                        .values_list('user_id', flat=True))
-    declined -= finished
-    return {'started': len(started), 'finished': len(finished), 'declined': len(declined),
-            'left': len(started - finished - declined)}
+        unpaid.update(orders.filter(paid=False).values_list('user_id', flat=True))
+    return {'started': len(started), 'finished': len(finished),
+            'retried': len(finished & unpaid), 'left': len(started - finished)}
 
 
 @staff_member_required
@@ -1147,8 +1145,8 @@ def _live_dials(today):
 
     funnel = _checkout_funnel(week_period[1], week_period[2])
     live['checkouts'] = _dial('Checkouts finished this week', funnel['finished'], funnel['started'],
-                              f"families who reached payment · {funnel['declined']} declined · "
-                              f"{funnel['left']} left", empty='No checkouts yet this week')
+                              f"families who reached payment · {funnel['retried']} needed more than "
+                              f"one try · {funnel['left']} left", empty='No checkouts yet this week')
 
     live.update(current_term=current_term, this_fill=this_fill)
     return live

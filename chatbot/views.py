@@ -22,6 +22,7 @@ from .helpers.gpt import (
 from .helpers.lesson import (
     format_booking_phase,
     format_lesson_list,
+    format_lesson_summary,
     get_active_lessons,
     get_upcoming_terms,
 )
@@ -237,7 +238,10 @@ def public_swim_chat(request):
     logger.debug("Swim bot message received (%d chars)", len(user_message))
 
     try:
-        result = faq_helper.match_faq(user_message, lessons_mode=False)
+        # This is the chat on every page of the site, so most lesson questions
+        # arrive here: it sees the lessons-only FAQs too. Those answers all say
+        # they are about lessons, so none passes for a public swim rule.
+        result = faq_helper.match_faq(user_message, lessons_mode=True)
 
         # A confident FAQ answers most things — but anything that depends on
         # today's timetable has to go to the live-data path instead.
@@ -259,7 +263,7 @@ def public_swim_chat(request):
             if not term:
                 return f"{label}: No data available."
             return (
-                f"{label} (ID {term.id}) runs from {term.start_date.strftime('%d %b %Y')} to {term.end_date.strftime('%d %b %Y')}.\n"
+                f"{label} runs from {term.start_date.strftime('%d %b %Y')} to {term.end_date.strftime('%d %b %Y')}.\n"
                 f"- Rebooking opens: {term.rebooking_date.strftime('%d %b %Y') if term.rebooking_date else 'TBA'}\n"
                 f"- Public booking opens: {term.booking_date.strftime('%d %b %Y') if term.booking_date else 'TBA'}\n"
                 f"- Assessments: {term.assessment_date.strftime('%d %b %Y') if term.assessment_date else 'TBA'}"
@@ -275,6 +279,9 @@ def public_swim_chat(request):
             lesson_term_info += format_term_info(current_term, "Current lesson term") + "\n\n"
         if next_term:
             lesson_term_info += format_term_info(next_term, "Next lesson term")
+        lesson_summary = format_lesson_summary(get_active_lessons())
+        if lesson_summary:
+            lesson_term_info += f"\n\nLessons by level, with prices:\n{lesson_summary}"
 
         swim_prompt = build_swim_prompt(
             user_message,
@@ -293,8 +300,9 @@ def public_swim_chat(request):
                 "content": (
                     "You are SplashBot — a helpful assistant who answers questions about "
                     "public swims and lessons.\nYou have access to lesson term dates, "
-                    "including rebooking, booking, and assessment dates.\nUse this info to "
-                    "answer when customers can book, rebook, or plan lessons."
+                    "including rebooking, booking, and assessment dates, and to each "
+                    "lesson level's days, times and prices.\nUse this info to answer "
+                    "when customers can book, rebook, or plan lessons, and what lessons cost."
                 ),
             },
             {"role": "user", "content": full_prompt},

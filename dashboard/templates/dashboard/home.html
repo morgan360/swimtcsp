@@ -8,13 +8,6 @@
 {% if user|in_group:'Desk' or user.is_staff %}
 
 <div class="max-w-7xl mx-auto">
-  <div class="bg-yellow-300 rounded-xl shadow-lg overflow-hidden mb-8 flex justify-center">
-    <p class="text-gray-600 text-lg m-6">
-      <i class="fa-solid fa-person-digging mr-2"></i>
-      <span class="font-bold">Currently under development </span> - some features may not be fully functional yet. 
-      Use the 'Admin' dropdown menu instead.
-    </p>
-  </div>
   <!-- Welcome Hero Section -->
   <div class="bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-500 via-cyan-400 to-blue-900 rounded-lg shadow-lg overflow-hidden mb-8">
 
@@ -30,6 +23,38 @@
       </div>
     </div>
   </div>
+
+  <!-- Today at the pool: the Operations home's dials, no money -->
+  {% if dial_strip %}
+  {% include "admin/financeadmin/_dial_styles.html" %}
+  <style>
+    /* _dial_styles.html reads Django admin's colour variables; give them Tailwind gray equivalents here. */
+    .dash-home {
+      --body-bg: #fff; --body-fg: #111827; --body-quiet-color: #6b7280;
+      --hairline-color: #e5e7eb; --darkened-bg: #f3f4f6;
+    }
+    .dash-home-head { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; margin-bottom: 0.75rem; }
+    .dash-home-head a:hover { text-decoration: underline; }
+    .dash-home .dash-dials { grid-template-columns: repeat(auto-fit, minmax(min(150px, 100%), 1fr)); gap: 0.75rem; margin-bottom: 0; }
+    .dash-home .dash-card { padding: 0.6rem 0.75rem; }
+    .dash-home .dash-card h2 { font-size: 0.8rem; margin-bottom: 0.25rem; }
+    .dash-home .dash-dial svg { max-width: 150px; }
+    .dash-home .dash-big { font-size: 1.3rem; }
+    .dash-home .dash-caption { font-size: 0.75rem; }
+    @media (max-width: 480px) { .dash-home .dash-dials { grid-template-columns: 1fr 1fr; } }
+  </style>
+  <section class="dash-home bg-white rounded-lg shadow-md p-6 mb-8" aria-label="Today at the pool">
+    <div class="dash-home-head">
+      <h3 class="text-lg font-semibold text-gray-900">Today at the pool</h3>
+      {% if live_dashboard_url %}<a href="{{ live_dashboard_url }}" class="text-blue-600">Full dashboard →</a>{% endif %}
+    </div>
+    <div class="dash-dials">
+      {% for dial in dial_strip %}
+      {% include "admin/financeadmin/_dial.html" %}
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
 
   <!-- Quick Access Cards -->
   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
@@ -88,7 +113,7 @@
           <i class="fa-solid fa-arrow-right text-yellow-400 group-hover:text-yellow-600 transition-colors duration-300"></i>
         </div>
         <h3 class="text-lg font-semibold text-gray-900 mb-2">Schools Panel</h3>
-        <p class="text-gray-600 text-sm">Oversee swimling enrolment, swimming lessons and instructors</p>
+        <p class="text-gray-600 text-sm">School groups, lessons and enrolments</p>
       </div>
     </a>
 
@@ -100,27 +125,12 @@
           <div class="bg-purple-100 p-3 rounded-lg">
             <i class="fas fa-credit-card text-2xl text-purple-600"></i>
           </div>
-          <i class="fas fa-arrow-right text-prurple-400 group-hover:text-purple-600 transition-colors duration-300"></i>
+          <i class="fas fa-arrow-right text-purple-400 group-hover:text-purple-600 transition-colors duration-300"></i>
         </div>
         <h3 class="text-lg font-semibold text-gray-900 mb-2">Orders</h3>
         <p class="text-gray-600 text-sm">Track bookings and payment transactions</p>
       </div>
     </a>
-
-    <!-- General Card -->
-    <!-- <a href="{% url 'dashboard:dashboard_general' %}"
-      class="group bg-white rounded-lg shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
-      <div class="p-6">
-        <div class="flex items-center justify-between mb-4">
-          <div class="bg-gray-100 p-3 rounded-lg">
-            <i class="fas fa-cog text-2xl text-gray-600 px-1"></i>
-          </div>
-          <i class="fas fa-arrow-right text-gray-400 group-hover:text-gray-600 transition-colors duration-300"></i>
-        </div>
-        <h3 class="text-lg font-semibold text-gray-900 mb-2">General</h3>
-        <p class="text-gray-600 text-sm">System settings and general administration</p>
-      </div>
-    </a> -->
 
     <!-- Management Card - Manager Only -->
     {% if user|in_group:'Manager' %}

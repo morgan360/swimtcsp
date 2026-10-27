@@ -15,6 +15,7 @@
   .dash-strip .dash-dial svg { max-width: 130px; }
   .dash-strip .dash-big { font-size: 1.3rem; }
   .dash-strip .dash-caption { font-size: 0.75rem; }
+  .dash-strip-today { margin-top: 0.75rem; }
   @media (max-width: 480px) { .dash-strip .dash-dials { grid-template-columns: 1fr 1fr; } }
 </style>
 {% endif %}
@@ -32,6 +33,7 @@
     {% include "admin/financeadmin/_dial.html" %}
     {% endfor %}
   </div>
+  {% if whats_on %}<div class="dash-strip-today">{% include "admin/financeadmin/_whats_on.html" %}</div>{% endif %}
 </section>
 {% endif %}
 {{ block.super }}

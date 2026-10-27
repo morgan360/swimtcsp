@@ -800,6 +800,29 @@ def _paid_orders(model, periods):
     return orders, revenue
 
 
+def _checkout_funnel(start, end):
+    """Customers who reached the payment page between ``start`` and ``end``, and how it ended.
+
+    Checkout creates the order and then sends the customer to BOIPA, so an order is
+    a visit to the payment page. Counted in people, not orders: a declined card and
+    a successful retry is one finished checkout. Orders for €0 (fully couponed) never
+    reach BOIPA and are left out, as are orders staff placed for a customer.
+    """
+    started, finished, declined = set(), set(), set()
+    for model, _ in ORDER_MODELS.values():
+        orders = model.objects.filter(created__gte=start, created__lt=end, amount__gt=0,
+                                      user__is_staff=False)
+        started.update(orders.values_list('user_id', flat=True))
+        finished.update(orders.filter(paid=True).values_list('user_id', flat=True))
+        # BOIPA's notification of a failed payment is kept against the order.
+        declined.update(orders.filter(paid=False, notifications__isnull=False)
+                        .exclude(notifications__status='CAPTURED')
+                        .values_list('user_id', flat=True))
+    declined -= finished
+    return {'started': len(started), 'finished': len(finished), 'declined': len(declined),
+            'left': len(started - finished - declined)}
+
+
 @staff_member_required
 def activity_report(request, template_name='admin/financeadmin/activity_report.html'):
     """What happened on the site today, yesterday and this week."""
@@ -1122,8 +1145,79 @@ def _live_dials(today):
     live['guardian_2fa'] = _dial('Guardians with 2FA', len(guardian_ids & with_app), len(guardian_ids),
                                  'accounts with a swimmer', empty='No guardian accounts')
 
+    funnel = _checkout_funnel(week_period[1], week_period[2])
+    live['checkouts'] = _dial('Checkouts finished this week', funnel['finished'], funnel['started'],
+                              f"families who reached payment · {funnel['declined']} declined · "
+                              f"{funnel['left']} left", empty='No checkouts yet this week')
+
     live.update(current_term=current_term, this_fill=this_fill)
     return live
+
+
+def _whats_on(today):
+    """Today's timetable in brief: public swims, lessons and school classes.
+
+    Read from the timetable alone. Nothing records closures or bank holidays, so on
+    a day the pool is shut the usual classes still show; the page says "as timetabled".
+    """
+    from django.urls import reverse
+    from instructors.models import InstructorAssignment
+    from lessons.models import Product
+    from lessons_bookings.models import LessonAssignment, LessonEnrollment, Term
+    from schools.models import ScoLessons
+    from schools_bookings.models import ScoEnrollment, ScoTerm
+    from swims.models import PublicSwimProduct
+    from swims_orders.models import OrderItem as SwimOrderItem
+
+    weekday = today.weekday()
+
+    # Paid swimmers per session, counted as the swims dial counts them.
+    booked = dict(SwimOrderItem.objects.filter(order__paid=True, order__booking=today)
+                  .exclude(order__payment_status='refunded')
+                  .order_by().values_list('order__product_id').annotate(n=Sum('quantity')))
+    swims = [
+        {'start': swim.start_time, 'end': swim.end_time, 'name': swim.category.name,
+         'booked': booked.get(swim.id, 0), 'places': swim.num_places or 0}
+        for swim in (PublicSwimProduct.objects.filter(available=True, day_of_week=weekday)
+                     .select_related('category').order_by('start_time'))
+    ]
+
+    # Lessons: one line, as there are a couple of dozen classes on a weekday.
+    lessons = None
+    term = Term.get_current_term()
+    if term:
+        swimmers = dict(LessonEnrollment.objects.filter(term=term, lesson__day_of_week=weekday)
+                        .order_by().values_list('lesson_id').annotate(n=Count('id')))
+        if swimmers:
+            times = Product.objects.filter(id__in=swimmers).values_list('start_time', 'end_time')
+            # Instructors are assigned through either model; see instructors.utils.
+            taught = set(InstructorAssignment.objects.filter(term=term, lesson_id__in=swimmers)
+                         .values_list('lesson_id', flat=True))
+            taught |= set(LessonAssignment.objects.filter(term=term, lessons__in=swimmers)
+                          .values_list('lessons', flat=True))
+            lessons = {
+                'classes': len(swimmers),
+                'swimmers': sum(swimmers.values()),
+                'start': min(start for start, _ in times),
+                'end': max(end for _, end in times),
+                'no_instructor': len(set(swimmers) - taught),
+                'url': f"{reverse('dashboard:admin_lessons_list')}?day={weekday}",
+            }
+
+    # School classes with swimmers in a term that is running today.
+    school_terms = ScoTerm.objects.filter(start_date__lte=today, end_date__gte=today)
+    school_swimmers = dict(ScoEnrollment.objects.filter(term__in=school_terms, lesson__day_of_week=weekday)
+                           .order_by().values_list('lesson_id').annotate(n=Count('id')))
+    schools = [
+        {'start': lesson.start_time, 'end': lesson.end_time,
+         'name': lesson.school.name if lesson.school else str(lesson.category),
+         'swimmers': school_swimmers[lesson.id]}
+        for lesson in (ScoLessons.objects.filter(id__in=school_swimmers)
+                       .select_related('school', 'category').order_by('start_time'))
+    ]
+
+    return {'swims': swims, 'lessons': lessons, 'schools': schools, 'no_term': term is None,
+            'empty': not (swims or lessons or schools)}
 
 
 @staff_member_required
@@ -1150,7 +1244,7 @@ def live_dashboard(request, template_name='admin/financeadmin/dashboard.html'):
     # --- Dials -------------------------------------------------------------
     live = _live_dials(today)
     current_term, this_fill = live['current_term'], live['this_fill']
-    dials = [live[key] for key in ('term', 'swims', 'attendance', 'registers', 'next_term',
+    dials = [live[key] for key in ('term', 'checkouts', 'swims', 'attendance', 'registers', 'next_term',
                                    'staff_2fa', 'guardian_2fa') if live[key]]
 
     # --- Tiles -------------------------------------------------------------
@@ -1229,6 +1323,7 @@ def live_dashboard(request, template_name='admin/financeadmin/dashboard.html'):
         'today': today,
         'week_start': week_period[1],
         'dials': dials,
+        'whats_on': _whats_on(today),
         'tiles': tiles,
         'term': current_term,
         'term_fill': this_fill,

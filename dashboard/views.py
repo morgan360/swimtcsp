@@ -51,11 +51,13 @@ def dashboard_home(request):
     from django.urls import reverse
 
     from custom_admins.financeadmin import finance_admin_site
-    from finances.views import _live_dials
+    from finances.views import _live_dials, _whats_on
 
-    live = _live_dials(timezone.localtime(timezone.now()).date())
+    today = timezone.localtime(timezone.now()).date()
+    live = _live_dials(today)
     context = {
         'dial_strip': [live[key] for key in ('swims', 'registers', 'attendance', 'term') if live[key]],
+        'whats_on': _whats_on(today),
         'live_dashboard_url': (reverse('finance:dashboard')
                                if finance_admin_site.has_permission(request) else None),
     }

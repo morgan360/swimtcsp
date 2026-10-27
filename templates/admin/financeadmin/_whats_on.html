@@ -1,0 +1,44 @@
+{# Today's timetable in brief, from finances.views._whats_on. Colours come from _dial_styles.html. #}
+<style>
+  .dash-whats-on h2 { display: flex; justify-content: space-between; align-items: baseline; gap: 0.5rem; }
+  .dash-whats-on ul { list-style: none; margin: 0; padding: 0; }
+  .dash-whats-on li { list-style: none; display: grid; grid-template-columns: 4.5rem 1fr; gap: 0.5rem; padding: 0.3rem 0; border-top: 1px solid var(--hairline-color); color: var(--body-fg); font-size: 0.85rem; }
+  .dash-whats-on li:first-child { border-top: none; }
+  .dash-whats-on .dash-what { color: var(--body-quiet-color); font-weight: 600; }
+  .dash-whats-on .dash-time { font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .dash-whats-on .is-warn { color: #b45309; }
+</style>
+<div class="dash-card dash-whats-on">
+  <h2>What’s on today <span class="dash-caption">as timetabled</span></h2>
+  {% if whats_on.empty %}
+  <p class="dash-hint">Nothing scheduled today{% if whats_on.no_term %} · no lesson term running{% endif %}.</p>
+  {% else %}
+  <ul>
+    {% for swim in whats_on.swims %}
+    <li>
+      <span class="dash-what">{% if forloop.first %}Swims{% endif %}</span>
+      <span><span class="dash-time">{{ swim.start|time:"H:i" }}–{{ swim.end|time:"H:i" }}</span> {{ swim.name }} · {{ swim.booked }} of {{ swim.places }} booked</span>
+    </li>
+    {% endfor %}
+    {% if whats_on.lessons %}{% with lessons=whats_on.lessons %}
+    <li>
+      <span class="dash-what">Lessons</span>
+      <span>
+        <a href="{{ lessons.url }}">{{ lessons.classes }} class{{ lessons.classes|pluralize:"es" }}</a>
+        · <span class="dash-time">{{ lessons.start|time:"H:i" }}–{{ lessons.end|time:"H:i" }}</span>
+        · {{ lessons.swimmers }} swimmer{{ lessons.swimmers|pluralize }}
+        {% if lessons.no_instructor %}· <span class="is-warn">{{ lessons.no_instructor }} with no instructor</span>{% endif %}
+      </span>
+    </li>
+    {% endwith %}{% elif whats_on.no_term %}
+    <li><span class="dash-what">Lessons</span><span class="dash-caption">No lesson term running</span></li>
+    {% endif %}
+    {% for school in whats_on.schools %}
+    <li>
+      <span class="dash-what">{% if forloop.first %}Schools{% endif %}</span>
+      <span><span class="dash-time">{{ school.start|time:"H:i" }}–{{ school.end|time:"H:i" }}</span> {{ school.name }} · {{ school.swimmers }} swimmer{{ school.swimmers|pluralize }}</span>
+    </li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+</div>

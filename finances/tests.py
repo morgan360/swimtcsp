@@ -447,3 +447,147 @@ class ChatTopicTests(TestCase):
         from chatbot.models import ChatbotQuery
         from finances.views import _chat_summary
         self.assertIsNone(_chat_summary(ChatbotQuery.objects.all()))
+
+
+class CheckoutFunnelTests(TestCase):
+    """The live dashboard's "Checkouts finished" dial: families who reached the
+    payment page this week, and whether they paid, were declined or left."""
+
+    @classmethod
+    def setUpTestData(cls):
+        from boipa.models import LessonOrderPaymentNotification, SwimOrderPaymentNotification
+        from lessons_orders.models import Order as LessonOrder
+        from swims_orders.models import Order as SwimOrder
+
+        cls.manager = User.objects.create_user(email="manager@tcsp.ie", password="pw", first_name="M")
+        cls.manager.is_staff = True
+        cls.manager.save(update_fields=["is_staff"])
+        cls.manager.groups.add(Group.objects.get_or_create(name="Manager")[0])
+
+        def customer(name):
+            return User.objects.create_user(email=f"{name}@example.com", password="pw", first_name=name)
+
+        def declined(order, model):
+            model.objects.create(order=order, txId=f"TRN_{order.id}", merchantTxId=f"x_{order.id}",
+                                 status="DECLINED")
+
+        # Paid first time.
+        SwimOrder.objects.create(user=customer("paid"), paid=True, amount="8.00")
+        # Declined, then paid on a second try: one finished checkout, not a drop-off.
+        retry = customer("retry")
+        declined(LessonOrder.objects.create(user=retry, amount="90.00"), LessonOrderPaymentNotification)
+        LessonOrder.objects.create(user=retry, paid=True, amount="90.00")
+        # Declined and never paid.
+        declined(SwimOrder.objects.create(user=customer("declined"), amount="8.00"), SwimOrderPaymentNotification)
+        # Reached the payment page and left: no payment and nothing from BOIPA.
+        SwimOrder.objects.create(user=customer("left"), amount="8.00")
+        # Not counted: a fully couponed order never reaches BOIPA, staff book for customers,
+        # and last week's checkouts are outside this week.
+        LessonOrder.objects.create(user=customer("free"), paid=True, amount="0.00")
+        SwimOrder.objects.create(user=cls.manager, amount="8.00")
+        old = SwimOrder.objects.create(user=customer("old"), amount="8.00")
+        SwimOrder.objects.filter(pk=old.pk).update(created=timezone.now() - timedelta(days=8))
+
+    def test_funnel_counts_families_not_orders(self):
+        from finances.views import _activity_periods, _checkout_funnel
+        _, _, (_, start, end) = _activity_periods()
+        self.assertEqual(_checkout_funnel(start, end),
+                         {"started": 4, "finished": 2, "declined": 1, "left": 1})
+
+    def test_dial_is_on_the_live_dashboard_only(self):
+        self.client.force_login(self.manager)
+        dials = {d["title"]: d for d in self.client.get(reverse("finance:dashboard")).context["dials"]}
+        dial = dials["Checkouts finished this week"]
+        self.assertEqual((dial["value"], dial["max"], dial["pct"]), (2, 4, 50))
+        self.assertEqual(dial["caption"], "families who reached payment · 1 declined · 1 left")
+        strip = self.client.get(reverse("operations:index")).context["dial_strip"]
+        self.assertNotIn("Checkouts finished this week", [d["title"] for d in strip])
+
+
+class WhatsOnTodayTests(TestCase):
+    """The brief "What's on today" on the staff home, Operations home and live dashboard."""
+
+    @classmethod
+    def setUpTestData(cls):
+        from datetime import time
+
+        from instructors.models import InstructorAssignment
+        from schools.models import ScoCategory, ScoLessons, ScoProgram, ScoSchool
+        from schools_bookings.models import ScoEnrollment, ScoTerm
+        from swims.models import PriceVariant, PublicSwimCategory, PublicSwimProduct
+        from swims_orders.models import Order as SwimOrder, OrderItem as SwimOrderItem
+
+        cls.manager = User.objects.create_user(email="manager@tcsp.ie", password="pw", first_name="M")
+        cls.manager.is_staff = True
+        cls.manager.save(update_fields=["is_staff"])
+        cls.manager.groups.add(Group.objects.get_or_create(name="Manager")[0])
+        guardian = User.objects.create_user(email="parent@example.com", password="pw", first_name="P")
+        instructor = User.objects.create_user(email="teacher@tcsp.ie", password="pw", first_name="T")
+
+        today = timezone.localdate()
+        cls.weekday = today.weekday()
+        other_day = (cls.weekday + 1) % 7
+        kids = [Swimling.objects.create(guardian=guardian, first_name=f"Kid{i}", last_name="T") for i in range(4)]
+
+        swims = PublicSwimCategory.objects.create(name="Lane Swim", slug="lane-swim")
+        session = PublicSwimProduct.objects.create(category=swims, day_of_week=cls.weekday, num_places=20,
+                                                   start_time=time(7), end_time=time(8), available=True)
+        PublicSwimProduct.objects.create(category=swims, day_of_week=other_day, num_places=50,
+                                         start_time=time(9), end_time=time(10), available=True)
+        variant = PriceVariant.objects.create(product=session, variant="Adult", price=8)
+        order = SwimOrder.objects.create(user=guardian, product=session, booking=today, amount="16.00", paid=True)
+        SwimOrderItem.objects.create(order=order, variant=variant, quantity=2)
+
+        term = Term.objects.create(start_date=today - timedelta(days=10), end_date=today + timedelta(days=50))
+        category = Category.objects.create(name="Beginners 1", program=Program.objects.create(name="P"))
+        early = Product.objects.create(category=category, day_of_week=cls.weekday, num_places=5, active=True,
+                                       start_time=time(16), end_time=time(16, 30))
+        late = Product.objects.create(category=category, day_of_week=cls.weekday, num_places=5, active=True,
+                                      start_time=time(18), end_time=time(18, 45))
+        tomorrow = Product.objects.create(category=category, day_of_week=other_day, num_places=5, active=True,
+                                          start_time=time(16), end_time=time(16, 30))
+        for kid in kids[:3]:
+            LessonEnrollment.objects.create(lesson=early, swimling=kid, term=term)
+        LessonEnrollment.objects.create(lesson=late, swimling=kids[3], term=term)
+        LessonEnrollment.objects.create(lesson=tomorrow, swimling=kids[0], term=term)
+        InstructorAssignment.objects.create(instructor=instructor, lesson=early, term=term)
+
+        school = ScoSchool.objects.create(name="St Mary's", sco_role_num="12345A")
+        sco_category = ScoCategory.objects.create(name="Year 3", program=ScoProgram.objects.create(name="S"))
+        sco_term = ScoTerm.objects.create(start_date=today - timedelta(days=5), end_date=today + timedelta(days=30),
+                                          booking_start_date=today - timedelta(days=20),
+                                          booking_end_date=today - timedelta(days=6), school=school)
+        sco_lesson = ScoLessons.objects.create(category=sco_category, school=school, day_of_week=cls.weekday,
+                                               start_time=time(9, 30), end_time=time(10, 30), num_places=30, active=True)
+        for kid in kids[:2]:
+            ScoEnrollment.objects.create(lesson=sco_lesson, swimling=kid, term=sco_term)
+
+    def whats_on(self):
+        from finances.views import _whats_on
+        return _whats_on(timezone.localdate())
+
+    def test_todays_swims_lessons_and_schools(self):
+        from datetime import time
+        on = self.whats_on()
+        self.assertEqual([(s["start"], s["booked"], s["places"]) for s in on["swims"]], [(time(7), 2, 20)])
+        lessons = on["lessons"]
+        # Tomorrow's class is left out; the 18:00 class has nobody teaching it.
+        self.assertEqual((lessons["classes"], lessons["swimmers"], lessons["no_instructor"]), (2, 4, 1))
+        self.assertEqual((lessons["start"], lessons["end"]), (time(16), time(18, 45)))
+        self.assertTrue(lessons["url"].endswith(f"?day={self.weekday}"))
+        self.assertEqual([(s["name"], s["swimmers"]) for s in on["schools"]], [("St Mary's", 2)])
+        self.assertFalse(on["empty"])
+
+    def test_no_term_running(self):
+        Term.objects.all().delete()
+        on = self.whats_on()
+        self.assertIsNone(on["lessons"])
+        self.assertTrue(on["no_term"])
+
+    def test_shown_on_all_three_pages(self):
+        self.client.force_login(self.manager)
+        for url in (reverse("dashboard:dashboard_home"), reverse("operations:index"), reverse("finance:dashboard")):
+            response = self.client.get(url)
+            self.assertContains(response, "What’s on today")
+            self.assertContains(response, "1 with no instructor")
+            self.assertContains(response, "St Mary&#x27;s")

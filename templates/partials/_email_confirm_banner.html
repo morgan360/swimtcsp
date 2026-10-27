@@ -1,0 +1,39 @@
+{% comment %}
+  Reminder bar for customers who have not confirmed their email address
+  (utils.context_processors.email_confirmation_reminder). It asks and never
+  blocks: booking works the same either way. Closing it hides it for the rest
+  of the browser session.
+{% endcomment %}
+{% if UNCONFIRMED_EMAIL %}
+  <div x-data="{ hidden: (() => { try { return sessionStorage.getItem('hideEmailConfirm') === '1' } catch (e) { return false } })() }"
+       x-show="!hidden"
+       class="no-print relative z-40 px-4 pt-4">
+    <div class="max-w-screen-xl mx-auto flex flex-col sm:flex-row sm:items-center gap-3 text-sm text-amber-900 bg-amber-50 border border-amber-300 rounded-xl px-4 py-3 shadow-md">
+      <div class="flex-1">
+        <i class="fas fa-envelope mr-1"></i>
+        {% if CONFIRMATION_EMAIL_SENT %}
+          We've sent a link to <strong>{{ UNCONFIRMED_EMAIL }}</strong>. Click it to confirm your email address.
+          Can't find it? Check your spam or junk folder.
+        {% else %}
+          Please confirm your email address, <strong>{{ UNCONFIRMED_EMAIL }}</strong>, so booking
+          confirmations and class notices reach you.
+        {% endif %}
+      </div>
+      <div class="flex items-center gap-2">
+        <form method="post" action="{% url 'users:send_confirmation_email' %}">
+          {% csrf_token %}
+          <input type="hidden" name="next" value="{{ request.get_full_path }}">
+          <button type="submit"
+                  class="inline-flex items-center px-4 py-2 bg-amber-600 text-white text-xs font-semibold rounded-lg hover:bg-amber-700 transition-colors whitespace-nowrap">
+            {% if CONFIRMATION_EMAIL_SENT %}Send it again{% else %}Send confirmation email{% endif %}
+          </button>
+        </form>
+        <button type="button" aria-label="Not now"
+                @click="hidden = true; try { sessionStorage.setItem('hideEmailConfirm', '1') } catch (e) {}"
+                class="px-2 py-1 text-amber-700 hover:text-amber-900">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+{% endif %}

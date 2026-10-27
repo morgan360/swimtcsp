@@ -590,3 +590,65 @@ class NewAccountEmailVerificationTests(TestCase):
     def test_the_requirement_can_be_switched_off(self):
         self.sign_in()
         self.assertEqual(self.client.session["_auth_user_id"], str(self.user.pk))
+
+
+class EmailConfirmationReminderTests(TestCase):
+    """Older customers who never confirmed their email are asked to, on every
+    page, but never stopped from booking (Esther, 2026-10-27)."""
+
+    def setUp(self):
+        self.user = User.objects.create_user(email="old@test.com", password="pw", first_name="O")
+        self.client.force_login(self.user)
+
+    def test_unconfirmed_customer_sees_the_reminder(self):
+        response = self.client.get(reverse("home"))
+        self.assertContains(response, "Please confirm your email address")
+        self.assertContains(response, reverse("users:send_confirmation_email"))
+
+    def test_confirmed_customer_does_not(self):
+        from allauth.account.models import EmailAddress
+
+        EmailAddress.objects.create(user=self.user, email="OLD@test.com", verified=True, primary=True)
+        response = self.client.get(reverse("home"))
+        self.assertNotContains(response, "Please confirm your email address")
+
+    def test_not_shown_while_staff_hijack_a_customer(self):
+        session = self.client.session
+        session["hijack_history"] = ["1"]
+        session.save()
+        response = self.client.get(reverse("home"))
+        self.assertNotContains(response, "Please confirm your email address")
+
+    def test_not_shown_when_signed_out(self):
+        self.client.logout()
+        self.assertNotContains(self.client.get(reverse("home")), "Please confirm your email address")
+
+    def test_button_sends_the_link_and_returns_to_the_page(self):
+        from allauth.account.models import EmailAddress, EmailConfirmationHMAC
+        from django.core import mail
+
+        response = self.client.post(reverse("users:send_confirmation_email"), {"next": "/users/profile/"})
+        self.assertRedirects(response, "/users/profile/", fetch_redirect_response=False)
+        self.assertEqual([m.to for m in mail.outbox], [["old@test.com"]])
+        self.assertContains(self.client.get(reverse("home")), "sent a link to")
+
+        # Following the link confirms it, and the reminder goes away.
+        confirmation = EmailConfirmationHMAC(EmailAddress.objects.get(email="old@test.com"))
+        self.client.post(reverse("account_confirm_email", args=[confirmation.key]))
+        self.assertTrue(EmailAddress.objects.get(email="old@test.com").verified)
+        self.assertNotContains(self.client.get(reverse("home")), "sent a link to")
+
+    def test_pressing_again_straight_away_does_not_send_a_second(self):
+        from django.core import mail
+
+        self.client.post(reverse("users:send_confirmation_email"))
+        response = self.client.post(reverse("users:send_confirmation_email"), follow=True)
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertContains(response, "We sent you an email a few minutes ago")
+
+    def test_next_cannot_send_them_off_site(self):
+        response = self.client.post(reverse("users:send_confirmation_email"), {"next": "https://evil.example/"})
+        self.assertRedirects(response, "/", fetch_redirect_response=False)
+
+    def test_get_is_refused(self):
+        self.assertEqual(self.client.get(reverse("users:send_confirmation_email")).status_code, 405)

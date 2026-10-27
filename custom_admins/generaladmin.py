@@ -247,8 +247,11 @@ class InstructorNoteAdmin(TCSPModelAdmin):
 ######## AI Splash BOT ############
 
 class ChatbotQueryAdmin(TCSPModelAdmin):
-    list_display = ("source", "timestamp", "short_message", "short_response", "response_type", "confidence_score")
-    readonly_fields = ("user", "session_key", "source", "message", "response", "response_type", "confidence_score", "timestamp")
+    list_display = ("source", "timestamp", "short_message", "short_response", "response_type", "confidence_score",
+                    "rating")
+    list_filter = ("rating", "response_type", "source")
+    readonly_fields = ("user", "session_key", "source", "message", "response", "response_type", "confidence_score",
+                       "timestamp", "rating", "rated_at")
 
     def short_message(self, obj):
         if not obj.message:

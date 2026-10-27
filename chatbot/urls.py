@@ -9,4 +9,5 @@ urlpatterns = [
     path("public-chat/", views.public_swim_chat_ui, name="public-swim-ui"),
     path("public-lessons/", views.public_lesson_chat_ui, name="public-lesson-ui"),
     path("api/chat/public-lessons/", views.public_lesson_chat_api, name="public-lesson-chat"),
+    path("api/chat/rate/", views.rate_answer, name="rate-answer"),
 ]

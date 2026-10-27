@@ -635,3 +635,46 @@ class PeopleTilesTests(TestCase):
         self.assertEqual(tiles["New customers"][0], 2)
         # Two swimmers on one account is still one guardian.
         self.assertEqual(tiles["New guardians"][0], 1)
+
+
+class ChatRatingsDashboardTests(TestCase):
+    """The live dashboard's "Answer ratings" card."""
+
+    @classmethod
+    def setUpTestData(cls):
+        from chatbot.models import ChatbotQuery
+
+        cls.manager = User.objects.create_user(email="manager@tcsp.ie", password="pw", first_name="M")
+        cls.manager.is_staff = True
+        cls.manager.save(update_fields=["is_staff"])
+        cls.manager.groups.add(Group.objects.get_or_create(name="Manager")[0])
+
+        def chat(kind, rating, message="Q", days_ago=0):
+            ChatbotQuery.objects.create(source="public_swim", message=message, response="<p>An answer</p>",
+                                        response_type=kind, rating=rating,
+                                        rated_at=None if rating is None else timezone.now() - timedelta(days=days_ago))
+
+        chat("FAQ", 1)
+        chat("FAQ_HEDGED", -1, message="Is the pool 50 metres?")
+        chat("GPT", 1)
+        chat("GPT", 1)
+        chat("GPT", None)  # not rated
+        chat("GPT", -1, message="An old complaint", days_ago=40)  # outside the 30 days
+
+    def test_ratings_split_by_where_the_answer_came_from(self):
+        self.client.force_login(self.manager)
+        response = self.client.get(reverse("finance:dashboard"))
+        ratings = response.context["chat_ratings"]
+        self.assertEqual(ratings["all"], {"helpful": 3, "unhelpful": 1, "pct": 75})
+        self.assertEqual(ratings["faq"], {"helpful": 1, "unhelpful": 1, "pct": 50})
+        self.assertEqual(ratings["ai"], {"helpful": 2, "unhelpful": 0, "pct": 100})
+        self.assertEqual([c["message"] for c in ratings["unhelpful"]], ["Is the pool 50 metres?"])
+        self.assertContains(response, "Latest marked not helpful")
+
+    def test_card_says_when_nothing_is_rated(self):
+        from chatbot.models import ChatbotQuery
+        ChatbotQuery.objects.update(rating=None, rated_at=None)
+        self.client.force_login(self.manager)
+        response = self.client.get(reverse("finance:dashboard"))
+        self.assertIsNone(response.context["chat_ratings"])
+        self.assertContains(response, "No answers rated yet")

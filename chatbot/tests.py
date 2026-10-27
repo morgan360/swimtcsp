@@ -877,3 +877,58 @@ class LessonPricesTests(TestCase):
     def test_swims_bot_searches_the_lessons_only_faqs(self):
         match, _ = self._ask_swims_bot("How many levels are there")
         self.assertTrue(match.call_args.kwargs["lessons_mode"])
+
+
+class AnswerRatingTests(TestCase):
+    """The 👍 / 👎 under each answer: the reply carries its id, and only the
+    session that asked can rate it."""
+
+    def _ask(self, client):
+        clean = moderation.ModerationResult(flagged=False)
+        hit = faq_helper.FAQResult(faq_helper.MATCH, answer="<p>Yes, there are showers.</p>", score=0.9)
+        with patch("chatbot.helpers.moderation.check", return_value=clean), \
+                patch("chatbot.views.faq_helper.match_faq", return_value=hit):
+            response = client.post(reverse("chatbot:public-swim-chat"),
+                                   data=json.dumps({"message": "Do you have showers"}),
+                                   content_type="application/json")
+        return response.json()["id"]
+
+    def _rate(self, client, query_id, rating):
+        return client.post(reverse("chatbot:rate-answer"), data=json.dumps({"id": query_id, "rating": rating}),
+                           content_type="application/json")
+
+    def setUp(self):
+        cache.clear()
+
+    def test_reply_carries_the_id_of_the_logged_answer(self):
+        query_id = self._ask(self.client)
+        self.assertEqual(ChatbotQuery.objects.get().id, query_id)
+
+    def test_rating_is_saved_and_can_be_changed(self):
+        query_id = self._ask(self.client)
+        self.assertEqual(self._rate(self.client, query_id, -1).status_code, 200)
+        self.assertEqual(ChatbotQuery.objects.get().rating, ChatbotQuery.UNHELPFUL)
+        self._rate(self.client, query_id, 1)
+        query = ChatbotQuery.objects.get()
+        self.assertEqual(query.rating, ChatbotQuery.HELPFUL)
+        self.assertIsNotNone(query.rated_at)
+
+    def test_another_session_cannot_rate_it(self):
+        from django.test import Client
+
+        query_id = self._ask(self.client)
+        stranger = Client()
+        stranger.get(reverse("chatbot:public-swim-ui"))  # a session of its own
+        self.assertEqual(self._rate(stranger, query_id, -1).status_code, 404)
+        self.assertIsNone(ChatbotQuery.objects.get().rating)
+
+    def test_only_thumbs_up_or_down(self):
+        query_id = self._ask(self.client)
+        self.assertEqual(self._rate(self.client, query_id, 5).status_code, 400)
+        self.assertEqual(self._rate(self.client, "x", 1).status_code, 400)
+
+    def test_refusals_cannot_be_rated(self):
+        self._ask(self.client)
+        query = ChatbotQuery.objects.get()
+        ChatbotQuery.objects.filter(pk=query.pk).update(response_type="BLOCKED")
+        self.assertEqual(self._rate(self.client, query.id, 1).status_code, 404)

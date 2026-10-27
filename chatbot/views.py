@@ -175,11 +175,11 @@ def public_lesson_chat_api(request):
 
         if result.is_answered:
             html_reply = render_faq_markdown(result.answer)
-            _log_query(
+            query = _log_query(
                 request, "public_lesson", user_message,
                 result.answer, result.tier, result.score,
             )
-            return JsonResponse({"reply": html_reply})
+            return JsonResponse({"reply": html_reply, "id": query.id})
 
         terms = get_upcoming_terms()
         term_info = "\n".join(
@@ -215,11 +215,11 @@ def public_lesson_chat_api(request):
         if api_error:
             return JsonResponse({"reply": f"<p>{api_error}</p>"}, status=503)
 
-        _log_query(
+        query = _log_query(
             request, "public_lesson", user_message,
             raw_reply, result.tier, result.score,
         )
-        return JsonResponse({"reply": render_model_markdown(raw_reply)})
+        return JsonResponse({"reply": render_model_markdown(raw_reply), "id": query.id})
 
     except Exception as exc:
         logger.error("Lesson chatbot error: %s", exc, exc_info=True)
@@ -247,11 +247,11 @@ def public_swim_chat(request):
         # today's timetable has to go to the live-data path instead.
         if result.is_answered and not _needs_live_data(user_message.lower()):
             html_reply = render_faq_markdown(result.answer)
-            _log_query(
+            query = _log_query(
                 request, "public_swim", user_message,
                 result.answer, result.tier, result.score,
             )
-            return JsonResponse({"reply": html_reply})
+            return JsonResponse({"reply": html_reply, "id": query.id})
 
         swim_list = format_swim_list(get_available_swims())
         # localtime rather than now().date(): the UTC date is still on yesterday
@@ -311,11 +311,11 @@ def public_swim_chat(request):
         if api_error:
             return JsonResponse({"reply": f"<p>{api_error}</p>"}, status=503)
 
-        _log_query(
+        query = _log_query(
             request, "public_swim", user_message,
             raw_reply, faq_helper.MISS, result.score,
         )
-        return JsonResponse({"reply": render_model_markdown(raw_reply)})
+        return JsonResponse({"reply": render_model_markdown(raw_reply), "id": query.id})
 
     except Exception as exc:
         logger.error("Swim chatbot error: %s", exc, exc_info=True)
@@ -323,6 +323,33 @@ def public_swim_chat(request):
             {"error": "Something went wrong while processing your message."},
             status=500,
         )
+
+
+def rate_answer(request):
+    """Record the visitor's thumbs up or down on one answer.
+
+    Only the session that asked can rate an answer, so ids cannot be guessed to
+    rate other people's. Clicking the other thumb changes the rating.
+    """
+    if request.method != "POST":
+        return JsonResponse({"error": "Invalid request method"}, status=405)
+    try:
+        data = json.loads(request.body)
+        query_id, rating = int(data.get("id")), int(data.get("rating"))
+    except (TypeError, ValueError):
+        return JsonResponse({"error": "Invalid rating"}, status=400)
+    if rating not in (ChatbotQuery.HELPFUL, ChatbotQuery.UNHELPFUL):
+        return JsonResponse({"error": "Invalid rating"}, status=400)
+
+    session_key = request.session.session_key
+    rated = session_key and (
+        ChatbotQuery.objects.filter(id=query_id, session_key=session_key)
+        .exclude(response_type=BLOCKED)
+        .update(rating=rating, rated_at=timezone.now())
+    )
+    if not rated:
+        return JsonResponse({"error": "Answer not found"}, status=404)
+    return JsonResponse({"rating": rating})
 
 
 # ✅ UI ROUTES

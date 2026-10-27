@@ -43,16 +43,23 @@ def is_Manager(user):
 @login_required
 @user_passes_test(is_staff)
 def dashboard_home(request):
-    swim_stats = {
-        'total_products': PublicSwimProduct.objects.count(),
-        'active_products': PublicSwimProduct.objects.filter(available=True).count(),
-        'categories_count': PublicSwimCategory.objects.count(),
-        'recent_orders': SwimOrder.objects.filter(paid=True).order_by('-created')[:5],
-        'today_orders_count': SwimOrder.objects.filter(
-            created__date=timezone.now().date(), paid=True
-        ).count(),
+    """Staff home: the Operations home's "Today at the pool" dials above the section cards.
+
+    No money in the strip, so any staff member may see it; those who can open
+    Finance also get a link to the full live dashboard.
+    """
+    from django.urls import reverse
+
+    from custom_admins.financeadmin import finance_admin_site
+    from finances.views import _live_dials
+
+    live = _live_dials(timezone.localtime(timezone.now()).date())
+    context = {
+        'dial_strip': [live[key] for key in ('swims', 'registers', 'attendance', 'term') if live[key]],
+        'live_dashboard_url': (reverse('finance:dashboard')
+                               if finance_admin_site.has_permission(request) else None),
     }
-    return render(request, 'dashboard/home.html', {'swim_stats': swim_stats})
+    return render(request, 'dashboard/home.html', context)
 
 
 @login_required

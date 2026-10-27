@@ -87,3 +87,37 @@ class PublicSwimCheckInTests(TestCase):
 
     def test_get_is_rejected(self):
         self.assertEqual(self.client.get(self.url).status_code, 405)
+
+
+class DashboardHomeTests(TestCase):
+    """The staff home shows the Operations home's dials in place of the old
+    "under development" banner, linking to the full dashboard only for those
+    who can open Finance."""
+
+    def setUp(self):
+        from django.contrib.auth.models import Group
+
+        self.staff = User.objects.create_user(email='desk@test.com', password='pw', first_name='D')
+        self.staff.is_staff = True
+        self.staff.save(update_fields=['is_staff'])
+        self.manager = User.objects.create_user(email='manager@test.com', password='pw', first_name='M')
+        self.manager.is_staff = True
+        self.manager.save(update_fields=['is_staff'])
+        self.manager.groups.add(Group.objects.get_or_create(name='Manager')[0])
+
+    def test_staff_see_the_dials_and_no_banner(self):
+        self.client.force_login(self.staff)
+        response = self.client.get(reverse('dashboard:dashboard_home'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Today at the pool')
+        self.assertNotContains(response, 'under development')
+        # No term in the test database, so only the day's swims and attendance.
+        titles = [d['title'] for d in response.context['dial_strip']]
+        self.assertEqual(titles, ['Today’s public swims', 'Swimmers’ attendance today'])
+        self.assertNotContains(response, 'Full dashboard')
+        self.assertNotContains(response, '€')
+
+    def test_finance_users_get_the_full_dashboard_link(self):
+        self.client.force_login(self.manager)
+        response = self.client.get(reverse('dashboard:dashboard_home'))
+        self.assertContains(response, reverse('finance:dashboard'))

@@ -1201,7 +1201,7 @@ def _whats_on(today):
                 'start': min(start for start, _ in times),
                 'end': max(end for _, end in times),
                 'unstaffed': [{'start': lesson.start_time, 'end': lesson.end_time,
-                               'name': lesson.category.short_name or lesson.category.name,
+                               'name': lesson.category.name,
                                'swimmers': swimmers[lesson.id]} for lesson in unstaffed],
                 'url': f"{reverse('dashboard:admin_lessons_list')}?day={weekday}",
             }

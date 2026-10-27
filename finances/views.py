@@ -1193,12 +1193,16 @@ def _whats_on(today):
                          .values_list('lesson_id', flat=True))
             taught |= set(LessonAssignment.objects.filter(term=term, lessons__in=swimmers)
                           .values_list('lessons', flat=True))
+            unstaffed = (Product.objects.filter(id__in=set(swimmers) - taught)
+                         .select_related('category').order_by('start_time'))
             lessons = {
                 'classes': len(swimmers),
                 'swimmers': sum(swimmers.values()),
                 'start': min(start for start, _ in times),
                 'end': max(end for _, end in times),
-                'no_instructor': len(set(swimmers) - taught),
+                'unstaffed': [{'start': lesson.start_time, 'end': lesson.end_time,
+                               'name': lesson.category.short_name or lesson.category.name,
+                               'swimmers': swimmers[lesson.id]} for lesson in unstaffed],
                 'url': f"{reverse('dashboard:admin_lessons_list')}?day={weekday}",
             }
 
@@ -1249,6 +1253,7 @@ def live_dashboard(request, template_name='admin/financeadmin/dashboard.html'):
     order_rows = [_paid_orders(model, periods) for model, _ in ORDER_MODELS.values()]
     customers = {'user__is_staff': False}
     staff = {'user__is_staff': True}
+    managers = {'user__is_staff': True, 'user__groups__name': 'Manager'}
 
     def tile(label, values, money=False, hint=''):
         return {'label': label, 'today': values[0], 'week': values[1], 'money': money, 'hint': hint}
@@ -1258,13 +1263,17 @@ def live_dashboard(request, template_name='admin/financeadmin/dashboard.html'):
              hint='Refunds left out'),
         tile('Paid orders', [sum(col) for col in zip(*(r[0] for r in order_rows))]),
         tile('New customers', _period_counts(User.objects.filter(is_staff=False), periods, 'date_joined')),
+        tile('New guardians', _period_counts(User.objects.filter(is_staff=False, swimling__isnull=False).distinct(),
+                                             periods, 'date_joined'),
+             hint='New customers who have added a swimmer'),
         tile('Customers logged in', _period_counts(LoginEvent.objects.filter(**customers), periods,
                                                    distinct='user')),
         tile('Customers active', _period_counts(ActiveDay.objects.filter(**customers), periods, 'date',
                                                 distinct='user'), hint='Used the site while logged in'),
-        tile('Staff logged in', _period_counts(LoginEvent.objects.filter(**staff), periods, distinct='user')),
-        tile('Staff active', _period_counts(ActiveDay.objects.filter(**staff), periods, 'date',
-                                            distinct='user')),
+        tile('Managers active', _period_counts(ActiveDay.objects.filter(**managers), periods, 'date',
+                                               distinct='user'), hint='Used the site while logged in'),
+        tile('Other staff active', _period_counts(ActiveDay.objects.filter(**staff).exclude(**managers), periods,
+                                                  'date', distinct='user')),
         tile('New enrolments', [a + b for a, b in zip(
             _period_counts(LessonEnrollment.objects.all(), periods),
             _period_counts(ScoEnrollment.objects.all(), periods))], hint='Lessons and schools'),
@@ -1274,7 +1283,7 @@ def live_dashboard(request, template_name='admin/financeadmin/dashboard.html'):
     ]
 
     chats = ChatbotQuery.objects.all()
-    week_chats = dict(chats.filter(timestamp__gte=week_period[1], timestamp__lt=week_period[2])
+    week_chats =dict(chats.filter(timestamp__gte=week_period[1], timestamp__lt=week_period[2])
                       .values_list('response_type').annotate(n=Count('id')))
     tiles.append(tile(
         'AI chat questions', _period_counts(chats, periods, 'timestamp'),

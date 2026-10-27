@@ -321,6 +321,7 @@ TEMPLATES = [
                 'utils.context_processors.term_status_for_active_schools',
                 'utils.context_processors.footer_message',
                 'utils.context_processors.two_factor',
+                'utils.context_processors.email_confirmation_reminder',
                 # 'utils.context_processors.current_term',
             ],
         },

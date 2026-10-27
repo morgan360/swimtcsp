@@ -2,6 +2,8 @@ from collections import defaultdict
 from datetime import date
 import logging
 
+from allauth.account.models import EmailAddress
+from allauth.account.utils import send_email_confirmation, sync_user_email_addresses
 from allauth.account.views import SignupView
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
@@ -16,6 +18,8 @@ from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.http import url_has_allowed_host_and_scheme
+from django.views.decorators.http import require_POST
 
 from schools_bookings.models import ScoEnrollment
 from utils.context_processors import get_term_info
@@ -424,6 +428,37 @@ def after_login(request):
     if is_guardian(request.user):
         return redirect('swimling_dashboard:guardian_dashboard')
     return redirect('users:profile')
+
+
+@login_required
+@require_POST
+def send_confirmation_email(request):
+    """The button on the reminder bar: email the customer a link to confirm
+    their address, then put them back on the page they were on."""
+    user = request.user
+    # Most older accounts have no allauth EmailAddress row. allauth sends the
+    # first email for those without starting its cooldown, so a second click
+    # would send another; with the row in place every send is rate limited.
+    sync_user_email_addresses(user)
+    if EmailAddress.objects.filter(user=user, email__iexact=user.email, verified=True).exists():
+        messages.success(request, "Your email address is already confirmed. Thank you!")
+    elif send_email_confirmation(request, user):
+        # allauth adds its own "Confirmation e-mail sent" message.
+        request.session['confirmation_email_sent'] = True
+    else:
+        # allauth sends at most one every few minutes per address and skips
+        # the rest silently; the earlier email's link still works.
+        request.session['confirmation_email_sent'] = True
+        messages.info(
+            request,
+            "We sent you an email a few minutes ago. Please check your inbox and "
+            "spam folder, or try again in a few minutes.",
+        )
+
+    next_url = request.POST.get('next')
+    if not url_has_allowed_host_and_scheme(next_url, {request.get_host()}, request.is_secure()):
+        next_url = '/'
+    return redirect(next_url)
 
 
 @staff_member_required

@@ -169,6 +169,40 @@ def two_factor(request):
     return {'TCSP_MFA_ON': settings.TCSP_MFA_ON}
 
 
+def email_confirmation_reminder(request):
+    """
+    The address a signed-in customer has not confirmed yet, for the reminder
+    bar at the top of every page; empty once it is confirmed.
+
+    Accounts from TCSP_EMAIL_VERIFICATION_FROM onwards cannot sign in without
+    confirming, so this is for the older ones. Esther chose (2026-10-27) to ask
+    them rather than make them: the bar never stops anyone booking. Not shown
+    while staff are hijacking a customer, so they are not asked to confirm an
+    address that is not theirs.
+
+    Lazy, so the query only runs on pages that render the bar, not on every
+    HTMX partial.
+    """
+    from allauth.account.models import EmailAddress
+    from django.utils.functional import SimpleLazyObject
+
+    session = getattr(request, 'session', {})
+
+    def unconfirmed_email():
+        user = getattr(request, 'user', None)
+        if not (user and user.is_authenticated and user.email) or session.get('hijack_history'):
+            return ''
+        confirmed = EmailAddress.objects.filter(
+            user=user, email__iexact=user.email, verified=True
+        ).exists()
+        return '' if confirmed else user.email
+
+    return {
+        'UNCONFIRMED_EMAIL': SimpleLazyObject(unconfirmed_email),
+        'CONFIRMATION_EMAIL_SENT': session.get('confirmation_email_sent', False),
+    }
+
+
 def term_status_for_active_schools(request):
     today = timezone.now().date()
     terms = ScoTerm.objects.filter(

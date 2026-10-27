@@ -24,5 +24,6 @@ urlpatterns = [
     path("my-bookings/", my_bookings, name="my_bookings"),
 
     path('after-login/', after_login, name='after_login'),
+    path('confirm-email/send/', views.send_confirmation_email, name='send_confirmation_email'),
 
 ]

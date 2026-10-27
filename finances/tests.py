@@ -451,11 +451,10 @@ class ChatTopicTests(TestCase):
 
 class CheckoutFunnelTests(TestCase):
     """The live dashboard's "Checkouts finished" dial: families who reached the
-    payment page this week, and whether they paid, were declined or left."""
+    payment page this week, whether they paid, and how many needed another try."""
 
     @classmethod
     def setUpTestData(cls):
-        from boipa.models import LessonOrderPaymentNotification, SwimOrderPaymentNotification
         from lessons_orders.models import Order as LessonOrder
         from swims_orders.models import Order as SwimOrder
 
@@ -467,20 +466,17 @@ class CheckoutFunnelTests(TestCase):
         def customer(name):
             return User.objects.create_user(email=f"{name}@example.com", password="pw", first_name=name)
 
-        def declined(order, model):
-            model.objects.create(order=order, txId=f"TRN_{order.id}", merchantTxId=f"x_{order.id}",
-                                 status="DECLINED")
-
         # Paid first time.
         SwimOrder.objects.create(user=customer("paid"), paid=True, amount="8.00")
-        # Declined, then paid on a second try: one finished checkout, not a drop-off.
+        # Unpaid, then paid on a second try: one finished checkout, and a retry.
         retry = customer("retry")
-        declined(LessonOrder.objects.create(user=retry, amount="90.00"), LessonOrderPaymentNotification)
+        LessonOrder.objects.create(user=retry, amount="90.00")
         LessonOrder.objects.create(user=retry, paid=True, amount="90.00")
-        # Declined and never paid.
-        declined(SwimOrder.objects.create(user=customer("declined"), amount="8.00"), SwimOrderPaymentNotification)
-        # Reached the payment page and left: no payment and nothing from BOIPA.
+        # Two families who reached the payment page and never paid, one after two goes.
         SwimOrder.objects.create(user=customer("left"), amount="8.00")
+        twice = customer("twice")
+        SwimOrder.objects.create(user=twice, amount="8.00")
+        SwimOrder.objects.create(user=twice, amount="8.00")
         # Not counted: a fully couponed order never reaches BOIPA, staff book for customers,
         # and last week's checkouts are outside this week.
         LessonOrder.objects.create(user=customer("free"), paid=True, amount="0.00")
@@ -492,14 +488,14 @@ class CheckoutFunnelTests(TestCase):
         from finances.views import _activity_periods, _checkout_funnel
         _, _, (_, start, end) = _activity_periods()
         self.assertEqual(_checkout_funnel(start, end),
-                         {"started": 4, "finished": 2, "declined": 1, "left": 1})
+                         {"started": 4, "finished": 2, "retried": 1, "left": 2})
 
     def test_dial_is_on_the_live_dashboard_only(self):
         self.client.force_login(self.manager)
         dials = {d["title"]: d for d in self.client.get(reverse("finance:dashboard")).context["dials"]}
         dial = dials["Checkouts finished this week"]
         self.assertEqual((dial["value"], dial["max"], dial["pct"]), (2, 4, 50))
-        self.assertEqual(dial["caption"], "families who reached payment · 1 declined · 1 left")
+        self.assertEqual(dial["caption"], "families who reached payment · 1 needed more than one try · 2 left")
         strip = self.client.get(reverse("operations:index")).context["dial_strip"]
         self.assertNotIn("Checkouts finished this week", [d["title"] for d in strip])
 

@@ -6,22 +6,105 @@ from django.urls import reverse
 
 
 class CalendarTabTests(TestCase):
-    """The public found the Calendar tab confusing, so only staff see it."""
+    """The Calendar tab is a plain 12-month view for everyone (Oct 2026); the
+    old FullCalendar one confused parents, so it had been staff-only."""
 
     url = reverse("timetable:timetable_grid")
 
-    def test_public_do_not_see_the_calendar_tab(self):
-        html = self.client.get(self.url).content.decode()
-        self.assertNotIn("switchTab('calendar')", html)
-        self.assertNotIn('id="calendar"', html)
-
-    def test_staff_still_see_it(self):
-        staff = get_user_model().objects.create_user(email="desk@tcsp.ie", password="pw")
-        staff.is_staff = True
-        staff.save(update_fields=["is_staff"])
-        self.client.force_login(staff)
+    def test_everyone_sees_the_calendar_tab_without_fullcalendar(self):
         html = self.client.get(self.url).content.decode()
         self.assertIn("switchTab('calendar')", html)
+        self.assertIn("Coming up", html)
+        self.assertNotIn("{#", html)
+        self.assertNotIn("fullcalendar", html.lower())
+
+
+class YearCalendarTests(TestCase):
+    """timetable.year: lesson starts, rebooking, booking and closures only."""
+
+    @classmethod
+    def setUpTestData(cls):
+        from datetime import time
+
+        from lessons.models import Category, Product, Program
+
+        category = Category.objects.create(name="Beginners 1", program=Program.objects.create(name="P"))
+        # Lessons on Mondays and Wednesdays only.
+        for day in (0, 2):
+            Product.objects.create(category=category, day_of_week=day, num_places=5, active=True,
+                                   start_time=time(17, 0), end_time=time(17, 30))
+
+    def setUp(self):
+        from lessons_bookings.models import Term
+
+        self.today = date(2026, 10, 28)
+        # Starts Thursday 1 Jan 2027, like terms that run 1st to last of the month.
+        self.term = Term.objects.create(start_date=date(2027, 1, 1), end_date=date(2027, 3, 31),
+                                        rebooking_date=date(2026, 12, 1), booking_date=date(2026, 12, 8))
+
+    def build(self):
+        from timetable.year import year_calendar
+
+        return year_calendar(self.today)
+
+    def marks_on(self, year, day):
+        for month in year["months"]:
+            for week in month["weeks"]:
+                for d in week:
+                    if d["date"] == day and d["in_month"]:
+                        return [m["kind"] for m in d["marks"]]
+        return None
+
+    def test_twelve_months_from_this_month(self):
+        months = [m["first"] for m in self.build()["months"]]
+        self.assertEqual((len(months), months[0], months[-1]), (12, date(2026, 10, 1), date(2027, 9, 1)))
+
+    def test_rebooking_and_booking_dates_are_marked(self):
+        year = self.build()
+        self.assertEqual(self.marks_on(year, date(2026, 12, 1)), ["rebooking"])
+        self.assertEqual(self.marks_on(year, date(2026, 12, 8)), ["booking"])
+
+    def test_lessons_start_on_the_first_class_day_not_the_1st(self):
+        # 1 Jan is a Thursday; the first lesson day is Monday 4 Jan.
+        year = self.build()
+        self.assertEqual(self.marks_on(year, date(2027, 1, 1)), [])
+        self.assertEqual(self.marks_on(year, date(2027, 1, 4)), ["start"])
+
+    def test_lessons_start_skips_a_lessons_closure(self):
+        from timetable.models import CalendarEvent
+
+        CalendarEvent.objects.create(title="Christmas", category="closure", affects="lessons",
+                                     start_date=date(2026, 12, 20), end_date=date(2027, 1, 5))
+        year = self.build()
+        self.assertEqual(self.marks_on(year, date(2027, 1, 6)), ["start"])
+        self.assertEqual(self.marks_on(year, date(2027, 1, 4)), ["closed"])
+
+    def test_a_closure_marks_each_day_and_is_one_key_date(self):
+        from timetable.models import CalendarEvent
+
+        CalendarEvent.objects.create(title="Midterm", category="closure", affects="all",
+                                     start_date=date(2027, 2, 15), end_date=date(2027, 2, 19))
+        year = self.build()
+        for day in range(15, 20):
+            self.assertEqual(self.marks_on(year, date(2027, 2, day)), ["closed"])
+        closures = [k for k in year["key_dates"] if k["kind"] == "closed"]
+        self.assertEqual([(k["first"], k["last"], k["label"]) for k in closures],
+                         [(date(2027, 2, 15), date(2027, 2, 19), "Pool closed: Midterm")])
+
+    def test_coming_up_leaves_out_past_dates(self):
+        from timetable.year import year_calendar
+
+        upcoming = year_calendar(date(2026, 12, 5))["upcoming"]
+        self.assertEqual([k["label"] for k in upcoming],
+                         ["Booking opens to everyone", "Lessons start"])
+
+    def test_school_terms_and_other_events_are_left_out(self):
+        from timetable.models import CalendarEvent
+
+        CalendarEvent.objects.create(title="Open day", category="special", start_date=date(2026, 11, 5))
+        labels = [k["label"] for k in self.build()["key_dates"]]
+        self.assertNotIn("Open day", " ".join(labels))
+        self.assertEqual(len(labels), 3)  # rebooking, booking, lessons start
 
 
 class ClosureFixtures:

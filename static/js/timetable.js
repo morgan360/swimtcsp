@@ -20,8 +20,11 @@ function timetableApp() {
 
         init() {
             // ?day=1 opens on tomorrow (the homepage links there once today's swims are over).
-            const day = parseInt(new URLSearchParams(window.location.search).get('day'), 10);
+            const params = new URLSearchParams(window.location.search);
+            const day = parseInt(params.get('day'), 10);
             if (day >= 0 && day < 7) this.selectedDay = day;
+            // ?tab=calendar or ?tab=lessons, so other pages can link straight there.
+            if (['swims', 'lessons', 'calendar'].includes(params.get('tab'))) this.currentTab = params.get('tab');
             setInterval(() => { this.now = new Date(); }, 60000);
         },
 
@@ -133,43 +136,10 @@ function timetableApp() {
                 && this.sessionState(event, index) !== 'over';
         },
 
-        // Inside the returned object:
-        calendarInitialized: false,
-
         switchTab(tab) {
             this.currentTab = tab;
-            if (tab === 'calendar' && !this.calendarInitialized) {
-                this.loadCalendar();
-                this.calendarInitialized = true;
-            } else {
-                this.fetchEvents();
-            }
-        },
-
-        loadCalendar() {
-            this.$nextTick(() => {
-                const calendarEl = document.getElementById('calendar');
-                if (!calendarEl) return;
-
-                const calendar = new FullCalendar.Calendar(calendarEl, {
-                    initialView: 'dayGridMonth',
-                    headerToolbar: {
-                        left: 'prev,next today',
-                        center: 'title',
-                        right: 'dayGridMonth,listYear'
-                    },
-                    views: {
-                        listYear: {
-                            buttonText: 'Year'
-                        }
-                    },
-                    events: '/timetable/calendar/events/',
-                    height: 'auto',
-                    eventDisplay: 'block'
-                });
-
-                calendar.render();
-            });
+            // The calendar is rendered by the server (timetable/year.py); nothing to fetch.
+            if (tab !== 'calendar') this.fetchEvents();
         },
 
 

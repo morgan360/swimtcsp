@@ -37,19 +37,15 @@
             }
         }
 
-        /* FullCalendar small polish */
-        #calendar .fc-toolbar {
-            gap: .5rem;
-        }
-
-        #calendar .fc-toolbar-title {
-            font-size: 1rem;
-            font-weight: 700;
-        }
-
-        #calendar .fc {
-            --fc-border-color: rgba(15, 23, 42, .08);
-        }
+        /* 12-month calendar (_year_calendar.html) */
+        .yc-dot { display: inline-block; width: .75rem; height: .75rem; border-radius: 9999px; flex-shrink: 0; }
+        .yc-day { display: block; margin: 1px; padding: .2rem 0; border-radius: .375rem; }
+        .yc-today { outline: 2px solid #1e3a8a; outline-offset: -2px; font-weight: 700; }
+        .yc-start { background: #2563eb; color: #fff; font-weight: 700; }
+        .yc-rebooking { background: #f59e0b; color: #111827; font-weight: 700; }
+        .yc-booking { background: #16a34a; color: #fff; font-weight: 700; }
+        .yc-closed { background: #fee2e2; color: #b91c1c; }
+        .yc-dot.yc-closed { background: #ef4444; }
     </style>
 
     <div class="max-w-8xl mx-auto">
@@ -98,8 +94,8 @@
                                 <span>Lessons</span>
                             </button>
                         </li>
-                        {# Staff only: the public found the calendar confusing (Esther, Sep 2026). #}
-                        {% if user.is_staff %}
+                        {% comment %}For everyone again since Oct 2026: a plain 12-month calendar of
+                           term starts, booking dates and closures (timetable.year).{% endcomment %}
                         <li class="w-full sm:w-auto">
                             <button @click.prevent="switchTab('calendar')"
                                 :class="currentTab === 'calendar' ?
@@ -110,7 +106,6 @@
                                 <span>Calendar</span>
                             </button>
                         </li>
-                        {% endif %}
                     </ul>
                 </nav>
             </div>
@@ -523,14 +518,10 @@
                 </div>{# /whole week #}
             </div>
 
-            {% if user.is_staff %}
-            <!-- Calendar Overview Tab -->
+            <!-- Calendar tab: 12 months, server-rendered -->
             <div x-show="currentTab === 'calendar'" class="w-full">
-                <div class="bg-white/90 rounded-xl shadow-lg p-6 backdrop-blur-sm">
-                    <div id="calendar" class="text-sm text-blue-900"></div>
-                </div>
+                {% include "timetable/_year_calendar.html" %}
             </div>
-            {% endif %}
 
             <!-- Include Modals -->
             {% include 'timetable/modals/lessons_faq_modal.html' %}
@@ -539,10 +530,6 @@
     </div>
 </section>
 
-<!-- FullCalendar CSS & JS -->
-<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet" />
-<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@fullcalendar/list@6.1.8/index.global.min.js"></script>
 
 <!-- Load JS logic -->
 <!-- ?v= as for styles.css in _base.html: a cached old copy breaks the day view. -->

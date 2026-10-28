@@ -1,0 +1,57 @@
+{% comment %}
+  The Calendar tab: 12 months from timetable.year.year_calendar. Only lesson
+  starts, rebooking and booking opening, and closures. The "Coming up" list
+  comes first, as the plainest answer; colours always come with words.
+{% endcomment %}
+<div class="bg-white/90 rounded-xl shadow-lg p-4 sm:p-6">
+  <h3 class="text-lg font-bold text-blue-900 mb-3">Coming up</h3>
+  {% if year.upcoming %}
+  <ul class="divide-y divide-gray-100 mb-8">
+    {% for item in year.upcoming %}
+    <li class="flex items-start gap-3 py-2">
+      <span class="yc-dot yc-{{ item.kind }} mt-1.5"></span>
+      <span class="w-36 shrink-0 font-semibold text-gray-800 tabular-nums">
+        {{ item.first|date:"D j M" }}{% if item.last != item.first %} – {{ item.last|date:"D j M" }}{% endif %}
+      </span>
+      <span class="text-gray-700">{{ item.label }}</span>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="text-gray-500 italic mb-8">No dates announced yet.</p>
+  {% endif %}
+
+  <ul class="flex flex-wrap gap-x-5 gap-y-2 justify-center text-sm text-gray-700 mb-6">
+    {% for kind, label in year.legend %}
+    <li class="flex items-center gap-2"><span class="yc-dot yc-{{ kind }}"></span>{{ label }}</li>
+    {% endfor %}
+  </ul>
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+    {% for month in year.months %}
+    <div class="rounded-lg border border-gray-200 bg-white p-3">
+      <h3 class="text-center font-bold text-blue-900 mb-2">{{ month.first|date:"F Y" }}</h3>
+      <div class="grid grid-cols-7 text-center text-[11px] font-semibold text-gray-400 mb-1">
+        <span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span>
+      </div>
+      {% for week in month.weeks %}
+      <div class="grid grid-cols-7 text-center text-xs">
+        {% for day in week %}
+          {% if not day.in_month %}<span class="py-1"></span>
+          {% elif day.marks %}
+            {% with mark=day.marks.0 %}
+            <span class="yc-day yc-{{ mark.kind }}{% if day.is_today %} yc-today{% endif %}"
+                  title="{{ day.date|date:'D j M' }}: {% for m in day.marks %}{{ m.label }}{% if not forloop.last %}; {% endif %}{% endfor %}">{{ day.date.day }}</span>
+            {% endwith %}
+          {% else %}
+            <span class="yc-day text-gray-700{% if day.is_today %} yc-today{% endif %}">{{ day.date.day }}</span>
+          {% endif %}
+        {% endfor %}
+      </div>
+      {% endfor %}
+    </div>
+    {% endfor %}
+  </div>
+
+
+</div>

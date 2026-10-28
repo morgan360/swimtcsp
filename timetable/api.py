@@ -48,8 +48,8 @@ def public_timetable(request):
                     "closed": closure.title if closure else None,
                     "places_left": places_left(product, current_date, booked),
                     # Swims are booked for the next occurrence of their weekday, which
-                    # within this week is this date.
-                    "book_url": reverse('swims:product_detail', args=[product.id, product.slug]),
+                    # within this week is this date. Through book_swim, which counts it.
+                    "book_url": reverse('timetable:book_swim', args=[product.id]) + '?via=timetable',
                 })
 
     return Response({

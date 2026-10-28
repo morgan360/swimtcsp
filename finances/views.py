@@ -1334,6 +1334,26 @@ def live_dashboard(request, template_name='admin/financeadmin/dashboard.html'):
              hint=f'{WaitingList.objects.filter(completed=False).count()} waiting now'),
     ]
 
+    # Timetable use (timetable.visits): counts per day, staff and bots left out.
+    from timetable.models import PageVisit
+    from timetable.visits import visit_totals
+
+    def visits(*pages):
+        return [visit_totals(pages, localtime(start).date(), localtime(end).date()) for _, start, end in periods]
+
+    week_start, week_end = localtime(week_period[1]).date(), localtime(week_period[2]).date()
+    tabs = {page: visit_totals([page], week_start, week_end)
+            for page in (PageVisit.TAB_SWIMS, PageVisit.TAB_LESSONS, PageVisit.TAB_CALENDAR)}
+    tiles += [
+        tile('Timetable views', visits(PageVisit.TIMETABLE),
+             hint=(f"Tabs this week: {tabs[PageVisit.TAB_SWIMS]} swims, {tabs[PageVisit.TAB_LESSONS]} lessons, "
+                   f"{tabs[PageVisit.TAB_CALENDAR]} calendar")),
+        tile('Homepage views', visits(PageVisit.HOME), hint='With the "Today at the pool" card'),
+        tile('Book clicks', visits(PageVisit.BOOK_TIMETABLE, PageVisit.BOOK_HOME),
+             hint=(f"This week: {visit_totals([PageVisit.BOOK_TIMETABLE], week_start, week_end)} from the "
+                   f"timetable, {visit_totals([PageVisit.BOOK_HOME], week_start, week_end)} from the homepage")),
+    ]
+
     chats = ChatbotQuery.objects.all()
     week_chats =dict(chats.filter(timestamp__gte=week_period[1], timestamp__lt=week_period[2])
                       .values_list('response_type').annotate(n=Count('id')))

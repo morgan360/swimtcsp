@@ -42,3 +42,35 @@ class CalendarEvent(models.Model):
 
     def __str__(self):
         return f"{self.title} ({self.category})"
+
+
+class PageVisit(models.Model):
+    """How often a page was used on a day, for the live dashboard.
+
+    Only a count: no cookies, IP addresses or anything about who visited, so it
+    needs no consent. Written by timetable.visits.count_visit, which leaves out
+    staff and bots.
+    """
+    HOME, TIMETABLE = 'home', 'timetable'
+    TAB_SWIMS, TAB_LESSONS, TAB_CALENDAR = 'tab:swims', 'tab:lessons', 'tab:calendar'
+    BOOK_TIMETABLE, BOOK_HOME = 'book:timetable', 'book:home'
+    PAGE_CHOICES = [
+        (HOME, 'Homepage'),
+        (TIMETABLE, 'Timetable page'),
+        (TAB_SWIMS, 'Timetable: public swims tab'),
+        (TAB_LESSONS, 'Timetable: lessons tab'),
+        (TAB_CALENDAR, 'Timetable: calendar tab'),
+        (BOOK_TIMETABLE, 'Book clicked on the timetable'),
+        (BOOK_HOME, 'Book clicked on the homepage card'),
+    ]
+
+    date = models.DateField(db_index=True)
+    page = models.CharField(max_length=20, choices=PAGE_CHOICES)
+    count = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['-date', 'page']
+        constraints = [models.UniqueConstraint(fields=['date', 'page'], name='unique_page_visit_day')]
+
+    def __str__(self):
+        return f"{self.get_page_display()} on {self.date}: {self.count}"

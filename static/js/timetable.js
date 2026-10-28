@@ -25,6 +25,7 @@ function timetableApp() {
             if (day >= 0 && day < 7) this.selectedDay = day;
             // ?tab=calendar or ?tab=lessons, so other pages can link straight there.
             if (['swims', 'lessons', 'calendar'].includes(params.get('tab'))) this.currentTab = params.get('tab');
+            this.recordTab(this.currentTab);
             setInterval(() => { this.now = new Date(); }, 60000);
         },
 
@@ -139,7 +140,18 @@ function timetableApp() {
                 && this.sessionState(event, index) !== 'over';
         },
 
+        // Counts which tabs people use (timetable.views.tab_seen); no cookies, nothing
+        // about who. Never allowed to get in the way of the page.
+        recordTab(tab) {
+            try {
+                const form = new FormData();
+                form.append('tab', tab);
+                navigator.sendBeacon('/timetable/seen/', form);
+            } catch (e) { /* counting is optional */ }
+        },
+
         switchTab(tab) {
+            if (tab !== this.currentTab) this.recordTab(tab);
             this.currentTab = tab;
             // The calendar is rendered by the server (timetable/year.py); nothing to fetch.
             if (tab !== 'calendar') this.fetchEvents();

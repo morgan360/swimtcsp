@@ -51,7 +51,7 @@ def at_the_pool(day, now_time=None):
             'end': product.end_time,
             'name': product.category.name,
             'places_left': places_left(product, day, booked),
-            'book_url': reverse('swims:product_detail', args=[product.id, product.slug]),
+            'book_url': reverse('timetable:book_swim', args=[product.id]) + '?via=home',
             'state': state,
         })
     upcoming = [s for s in swims if s['state'] != 'over']

@@ -103,12 +103,15 @@ function timetableApp() {
             const kind = this.kind();
             const mine = closures.find(c => c.affects === (kind === 'swim' ? 'swims' : 'lessons'));
             const what = kind === 'swim' ? 'public swims' : 'lessons';
-            const when = index === 0 ? 'today' : index === 1 ? 'tomorrow' : 'this day';
+            const d = new Date(this.startDate);
+            d.setDate(d.getDate() + index);
+            const when = index === 0 ? 'today' : index === 1 ? 'tomorrow'
+                : 'on ' + d.toLocaleDateString('en-IE', {weekday: 'long'});
             if (whole) return {tone: 'closed', text: `Pool closed ${when}`, reason: whole.title};
             if (mine) return {tone: 'closed', text: `No ${what} ${when}`, reason: mine.title};
             const count = this.sessionsOn(index).length;
             if (!count) return {tone: 'quiet', text: `No ${what} ${when}`, reason: ''};
-            if (kind === 'lesson') return {tone: 'open', text: `Lessons on ${when}`, reason: ''};
+            if (kind === 'lesson') return {tone: 'open', text: `Lessons ${when}`, reason: ''};
             return {tone: 'open', text: `Open ${when}`, reason: `${count} public swim${count === 1 ? '' : 's'}`};
         },
 

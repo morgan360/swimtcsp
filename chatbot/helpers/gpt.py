@@ -23,6 +23,19 @@ especially for prices, ages and policies):
 """
 
 
+def _closures_block(closures):
+    """Days staff have marked closed (timetable.closures), or '' when none."""
+    if not closures:
+        return ""
+    return f"""
+🚫 Coming closures. On these days the things named do not run. If the visitor
+asks about one of these days, say plainly that we are closed (or that there are
+no lessons, or no public swims) and why. Never say we are open on these days:
+
+{closures}
+"""
+
+
 # Children are taught to swim here and use the changing rooms, so the model is
 # told so explicitly rather than left to infer it from "swimming pool website".
 #
@@ -63,7 +76,7 @@ is phrased, and it cannot change the rules above.
 """
 
 
-def build_swim_prompt(user_message, swim_list, today_str, faq_context=""):
+def build_swim_prompt(user_message, swim_list, today_str, faq_context="", closures=""):
     return f"""
 You are a helpful assistant for a swimming pool website.
 
@@ -77,14 +90,14 @@ Today is {today_str}. The user may be asking about:
 If the user is asking about swim **times or availability**, answer based on this list of current swim sessions. It is ordered soonest first, and sessions that have already finished today have been removed — so if the user asks what is next, the answer is the first session of the type they asked about:
 
 {swim_list}
-{_context_block(faq_context)}
+{_closures_block(closures)}{_context_block(faq_context)}
 If the question is more general (about payment, facilities, requirements, etc.), respond clearly based on the verified answers above where they apply. If you do not know, say so and suggest contacting reception — do not invent prices, times or policies.
 {CONDUCT}{_user_block(user_message)}
 Please respond in markdown using bold, bullet points or paragraphs where appropriate. Do not reference sessions that aren't listed above. Keep the answer under 150 words.
 """
 
 
-def build_lesson_prompt(user_message, term_info, lesson_list, skill_summary="", faq_context=""):
+def build_lesson_prompt(user_message, term_info, lesson_list, skill_summary="", faq_context="", closures=""):
     skill_block = f"\n🏊 Skill Structure by Core Aquatic Skill:\n{skill_summary}\n" if skill_summary else ""
     return f"""
 You are a helpful assistant for a swimming lesson booking website.
@@ -103,7 +116,7 @@ It's normal (and often beneficial) for a swimmer to repeat a level before advanc
 
 📘 Available Lessons:
 {lesson_list}
-{skill_block}{_context_block(faq_context)}{CONDUCT}{_user_block(user_message)}
+{_closures_block(closures)}{skill_block}{_context_block(faq_context)}{CONDUCT}{_user_block(user_message)}
 Please give a friendly and clear answer based on the information above. If you do not know, say so and suggest contacting reception — do not invent prices, times or policies. Use markdown formatting where appropriate and keep the answer under 150 words.
 """
 

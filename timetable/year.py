@@ -12,8 +12,7 @@ from datetime import date, timedelta
 from lessons.models import Product
 from lessons_bookings.models import Term
 
-from .closures import closure_for, closures_between
-from .models import CalendarEvent
+from .closures import CLOSURE_LABELS, closure_for, closures_between
 
 LESSONS_START, REBOOKING, BOOKING, CLOSED = 'start', 'rebooking', 'booking', 'closed'
 
@@ -23,13 +22,6 @@ LEGEND = [
     (BOOKING, 'Booking opens to everyone'),
     (CLOSED, 'Closed / no lessons'),
 ]
-
-CLOSURE_LABELS = {
-    CalendarEvent.AFFECTS_ALL: 'Pool closed',
-    CalendarEvent.AFFECTS_LESSONS: 'No lessons',
-    CalendarEvent.AFFECTS_SWIMS: 'No public swims',
-}
-
 
 def _add_months(day, months):
     month = day.month - 1 + months

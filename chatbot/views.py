@@ -28,6 +28,7 @@ from .helpers.lesson import (
 )
 from .helpers import alerts, moderation
 from .helpers.swim import format_swim_list, get_available_swims
+from timetable.closures import closures_text
 from .helpers.throttle import TOO_MANY_MESSAGES, is_rate_limited
 
 logger = logging.getLogger(__name__)
@@ -55,6 +56,15 @@ LIVE_DATA_KEYWORDS = (
     "when do you open", "what time do you open", "what time do you close",
     "closing time", "open today", "open on",
 )
+
+# Closures staff record on the timetable (timetable.closures): a stock FAQ
+# answer can't know this year's midterm or bank holidays, so both bots send these
+# to the model, which is given the coming closures.
+CLOSURE_KEYWORDS = (
+    "closed", "closure", "midterm", "mid-term", "mid term", "bank holiday",
+    "christmas", "easter", "holiday",
+)
+LIVE_DATA_KEYWORDS += CLOSURE_KEYWORDS
 
 
 # The skill tree renders to ~11 KB (roughly 3k tokens). It is the answer to
@@ -173,7 +183,8 @@ def public_lesson_chat_api(request):
     try:
         result = faq_helper.match_faq(user_message, lessons_mode=True)
 
-        if result.is_answered:
+        asks_about_closures = any(k in user_message.lower() for k in CLOSURE_KEYWORDS)
+        if result.is_answered and not asks_about_closures:
             html_reply = render_faq_markdown(result.answer)
             query = _log_query(
                 request, "public_lesson", user_message,
@@ -203,6 +214,7 @@ def public_lesson_chat_api(request):
             lesson_list,
             skill_summary=skill_summary,
             faq_context=faq_helper.format_context(result.context),
+            closures=closures_text(timezone.localdate()),
         )
         raw_reply, api_error = ask_openai([
             {
@@ -288,6 +300,7 @@ def public_swim_chat(request):
             swim_list,
             now_local.strftime("%A %d %B at %H:%M"),
             faq_context=faq_helper.format_context(result.context),
+            closures=closures_text(now_local.date()),
         )
         full_prompt = (
             f"You may find this lesson term info useful:\n\n{lesson_term_info}\n\n"

@@ -545,5 +545,6 @@
 <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/list@6.1.8/index.global.min.js"></script>
 
 <!-- Load JS logic -->
-<script src="{% static 'js/timetable.js' %}"></script>
+<!-- ?v= as for styles.css in _base.html: a cached old copy breaks the day view. -->
+<script src="{% static 'js/timetable.js' %}?v={{ VERSION|urlencode }}"></script>
 {% endblock %}

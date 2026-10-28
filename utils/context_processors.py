@@ -183,8 +183,9 @@ def email_confirmation_reminder(request):
     Lazy, so the query only runs on pages that render the bar, not on every
     HTMX partial.
     """
-    from allauth.account.models import EmailAddress
     from django.utils.functional import SimpleLazyObject
+
+    from users.adapters import email_confirmed
 
     session = getattr(request, 'session', {})
 
@@ -192,10 +193,7 @@ def email_confirmation_reminder(request):
         user = getattr(request, 'user', None)
         if not (user and user.is_authenticated and user.email) or session.get('hijack_history'):
             return ''
-        confirmed = EmailAddress.objects.filter(
-            user=user, email__iexact=user.email, verified=True
-        ).exists()
-        return '' if confirmed else user.email
+        return '' if email_confirmed(user) else user.email
 
     return {
         'UNCONFIRMED_EMAIL': SimpleLazyObject(unconfirmed_email),

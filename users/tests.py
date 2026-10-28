@@ -612,6 +612,32 @@ class EmailConfirmationReminderTests(TestCase):
         response = self.client.get(reverse("home"))
         self.assertNotContains(response, "Please confirm your email address")
 
+    def google(self, **extra_data):
+        SocialAccount.objects.create(user=self.user, provider="google", uid="g1", extra_data=extra_data)
+
+    def test_google_verified_address_counts_as_confirmed_and_is_recorded(self):
+        from allauth.account.models import EmailAddress
+
+        self.google(email="Old@test.com", email_verified=True)
+        self.assertNotContains(self.client.get(reverse("home")), "Please confirm your email address")
+        self.assertTrue(EmailAddress.objects.get(user=self.user).verified)
+
+    def test_google_with_an_unverified_record_marks_it_verified(self):
+        from allauth.account.models import EmailAddress
+
+        EmailAddress.objects.create(user=self.user, email="old@test.com", verified=False, primary=True)
+        self.google(email="old@test.com", verified_email=True)
+        self.assertNotContains(self.client.get(reverse("home")), "Please confirm your email address")
+        self.assertTrue(EmailAddress.objects.get(user=self.user).verified)
+
+    def test_google_for_a_different_address_does_not_count(self):
+        self.google(email="other@gmail.com", email_verified=True)
+        self.assertContains(self.client.get(reverse("home")), "Please confirm your email address")
+
+    def test_google_not_verified_does_not_count(self):
+        self.google(email="old@test.com", email_verified=False)
+        self.assertContains(self.client.get(reverse("home")), "Please confirm your email address")
+
     def test_not_shown_while_staff_hijack_a_customer(self):
         session = self.client.session
         session["hijack_history"] = ["1"]

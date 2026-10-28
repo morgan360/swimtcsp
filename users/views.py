@@ -2,7 +2,6 @@ from collections import defaultdict
 from datetime import date
 import logging
 
-from allauth.account.models import EmailAddress
 from allauth.account.utils import send_email_confirmation, sync_user_email_addresses
 from allauth.account.views import SignupView
 from django.contrib import messages
@@ -27,6 +26,7 @@ from lessons_bookings.models import LessonEnrollment
 from lessons_orders.models import Order as LessonOrder
 from swims_orders.models import Order as SwimOrder
 from schools_orders.models import Order as SchoolOrder
+from users.adapters import email_confirmed
 from users.helpers import collect_previous_lessons
 from users.utils.roles import is_guardian
 from .forms import UserForm, GuardianOptInForm, JoinSchoolsForm
@@ -440,7 +440,7 @@ def send_confirmation_email(request):
     # first email for those without starting its cooldown, so a second click
     # would send another; with the row in place every send is rate limited.
     sync_user_email_addresses(user)
-    if EmailAddress.objects.filter(user=user, email__iexact=user.email, verified=True).exists():
+    if email_confirmed(user):
         messages.success(request, "Your email address is already confirmed. Thank you!")
     elif send_email_confirmation(request, user):
         # allauth adds its own "Confirmation e-mail sent" message.

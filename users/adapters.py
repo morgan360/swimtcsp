@@ -13,6 +13,40 @@ from django.contrib.auth import get_user_model
 User = get_user_model()
 
 
+def email_confirmed(user):
+    """
+    Has the user confirmed the address they sign in with?
+
+    Signing in with Google counts when Google says it has verified that same
+    address. AutoLinkSocialAccountAdapter links Google to existing accounts
+    without allauth ever recording the address as verified, so 588 of the
+    1,126 Google accounts on 2026-10-28 had no record of it. The first time
+    one is found here it is recorded, so the check is a single query after.
+    """
+    from allauth.account.models import EmailAddress
+    from allauth.socialaccount.models import SocialAccount
+
+    if EmailAddress.objects.filter(user=user, email__iexact=user.email, verified=True).exists():
+        return True
+    for account in SocialAccount.objects.filter(user=user, provider="google"):
+        data = account.extra_data or {}
+        google_verified = data.get("email_verified") or data.get("verified_email")
+        if google_verified and (data.get("email") or "").lower() == user.email.lower():
+            address = EmailAddress.objects.filter(user=user, email__iexact=user.email).first()
+            if address:
+                address.verified = True
+                address.save(update_fields=["verified"])
+            else:
+                EmailAddress.objects.create(
+                    user=user,
+                    email=user.email,
+                    verified=True,
+                    primary=not EmailAddress.objects.filter(user=user, primary=True).exists(),
+                )
+            return True
+    return False
+
+
 class NewAccountEmailVerificationStage(EmailVerificationStage):
     """
     Make accounts created from TCSP_EMAIL_VERIFICATION_FROM onwards verify

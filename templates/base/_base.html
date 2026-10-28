@@ -14,8 +14,9 @@
     <meta property="og:image" content="{% static 'img/og-image.jpg' %}">
     <meta property="og:type" content="website">
 
-    <!-- Tailwind CSS -->
-    <link href="{% static 'css/styles.css' %}" rel="stylesheet">
+    <!-- Tailwind CSS. ?v= changes with every deploy (settings.VERSION is the git
+         commit), so browsers fetch the new build instead of a cached old one. -->
+    <link href="{% static 'css/styles.css' %}?v={{ VERSION|urlencode }}" rel="stylesheet">
     <!-- Alpine x-cloak helper to prevent initial flicker -->
     <style>[x-cloak] {
         display: none !important;

@@ -13,7 +13,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/list@6.1.8/index.global.min.js"></script>
 
 <!-- Your JS logic -->
-<script src="{% static 'js/timetable.js' %}"></script>
+<script src="{% static 'js/timetable.js' %}?v={{ VERSION|urlencode }}"></script>
 
 
 <script>

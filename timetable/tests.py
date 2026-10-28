@@ -183,3 +183,15 @@ class TimetablePageTests(TestCase):
         html = self.client.get(reverse("timetable:timetable_grid")).content.decode()
         self.assertIn("dayStatus(selectedDay)", html)
         self.assertIn("See the whole week", html)
+
+
+class StaticCacheBustingTests(TestCase):
+    """Browsers kept an old timetable.js after the day view shipped, leaving it
+    blank; the asset URLs change with every deploy so they fetch the new one."""
+
+    def test_script_and_stylesheet_carry_the_version(self):
+        from django.conf import settings
+
+        html = self.client.get(reverse("timetable:timetable_grid")).content.decode()
+        self.assertIn(f"js/timetable.js?v={settings.VERSION}", html)
+        self.assertIn(f"css/styles.css?v={settings.VERSION}", html)

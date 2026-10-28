@@ -14,20 +14,18 @@ from chatbot.utils import get_skill_structure_summary
 from .helpers import faq as faq_helper
 from .helpers.client import ask_openai
 from .helpers.gpt import (
-    build_lesson_prompt,
     build_swim_prompt,
     render_faq_markdown,
     render_model_markdown,
 )
 from .helpers.lesson import (
     format_booking_phase,
-    format_lesson_list,
     format_lesson_summary,
     get_active_lessons,
-    get_upcoming_terms,
 )
 from .helpers import alerts, moderation
 from .helpers.swim import format_swim_list, get_available_swims
+from timetable.closures import closures_text
 from .helpers.throttle import TOO_MANY_MESSAGES, is_rate_limited
 
 logger = logging.getLogger(__name__)
@@ -55,6 +53,15 @@ LIVE_DATA_KEYWORDS = (
     "when do you open", "what time do you open", "what time do you close",
     "closing time", "open today", "open on",
 )
+
+# Closures staff record on the timetable (timetable.closures): a stock FAQ
+# answer can't know this year's midterm or bank holidays, so these go to the
+# model, which is given the coming closures.
+CLOSURE_KEYWORDS = (
+    "closed", "closure", "midterm", "mid-term", "mid term", "bank holiday",
+    "christmas", "easter", "holiday",
+)
+LIVE_DATA_KEYWORDS += CLOSURE_KEYWORDS
 
 
 # The skill tree renders to ~11 KB (roughly 3k tokens). It is the answer to
@@ -162,74 +169,11 @@ def _prepare(request, source):
     return message, None
 
 
-# ✅ PUBLIC LESSON CHATBOT VIEW
-def public_lesson_chat_api(request):
-    user_message, error = _prepare(request, "public_lesson")
-    if error:
-        return error
-
-    logger.debug("Lesson bot message received (%d chars)", len(user_message))
-
-    try:
-        result = faq_helper.match_faq(user_message, lessons_mode=True)
-
-        if result.is_answered:
-            html_reply = render_faq_markdown(result.answer)
-            query = _log_query(
-                request, "public_lesson", user_message,
-                result.answer, result.tier, result.score,
-            )
-            return JsonResponse({"reply": html_reply, "id": query.id})
-
-        terms = get_upcoming_terms()
-        term_info = "\n".join(
-            f"- **Term** from **{t.start_date}** to **{t.end_date}**" for t in terms
-        ) or "No upcoming terms available."
-        booking_phase = format_booking_phase()
-        if booking_phase:
-            term_info = f"{booking_phase}\n{term_info}"
-        lesson_list = format_lesson_list(get_active_lessons()) or "No active public lessons found."
-
-        skill_summary = ""
-        if _is_progression_question(user_message.lower()):
-            try:
-                skill_summary = get_skill_structure_summary()
-            except Exception as exc:
-                logger.error("Skill summary failed: %s", exc)
-
-        prompt = build_lesson_prompt(
-            user_message,
-            term_info,
-            lesson_list,
-            skill_summary=skill_summary,
-            faq_context=faq_helper.format_context(result.context),
-        )
-        raw_reply, api_error = ask_openai([
-            {
-                "role": "system",
-                "content": "You are an expert assistant helping parents understand swimming lessons, progression, and skills.",
-            },
-            {"role": "user", "content": prompt},
-        ])
-
-        if api_error:
-            return JsonResponse({"reply": f"<p>{api_error}</p>"}, status=503)
-
-        query = _log_query(
-            request, "public_lesson", user_message,
-            raw_reply, result.tier, result.score,
-        )
-        return JsonResponse({"reply": render_model_markdown(raw_reply), "id": query.id})
-
-    except Exception as exc:
-        logger.error("Lesson chatbot error: %s", exc, exc_info=True)
-        return JsonResponse(
-            {"error": "Something went wrong while processing your message."},
-            status=500,
-        )
-
-
-# ✅ PUBLIC SWIM CHATBOT VIEW
+# ✅ SPLASHBOT: the one chatbot, for swims and lessons.
+# There used to be a separate lessons bot too. It had about 1 question in 8 by
+# Oct 2026, gave answers that could differ from this one, and meant every change
+# had to be made twice, so its teaching guidance moved here and its URLs point
+# at this view (chatbot/urls.py). Its old questions keep source "public_lesson".
 def public_swim_chat(request):
     user_message, error = _prepare(request, "public_swim")
     if error:
@@ -283,11 +227,20 @@ def public_swim_chat(request):
         if lesson_summary:
             lesson_term_info += f"\n\nLessons by level, with prices:\n{lesson_summary}"
 
+        skill_summary = ""
+        if _is_progression_question(user_message.lower()):
+            try:
+                skill_summary = get_skill_structure_summary()
+            except Exception as exc:
+                logger.error("Skill summary failed: %s", exc)
+
         swim_prompt = build_swim_prompt(
             user_message,
             swim_list,
             now_local.strftime("%A %d %B at %H:%M"),
             faq_context=faq_helper.format_context(result.context),
+            closures=closures_text(now_local.date()),
+            skill_summary=skill_summary,
         )
         full_prompt = (
             f"You may find this lesson term info useful:\n\n{lesson_term_info}\n\n"
@@ -356,15 +309,10 @@ def rate_answer(request):
 # ensure_csrf_cookie: these pages contain no form, so without it there is no
 # csrftoken cookie for chat.js to send and every POST would be rejected.
 @ensure_csrf_cookie
-def public_lesson_chat_ui(request):
-    return render(request, "chatbot/public_lesson_chat.html")
-
-
-@ensure_csrf_cookie
 def public_swim_chat_ui(request):
     return render(request, "chatbot/public_swim_chat.html")
 
 
 def chat_response(request):
     return JsonResponse(
-        {"reply": "This is the default chatbot endpoint. Try /chat/public-swim/ or /chat/public-lesson/."})
+        {"reply": "This is the default chatbot endpoint. Try /chat/public-swim/."})

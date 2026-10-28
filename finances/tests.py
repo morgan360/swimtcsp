@@ -216,6 +216,26 @@ class DashboardTests(TestCase):
     def dials(self):
         return {dial["title"]: dial for dial in self.get().context["dials"]}
 
+    def test_confirmed_email_dial_counts_guardians_as_the_reminder_does(self):
+        from allauth.account.models import EmailAddress
+        from allauth.socialaccount.models import SocialAccount
+
+        parent = User.objects.get(email="parent@example.com")
+        dial = self.dials()["Guardians with confirmed email"]
+        self.assertEqual((dial["value"], dial["max"]), (0, 1))
+
+        # Google's word counts, for the same address only.
+        google = SocialAccount.objects.create(user=parent, provider="google", uid="g1",
+                                              extra_data={"email": "other@gmail.com", "email_verified": True})
+        self.assertEqual(self.dials()["Guardians with confirmed email"]["value"], 0)
+        google.extra_data = {"email": "Parent@example.com", "email_verified": True}
+        google.save()
+        self.assertEqual(self.dials()["Guardians with confirmed email"]["value"], 1)
+
+        google.delete()
+        EmailAddress.objects.create(user=parent, email="PARENT@example.com", verified=True, primary=True)
+        self.assertEqual(self.dials()["Guardians with confirmed email"]["value"], 1)
+
     def test_index_links_to_the_dashboard(self):
         self.client.force_login(self.manager)
         self.assertContains(self.client.get(reverse("finance:index")), reverse("finance:dashboard"))

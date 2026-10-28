@@ -5,7 +5,7 @@ from decimal import Decimal
 
 logger = logging.getLogger('finances')
 
-from django.db.models import Sum, Count
+from django.db.models import F, Sum, Count
 from django.db.models.functions import TruncDay, TruncWeek, TruncMonth, TruncYear
 from django.utils.timezone import now, timedelta
 from django.shortcuts import render
@@ -1179,6 +1179,22 @@ def _live_dials(today):
     live['guardian_2fa'] = _dial('Guardians with 2FA', len(guardian_ids & with_app), len(guardian_ids),
                                  'accounts with a swimmer', empty='No guardian accounts')
 
+    # Confirmed email, counted as users.adapters.email_confirmed counts it: a verified
+    # address, or Google having verified the same one (recorded only once they next
+    # load a page, so counted here from Google's own data too).
+    from allauth.account.models import EmailAddress
+    from allauth.socialaccount.models import SocialAccount
+    from users.adapters import google_verified_email
+
+    confirmed = set(EmailAddress.objects.filter(user_id__in=guardian_ids, verified=True,
+                                                email__iexact=F('user__email'))
+                    .values_list('user_id', flat=True))
+    for account in SocialAccount.objects.filter(user_id__in=guardian_ids, provider='google').select_related('user'):
+        if google_verified_email(account) == account.user.email.lower():
+            confirmed.add(account.user_id)
+    live['guardian_email'] = _dial('Guardians with confirmed email', len(confirmed), len(guardian_ids),
+                                   'accounts with a swimmer', empty='No guardian accounts')
+
     funnel = _checkout_funnel(week_period[1], week_period[2])
     live['checkouts'] = _dial('Checkouts finished this week', funnel['finished'], funnel['started'],
                               f"families who reached payment · {funnel['retried']} needed more than "
@@ -1283,7 +1299,7 @@ def live_dashboard(request, template_name='admin/financeadmin/dashboard.html'):
     live = _live_dials(today)
     current_term, this_fill = live['current_term'], live['this_fill']
     dials = [live[key] for key in ('term', 'checkouts', 'swims', 'attendance', 'registers', 'next_term',
-                                   'staff_2fa', 'guardian_2fa') if live[key]]
+                                   'staff_2fa', 'guardian_2fa', 'guardian_email') if live[key]]
 
     # --- Tiles -------------------------------------------------------------
     order_rows = [_paid_orders(model, periods) for model, _ in ORDER_MODELS.values()]

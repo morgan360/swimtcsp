@@ -13,6 +13,14 @@ from django.contrib.auth import get_user_model
 User = get_user_model()
 
 
+def google_verified_email(account):
+    """The address a Google SocialAccount says Google has verified, lower-cased, or ''."""
+    data = account.extra_data or {}
+    if data.get("email_verified") or data.get("verified_email"):
+        return (data.get("email") or "").lower()
+    return ""
+
+
 def email_confirmed(user):
     """
     Has the user confirmed the address they sign in with?
@@ -29,9 +37,7 @@ def email_confirmed(user):
     if EmailAddress.objects.filter(user=user, email__iexact=user.email, verified=True).exists():
         return True
     for account in SocialAccount.objects.filter(user=user, provider="google"):
-        data = account.extra_data or {}
-        google_verified = data.get("email_verified") or data.get("verified_email")
-        if google_verified and (data.get("email") or "").lower() == user.email.lower():
+        if google_verified_email(account) == user.email.lower():
             address = EmailAddress.objects.filter(user=user, email__iexact=user.email).first()
             if address:
                 address.verified = True

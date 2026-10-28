@@ -1006,6 +1006,10 @@ class OneChatbotTests(TestCase):
         prompt = self._ask("chatbot:public-swim-chat", "Why hasn't my child moved up a level")
         self.assertIn("Core Aquatic Skills", prompt)
         self.assertIn("- Breathing: B1, B2", prompt)
+        # Morgan, 28 Oct: answers left out that levels overlap and that a repeated
+        # term still teaches new skills.
+        self.assertIn("The levels overlap", prompt)
+        self.assertIn("learn new skills", prompt)
 
     def test_other_questions_do_not(self):
         prompt = self._ask("chatbot:public-swim-chat", "Do you have lockers")

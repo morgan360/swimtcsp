@@ -33,6 +33,7 @@ class OperationsAdminSite(TCSPAdminSite):
     sections = (
         ("lessons", "Lessons", "📚", ("lessons", "lessons_bookings", "waiting_list")),
         ("swims", "Swims", "🏊", ("swims",)),
+        ("timetable", "Timetable & closures", "📅", ("timetable",)),
         ("schools", "Schools", "🏫", ("schools", "schools_bookings")),
         ("members", "Members", "👪", ("users",)),
         ("instructors", "Instructors & attendance", "📋", ("instructors", "anseo", "progress")),

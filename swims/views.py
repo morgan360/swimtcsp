@@ -4,6 +4,7 @@ from swims_orders.models import Order, OrderItem
 from django.utils import timezone
 from datetime import timedelta
 from utils.date_utils import get_next_occurrence
+from timetable.closures import closure_for, closures_between
 from django.urls import reverse
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
@@ -60,6 +61,16 @@ def product_detail(request, id, slug):
     product = get_object_or_404(PublicSwimProduct, id=id, slug=slug, available=True)
     price_variants = PriceVariant.objects.filter(product=product)
     quantities = range(0, 6)
+    # A swim is booked for the next occurrence of its weekday; refuse it when
+    # staff have recorded that day as closed (timetable.closures).
+    next_occurrence_date = get_next_occurrence(product.day_of_week)
+    closure = closure_for('swim', next_occurrence_date,
+                          closures_between(next_occurrence_date, next_occurrence_date))
+
+    if request.method == 'POST' and closure:
+        messages.error(request, f"There is no public swimming on {next_occurrence_date:%A %-d %B} "
+                                f"({closure.title}). You have not been charged.")
+        return redirect(request.path)
 
     if request.method == 'POST':
         # Store coupon
@@ -145,12 +156,12 @@ def product_detail(request, id, slug):
         else:
             print(">>> DEBUG: No items selected, not proceeding.")
 
-    next_occurrence_date = get_next_occurrence(product.day_of_week)
     return render(request, 'swims/product/detail.html', {
         'product': product,
         'price_variants': price_variants,
         'quantities': quantities,
         'next_occurrence_date': next_occurrence_date,
+        'closure': closure,
     })
 
 

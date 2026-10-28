@@ -68,7 +68,16 @@ def info_view(request, section=None):
     raise Http404("Invalid section")
 
 def home(request):
-    return render(request, 'home.html', {'announcement': Announcement.current()})
+    from django.utils import timezone
+
+    from timetable.today import at_the_pool
+
+    now = timezone.localtime()
+    return render(request, 'home.html', {
+        'announcement': Announcement.current(),
+        # "Is the pool open today?" answered on the page people land on.
+        'pool_today': at_the_pool(now.date(), now.time()),
+    })
 
 
 @login_required

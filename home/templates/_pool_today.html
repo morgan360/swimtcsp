@@ -1,0 +1,58 @@
+{% comment %}
+  "Is the pool open today?" on the homepage, from timetable.today.at_the_pool.
+  Server-rendered so it shows at once, with no script to load.
+{% endcomment %}
+<section class="mx-4 my-6" aria-labelledby="pool-today-heading">
+  <div class="max-w-5xl mx-auto bg-white/95 rounded-2xl shadow-xl border border-white/30 overflow-hidden">
+    <div class="flex flex-wrap items-center gap-4 px-6 py-5
+                {% if pool_today.closed %}bg-red-50 text-red-900{% else %}bg-green-50 text-green-900{% endif %}">
+      <i class="fas text-3xl {% if pool_today.closed %}fa-door-closed text-red-600{% else %}fa-circle-check text-green-600{% endif %}"></i>
+      <div class="flex-1 min-w-[12rem]">
+        <div class="text-xs uppercase tracking-wide opacity-75">Today at the pool · {{ pool_today.day|date:"l j F" }}</div>
+        <h2 id="pool-today-heading" class="text-2xl font-bold">
+          {% if pool_today.closed %}Closed today: {{ pool_today.closed.title }}{% else %}Open today{% endif %}
+        </h2>
+        {% if not pool_today.closed %}
+        <div class="text-sm mt-1 space-x-3">
+          {% if pool_today.lesson_closure %}<span><i class="fas fa-graduation-cap mr-1"></i>No lessons today: {{ pool_today.lesson_closure.title }}</span>
+          {% elif pool_today.has_lessons %}<span><i class="fas fa-graduation-cap mr-1"></i>Lessons on as usual</span>{% endif %}
+          {% if pool_today.swim_closure %}<span><i class="fas fa-swimmer mr-1"></i>No public swims today: {{ pool_today.swim_closure.title }}</span>{% endif %}
+        </div>
+        {% endif %}
+      </div>
+      <a href="{% url 'timetable:timetable_grid' %}"
+         class="inline-flex items-center px-5 py-2 rounded-lg bg-blue-700 hover:bg-blue-800 text-white font-semibold shadow">
+        Full timetable <i class="fas fa-arrow-right ml-2"></i>
+      </a>
+    </div>
+
+    {% if not pool_today.closed and not pool_today.swim_closure %}
+    <div class="px-6 py-4">
+      {% if pool_today.swims %}
+        <div class="text-sm font-semibold text-gray-700 mb-3"><i class="fas fa-swimmer mr-1 text-blue-600"></i>Public swims still to come today</div>
+        <div class="flex flex-wrap gap-3">
+          {% for swim in pool_today.swims %}
+          <a {% if swim.places_left != 0 %}href="{{ swim.book_url }}"{% endif %}
+             class="flex flex-col px-4 py-3 rounded-xl border min-w-[10rem]
+                    {% if swim.state == 'now' %}border-blue-500 ring-2 ring-blue-200{% else %}border-gray-200{% endif %}
+                    {% if swim.places_left != 0 %}hover:border-blue-400 hover:shadow-md transition{% else %}opacity-60{% endif %}">
+            <span class="font-bold text-blue-800 tabular-nums">{{ swim.start|time:"H:i" }}–{{ swim.end|time:"H:i" }}</span>
+            <span class="text-sm text-gray-800">{{ swim.name }}</span>
+            <span class="flex flex-wrap gap-1 mt-1 text-xs">
+              {% if swim.state == 'now' %}<span class="px-2 py-0.5 rounded-full bg-blue-600 text-white font-semibold">On now</span>
+              {% elif swim.state == 'next' %}<span class="px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 font-semibold">Next</span>{% endif %}
+              {% if swim.places_left == 0 %}<span class="px-2 py-0.5 rounded-full bg-red-100 text-red-700 font-semibold">Full</span>
+              {% elif swim.places_left is not None %}<span class="px-2 py-0.5 rounded-full font-semibold {% if swim.places_left <= 5 %}bg-amber-100 text-amber-800{% else %}bg-green-100 text-green-800{% endif %}">{{ swim.places_left }} place{{ swim.places_left|pluralize }} left</span>{% endif %}
+            </span>
+          </a>
+          {% endfor %}
+        </div>
+      {% elif pool_today.swims_finished %}
+        <p class="text-gray-600"><i class="fas fa-moon mr-1"></i>Today&rsquo;s public swims have finished. <a href="{% url 'timetable:timetable_grid' %}?day=1" class="underline text-blue-700">See tomorrow</a>.</p>
+      {% else %}
+        <p class="text-gray-600"><i class="fas fa-swimmer mr-1"></i>No public swims today. <a href="{% url 'timetable:timetable_grid' %}" class="underline text-blue-700">See the week</a>.</p>
+      {% endif %}
+    </div>
+    {% endif %}
+  </div>
+</section>

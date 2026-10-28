@@ -61,6 +61,13 @@
                     </div>
 
                     <div class="p-6">
+                        {% if closure %}
+                        <div class="mb-6 bg-amber-50 border border-amber-300 text-amber-900 rounded-lg p-4">
+                            <i class="fas fa-door-closed mr-2"></i>
+                            No public swimming on {{ next_occurrence_date|date:"l j F" }}: {{ closure.title }}.
+                            <a href="{% url 'timetable:timetable_grid' %}" class="underline font-medium">See the timetable</a>
+                        </div>
+                        {% endif %}
                         <form method="post" id="bookingForm">
                             {% csrf_token %}
 
@@ -154,8 +161,8 @@
                                     <i class="fas fa-arrow-left mr-2"></i>
                                     Back to Sessions
                                 </a>
-                                <button type="submit" id="submitBtn"
-                                    class="flex-1 inline-flex items-center justify-center px-8 py-3 bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-medium rounded-lg hover:from-blue-600 hover:to-cyan-600 transition-all duration-200 shadow-lg hover:shadow-xl">
+                                <button type="submit" id="submitBtn"{% if closure %} disabled{% endif %}
+                                    class="disabled:opacity-50 disabled:cursor-not-allowed flex-1 inline-flex items-center justify-center px-8 py-3 bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-medium rounded-lg hover:from-blue-600 hover:to-cyan-600 transition-all duration-200 shadow-lg hover:shadow-xl">
                                     <i class="fas fa-credit-card mr-2"></i>
                                     Complete Booking
                                 </button>

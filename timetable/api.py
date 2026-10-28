@@ -1,11 +1,25 @@
 from datetime import date, timedelta
+from django.urls import reverse
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from lessons.models import Product
 from swims.models import PublicSwimProduct
+from .closures import closure_for, closures_between, closures_on
+from .today import booked_swimmers, places_left
 from .models import CalendarEvent
 from lessons_bookings.models import Term
 from schools_bookings.models import ScoTerm
+
+
+def _days(start, closures):
+    """The week's seven days, each with the closures customers should see."""
+    return [
+        {
+            "date": (day := start + timedelta(days=offset)).isoformat(),
+            "closures": [{"title": c.title, "affects": c.affects} for c in closures_on(day, closures)],
+        }
+        for offset in range(7)
+    ]
 
 
 @api_view(['GET'])
@@ -14,13 +28,16 @@ def public_timetable(request):
     start = date.fromisoformat(start_str) if start_str else date.today()
     end = start + timedelta(days=6)
 
-    products = PublicSwimProduct.objects.filter(available=True)
+    products = PublicSwimProduct.objects.filter(available=True).select_related('category')
+    closures = closures_between(start, end)
+    booked = booked_swimmers(start, end)
     events = []
 
     for offset in range(7):
         current_date = start + timedelta(days=offset)
         for product in products:
             if product.day_of_week == current_date.weekday():
+                closure = closure_for('swim', current_date, closures)
                 events.append({
                     "title": product.category.name,
                     "type": "swim",
@@ -28,11 +45,17 @@ def public_timetable(request):
                     "date": current_date.isoformat(),
                     "start": product.start_time.strftime('%H:%M'),
                     "end": product.end_time.strftime('%H:%M'),
+                    "closed": closure.title if closure else None,
+                    "places_left": places_left(product, current_date, booked),
+                    # Swims are booked for the next occurrence of their weekday, which
+                    # within this week is this date.
+                    "book_url": reverse('swims:product_detail', args=[product.id, product.slug]),
                 })
 
     return Response({
         "start": start,
         "end": end,
+        "days": _days(start, closures),
         "events": events,
     })
 
@@ -44,7 +67,8 @@ def weekly_timetable(request):
     end = start + timedelta(days=6)
 
     lesson_events = []
-    products = Product.objects.filter(active=True)
+    products = Product.objects.filter(active=True).select_related('category')
+    closures = closures_between(start, end)
 
     for offset in range(7):
         current_date = start + timedelta(days=offset)
@@ -58,11 +82,13 @@ def weekly_timetable(request):
                     "date": current_date.isoformat(),
                     "start": product.start_time.strftime('%H:%M'),
                     "end": product.end_time.strftime('%H:%M'),
+                    "closed": getattr(closure_for('lesson', current_date, closures), 'title', None),
                 })
 
     return Response({
         "start": start,
         "end": end,
+        "days": _days(start, closures),
         "events": lesson_events,
     })
 

@@ -10,10 +10,26 @@ class CalendarEvent(models.Model):
         ('special', 'Special Event'),
     ]
 
-    title = models.CharField(max_length=200)
+    # For closures: what is off that day. Customers see these on the timetable
+    # and the homepage; the other categories are for the staff calendar only.
+    AFFECTS_ALL, AFFECTS_LESSONS, AFFECTS_SWIMS = 'all', 'lessons', 'swims'
+    AFFECTS_CHOICES = [
+        (AFFECTS_ALL, 'Whole pool closed'),
+        (AFFECTS_LESSONS, 'No lessons'),
+        (AFFECTS_SWIMS, 'No public swims'),
+    ]
+
+    title = models.CharField(
+        max_length=200,
+        help_text="For a closure, customers see this as the reason, e.g. \"Bank holiday\" or \"Midterm break\".",
+    )
     start_date = models.DateField()
     end_date = models.DateField(blank=True, null=True)
     category = models.CharField(max_length=20, choices=CATEGORY_CHOICES)
+    affects = models.CharField(
+        max_length=10, choices=AFFECTS_CHOICES, default=AFFECTS_ALL,
+        help_text="Closures only: what is off on these days.",
+    )
     description = models.TextField(blank=True)
 
     def get_color(self):

@@ -7,6 +7,9 @@
 
 {% block content %}
 <div>
+    {# Above the hero, which fills most of the screen: the answer people come for. #}
+    {% if pool_today %}{% include "_pool_today.html" %}{% endif %}
+
     <!-- Hero Section -->
     <section
         class="relative bg-cover bg-center h-[60vh] sm:h-[70vh] md:h-[80vh] w-full shadow-lg overflow-hidden"

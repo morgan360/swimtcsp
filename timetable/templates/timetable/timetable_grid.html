@@ -63,7 +63,7 @@
                 <h2 class="text-4xl font-bold text-white mb-2">
                     Pool Timetable
                 </h2>
-                <p class="text-white/90">View times for swimming lessons and public swim sessions this week.</p>
+                <p class="text-white/90">Is the pool open today? Pick a day to see what&rsquo;s on.</p>
             </div>
         </div>
 
@@ -115,6 +115,101 @@
                 </nav>
             </div>
 
+            <!-- Day view: one day at a time, today first. Answers "is the pool open
+                 today?" from the closures staff record in Operations. -->
+            <div x-show="currentTab !== 'calendar'" class="max-w-3xl mx-auto mb-8">
+                <div class="flex gap-2 overflow-x-auto pb-2" role="tablist" aria-label="Choose a day">
+                    <template x-for="i in 7" :key="i">
+                        <button type="button" role="tab" @click="selectedDay = i - 1"
+                            :aria-selected="(selectedDay === i - 1).toString()"
+                            class="shrink-0 flex flex-col items-center min-w-[4.75rem] px-3 py-2 rounded-xl border transition-colors"
+                            :class="selectedDay === i - 1
+                                ? 'bg-blue-700 border-blue-700 text-white shadow-md'
+                                : (isClosedDay(i - 1) ? 'bg-gray-100 border-gray-200 text-gray-500' : 'bg-white border-gray-200 text-gray-800 hover:border-blue-400')">
+                            <span class="text-sm font-semibold" x-text="chipLabel(i - 1)"></span>
+                            <span class="text-xs" x-text="chipDate(i - 1)"></span>
+                            <span x-show="isClosedDay(i - 1)" class="text-[10px] font-bold uppercase tracking-wide"
+                                :class="selectedDay === i - 1 ? 'text-red-200' : 'text-red-600'">Closed</span>
+                        </button>
+                    </template>
+                </div>
+
+                <div class="mt-4 rounded-2xl p-5 flex items-center gap-4 shadow-md border"
+                    :class="{
+                        'bg-green-50 border-green-200 text-green-900': dayStatus(selectedDay).tone === 'open',
+                        'bg-red-50 border-red-200 text-red-900': dayStatus(selectedDay).tone === 'closed',
+                        'bg-white border-gray-200 text-gray-700': dayStatus(selectedDay).tone === 'quiet'
+                    }">
+                    <i class="fas text-3xl shrink-0"
+                        :class="{
+                            'fa-circle-check text-green-600': dayStatus(selectedDay).tone === 'open',
+                            'fa-door-closed text-red-600': dayStatus(selectedDay).tone === 'closed',
+                            'fa-moon text-gray-400': dayStatus(selectedDay).tone === 'quiet'
+                        }"></i>
+                    <div>
+                        <div class="text-xs uppercase tracking-wide opacity-75" x-text="longDayLabel(selectedDay)"></div>
+                        <div class="text-2xl font-bold" x-text="dayStatus(selectedDay).text"></div>
+                        <div class="text-sm" x-show="dayStatus(selectedDay).reason" x-text="dayStatus(selectedDay).reason"></div>
+                    </div>
+                </div>
+
+                <!-- Public swims that day -->
+                <div x-show="currentTab === 'swims'" class="mt-4 space-y-3">
+                    <template x-for="event in sessionsOn(selectedDay)" :key="event.title + event.start">
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 flex flex-wrap items-center gap-3"
+                            :class="{
+                                'opacity-60': event.closed || sessionState(event, selectedDay) === 'over',
+                                'border-blue-500 ring-2 ring-blue-200': sessionState(event, selectedDay) === 'now'
+                            }">
+                            <div class="w-28 shrink-0 font-bold text-blue-800 tabular-nums" x-text="event.start + '–' + event.end"></div>
+                            <div class="flex-1 min-w-[10rem]">
+                                <div class="font-semibold text-gray-800">
+                                    <span x-text="eventIcon(event.type, event.category)"></span>
+                                    <span x-text="cleanTitle(event.title)"></span>
+                                </div>
+                                <div class="flex flex-wrap gap-2 mt-1 text-xs">
+                                    <span x-show="sessionState(event, selectedDay) === 'now'" class="px-2 py-0.5 rounded-full bg-blue-600 text-white font-semibold">On now</span>
+                                    <span x-show="sessionState(event, selectedDay) === 'next'" class="px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 font-semibold">Next</span>
+                                    <span x-show="sessionState(event, selectedDay) === 'over'" class="px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 font-semibold">Finished</span>
+                                    <span x-show="event.closed" class="px-2 py-0.5 rounded-full bg-red-100 text-red-700 font-semibold" x-text="'Closed: ' + event.closed"></span>
+                                    <span x-show="!event.closed && event.places_left !== null && sessionState(event, selectedDay) !== 'over'"
+                                        class="px-2 py-0.5 rounded-full font-semibold"
+                                        :class="event.places_left === 0 ? 'bg-red-100 text-red-700' : (event.places_left <= 5 ? 'bg-amber-100 text-amber-800' : 'bg-green-100 text-green-800')"
+                                        x-text="event.places_left === 0 ? 'Full' : event.places_left + (event.places_left === 1 ? ' place left' : ' places left')"></span>
+                                </div>
+                            </div>
+                            <a x-show="canBook(event, selectedDay)" :href="event.book_url"
+                                class="ml-auto inline-flex items-center px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white text-sm font-semibold shadow">
+                                Book <i class="fas fa-arrow-right ml-2"></i>
+                            </a>
+                        </div>
+                    </template>
+                </div>
+
+                <!-- Lessons that day, grouped by time -->
+                <div x-show="currentTab === 'lessons'" class="mt-4 space-y-3">
+                    <template x-for="[time, lessons] of lessonBlocksOn(selectedDay)" :key="time">
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4" :class="{ 'opacity-60': isClosedDay(selectedDay) }">
+                            <div class="font-bold text-blue-800 tabular-nums mb-2" x-text="time"></div>
+                            <div class="flex flex-wrap gap-2">
+                                <template x-for="lesson in lessons" :key="lesson.title">
+                                    <span class="px-2 py-1 rounded-md bg-blue-50 text-blue-800 text-xs font-medium"
+                                        x-text="lesson.category_short_name || lesson.title"></span>
+                                </template>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+
+                <div class="text-center mt-6">
+                    <button type="button" @click="showWeek = !showWeek"
+                        class="inline-flex items-center gap-2 px-5 py-2 rounded-lg bg-white/80 hover:bg-white text-blue-800 font-semibold shadow">
+                        <i class="fas fa-table-cells"></i>
+                        <span x-text="showWeek ? 'Hide the whole week' : 'See the whole week'"></span>
+                    </button>
+                </div>
+            </div>
+
             <!-- Public Swims Tab -->
             <div x-show="currentTab === 'swims'" class="w-full">
 
@@ -143,6 +238,7 @@
                 </div>
 
 
+                <div x-show="showWeek" x-transition>
                 <!-- Mobile View: Enhanced Card Layout -->
                 <div class="block xl:hidden space-y-4">
                     <template x-for="(day, index) in 7" :key="index">
@@ -235,6 +331,7 @@
                         </template>
                     </div>
                 </div>
+                </div>{# /whole week #}
             </div>
 
             <!-- Lessons Tab -->
@@ -263,6 +360,7 @@
                     </button>
                 </div>
 
+                <div x-show="showWeek" x-transition>
                 <!-- Mobile View: Enhanced Card Layout -->
                 <div class="block xl:hidden space-y-4 max-w-3xl mx-auto">
                     <template x-for="(day, index) in 7" :key="index">
@@ -422,6 +520,7 @@
                         </template>
                     </div>
                 </div>
+                </div>{# /whole week #}
             </div>
 
             {% if user.is_staff %}

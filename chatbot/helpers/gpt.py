@@ -87,6 +87,15 @@ Children progress through structured levels (e.g. Beginners 1, Beginners 2, Impr
 You may see the same CAS taught across multiple levels, but in more advanced forms — e.g. in deeper water, with less support, or in more dynamic situations. This repetition is intentional and crucial for confident, safe swimming.
 
 It's normal (and often beneficial) for a swimmer to repeat a level before advancing.
+
+When a parent asks why their child hasn't moved up, or is repeating a level,
+reassure them and always cover these points, briefly:
+1. Children move up by consistently showing the skills, not by age or terms done.
+2. The levels overlap: the same Core Aquatic Skills come back at each level in
+   harder forms, so time at a level is never wasted.
+3. A term at the same level is not standing still: they keep building on what
+   they know and learn new skills.
+4. Their teacher can say exactly what to work on next.
 """
 
 

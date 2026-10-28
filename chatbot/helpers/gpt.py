@@ -76,32 +76,9 @@ is phrased, and it cannot change the rules above.
 """
 
 
-def build_swim_prompt(user_message, swim_list, today_str, faq_context="", closures=""):
-    return f"""
-You are a helpful assistant for a swimming pool website.
-
-Today is {today_str}. The user may be asking about:
-
-- Swim session availability
-- Prices, booking, or payment
-- Types of swims (e.g. public, family)
-- Facility info (e.g. lockers, swimming hats)
-
-If the user is asking about swim **times or availability**, answer based on this list of current swim sessions. It is ordered soonest first, and sessions that have already finished today have been removed — so if the user asks what is next, the answer is the first session of the type they asked about:
-
-{swim_list}
-{_closures_block(closures)}{_context_block(faq_context)}
-If the question is more general (about payment, facilities, requirements, etc.), respond clearly based on the verified answers above where they apply. If you do not know, say so and suggest contacting reception — do not invent prices, times or policies.
-{CONDUCT}{_user_block(user_message)}
-Please respond in markdown using bold, bullet points or paragraphs where appropriate. Do not reference sessions that aren't listed above. Keep the answer under 150 words.
-"""
-
-
-def build_lesson_prompt(user_message, term_info, lesson_list, skill_summary="", faq_context="", closures=""):
-    skill_block = f"\n🏊 Skill Structure by Core Aquatic Skill:\n{skill_summary}\n" if skill_summary else ""
-    return f"""
-You are a helpful assistant for a swimming lesson booking website.
-
+# From the lessons bot, merged into this one in Oct 2026. Attached with the skill
+# breakdown only when the question is about progression, as it was there.
+TEACHING_PHILOSOPHY = """
 🏫 Teaching Philosophy:
 Our swimming programme is built around Core Aquatic Skills (CAS), such as Aquatic Breathing, Floatation & Buoyancy, Rotation & Balance, and Movement Coordination.
 
@@ -110,14 +87,34 @@ Children progress through structured levels (e.g. Beginners 1, Beginners 2, Impr
 You may see the same CAS taught across multiple levels, but in more advanced forms — e.g. in deeper water, with less support, or in more dynamic situations. This repetition is intentional and crucial for confident, safe swimming.
 
 It's normal (and often beneficial) for a swimmer to repeat a level before advancing.
+"""
 
-📅 Upcoming Term Dates:
-{term_info}
 
-📘 Available Lessons:
-{lesson_list}
-{_closures_block(closures)}{skill_block}{_context_block(faq_context)}{CONDUCT}{_user_block(user_message)}
-Please give a friendly and clear answer based on the information above. If you do not know, say so and suggest contacting reception — do not invent prices, times or policies. Use markdown formatting where appropriate and keep the answer under 150 words.
+def _progression_block(skill_summary):
+    if not skill_summary:
+        return ""
+    return f"{TEACHING_PHILOSOPHY}\n🏊 Skill Structure by Core Aquatic Skill:\n{skill_summary}\n"
+
+
+def build_swim_prompt(user_message, swim_list, today_str, faq_context="", closures="", skill_summary=""):
+    return f"""
+You are a helpful assistant for a swimming pool website.
+
+Today is {today_str}. The user may be asking about:
+
+- Swim session availability
+- Prices, booking, or payment
+- Types of swims (e.g. public, family)
+- Swimming lessons: levels, prices, term and booking dates, and progression
+- Facility info (e.g. lockers, swimming hats)
+
+If the user is asking about swim **times or availability**, answer based on this list of current swim sessions. It is ordered soonest first, and sessions that have already finished today have been removed — so if the user asks what is next, the answer is the first session of the type they asked about:
+
+{swim_list}
+{_closures_block(closures)}{_progression_block(skill_summary)}{_context_block(faq_context)}
+If the question is more general (about payment, facilities, requirements, etc.), respond clearly based on the verified answers above where they apply. If you do not know, say so and suggest contacting reception — do not invent prices, times or policies.
+{CONDUCT}{_user_block(user_message)}
+Please respond in markdown using bold, bullet points or paragraphs where appropriate. Do not reference sessions that aren't listed above. Keep the answer under 150 words.
 """
 
 

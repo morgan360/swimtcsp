@@ -1,8 +1,6 @@
 import logging
 
 from lessons.models import Product
-from lessons_bookings.models import Term
-from django.utils import timezone
 
 from utils.context_processors import get_term_info
 
@@ -47,14 +45,10 @@ def format_booking_phase():
     return "\n".join(lines)
 
 
-def get_upcoming_terms():
-    today = timezone.now().date()
-    return Term.objects.filter(end_date__gte=today).order_by("start_date")
-
 def get_active_lessons():
     return Product.objects.filter(active=True).order_by("day_of_week", "start_time")
 
-# How Product.get_price_for_term charges, in words. Without it the bots could
+# How Product.get_price_for_term charges, in words. Without it the bot could
 # only quote a full-term price to someone joining mid-term, who pays less.
 PRICING_NOTE = (
     "- Prices are per swimmer. Booking after a term has started, you pay only for "
@@ -75,18 +69,6 @@ def _price(lesson):
     if lesson.price:
         parts.append(f"{_euro(lesson.price)} a full term")
     return ", ".join(parts)
-
-
-def format_lesson_list(lessons):
-    lines = []
-    for lesson in lessons:
-        price = _price(lesson)
-        lines.append(
-            f"- **{lesson.category.name}**: {lesson.get_day_of_week_display()} "
-            f"{lesson.start_time.strftime('%H:%M')}–{lesson.end_time.strftime('%H:%M')} "
-            f"({lesson.num_places} places{', ' + price if price else ''})"
-        )
-    return "\n".join(lines + [PRICING_NOTE]) if lines else ""
 
 
 def format_lesson_summary(lessons):

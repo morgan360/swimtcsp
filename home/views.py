@@ -70,8 +70,11 @@ def info_view(request, section=None):
 def home(request):
     from django.utils import timezone
 
+    from timetable.models import PageVisit
     from timetable.today import at_the_pool
+    from timetable.visits import count_visit
 
+    count_visit(request, PageVisit.HOME)
     now = timezone.localtime()
     return render(request, 'home.html', {
         'announcement': Announcement.current(),

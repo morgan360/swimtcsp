@@ -236,6 +236,20 @@ class DashboardTests(TestCase):
         EmailAddress.objects.create(user=parent, email="PARENT@example.com", verified=True, primary=True)
         self.assertEqual(self.dials()["Guardians with confirmed email"]["value"], 1)
 
+    def test_timetable_use_tiles(self):
+        from timetable.models import PageVisit
+
+        today = timezone.localdate()
+        PageVisit.objects.create(date=today, page=PageVisit.TIMETABLE, count=7)
+        PageVisit.objects.create(date=today, page=PageVisit.TAB_CALENDAR, count=2)
+        PageVisit.objects.create(date=today, page=PageVisit.BOOK_TIMETABLE, count=3)
+        PageVisit.objects.create(date=today, page=PageVisit.BOOK_HOME, count=1)
+        tiles = {t["label"]: t for t in self.get().context["tiles"]}
+        self.assertEqual(tiles["Timetable views"]["today"], 7)
+        self.assertIn("2 calendar", tiles["Timetable views"]["hint"])
+        self.assertEqual(tiles["Book clicks"]["today"], 4)
+        self.assertIn("3 from the timetable, 1 from the homepage", tiles["Book clicks"]["hint"])
+
     def test_index_links_to_the_dashboard(self):
         self.client.force_login(self.manager)
         self.assertContains(self.client.get(reverse("finance:index")), reverse("finance:dashboard"))

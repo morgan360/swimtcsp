@@ -204,7 +204,7 @@ class TimetableApiTests(ClosureFixtures, TestCase):
         self.book(self.today, 4, paid=False)
         swim_today = next(e for e in self.swim_week()["events"] if e["date"] == self.today.isoformat())
         self.assertEqual(swim_today["places_left"], 17)
-        self.assertTrue(swim_today["book_url"].startswith("/swims/"))
+        self.assertTrue(swim_today["book_url"].startswith("/timetable/book/"))
 
     def test_places_never_go_below_zero(self):
         self.book(self.today, 25, paid=True)
@@ -278,3 +278,61 @@ class StaticCacheBustingTests(TestCase):
         html = self.client.get(reverse("timetable:timetable_grid")).content.decode()
         self.assertIn(f"js/timetable.js?v={settings.VERSION}", html)
         self.assertIn(f"css/styles.css?v={settings.VERSION}", html)
+
+
+BROWSER = "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) Safari/604.1"
+
+
+class TimetableVisitTests(ClosureFixtures, TestCase):
+    """How often the timetable is used: a count per page per day, nothing more."""
+
+    def count(self, page):
+        from timetable.models import PageVisit
+
+        row = PageVisit.objects.filter(page=page).first()
+        return row.count if row else 0
+
+    def test_timetable_and_homepage_views_are_counted(self):
+        self.client.get(reverse("timetable:timetable_grid"), HTTP_USER_AGENT=BROWSER)
+        self.client.get(reverse("timetable:timetable_grid"), HTTP_USER_AGENT=BROWSER)
+        self.client.get(reverse("home"), HTTP_USER_AGENT=BROWSER)
+        self.assertEqual((self.count("timetable"), self.count("home")), (2, 1))
+
+    def test_bots_and_staff_are_not_counted(self):
+        self.client.get(reverse("timetable:timetable_grid"), HTTP_USER_AGENT="Googlebot/2.1")
+        self.client.get(reverse("timetable:timetable_grid"))  # no user agent
+        staff = get_user_model().objects.create_user(email="desk@tcsp.ie", password="pw")
+        staff.is_staff = True
+        staff.save(update_fields=["is_staff"])
+        self.client.force_login(staff)
+        self.client.get(reverse("timetable:timetable_grid"), HTTP_USER_AGENT=BROWSER)
+        self.assertEqual(self.count("timetable"), 0)
+
+    def test_staff_impersonating_a_customer_are_not_counted(self):
+        self.client.force_login(self.customer)
+        session = self.client.session
+        session["hijack_history"] = ["1"]
+        session.save()
+        self.client.get(reverse("timetable:timetable_grid"), HTTP_USER_AGENT=BROWSER)
+        self.assertEqual(self.count("timetable"), 0)
+
+    def test_tab_pings_count_known_tabs_only(self):
+        url = reverse("timetable:tab_seen")
+        self.assertEqual(self.client.post(url, {"tab": "calendar"}, HTTP_USER_AGENT=BROWSER).status_code, 204)
+        self.client.post(url, {"tab": "anything"}, HTTP_USER_AGENT=BROWSER)
+        from timetable.models import PageVisit
+
+        self.assertEqual(list(PageVisit.objects.values_list("page", "count")), [("tab:calendar", 1)])
+
+    def test_book_click_is_counted_then_goes_to_the_booking_page(self):
+        product = self.swims[self.today.weekday()]
+        response = self.client.get(reverse("timetable:book_swim", args=[product.id]) + "?via=home",
+                                   HTTP_USER_AGENT=BROWSER)
+        self.assertRedirects(response, reverse("swims:product_detail", args=[product.id, product.slug]),
+                             fetch_redirect_response=False)
+        self.assertEqual(self.count("book:home"), 1)
+
+    def test_homepage_card_book_links_go_through_the_counter(self):
+        page = self.client.get(reverse("home"), HTTP_USER_AGENT=BROWSER).content.decode()
+        self.assertIn("/timetable/book/", page)
+        self.assertIn("?via=home", page)

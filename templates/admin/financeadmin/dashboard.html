@@ -32,6 +32,14 @@
   .dash-chats li { list-style: none; padding: 0.45rem 0; border-bottom: 1px solid var(--hairline-color); }
   .dash-chat-meta { color: var(--body-quiet-color); font-size: 0.75rem; }
   .dash-chat-text { color: var(--body-fg); margin-top: 0.15rem; overflow-wrap: anywhere; }
+  .dash-chat-answer { margin-top: 0.2rem; font-size: 0.8rem; }
+  .dash-chat-answer summary { cursor: pointer; color: var(--body-quiet-color); overflow-wrap: anywhere; }
+  .dash-chat-answer[open] summary .dash-answer-preview { display: none; }
+  .dash-chat-answer-body { color: var(--body-fg); margin-top: 0.25rem; padding-left: 0.6rem; border-left: 2px solid var(--hairline-color); overflow-wrap: anywhere; }
+  .dash-chat-answer-body p { margin: 0 0 0.4rem; padding: 0; }
+  .dash-chat-answer-body ul, .dash-chat-answer-body ol { margin: 0 0 0.4rem; padding-left: 1.2rem; }
+  .dash-chats .dash-chat-answer-body li { list-style: disc; padding: 0; border: 0; }
+  .dash-chats .dash-chat-answer-body ol li { list-style: decimal; }
   .dash-badge { display: inline-block; padding: 0 0.4rem; border-radius: 9999px; font-size: 0.7rem; font-weight: 600; color: #fff; background: #0d9488; margin-right: 0.25rem; }
   .dash-badge.is-faq_hedged { background: #d97706; }
   .dash-badge.is-gpt { background: #7c3aed; }
@@ -119,6 +127,12 @@
         </div>
         {% if chat.message %}<div class="dash-chat-text">{{ chat.message|truncatechars:140 }}</div>
         {% else %}<div class="dash-chat-text is-muted">Message hidden: refused as abusive</div>{% endif %}
+        {% if chat.response %}
+        <details class="dash-chat-answer">
+          <summary>Answer<span class="dash-answer-preview">: {{ chat.response|striptags|truncatechars:100 }}</span></summary>
+          <div class="dash-chat-answer-body">{{ chat.response }}</div>
+        </details>
+        {% endif %}
       </li>
       {% endfor %}
     </ul>

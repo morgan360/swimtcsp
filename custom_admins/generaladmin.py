@@ -16,6 +16,9 @@ from chatbot.models import ChatbotQuery, FAQEntry
 from home.models import Announcement
 from chatbot.helpers.client import embed, embed_model
 from chatbot.helpers.faq_index import embedding_text
+from chatbot.helpers.gpt import render_model_markdown
+from django.utils.html import strip_tags
+from django.utils.safestring import mark_safe
 from lessons_bookings.models import LessonEnrollment, Term
 from django.contrib.admin import SimpleListFilter
 from django.db.models import BooleanField, Exists, OuterRef, Value
@@ -250,8 +253,9 @@ class ChatbotQueryAdmin(TCSPModelAdmin):
     list_display = ("source", "timestamp", "short_message", "short_response", "response_type", "confidence_score",
                     "rating")
     list_filter = ("rating", "response_type", "source")
-    readonly_fields = ("user", "session_key", "source", "message", "response", "response_type", "confidence_score",
-                       "timestamp", "rating", "rated_at")
+    readonly_fields = ("user", "session_key", "source", "message", "formatted_response", "response_type",
+                       "confidence_score", "timestamp", "rating", "rated_at")
+    exclude = ("response",)
 
     def short_message(self, obj):
         if not obj.message:
@@ -263,9 +267,19 @@ class ChatbotQueryAdmin(TCSPModelAdmin):
     def short_response(self, obj):
         if not obj.response:
             return "-"
-        return (obj.response[:50] + "...") if len(obj.response) > 50 else obj.response
+        # Plain text of the rendered answer, so the list shows no ** or <p>.
+        text = " ".join(strip_tags(render_model_markdown(obj.response)).split())
+        return (text[:50] + "...") if len(text) > 50 else text
 
     short_response.short_description = "Response"
+
+    def formatted_response(self, obj):
+        """The answer as the visitor saw it: markdown and FAQ HTML rendered, then sanitised."""
+        if not obj.response:
+            return "-"
+        return mark_safe(f'<div class="chat-answer">{render_model_markdown(obj.response)}</div>')
+
+    formatted_response.short_description = "Response"
 
 # Frequently Asked Questions
 

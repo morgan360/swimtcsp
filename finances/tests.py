@@ -434,6 +434,27 @@ class DashboardChatTests(TestCase):
         self.assertIsNotNone(self.get().context["chat_log_url"])
         self.assertIsNone(self.get(self.full_timer).context["chat_log_url"])
 
+    def test_recent_questions_show_formatted_answer(self):
+        from chatbot.models import ChatbotQuery
+        ChatbotQuery.objects.create(source="public_swim", message="Is the pool open?", response_type="GPT",
+                                    response="**Yes**, open till 9.\n\n- Lane swim<script>alert(1)</script>")
+        response = self.get()
+        self.assertContains(response, "<strong>Yes</strong>, open till 9.")
+        self.assertContains(response, "<li>Lane swim")
+        self.assertNotContains(response, "<script>alert")
+
+    def test_chat_log_admin_shows_formatted_answer(self):
+        from chatbot.models import ChatbotQuery
+        chat = ChatbotQuery.objects.create(source="public_swim", message="Price?", response_type="GPT",
+                                           response="It costs **€8**.")
+        self.client.force_login(User.objects.filter(is_superuser=True).first()
+                                or User.objects.create_superuser(email="root@tcsp.ie", password="pw"))
+        change = self.client.get(reverse("settings:chatbot_chatbotquery_change", args=[chat.pk]))
+        self.assertContains(change, "<strong>€8</strong>")
+        changelist = self.client.get(reverse("settings:chatbot_chatbotquery_changelist"))
+        self.assertContains(changelist, "It costs €8.")
+        self.assertNotContains(changelist, "**€8**")
+
 
 class ChatTopicTests(TestCase):
     """Sorting AI chat questions into topics for the dashboard."""

@@ -9,6 +9,7 @@ from django.db.models import F, Sum, Count
 from django.db.models.functions import TruncDay, TruncWeek, TruncMonth, TruncYear
 from django.utils.timezone import now, timedelta
 from django.shortcuts import render
+from django.utils.safestring import mark_safe
 from django.contrib.admin.views.decorators import staff_member_required
 from django.http import JsonResponse, HttpResponse
 from django.utils.timezone import localtime, make_aware
@@ -985,6 +986,7 @@ def _chat_ratings(chats, today):
     Split by where the answer came from, since a poor FAQ answer is fixed by
     editing the FAQ and a poor AI answer usually by adding one.
     """
+    from chatbot.helpers.gpt import render_model_markdown
     from chatbot.models import ChatbotQuery
 
     since = make_aware(datetime.datetime.combine(today - timedelta(days=CHAT_RATING_DAYS - 1), datetime.time.min))
@@ -1006,7 +1008,9 @@ def _chat_ratings(chats, today):
         'faq': counts(rated.filter(response_type__in=['FAQ', 'FAQ_HEDGED'])),
         'ai': counts(rated.filter(response_type='GPT')),
         'unhelpful': [{'when': chat.rated_at, 'kind': CHAT_TYPES.get(chat.response_type, chat.response_type),
-                       'type': chat.response_type, 'message': chat.message, 'response': chat.response}
+                       'type': chat.response_type, 'message': chat.message,
+                       # Rendered so the template's striptags drops markdown as well as HTML.
+                       'response': render_model_markdown(chat.response)}
                       for chat in unhelpful],
     }
 
@@ -1280,6 +1284,7 @@ def live_dashboard(request, template_name='admin/financeadmin/dashboard.html'):
     from django.contrib.auth import get_user_model
     from django.urls import reverse
     from anseo.models import AttendanceEntry
+    from chatbot.helpers.gpt import render_model_markdown
     from chatbot.models import ChatbotQuery
     from custom_admins.financeadmin import finance_admin_site
     from custom_admins.panels import settings_site
@@ -1370,6 +1375,8 @@ def live_dashboard(request, template_name='admin/financeadmin/dashboard.html'):
             'type': chat.response_type,
             # Blocked messages are abusive by definition; the full text is in the admin.
             'message': '' if chat.response_type == 'BLOCKED' else chat.message,
+            # Stored as markdown (model) or HTML (FAQ); rendered and sanitised like the chat widget.
+            'response': mark_safe(render_model_markdown(chat.response)) if chat.response else '',
             'lessons': chat.source == 'public_lesson',
             'customer': bool(chat.user_id),
             'rating': chat.rating,

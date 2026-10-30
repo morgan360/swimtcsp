@@ -13,15 +13,41 @@ from lessons.models import Product
 from lessons_bookings.models import Term
 
 from .closures import CLOSURE_LABELS, closure_for, closures_between
+from .models import CalendarEvent
 
-LESSONS_START, REBOOKING, BOOKING, CLOSED = 'start', 'rebooking', 'booking', 'closed'
+LESSONS_START, REBOOKING, BOOKING = 'start', 'rebooking', 'booking'
+CLOSED, PARTIAL = 'closed', 'partial'  # whole pool / only lessons or only swims
 
 LEGEND = [
     (LESSONS_START, 'Lessons start'),
     (REBOOKING, 'Rebooking opens (current members)'),
     (BOOKING, 'Booking opens to everyone'),
-    (CLOSED, 'Closed / no lessons'),
+    (CLOSED, 'Pool closed'),
+    (PARTIAL, 'No lessons or no public swims'),
 ]
+
+# What is still running during a partial closure.
+STILL_ON = {
+    CalendarEvent.AFFECTS_LESSONS: 'public swims on',
+    CalendarEvent.AFFECTS_SWIMS: 'lessons on',
+}
+
+
+def _closure_event(closure, start, end):
+    label = f"{CLOSURE_LABELS.get(closure.affects, 'Closed')}: {closure.title}"
+    still_on = STILL_ON.get(closure.affects)
+    return (max(closure.start_date, start), min(closure.end_date or closure.start_date, end),
+            PARTIAL if still_on else CLOSED, f"{label} ({still_on})" if still_on else label)
+
+
+def _when(first, last):
+    """"Thu 31 Dec", "24–27 Dec" or "28 Dec – 2 Jan"."""
+    if first == last:
+        return f"{first:%a} {first.day} {first:%b}"
+    if (first.year, first.month) == (last.year, last.month):
+        return f"{first.day}–{last.day} {last:%b}"
+    return f"{first.day} {first:%b} – {last.day} {last:%b}"
+
 
 def _add_months(day, months):
     month = day.month - 1 + months
@@ -53,10 +79,7 @@ def year_calendar(today, months=12):
                                  (term.booking_date, BOOKING, 'Booking opens to everyone')):
             if day and start <= day <= end:
                 events.append((day, day, kind, label))
-    for closure in closures:
-        label = f"{CLOSURE_LABELS.get(closure.affects, 'Closed')}: {closure.title}"
-        events.append((max(closure.start_date, start), min(closure.end_date or closure.start_date, end),
-                       CLOSED, label))
+    events.extend(_closure_event(closure, start, end) for closure in closures)
     events.sort(key=lambda e: (e[0], e[1]))
 
     marks = {}
@@ -80,7 +103,8 @@ def year_calendar(today, months=12):
             ],
         })
 
-    key_dates = [{'first': first, 'last': last, 'kind': kind, 'label': label}
+    key_dates = [{'first': first, 'last': last, 'when': _when(first, last), 'kind': kind, 'label': label,
+                  'is_closure': kind in (CLOSED, PARTIAL)}
                  for first, last, kind, label in events]
     upcoming = [k for k in key_dates if k['last'] >= today]
     return {'months': month_list, 'key_dates': key_dates, 'upcoming': upcoming, 'legend': LEGEND}

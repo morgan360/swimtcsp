@@ -42,10 +42,19 @@
         .yc-day { display: block; margin: 1px; padding: .2rem 0; border-radius: .375rem; }
         .yc-today { outline: 2px solid #1e3a8a; outline-offset: -2px; font-weight: 700; }
         .yc-start { background: #2563eb; color: #fff; font-weight: 700; }
-        .yc-rebooking { background: #f59e0b; color: #111827; font-weight: 700; }
+        .yc-rebooking { background: #7c3aed; color: #fff; font-weight: 700; }
         .yc-booking { background: #16a34a; color: #fff; font-weight: 700; }
         .yc-closed { background: #fee2e2; color: #b91c1c; }
         .yc-dot.yc-closed { background: #ef4444; }
+        .yc-partial { background: #fef3c7; color: #92400e; }
+        .yc-dot.yc-partial { background: #f59e0b; }
+        /* Closures in the Coming up list; neighbouring ones read as one block. */
+        .yc-tint { padding-left: .5rem; padding-right: .5rem; margin-left: -.5rem; margin-right: -.5rem; }
+        .yc-tint-closed { background: #fef2f2; }
+        .yc-tint-partial { background: #fffbeb; }
+        .yc-tint + .yc-tint { border-top-color: transparent !important; }
+        .yc-tint:not(.yc-tint + .yc-tint) { border-top-left-radius: .5rem; border-top-right-radius: .5rem; }
+        .yc-tint:not(:has(+ .yc-tint)) { border-bottom-left-radius: .5rem; border-bottom-right-radius: .5rem; }
     </style>
 
     <div class="max-w-8xl mx-auto">

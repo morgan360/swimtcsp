@@ -8,11 +8,9 @@
   {% if year.upcoming %}
   <ul class="divide-y divide-gray-100 mb-8">
     {% for item in year.upcoming %}
-    <li class="flex items-start gap-3 py-2">
+    <li class="flex items-start gap-3 py-2{% if item.is_closure %} yc-tint yc-tint-{{ item.kind }}{% endif %}">
       <span class="yc-dot yc-{{ item.kind }} mt-1.5"></span>
-      <span class="w-36 shrink-0 font-semibold text-gray-800 tabular-nums">
-        {{ item.first|date:"D j M" }}{% if item.last != item.first %} – {{ item.last|date:"D j M" }}{% endif %}
-      </span>
+      <span class="w-36 shrink-0 font-semibold text-gray-800 tabular-nums">{{ item.when }}</span>
       <span class="text-gray-700">{{ item.label }}</span>
     </li>
     {% endfor %}

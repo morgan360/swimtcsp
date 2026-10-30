@@ -1,0 +1,28 @@
+{% load static %}<!doctype html>
+{# Stands alone from base/_base.html: no navbar or CDN scripts, so it opens fast on poolside signal and needs no JavaScript. #}
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>{% block title %}Registers{% endblock %}</title>
+    <link href="{% static 'css/styles.css' %}?v={{ VERSION|urlencode }}" rel="stylesheet">
+    <link rel="manifest" href="{% static 'favicon/registers.webmanifest' %}"/>
+    <link rel="apple-touch-icon" sizes="180x180" href="{% static 'favicon/apple-touch-icon.png' %}"/>
+    <meta name="theme-color" content="#1e3a8a"/>
+    <meta name="apple-mobile-web-app-capable" content="yes"/>
+    <meta name="mobile-web-app-capable" content="yes"/>
+    <meta name="apple-mobile-web-app-title" content="Registers"/>
+    <style>@media (display-mode: standalone) { .browser-only { display: none; } }</style>
+</head>
+<body class="min-h-screen bg-slate-100 text-slate-900">
+<header class="sticky top-0 z-10 bg-blue-900 px-4 py-3 text-white">
+    {% block header %}{% endblock %}
+</header>
+{% for message in messages %}
+    <p class="mx-4 mt-4 rounded-lg bg-green-100 p-3 font-medium text-green-900">{{ message }}</p>
+{% endfor %}
+<main class="mx-auto max-w-lg px-4 py-4">
+    {% block content %}{% endblock %}
+</main>
+</body>
+</html>

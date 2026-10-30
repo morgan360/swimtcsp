@@ -77,7 +77,32 @@ class YearCalendarTests(TestCase):
                                      start_date=date(2026, 12, 20), end_date=date(2027, 1, 5))
         year = self.build()
         self.assertEqual(self.marks_on(year, date(2027, 1, 6)), ["start"])
-        self.assertEqual(self.marks_on(year, date(2027, 1, 4)), ["closed"])
+        self.assertEqual(self.marks_on(year, date(2027, 1, 4)), ["partial"])
+
+    def test_a_lessons_closure_says_public_swims_are_still_on(self):
+        from timetable.models import CalendarEvent
+
+        CalendarEvent.objects.create(title="Christmas", category="closure", affects="lessons",
+                                     start_date=date(2026, 12, 28), end_date=date(2026, 12, 30))
+        item = next(k for k in self.build()["key_dates"] if k["kind"] == "partial")
+        self.assertEqual(item["label"], "No lessons: Christmas (public swims on)")
+        self.assertEqual(item["when"], "28–30 Dec")
+        self.assertTrue(item["is_closure"])
+
+    def test_dates_are_short(self):
+        from timetable.year import _when
+
+        self.assertEqual(_when(date(2026, 12, 31), date(2026, 12, 31)), "Thu 31 Dec")
+        self.assertEqual(_when(date(2026, 12, 24), date(2026, 12, 27)), "24–27 Dec")
+        self.assertEqual(_when(date(2026, 12, 28), date(2027, 1, 2)), "28 Dec – 2 Jan")
+
+    def test_only_closures_are_tinted(self):
+        from timetable.models import CalendarEvent
+
+        CalendarEvent.objects.create(title="Bank holiday", category="closure", affects="all",
+                                     start_date=date(2026, 11, 2))
+        html = self.client.get(reverse("timetable:timetable_grid")).content.decode()
+        self.assertEqual(html.count("yc-tint yc-tint-closed"), 1)
 
     def test_a_closure_marks_each_day_and_is_one_key_date(self):
         from timetable.models import CalendarEvent

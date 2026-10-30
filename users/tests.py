@@ -678,3 +678,13 @@ class EmailConfirmationReminderTests(TestCase):
 
     def test_get_is_refused(self):
         self.assertEqual(self.client.get(reverse("users:send_confirmation_email")).status_code, 405)
+
+    def test_link_survives_mail_clients_that_drop_gradients(self):
+        from django.core import mail
+
+        self.client.post(reverse("users:send_confirmation_email"))
+        html = dict((t, c) for c, t in mail.outbox[0].alternatives)["text/html"]
+        self.assertIn('bgcolor="#2563eb"', html)
+        self.assertIn("background-color:#2563eb; color:#ffffff", html)
+        self.assertIn("Or paste this link into your browser", html)
+        self.assertNotIn("cta-button", html)

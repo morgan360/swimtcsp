@@ -12,7 +12,5 @@
 {% endblock %}
 
 {% block cta %}
-  <div style="text-align:center; margin: 30px 0;">
-    <a href="{{ password_reset_url }}" class="cta-button">{% trans "Reset password" %}</a>
-  </div>
+  {% trans "Reset password" as label %}{% include "account/email/_cta_button.html" with url=password_reset_url %}
 {% endblock %}

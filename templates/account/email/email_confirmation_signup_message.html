@@ -11,7 +11,11 @@
 {% endblock %}
 
 {% block cta %}
-  <div style="text-align:center; margin: 30px 0;">
-    <a href="{{ activate_url }}" class="cta-button">{% trans "Confirm email" %}</a>
+  {% trans "Confirm email" as label %}{% include "account/email/_cta_button.html" with url=activate_url %}
+  <div style="text-align:center; margin-bottom: 30px;">
+    <p style="font-size:12px; color:#6b7280; margin-top:8px;">
+      {% trans "Or paste this link into your browser:" %}
+    </p>
+    <p style="word-break: break-all; font-size:12px; color:#1f2937;">{{ activate_url }}</p>
   </div>
 {% endblock %}

@@ -1,0 +1,27 @@
+{# A Live Dashboard section's heading, dials and tiles. Pass section. #}
+<h2 class="dash-section-title" id="dash-{{ section.key }}">{{ section.title }}</h2>
+{% if section.dials %}
+<div class="dash-dials">
+  {% for dial in section.dials %}
+  {% include "admin/financeadmin/_dial.html" %}
+  {% endfor %}
+</div>
+{% endif %}
+<div class="dash-tiles">
+  {% for tile in section.tiles %}
+  <div class="dash-card dash-tile">
+    <div class="dash-tile-label">{{ tile.label }}</div>
+    <div class="dash-tile-values">
+      <div>
+        <span class="dash-tile-num{% if not tile.today %} is-muted{% endif %}">{% if tile.money %}€{{ tile.today|floatformat:"0g" }}{% else %}{{ tile.today }}{% endif %}</span>
+        <span class="dash-tile-when">today</span>
+      </div>
+      <div>
+        <span class="dash-tile-num is-week{% if not tile.week %} is-muted{% endif %}">{% if tile.money %}€{{ tile.week|floatformat:"0g" }}{% else %}{{ tile.week }}{% endif %}</span>
+        <span class="dash-tile-when">since {{ week_start|date:"D" }}</span>
+      </div>
+    </div>
+    {% if tile.hint %}<div class="dash-hint">{{ tile.hint }}</div>{% endif %}
+  </div>
+  {% endfor %}
+</div>

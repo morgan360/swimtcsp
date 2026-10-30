@@ -250,6 +250,47 @@ class DashboardTests(TestCase):
         self.assertEqual(tiles["Book clicks"]["today"], 4)
         self.assertIn("3 from the timetable, 1 from the homepage", tiles["Book clicks"]["hint"])
 
+    def test_every_dial_and_tile_is_in_a_section(self):
+        context = self.get().context
+        sections = context["sections"]
+        self.assertEqual(list(sections), ["enrolments", "security", "operations", "admin", "finance"])
+        placed_dials = [d["title"] for s in sections.values() for d in s["dials"]]
+        placed_tiles = [t["label"] for s in sections.values() for t in s["tiles"]]
+        self.assertCountEqual(placed_dials, [d["title"] for d in context["dials"]])
+        self.assertCountEqual(placed_tiles, [t["label"] for t in context["tiles"]])
+
+    def test_coupon_values(self):
+        from django.contrib.contenttypes.models import ContentType
+        from coupons.models import Coupon, CouponRedemption
+
+        current = timezone.now()
+        day = timedelta(days=1)
+
+        def coupon(code, value, balance, **kwargs):
+            fields = {"discount_type": "fixed", "valid_from": current - day, "valid_to": current + day, **kwargs}
+            return Coupon.objects.create(code=code, discount_value=value, balance_remaining=balance, **fields)
+
+        usable = coupon("USABLE", 50, 30)
+        coupon("SPENT", 20, Decimal("0.01"), valid_to=current - day)  # expired, a cent left
+        coupon("OFF", 40, 40, active=False)  # switched off: in neither figure
+        coupon("MULTI", 10, 10, multi_use=True)
+        coupon("PERCENT", 25, 25, discount_type="percent")
+
+        target = {"content_type": ContentType.objects.get_for_model(Coupon), "object_id": usable.id}
+        CouponRedemption.objects.create(coupon=usable, redeemed_amount=20, confirmed=True, **target)
+        CouponRedemption.objects.create(coupon=usable, redeemed_amount=99, confirmed=False, **target)
+        old = CouponRedemption.objects.create(coupon=usable, redeemed_amount=5, confirmed=True, **target)
+        CouponRedemption.objects.filter(id=old.id).update(redeemed_at=current - timedelta(days=30))
+
+        response = self.get()
+        totals = response.context["coupons"]
+        self.assertEqual((totals["unused"]["value"], totals["unused"]["count"]), (Decimal("30"), 1))
+        self.assertEqual((totals["expired"]["value"], totals["expired"]["count"]), (Decimal("0.01"), 1))
+        self.assertEqual(totals["used_week"]["value"], Decimal("20"))
+        self.assertEqual((totals["used_all"]["value"], totals["used_all"]["count"]), (Decimal("25"), 2))
+        self.assertEqual(totals["multi_use"], 1)
+        self.assertNotContains(response, "USABLE")
+
     def test_index_links_to_the_dashboard(self):
         self.client.force_login(self.manager)
         self.assertContains(self.client.get(reverse("finance:index")), reverse("finance:dashboard"))

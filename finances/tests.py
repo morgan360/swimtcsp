@@ -300,6 +300,30 @@ class DashboardTests(TestCase):
         tiles = {t["label"]: t for t in response.context["tiles"]}
         self.assertEqual(tiles["Attackers blocked"]["today"], 1)
 
+    def section_links(self):
+        sections = self.get().context["sections"]
+        return {key: [l["url"] for l in s.get("links", [])] for key, s in sections.items()}
+
+    def test_sections_link_to_their_full_figures(self):
+        from django.contrib.auth.models import Permission
+
+        self.manager.user_permissions.add(
+            Permission.objects.get(codename="view_coupon"), Permission.objects.get(codename="view_securityincident"))
+        urls = self.section_links()
+        self.assertEqual(urls["finance"], [reverse("finance:revenue_report"), reverse("finance:reconciliation"),
+                                           reverse("finance:coupons_coupon_changelist"),
+                                           reverse("finance:activity_report")])
+        self.assertEqual(urls["enrolments"], [reverse("finance:lesson_enrollments")])
+        self.assertEqual(urls["security"], [reverse("settings:security_securityincident_changelist")])
+        for url in urls["finance"] + urls["enrolments"] + urls["security"]:
+            self.assertEqual(self.client.get(url).status_code, 200, url)
+
+    def test_links_someone_cannot_open_are_left_out(self):
+        urls = self.section_links()
+        self.assertNotIn(reverse("finance:coupons_coupon_changelist"), urls["finance"])
+        self.assertEqual(urls["security"], [])
+        self.assertEqual(len(urls["finance"]), 3)
+
     def test_index_links_to_the_dashboard(self):
         self.client.force_login(self.manager)
         self.assertContains(self.client.get(reverse("finance:index")), reverse("finance:dashboard"))

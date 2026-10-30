@@ -1,0 +1,53 @@
+{% extends "anseo/phone_base.html" %}
+
+{% block title %}Register · {{ lesson.name }}{% endblock %}
+
+{% block header %}
+    <a href="{% url 'anseo:registers' %}" class="text-sm text-blue-100 underline">← Registers</a>
+    <h1 class="mt-1 text-lg font-bold">{{ lesson.name }}</h1>
+    <p class="text-sm text-blue-100">{{ class_day|date:"l j F" }}</p>
+{% endblock %}
+
+{% block content %}
+    {% if already_saved %}
+        <p class="mb-3 rounded-lg bg-green-100 p-3 text-sm font-medium text-green-900">Already saved. Change anything below and save again.</p>
+    {% else %}
+        <p class="mb-3 text-sm text-slate-600">Everyone starts as Here. Tap anyone who wasn't, then save.</p>
+    {% endif %}
+
+    <form method="post">
+        {% csrf_token %}
+        <ul class="space-y-3 pb-24">
+            {% for row in rows %}
+                <li class="rounded-xl bg-white p-3 shadow">
+                    <p class="mb-2 font-semibold">{{ row.enrolment.swimling.first_name }} {{ row.enrolment.swimling.last_name }}</p>
+                    <div class="grid grid-cols-4 gap-1">
+                        {% for code, label in statuses %}
+                            <label class="cursor-pointer">
+                                <input type="radio" class="peer sr-only" name="status_{{ row.enrolment.id }}" value="{{ code }}"
+                                       {% if row.status == code %}checked{% endif %}>
+                                <span class="block rounded-lg border border-slate-300 py-3 text-center text-sm font-semibold text-slate-700
+                                             {% if code == 'present' %}peer-checked:border-green-600 peer-checked:bg-green-600
+                                             {% elif code == 'absent' %}peer-checked:border-red-600 peer-checked:bg-red-600
+                                             {% elif code == 'late' %}peer-checked:border-amber-500 peer-checked:bg-amber-500
+                                             {% else %}peer-checked:border-blue-600 peer-checked:bg-blue-600{% endif %}
+                                             peer-checked:text-white">{{ label }}</span>
+                            </label>
+                        {% endfor %}
+                    </div>
+                    <details class="mt-2 text-sm" {% if row.note %}open{% endif %}>
+                        <summary class="text-slate-500">Add a note</summary>
+                        <input type="text" name="note_{{ row.enrolment.id }}" value="{{ row.note }}" maxlength="255"
+                               aria-label="Note for {{ row.enrolment.swimling.first_name }}"
+                               class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-base">
+                    </details>
+                </li>
+            {% endfor %}
+        </ul>
+        <div class="fixed inset-x-0 bottom-0 bg-white p-3 shadow-lg">
+            <button type="submit" class="mx-auto block w-full max-w-lg rounded-xl bg-blue-800 py-4 text-lg font-bold text-white">
+                Save register
+            </button>
+        </div>
+    </form>
+{% endblock %}

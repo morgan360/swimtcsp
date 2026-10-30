@@ -1,0 +1,59 @@
+{% extends "anseo/phone_base.html" %}
+
+{% block header %}
+    <h1 class="text-lg font-bold">Registers</h1>
+    <p class="text-sm text-blue-100">{{ today|date:"l j F" }}</p>
+{% endblock %}
+
+{% block content %}
+    {% if missed_rows %}
+        <h2 class="mb-2 font-bold text-red-700">Still to do from this past week</h2>
+        <ul class="mb-6 space-y-2">
+            {% for row in missed_rows %}
+                <li>
+                    <a href="{% url 'anseo:phone_roll' row.lesson_id row.day|date:'Y-m-d' %}"
+                       class="block rounded-xl border-l-4 border-red-500 bg-white p-4 shadow">
+                        <span class="block font-semibold">{{ row.name }}</span>
+                        <span class="block text-sm text-slate-600">{{ row.day|date:"l j M" }} · {{ row.swimmers }} swimmer{{ row.swimmers|pluralize }}</span>
+                    </a>
+                </li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    <h2 class="mb-2 font-bold">Today</h2>
+    <ul class="space-y-2">
+        {% for row in today_rows %}
+            <li>
+                <a href="{% url 'anseo:phone_roll' row.lesson_id row.day|date:'Y-m-d' %}"
+                   class="flex items-center justify-between gap-3 rounded-xl border-l-4 bg-white p-4 shadow {% if row.done %}border-green-500{% elif row.not_started %}border-slate-300{% else %}border-amber-500{% endif %}">
+                    <span>
+                        <span class="block font-semibold">{{ row.name }}</span>
+                        <span class="block text-sm text-slate-600">{{ row.swimmers }} swimmer{{ row.swimmers|pluralize }}</span>
+                    </span>
+                    <span class="shrink-0 text-sm font-semibold {% if row.done %}text-green-700{% elif row.not_started %}text-slate-500{% else %}text-amber-700{% endif %}">
+                        {% if row.done %}✓ Done{% elif row.not_started %}Later{% else %}To do{% endif %}
+                    </span>
+                </a>
+            </li>
+        {% empty %}
+            <li class="rounded-xl bg-white p-4 text-slate-600 shadow">No classes today.</li>
+        {% endfor %}
+    </ul>
+
+    {% if has_own_classes %}
+        <p class="mt-6 text-center">
+            {% if show_all %}
+                <a class="font-semibold text-blue-800 underline" href="{% url 'anseo:registers' %}">Show only my classes</a>
+            {% else %}
+                <a class="font-semibold text-blue-800 underline" href="{% url 'anseo:registers' %}?all=1">Covering a class? Show all classes</a>
+            {% endif %}
+        </p>
+    {% endif %}
+
+    <details class="browser-only mt-6 rounded-xl bg-white p-4 text-sm text-slate-700 shadow">
+        <summary class="font-semibold">Put this on your home screen</summary>
+        <p class="mt-2"><strong>iPhone:</strong> in Safari, tap Share, then Add to Home Screen.</p>
+        <p class="mt-1"><strong>Android:</strong> in Chrome, tap the ⋮ menu, then Add to Home screen.</p>
+    </details>
+{% endblock %}

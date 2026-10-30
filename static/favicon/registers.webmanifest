@@ -1,0 +1,23 @@
+{
+  "name": "TCSP Registers",
+  "short_name": "Registers",
+  "start_url": "/anseo/registers/",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/static/favicon/web-app-manifest-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/static/favicon/web-app-manifest-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "theme_color": "#1e3a8a",
+  "background_color": "#f1f5f9",
+  "display": "standalone"
+}

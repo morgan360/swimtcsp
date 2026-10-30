@@ -1,14 +1,13 @@
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, get_object_or_404, redirect
 from django.template.loader import render_to_string
-from django.http import JsonResponse, HttpResponse
+from django.http import Http404, JsonResponse, HttpResponse
 from django.contrib import messages
 from django.db.models import Q
 from lessons_bookings.models import Term
 from shopping_cart.forms import CartAddProductForm
 from users.models import Swimling
 from .models import Program, Category, Product
-from .filters import ProductFilter
 from utils.context_processors import get_term_info
 from utils.terms_utils import get_term_context_data, booking_pause_notice, public_booking_paused
 from utils.terms_utils import get_current_term
@@ -376,14 +375,11 @@ def product_detail(request, id):
 
 
 # ---------------------------------
-# 🔍 List Products with Filtering UI
+# 🔍 Old category links
 # ---------------------------------
-def product_list(request):
-    filter = ProductFilter(request.GET, queryset=Product.objects.all())
-
-    if 'clear_filters' in request.GET:
-        filter = ProductFilter(queryset=Product.objects.all())
-
-    return render(request, 'lessons/products/list_filter.html', {
-        'filter': filter,
-    })
+def product_list(request, category_slug):
+    """The category page was never finished, so send real categories to the
+    lesson list. Anything else under /lessons/ is a 404."""
+    if not Category.objects.filter(slug=category_slug).exists():
+        raise Http404("No such category")
+    return redirect('lessons:lesson_list')

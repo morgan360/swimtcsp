@@ -119,7 +119,7 @@ def newsletter_signup(request):
                 messages.error(request, f"Could not subscribe: {getattr(e, 'text', str(e))}")
 
             return redirect("home")  # Or wherever you want to go after form submit
-    else:
-        form = NewsletterSignupForm()
+        messages.error(request, "Please enter a valid email address.")
 
-    return render(request, "mailchimp/newsletter_signup.html", {"form": form})
+    # The form lives on the homepage; this URL has no page of its own.
+    return redirect("home")

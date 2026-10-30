@@ -202,3 +202,33 @@ class RedeemOnPaymentTests(TestCase):
         self.assertEqual((self.coupon.times_used, self.coupon.balance_remaining), (1, Decimal("0.00")))
         self.assertTrue(self.coupon.used_by_users.filter(pk=self.user.pk).exists())
         self.assertTrue(CouponRedemption.objects.get().confirmed)
+
+
+
+class CouponPagesTests(TestCase):
+    """The pages show live codes and balances, so they are staff only."""
+
+    def setUp(self):
+        self.coupon = Coupon.objects.create(
+            code="TESTCODE", discount_type="fixed", discount_value=Decimal("5"),
+            valid_from=timezone.now() - timedelta(days=1), valid_to=timezone.now() + timedelta(days=1),
+        )
+        self.urls = ("/coupons/", f"/coupons/{self.coupon.code}/")
+
+    def test_customers_and_visitors_cannot_see_codes(self):
+        customer = get_user_model().objects.create_user(email="c@test.com", password="pw")
+        for login in (False, True):
+            if login:
+                self.client.force_login(customer)
+            for url in self.urls:
+                response = self.client.get(url)
+                self.assertEqual(response.status_code, 302, url)
+                self.assertNotIn("TESTCODE", response.content.decode())
+
+    def test_staff_see_the_pages(self):
+        staff = get_user_model().objects.create_user(email="s@test.com", password="pw")
+        staff.is_staff = True
+        staff.save()
+        self.client.force_login(staff)
+        for url in self.urls:
+            self.assertContains(self.client.get(url), "TESTCODE")

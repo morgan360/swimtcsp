@@ -105,6 +105,11 @@ CHATBOT_MODERATION_MODEL = config('CHATBOT_MODERATION_MODEL', default='gpt-4o-mi
 # a few minutes.
 CHATBOT_ABUSE_ALERT_EMAIL = config('CHATBOT_ABUSE_ALERT_EMAIL', default='')
 
+# Temporary blocks for scanners, form spam and chat abuse (security.services).
+# False stops new blocks and lifts the existing ones; alerts use the address above.
+SECURITY_BLOCKING_ON = config('SECURITY_BLOCKING_ON', default=True, cast=bool)
+SECURITY_IP_ALLOWLIST = config('SECURITY_IP_ALLOWLIST', default='', cast=lambda v: [a.strip() for a in v.split(',') if a.strip()])
+
 # The ceiling on the whole site's model spend, which the per-caller buckets
 # above cannot provide: enough separate visitors add up without any one of them
 # misbehaving. Counts completions only, so FAQ answers keep working after it
@@ -240,6 +245,7 @@ INSTALLED_APPS = [
     'rangefilter',
     # My Apps
     'chatbot',
+    'security',
     'users',
     'home',
     'lessons',
@@ -269,6 +275,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'security.middleware.AttackBlockMiddleware',  # first: a blocked address costs nothing else
     'django.contrib.sessions.middleware.SessionMiddleware',
     'utils.middleware.PaymentGatewaySessionMiddleware',  # ✅ Must be after SessionMiddleware
     'django.middleware.common.CommonMiddleware',

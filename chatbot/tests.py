@@ -737,14 +737,15 @@ class BlockedMessageTests(TestCase):
         self.assertIn("sexual", sent.body)
         self.assertIn(self.ABUSE, sent.body)
 
-    def test_a_burst_from_one_session_sends_one_email(self):
-        """A troll works through variants in minutes; that is one incident."""
+    def test_a_burst_from_one_session_sends_one_alert_and_one_block_email(self):
+        """A troll works through variants in minutes; that is one incident,
+        and the third message ends it, so later ones are not even recorded."""
         with self._flagged():
             for _ in range(5):
                 self._post(self.ABUSE)
 
-        self.assertEqual(ChatbotQuery.objects.count(), 5)
-        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(ChatbotQuery.objects.count(), 3)
+        self.assertEqual(len(mail.outbox), 2)
 
     @override_settings(CHATBOT_ABUSE_ALERT_EMAIL="")
     def test_no_recipients_configured_still_refuses(self):
@@ -763,6 +764,25 @@ class BlockedMessageTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertIn(moderation.REFUSAL, response.json()["reply"])
+
+    def test_third_refusal_blocks_the_chat_and_emails(self):
+        from django.core.cache import cache
+        from security.models import SecurityIncident
+        from security.services import CHAT_UNAVAILABLE
+
+        cache.clear()
+        self.addCleanup(cache.clear)
+        with self._flagged():
+            for _ in range(3):
+                self.assertIn(moderation.REFUSAL, self._post(self.ABUSE).json()["reply"])
+        self.assertEqual(SecurityIncident.objects.filter(kind="chat_refused").count(), 3)
+        self.assertEqual(SecurityIncident.objects.filter(kind="chat_blocked").count(), 1)
+        self.assertTrue(any("Chat blocked" in m.subject for m in mail.outbox))
+
+        # Now even a harmless question gets the same answer, and no model call.
+        response = self._post("what time do you open")
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(CHAT_UNAVAILABLE, response.json()["reply"])
 
     def test_clean_message_is_unaffected(self):
         """Screening must be invisible to ordinary traffic.

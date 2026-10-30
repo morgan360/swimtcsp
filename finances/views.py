@@ -1278,12 +1278,14 @@ def _whats_on(today):
             'empty': not (swims or lessons or schools)}
 
 
+SECURITY_INCIDENTS_SHOWN = 10
+
 # Which section of the Live Dashboard each dial (by key) and tile (by label) is in.
 DASHBOARD_SECTIONS = [
     ('enrolments', 'Enrolments', ('term', 'next_term', 'checkouts'),
      ('New enrolments', 'Joined waiting list', 'New customers', 'New guardians')),
     ('security', 'Security', ('staff_2fa', 'guardian_2fa', 'guardian_email'),
-     ('Customers logged in',)),
+     ('Customers logged in', 'Chat messages refused', 'Attackers blocked')),
     ('operations', 'Operations', ('swims', 'attendance', 'registers'),
      ('Swim check-ins', 'Timetable views', 'Homepage views', 'Book clicks')),
     ('admin', 'Admin', (),
@@ -1414,6 +1416,15 @@ def live_dashboard(request, template_name='admin/financeadmin/dashboard.html'):
         hint=(f"This week: {week_chats.get('GPT', 0)} by the AI model, "
               f"{week_chats.get('FAQ', 0) + week_chats.get('FAQ_HEDGED', 0)} from the FAQ"),
     ))
+    from security.models import SecurityIncident
+
+    tiles += [
+        tile('Chat messages refused', _period_counts(chats.filter(response_type='BLOCKED'), periods, 'timestamp'),
+             hint='Abusive messages the chatbot turned down'),
+        tile('Attackers blocked', _period_counts(SecurityIncident.objects.filter(kind__in=SecurityIncident.BLOCKS),
+                                                 periods, 'created'),
+             hint='Scanners, form spam and chat abuse'),
+    ]
     chat_summary = _chat_summary(chats)
     recent_chats = [
         {
@@ -1468,6 +1479,7 @@ def live_dashboard(request, template_name='admin/financeadmin/dashboard.html'):
         'whats_on': _whats_on(today),
         'tiles': tiles,
         'sections': sections,
+        'incidents': SecurityIncident.objects.all()[:SECURITY_INCIDENTS_SHOWN],
         'coupons': _coupon_totals(week_period),
         'coupons_url': reverse('finance:coupons_coupon_changelist'),
         'term': current_term,

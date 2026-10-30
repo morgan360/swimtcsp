@@ -78,6 +78,7 @@ class FinanceAdminSite(TCSPAdminSite):
                  self.admin_view(fv.reconciliation_details), name='reconciliation_details'),
             path('reconciliation/export/csv/', self.admin_view(fv.reconciliation_export_csv), name='reconciliation_export_csv'),
             path('lesson-enrollments/', self.admin_view(fv.lesson_enrollments), name='lesson_enrollments'),
+            path('unrecorded-registers/', self.admin_view(fv.unrecorded_registers), name='unrecorded_registers'),
             path('activity/', self.admin_view(fv.activity_report), name='activity_report'),
             path('dashboard/', self.admin_view(fv.live_dashboard), name='dashboard'),
         ]

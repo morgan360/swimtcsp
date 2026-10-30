@@ -1278,6 +1278,67 @@ def _whats_on(today):
             'empty': not (swims or lessons or schools)}
 
 
+def _unrecorded_registers(today, current_time, weeks_back=0):
+    """Classes that have run in a week with nothing marked on their register.
+
+    Leaves out classes on a closed day and ones that haven't started yet. A roll
+    is dated when it is marked, so "recorded" means marked at any point that week:
+    catching up on a class the following week counts for the wrong week.
+    """
+    from anseo.models import AttendanceEntry
+    from lessons_bookings.models import LessonAssignment, LessonEnrollment, Term
+    from timetable.closures import closure_for, closures_between
+
+    monday = today - timedelta(days=today.weekday() + 7 * weeks_back)
+    sunday = monday + timedelta(days=6)
+    closures = closures_between(monday, sunday)
+    # A range rather than __date, which needs MySQL's time zone tables.
+    week_start = make_aware(datetime.datetime.combine(monday, datetime.time.min))
+    week_end = week_start + timedelta(days=7)
+    rows, due = [], 0
+    for offset in range(7):
+        day = monday + timedelta(days=offset)
+        term = Term.objects.filter(start_date__lte=day, end_date__gte=day).first()
+        if day > today or not term or closure_for('lesson', day, closures):
+            continue
+        lessons = (LessonEnrollment.objects.filter(term=term, lesson__day_of_week=day.weekday())
+                   .values('lesson_id', 'lesson__name', 'lesson__start_time')
+                   .annotate(swimmers=Count('id')).order_by('lesson__start_time', 'lesson__name'))
+        if day == today:
+            lessons = [row for row in lessons
+                       if not row['lesson__start_time'] or row['lesson__start_time'] <= current_time]
+        lessons = list(lessons)
+        due += len(lessons)
+        marked = set(AttendanceEntry.objects.exclude(status=AttendanceEntry.UNKNOWN)
+                     .filter(roll__term=term, roll__window_start__gte=week_start, roll__window_start__lt=week_end)
+                     .values_list('roll__product_id', flat=True))
+        instructors = defaultdict(list)
+        for assignment in LessonAssignment.objects.filter(term=term).select_related('instructor').prefetch_related('lessons'):
+            for lesson in assignment.lessons.all():
+                instructors[lesson.id].append(assignment.instructor.get_full_name())
+        rows += [{'day': day, 'time': row['lesson__start_time'], 'name': row['lesson__name'],
+                  'swimmers': row['swimmers'], 'instructors': ', '.join(instructors[row['lesson_id']]),
+                  'lesson_id': row['lesson_id'], 'term_id': term.id}
+                 for row in lessons if row['lesson_id'] not in marked]
+    return {'rows': rows, 'due': due, 'monday': monday, 'sunday': sunday}
+
+
+@staff_member_required
+def unrecorded_registers(request, template_name='admin/financeadmin/unrecorded_registers.html'):
+    """Classes with no register taken, this week or last week."""
+    from custom_admins.financeadmin import finance_admin_site
+
+    current = localtime(now())
+    last_week = request.GET.get('week') == 'last'
+    context = {
+        **finance_admin_site.each_context(request),
+        'title': 'Unrecorded registers',
+        'last_week': last_week,
+        **_unrecorded_registers(current.date(), current.time(), weeks_back=1 if last_week else 0),
+    }
+    return render(request, template_name, context)
+
+
 SECURITY_INCIDENTS_SHOWN = 10
 
 # Which section of the Live Dashboard each dial (by key) and tile (by label) is in.
@@ -1478,6 +1539,7 @@ def live_dashboard(request, template_name='admin/financeadmin/dashboard.html'):
     coupons_url = (reverse('finance:coupons_coupon_changelist')
                    if request.user.has_perm('coupons.view_coupon') else None)
     sections['enrolments']['links'] = [link('Lesson Enrollments', 'finance:lesson_enrollments')]
+    sections['operations']['links'] = [link('Classes with unrecorded registers', 'finance:unrecorded_registers')]
     sections['finance']['links'] = [link('Revenue report', 'finance:revenue_report'),
                                     link('Reconciliation', 'finance:reconciliation'),
                                     *([{'label': 'All coupons', 'url': coupons_url}] if coupons_url else []),

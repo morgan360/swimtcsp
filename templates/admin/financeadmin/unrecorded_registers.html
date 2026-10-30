@@ -1,0 +1,39 @@
+{% extends "admin/base_site.html" %}
+
+{% block title %}Unrecorded registers{% endblock %}
+{% block content_title %}<h1>Classes with unrecorded registers</h1>{% endblock %}
+{% block nav-sidebar %}{% endblock %}
+
+{% block content %}
+<p>
+  {% if last_week %}<a href="?">This week</a> · <strong>Last week</strong>{% else %}<strong>This week</strong> · <a href="?week=last">Last week</a>{% endif %}
+  · {{ monday|date:"j M" }} – {{ sunday|date:"j M" }}
+</p>
+<p><strong>{{ rows|length }}</strong> of {{ due }} class{{ due|pluralize:"es" }} so far with nothing marked.</p>
+
+{% if rows %}
+<div style="overflow-x: auto;">
+<table>
+  <thead><tr><th>Day</th><th>Time</th><th>Class</th><th>Instructor</th><th>Swimmers</th><th></th></tr></thead>
+  <tbody>
+    {% for row in rows %}
+    <tr>
+      <td>{{ row.day|date:"D j M" }}</td>
+      <td>{{ row.time|time:"H:i" }}</td>
+      <td>{{ row.name }}</td>
+      <td>{{ row.instructors|default:"Not assigned" }}</td>
+      <td>{{ row.swimmers }}</td>
+      <td><a href="{% url 'anseo:take_roll' row.lesson_id row.term_id %}">Take register</a></td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+{% else %}
+<p>Every class that has run so far has something marked.</p>
+{% endif %}
+
+<p class="help">
+  Leaves out closed days and classes that haven't started yet. A register counts for the week it was marked, so catching up on a class the following week still shows it here for its own week.
+</p>
+{% endblock %}

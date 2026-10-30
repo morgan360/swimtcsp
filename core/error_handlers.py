@@ -23,4 +23,7 @@ def custom_handler503(request, template_name="503.html"):
 
 def csrf_failure_view(request, reason="", template_name="403.html"):
     """Render a friendly page for CSRF failures (403)."""
+    from security.services import note_csrf_failure
+
+    note_csrf_failure(request)
     return render(request, template_name, status=403)

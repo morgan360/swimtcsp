@@ -87,6 +87,22 @@
 {% include "admin/financeadmin/_dash_section.html" with section=sections.security %}
 <div class="dash-charts">
   <div class="dash-card">
+    <h2>Security incidents</h2>
+    {% if incidents %}
+    <ul class="dash-chats">
+      {% for incident in incidents %}
+      <li>
+        <div class="dash-chat-meta"><span class="dash-badge{% if incident.kind != "chat_refused" %} is-blocked{% else %} is-faq_hedged{% endif %}">{{ incident.get_kind_display }}</span>{{ incident.created|date:"D j M, H:i" }}</div>
+        <div class="dash-chat-text">{{ incident.ip }}{% if incident.path %} · {{ incident.path|truncatechars:60 }}{% endif %}</div>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="dash-hint">Nothing recorded yet.</p>
+    {% endif %}
+    <p class="dash-hint">Blocks lift themselves: an hour for an address, a day for a chat session.</p>
+  </div>
+  <div class="dash-card">
     <h2>Logins and sign-ups · last 14 days</h2>
     <div class="dash-chart"><canvas id="loginsChart"></canvas></div>
   </div>

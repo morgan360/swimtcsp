@@ -27,6 +27,7 @@ from .helpers import alerts, moderation
 from .helpers.swim import format_swim_list, get_available_swims
 from timetable.closures import closures_text
 from .helpers.throttle import TOO_MANY_MESSAGES, is_rate_limited
+from security.services import CHAT_UNAVAILABLE, chat_is_blocked, note_chat_refusal
 
 logger = logging.getLogger(__name__)
 
@@ -127,6 +128,8 @@ def _screen(request, source, message):
         source, result.category_text or "uncategorised",
     )
 
+    note_chat_refusal(request)
+
     # The row is the audit trail, recorded with the refusal as the response so
     # it shows what the customer actually saw. Notification is by email only —
     # there is deliberately no flag surfaced in the admin.
@@ -154,6 +157,10 @@ def _prepare(request, source):
 
     if not request.session.session_key:
         request.session.save()
+
+    # 200, as with a refusal: chat.js renders `reply` for a 200 only.
+    if chat_is_blocked(request):
+        return None, JsonResponse({"reply": f"<p>{CHAT_UNAVAILABLE}</p>"})
 
     if is_rate_limited(request):
         return None, JsonResponse({"reply": f"<p>{TOO_MANY_MESSAGES}</p>"}, status=429)

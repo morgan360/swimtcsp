@@ -291,6 +291,15 @@ class DashboardTests(TestCase):
         self.assertEqual(totals["multi_use"], 1)
         self.assertNotContains(response, "USABLE")
 
+    def test_security_incidents_are_shown(self):
+        from security.models import SecurityIncident
+
+        SecurityIncident.objects.create(kind="probe_blocked", ip="203.0.113.9", path="/wp-login.php")
+        response = self.get()
+        self.assertContains(response, "203.0.113.9")
+        tiles = {t["label"]: t for t in response.context["tiles"]}
+        self.assertEqual(tiles["Attackers blocked"]["today"], 1)
+
     def test_index_links_to_the_dashboard(self):
         self.client.force_login(self.manager)
         self.assertContains(self.client.get(reverse("finance:index")), reverse("finance:dashboard"))

@@ -132,3 +132,13 @@ class ProratedPricingTestCase(TestCase):
         )
 
         self.assertEqual(self.product.get_prorated_price(term), Decimal('100.00'))
+
+
+class OldCategoryLinkTests(TestCase):
+    def test_unknown_category_is_a_404(self):
+        self.assertEqual(self.client.get("/lessons/999999/").status_code, 404)
+
+    def test_real_category_goes_to_the_lesson_list(self):
+        category = Category.objects.create(name="Beginners 1", program=Program.objects.create(name="P"))
+        self.assertRedirects(self.client.get(f"/lessons/{category.slug}/"),
+                             "/lessons/lesson_list/", fetch_redirect_response=False)

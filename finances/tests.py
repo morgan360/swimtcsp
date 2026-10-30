@@ -342,10 +342,10 @@ class DashboardTests(TestCase):
             enrolment = LessonEnrollment.objects.create(lesson=product, swimling=kid, term=self.term)
             return product, enrolment
 
-        lesson("Missed", 2)
+        missed, _ = lesson("Missed", 2)
         marked, enrolment = lesson("Marked", 2)
-        lesson("Closed", 3)
-        lesson("Not started", 2, hour=18)
+        closed, _ = lesson("Closed", 3)
+        evening, _ = lesson("Not started", 2, hour=18)
         window = timezone.make_aware(datetime.combine(monday + timedelta(days=2), time(8)))
         roll = AttendanceRoll.objects.create(product=marked, term=self.term, window_start=window,
                                              window_end=window + timedelta(hours=8))
@@ -355,17 +355,16 @@ class DashboardTests(TestCase):
                                      start_date=monday + timedelta(days=3))
 
         # As if it were Thursday at noon.
-        result = _unrecorded_registers(monday + timedelta(days=3), time(12))
-        names = [row["name"] for row in result["rows"]]
-        self.assertIn("Missed", names)
-        self.assertIn("Not started", names)  # Wednesday's has happened by Thursday
-        self.assertNotIn("Marked", names)
-        self.assertNotIn("Closed", names)
+        ids = [row["lesson_id"] for row in _unrecorded_registers(monday + timedelta(days=3), time(12))["rows"]]
+        self.assertIn(missed.id, ids)
+        self.assertIn(evening.id, ids)  # Wednesday's has happened by Thursday
+        self.assertNotIn(marked.id, ids)
+        self.assertNotIn(closed.id, ids)
 
         # Wednesday at noon: the 18:00 class hasn't started.
-        names = [r["name"] for r in _unrecorded_registers(monday + timedelta(days=2), time(12))["rows"]]
-        self.assertIn("Missed", names)
-        self.assertNotIn("Not started", names)
+        ids = [row["lesson_id"] for row in _unrecorded_registers(monday + timedelta(days=2), time(12))["rows"]]
+        self.assertIn(missed.id, ids)
+        self.assertNotIn(evening.id, ids)
 
     def test_unrecorded_registers_page_opens_from_operations(self):
         url = reverse("finance:unrecorded_registers")

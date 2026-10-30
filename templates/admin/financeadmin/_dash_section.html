@@ -1,5 +1,11 @@
 {# A Live Dashboard section's heading, dials and tiles. Pass section. #}
 <h2 class="dash-section-title" id="dash-{{ section.key }}">{{ section.title }}</h2>
+{% if section.links %}
+<p class="dash-section-links">
+  Full figures:
+  {% for link in section.links %}<a href="{{ link.url }}">{{ link.label }}</a>{% endfor %}
+</p>
+{% endif %}
 {% if section.dials %}
 <div class="dash-dials">
   {% for dial in section.dials %}

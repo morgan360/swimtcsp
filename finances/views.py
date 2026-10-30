@@ -1470,6 +1470,21 @@ def live_dashboard(request, template_name='admin/financeadmin/dashboard.html'):
         for key, title, dial_keys, tile_labels in DASHBOARD_SECTIONS
     }
 
+    def link(label, name):
+        return {'label': label, 'url': reverse(name)}
+
+    # Not everyone who can open this page can open the coupons or the incident
+    # list (Full-Timers can't), so only offer the links that will work for them.
+    coupons_url = (reverse('finance:coupons_coupon_changelist')
+                   if request.user.has_perm('coupons.view_coupon') else None)
+    sections['enrolments']['links'] = [link('Lesson Enrollments', 'finance:lesson_enrollments')]
+    sections['finance']['links'] = [link('Revenue report', 'finance:revenue_report'),
+                                    link('Reconciliation', 'finance:reconciliation'),
+                                    *([{'label': 'All coupons', 'url': coupons_url}] if coupons_url else []),
+                                    link('Daily Activity', 'finance:activity_report')]
+    if settings_site.has_permission(request) and request.user.has_perm('security.view_securityincident'):
+        sections['security']['links'] = [link('All incidents', 'settings:security_securityincident_changelist')]
+
     context = {
         **finance_admin_site.each_context(request),
         'title': 'Live Dashboard',
@@ -1481,7 +1496,7 @@ def live_dashboard(request, template_name='admin/financeadmin/dashboard.html'):
         'sections': sections,
         'incidents': SecurityIncident.objects.all()[:SECURITY_INCIDENTS_SHOWN],
         'coupons': _coupon_totals(week_period),
-        'coupons_url': reverse('finance:coupons_coupon_changelist'),
+        'coupons_url': coupons_url,
         'term': current_term,
         'term_fill': this_fill,
         'recent_chats': recent_chats,

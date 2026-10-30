@@ -1278,6 +1278,53 @@ def _whats_on(today):
             'empty': not (swims or lessons or schools)}
 
 
+# Which section of the Live Dashboard each dial (by key) and tile (by label) is in.
+DASHBOARD_SECTIONS = [
+    ('enrolments', 'Enrolments', ('term', 'next_term', 'checkouts'),
+     ('New enrolments', 'Joined waiting list', 'New customers', 'New guardians')),
+    ('security', 'Security', ('staff_2fa', 'guardian_2fa', 'guardian_email'),
+     ('Customers logged in',)),
+    ('operations', 'Operations', ('swims', 'attendance', 'registers'),
+     ('Swim check-ins', 'Timetable views', 'Homepage views', 'Book clicks')),
+    ('admin', 'Admin', (),
+     ('Customers active', 'Managers active', 'Other staff active', 'AI chat questions')),
+    ('finance', 'Finance', (), ('Revenue', 'Paid orders')),
+]
+
+
+def _coupon_totals(week_period):
+    """Coupon money for the dashboard: totals only, never codes or names.
+
+    Unused counts single-use fixed coupons, the only kind with a balance that
+    goes down. A multi-use coupon keeps its balance however often it is used, and
+    a percentage has no euro value until it is spent, so neither has a remaining
+    value to add up.
+    """
+    from coupons.models import Coupon, CouponRedemption
+
+    current = now()
+    with_balance = Coupon.objects.filter(discount_type='fixed', multi_use=False, balance_remaining__gt=0)
+
+    def unused(coupons):
+        totals = coupons.aggregate(value=Sum('balance_remaining'), count=Count('id'))
+        return {'value': totals['value'] or Decimal('0'), 'count': totals['count']}
+
+    # An unpaid order's redemption is not confirmed, and hasn't spent anything.
+    redeemed = CouponRedemption.objects.filter(confirmed=True)
+
+    def used(redemptions):
+        totals = redemptions.aggregate(value=Sum('redeemed_amount'), count=Count('id'))
+        return {'value': totals['value'] or Decimal('0'), 'count': totals['count']}
+
+    return {
+        'unused': unused(with_balance.filter(active=True, valid_from__lte=current, valid_to__gte=current)),
+        'expired': unused(with_balance.filter(valid_to__lt=current)),
+        'used_week': used(redeemed.filter(redeemed_at__gte=week_period[1], redeemed_at__lt=week_period[2])),
+        'used_all': used(redeemed),
+        'multi_use': Coupon.objects.filter(multi_use=True, active=True, valid_to__gte=current).count(),
+    }
+
+
 @staff_member_required
 def live_dashboard(request, template_name='admin/financeadmin/dashboard.html'):
     """Live numbers for today and this week, as dials, tiles and charts."""
@@ -1405,6 +1452,13 @@ def live_dashboard(request, template_name='admin/financeadmin/dashboard.html'):
         },
     }
 
+    tiles_by_label = {t['label']: t for t in tiles}
+    sections = {
+        key: {'key': key, 'title': title, 'dials': [live[d] for d in dial_keys if live[d]],
+              'tiles': [tiles_by_label[label] for label in tile_labels]}
+        for key, title, dial_keys, tile_labels in DASHBOARD_SECTIONS
+    }
+
     context = {
         **finance_admin_site.each_context(request),
         'title': 'Live Dashboard',
@@ -1413,6 +1467,9 @@ def live_dashboard(request, template_name='admin/financeadmin/dashboard.html'):
         'dials': dials,
         'whats_on': _whats_on(today),
         'tiles': tiles,
+        'sections': sections,
+        'coupons': _coupon_totals(week_period),
+        'coupons_url': reverse('finance:coupons_coupon_changelist'),
         'term': current_term,
         'term_fill': this_fill,
         'recent_chats': recent_chats,

@@ -44,6 +44,10 @@
   .dash-badge.is-faq_hedged { background: #d97706; }
   .dash-badge.is-gpt { background: #7c3aed; }
   .dash-badge.is-blocked { background: #dc2626; }
+  .dash-jump { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem; }
+  .dash-jump a { padding: 0.25rem 0.75rem; border: 1px solid var(--hairline-color); border-radius: 9999px; font-weight: 600; }
+  .dash-section-title { font-size: 1.15rem; margin: 2rem 0 0.75rem; padding: 0 0 0.35rem; color: var(--body-fg); background: none; border-bottom: 2px solid var(--hairline-color); text-transform: none; scroll-margin-top: 1rem; }
+  .dash-coupons { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(190px, 100%), 1fr)); gap: 0.75rem; margin-bottom: 0.75rem; }
   .dash-chart { position: relative; height: 16rem; width: 100%; overflow: hidden; }
 
   @media (max-width: 480px) {
@@ -59,42 +63,41 @@
   · <a href="{{ activity_report_url }}">exact figures in Daily Activity</a>
 </p>
 
-<div class="dash-dials">
-  {% for dial in dials %}
-  {% include "admin/financeadmin/_dial.html" %}
-  {% endfor %}
-</div>
+<nav class="dash-jump">
+  {% for key, section in sections.items %}<a href="#dash-{{ key }}">{{ section.title }}</a>{% endfor %}
+</nav>
 
-<div class="dash-today">{% include "admin/financeadmin/_whats_on.html" %}</div>
-
-<div class="dash-tiles">
-  {% for tile in tiles %}
-  <div class="dash-card dash-tile">
-    <div class="dash-tile-label">{{ tile.label }}</div>
-    <div class="dash-tile-values">
-      <div>
-        <span class="dash-tile-num{% if not tile.today %} is-muted{% endif %}">{% if tile.money %}€{{ tile.today|floatformat:"0g" }}{% else %}{{ tile.today }}{% endif %}</span>
-        <span class="dash-tile-when">today</span>
-      </div>
-      <div>
-        <span class="dash-tile-num is-week{% if not tile.week %} is-muted{% endif %}">{% if tile.money %}€{{ tile.week|floatformat:"0g" }}{% else %}{{ tile.week }}{% endif %}</span>
-        <span class="dash-tile-when">since {{ week_start|date:"D" }}</span>
-      </div>
+{% include "admin/financeadmin/_dash_section.html" with section=sections.enrolments %}
+<div class="dash-charts">
+  {% if term_fill %}
+  <div class="dash-card dash-wide">
+    <h2>How full each level is this term</h2>
+    <p class="dash-hint">
+      <strong>{{ term_fill.full }}</strong> class{{ term_fill.full|pluralize:"es" }} full,
+      <strong>{{ term_fill.nearly_full }}</strong> nearly full (90%+) ·
+      <a href="{{ lesson_enrollments_url }}">see every class</a>
+    </p>
+    <div class="dash-chart" style="height: {{ term_fill.categories|length|add:2 }}rem; min-height: 12rem;">
+      <canvas id="fillChart"></canvas>
     </div>
-    {% if tile.hint %}<div class="dash-hint">{{ tile.hint }}</div>{% endif %}
   </div>
-  {% endfor %}
+  {% endif %}
 </div>
 
+{% include "admin/financeadmin/_dash_section.html" with section=sections.security %}
 <div class="dash-charts">
   <div class="dash-card">
     <h2>Logins and sign-ups · last 14 days</h2>
     <div class="dash-chart"><canvas id="loginsChart"></canvas></div>
   </div>
-  <div class="dash-card">
-    <h2>Revenue by type · last 14 days</h2>
-    <div class="dash-chart"><canvas id="revenueChart"></canvas></div>
-  </div>
+</div>
+
+{% include "admin/financeadmin/_dash_section.html" with section=sections.operations %}
+
+<div class="dash-today">{% include "admin/financeadmin/_whats_on.html" %}</div>
+
+{% include "admin/financeadmin/_dash_section.html" with section=sections.admin %}
+<div class="dash-charts">
   <div class="dash-card">
     <h2>AI chat questions</h2>
     {% if chat_summary %}
@@ -169,19 +172,28 @@
     <p class="dash-hint">No answers rated yet. Visitors rate them with 👍 / 👎 under each reply.</p>
     {% endif %}
   </div>
-  {% if term_fill %}
-  <div class="dash-card dash-wide">
-    <h2>How full each level is this term</h2>
-    <p class="dash-hint">
-      <strong>{{ term_fill.full }}</strong> class{{ term_fill.full|pluralize:"es" }} full,
-      <strong>{{ term_fill.nearly_full }}</strong> nearly full (90%+) ·
-      <a href="{{ lesson_enrollments_url }}">see every class</a>
-    </p>
-    <div class="dash-chart" style="height: {{ term_fill.categories|length|add:2 }}rem; min-height: 12rem;">
-      <canvas id="fillChart"></canvas>
-    </div>
+</div>
+
+{% include "admin/financeadmin/_dash_section.html" with section=sections.finance %}
+<div class="dash-charts">
+  <div class="dash-card">
+    <h2>Revenue by type · last 14 days</h2>
+    <div class="dash-chart"><canvas id="revenueChart"></canvas></div>
   </div>
-  {% endif %}
+  <div class="dash-card">
+    <h2>Coupons</h2>
+    <div class="dash-coupons">
+      <div><span class="dash-tile-num">€{{ coupons.unused.value|floatformat:"2g" }}</span>
+        <span class="dash-tile-when">unused, still usable · {{ coupons.unused.count }} coupon{{ coupons.unused.count|pluralize }}</span></div>
+      <div><span class="dash-tile-num">€{{ coupons.expired.value|floatformat:"2g" }}</span>
+        <span class="dash-tile-when">unused, expired · {{ coupons.expired.count }} coupon{{ coupons.expired.count|pluralize }}</span></div>
+      <div><span class="dash-tile-num">€{{ coupons.used_week.value|floatformat:"2g" }}</span>
+        <span class="dash-tile-when">used since {{ week_start|date:"D" }} · {{ coupons.used_week.count }} use{{ coupons.used_week.count|pluralize }}</span></div>
+      <div><span class="dash-tile-num">€{{ coupons.used_all.value|floatformat:"2g" }}</span>
+        <span class="dash-tile-when">used, all time · {{ coupons.used_all.count }} use{{ coupons.used_all.count|pluralize }}</span></div>
+    </div>
+    <p class="dash-hint">Unused covers single-use fixed coupons. Left out: percentage coupons and {{ coupons.multi_use }} usable multi-use coupon{{ coupons.multi_use|pluralize }}, which have no fixed remaining value. · <a href="{{ coupons_url }}">All coupons</a></p>
+  </div>
 </div>
 
 {{ chart_data|json_script:"dashboard-data" }}

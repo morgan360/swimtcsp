@@ -324,6 +324,54 @@ class DashboardTests(TestCase):
         self.assertEqual(urls["security"], [])
         self.assertEqual(len(urls["finance"]), 3)
 
+    def test_unrecorded_registers_lists_classes_with_nothing_marked(self):
+        from datetime import datetime, time
+
+        from anseo.models import AttendanceEntry, AttendanceRoll
+        from timetable.models import CalendarEvent
+        from finances.views import _unrecorded_registers
+
+        monday = timezone.localdate() - timedelta(days=timezone.localdate().weekday())
+        category = Category.objects.create(name="Reg", program=Program.objects.create(name="R"))
+        parent = User.objects.create_user(email="reg@example.com", password="pw", first_name="R")
+        kid = Swimling.objects.create(guardian=parent, first_name="K", last_name="T")
+
+        def lesson(name, day, hour=9):
+            product = Product.objects.create(category=category, name=name, day_of_week=day, num_places=5,
+                                             active=True, start_time=time(hour), end_time=time(hour, 30))
+            enrolment = LessonEnrollment.objects.create(lesson=product, swimling=kid, term=self.term)
+            return product, enrolment
+
+        missed, _ = lesson("Missed", 2)
+        marked, enrolment = lesson("Marked", 2)
+        closed, _ = lesson("Closed", 3)
+        evening, _ = lesson("Not started", 2, hour=18)
+        window = timezone.make_aware(datetime.combine(monday + timedelta(days=2), time(8)))
+        roll = AttendanceRoll.objects.create(product=marked, term=self.term, window_start=window,
+                                             window_end=window + timedelta(hours=8))
+        AttendanceEntry.objects.create(roll=roll, enrollment=enrolment, swimling_id=kid.id,
+                                       status=AttendanceEntry.PRESENT)
+        CalendarEvent.objects.create(title="Shut", category="closure", affects="lessons",
+                                     start_date=monday + timedelta(days=3))
+
+        # As if it were Thursday at noon.
+        ids = [row["lesson_id"] for row in _unrecorded_registers(monday + timedelta(days=3), time(12))["rows"]]
+        self.assertIn(missed.id, ids)
+        self.assertIn(evening.id, ids)  # Wednesday's has happened by Thursday
+        self.assertNotIn(marked.id, ids)
+        self.assertNotIn(closed.id, ids)
+
+        # Wednesday at noon: the 18:00 class hasn't started.
+        ids = [row["lesson_id"] for row in _unrecorded_registers(monday + timedelta(days=2), time(12))["rows"]]
+        self.assertIn(missed.id, ids)
+        self.assertNotIn(evening.id, ids)
+
+    def test_unrecorded_registers_page_opens_from_operations(self):
+        url = reverse("finance:unrecorded_registers")
+        self.assertIn(url, self.section_links()["operations"])
+        self.assertContains(self.client.get(url), "Classes with unrecorded registers")
+        self.assertContains(self.client.get(url + "?week=last"), "Last week")
+
     def test_index_links_to_the_dashboard(self):
         self.client.force_login(self.manager)
         self.assertContains(self.client.get(reverse("finance:index")), reverse("finance:dashboard"))

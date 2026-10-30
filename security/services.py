@@ -65,7 +65,7 @@ def _record(kind, request, ip):
 
 
 def _alert(incident, what):
-    """Email about a block, capped so a wave of scanners can't flood the inbox."""
+    """Email about a block, capped in case of a wave of them."""
     to = recipients()
     if not to or _count('security:emails', 60 * 60) > EMAILS_PER_HOUR:
         return
@@ -93,8 +93,9 @@ def ip_is_blocked(request):
         return False
 
 
-def _strike(request, name, limit, kind, what):
-    """Count an attack signal from this address, blocking it at the limit."""
+def _strike(request, name, limit, kind, what=None):
+    """Count an attack signal from this address, blocking it at the limit. With
+    no `what` there is no email of its own."""
     if not _on() or is_exempt(request):
         return
     try:
@@ -104,16 +105,19 @@ def _strike(request, name, limit, kind, what):
         # == so that a burst blocks, records and emails once.
         if _count(f'security:{name}:{ip}', ATTACK_WINDOW) == limit:
             cache.set(f'security:block:{ip}', 1, IP_BLOCK)
-            _alert(_record(kind, request, ip), what)
+            incident = _record(kind, request, ip)
+            if what:
+                _alert(incident, what)
     except Exception as exc:
         logger.error("Could not record a security strike: %s", exc)
 
 
 def note_response(request, status):
-    """Called for every response: count requests for files a scanner looks for."""
+    """Called for every response: count requests for files a scanner looks for.
+    Blocked but not emailed: production sees 4 to 16 of these a day, nearly all
+    routine WordPress scans. The daily log digest gives the count instead."""
     if status == 404 and PROBE_PATH.search(request.path):
-        _strike(request, 'probe', PROBE_LIMIT, SecurityIncident.PROBE_BLOCKED,
-                "An address looking for WordPress or config files has been blocked from the whole site for an hour.")
+        _strike(request, 'probe', PROBE_LIMIT, SecurityIncident.PROBE_BLOCKED)
 
 
 def note_csrf_failure(request):

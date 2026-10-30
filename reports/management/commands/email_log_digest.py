@@ -14,7 +14,7 @@ import glob
 import os
 import re
 from collections import Counter
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone as dt_timezone
 
 from django.conf import settings
 from django.core.mail import send_mail
@@ -161,6 +161,12 @@ def build_digest(since, web_log=WEB_LOG, server_log=SERVER_LOG,
     if not_found:
         counted.append('Top 404 paths: ' + ', '.join(
             f'{path} ({count})' for path, count in not_found.most_common(10)))
+    # Not an item to look at: they are blocked already and don't get an email each.
+    from security.models import SecurityIncident
+    scanners = SecurityIncident.objects.filter(
+        kind=SecurityIncident.PROBE_BLOCKED, created__gte=since.replace(tzinfo=dt_timezone.utc)).count()
+    sections.append(('Scanners blocked', f'{scanners} address(es) blocked for an hour. See Security on the Live Dashboard.'))
+
     sections.append(('Counted as noise, not listed', '\n'.join(counted) or 'None.'))
 
     body = f'Logged since {since:%Y-%m-%d %H:%M} (server time, UTC).\n'

@@ -16,14 +16,13 @@ class SecurityTestCase(TestCase):
 
 
 class ScannerBlockTests(SecurityTestCase):
-    def test_scanner_is_blocked_once_with_one_email(self):
+    def test_scanner_is_blocked_once_without_an_email(self):
         for _ in range(PROBE_LIMIT):
             self.assertEqual(self.client.get("/wp-login.php").status_code, 404)
         self.assertEqual(self.client.get("/").status_code, 403)
         self.assertEqual(self.client.get("/wp-login.php").status_code, 403)
         self.assertEqual(SecurityIncident.objects.filter(kind="probe_blocked").count(), 1)
-        self.assertEqual(len(mail.outbox), 1)
-        self.assertIn("blocked", mail.outbox[0].body)
+        self.assertEqual(mail.outbox, [])
 
     def test_ordinary_404s_do_not_count(self):
         for _ in range(PROBE_LIMIT * 3):
@@ -51,14 +50,6 @@ class ScannerBlockTests(SecurityTestCase):
             self.client.get("/wp-login.php")
         self.assertEqual(self.client.get("/").status_code, 200)
 
-    def test_emails_are_capped(self):
-        with patch("security.services.EMAILS_PER_HOUR", 1):
-            for n in range(1, 4):
-                for _ in range(PROBE_LIMIT):
-                    self.client.get("/wp-login.php", HTTP_X_REAL_IP=f"10.0.1.{n}")
-        self.assertEqual(len(mail.outbox), 1)
-        self.assertEqual(SecurityIncident.objects.filter(kind="probe_blocked").count(), 3)
-
 
 class CsrfBlockTests(SecurityTestCase):
     def test_burst_of_forged_posts_is_blocked(self):
@@ -67,3 +58,14 @@ class CsrfBlockTests(SecurityTestCase):
             self.assertEqual(client.post("/accounts/login/").status_code, 403)
         self.assertEqual(SecurityIncident.objects.filter(kind="csrf_blocked").count(), 1)
         self.assertEqual(client.get("/").status_code, 403)
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertIn("blocked", mail.outbox[0].body)
+
+    def test_emails_are_capped(self):
+        client = self.client_class(enforce_csrf_checks=True)
+        with patch("security.services.EMAILS_PER_HOUR", 1):
+            for n in range(1, 4):
+                for _ in range(CSRF_LIMIT):
+                    client.post("/accounts/login/", HTTP_X_REAL_IP=f"10.0.1.{n}")
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(SecurityIncident.objects.filter(kind="csrf_blocked").count(), 3)

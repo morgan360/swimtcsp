@@ -236,6 +236,15 @@ class ReportAccessTests(TestCase):
 class LogDigestTests(TestCase):
     """email_log_digest lists real errors and only counts the noise."""
 
+    def test_scanner_blocks_are_counted_but_are_not_items(self):
+        from security.models import SecurityIncident
+
+        SecurityIncident.objects.create(kind="probe_blocked", ip="203.0.113.9")
+        SecurityIncident.objects.create(kind="chat_blocked", ip="203.0.113.8")
+        items, body = self.digest()
+        self.assertEqual(items, 0)
+        self.assertIn("1 address(es) blocked", body)
+
     def setUp(self):
         import tempfile
         self.dir = tempfile.mkdtemp()

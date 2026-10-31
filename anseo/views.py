@@ -1,7 +1,6 @@
 from types import SimpleNamespace
 from datetime import timedelta
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required
 from django.db import transaction
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
@@ -9,10 +8,11 @@ from django.utils import timezone
 from lessons_bookings.models import LessonEnrollment, Term
 from lessons.models import Product
 from anseo.models import AttendanceEntry, AttendanceRoll
+from utils.decorators import staff_or_instructor_required
 from django.db.models import Count, Q
 
 
-@login_required
+@staff_or_instructor_required
 def take_roll(request, product_id: int, term_id: int):
     lesson = get_object_or_404(Product, pk=product_id)
     term = get_object_or_404(Term, pk=term_id)
@@ -94,7 +94,7 @@ def take_roll(request, product_id: int, term_id: int):
     )
 
 
-@login_required
+@staff_or_instructor_required
 def attendance_history(request, product_id: int, term_id: int):
     lesson = get_object_or_404(Product.objects.select_related("category"), pk=product_id)
     term = get_object_or_404(Term, pk=term_id)
@@ -181,7 +181,7 @@ def attendance_history(request, product_id: int, term_id: int):
     )
 
 
-@login_required
+@staff_or_instructor_required
 def attendance_matrix(request, product_id: int):
     lesson = get_object_or_404(Product.objects.select_related("category"), pk=product_id)
 

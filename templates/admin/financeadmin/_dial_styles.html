@@ -6,6 +6,23 @@
   .dash-hint, .dash-caption { color: var(--body-quiet-color); font-size: 0.8rem; }
   .is-muted { color: var(--body-quiet-color) !important; }
 
+  .reg-wrap { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 13rem); gap: 1rem; margin-bottom: 1rem; }
+  @media (max-width: 767px) { .reg-wrap { grid-template-columns: minmax(0, 1fr); } }
+  .reg-week + .reg-week { margin-top: 1rem; }
+  .reg-week h3 { margin: 0 0 0.4rem; font-size: 0.85rem; color: var(--body-fg); background: none; padding: 0; text-transform: none; letter-spacing: 0; }
+  .reg-days { display: flex; gap: 0.75rem; overflow-x: auto; padding-bottom: 0.25rem; }
+  .reg-day { flex: 1 0 4.25rem; min-width: 0; }
+  .reg-day-name { display: block; margin-bottom: 0.25rem; color: var(--body-quiet-color); font-size: 0.75rem; }
+  .reg-boxes { display: flex; flex-wrap: wrap; gap: 3px; }
+  .reg-box { display: block; box-sizing: border-box; width: 14px; height: 14px; border: 1.5px solid #64748b; border-radius: 3px; }
+  .reg-box.is-taken { background: #16a34a; border-color: #16a34a; }
+  .reg-box.is-missed { background: transparent; }
+  .reg-box.is-later { background: transparent; border: 1.5px dashed var(--hairline-color); }
+  a.reg-box:hover, a.reg-box:focus { outline: 2px solid #2563eb; outline-offset: 1px; }
+  .reg-closed { color: var(--body-quiet-color); font-size: 0.75rem; }
+  .reg-key { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 0.75rem; color: var(--body-quiet-color); font-size: 0.75rem; }
+  .reg-key span { display: inline-flex; align-items: center; gap: 0.3rem; }
+
   .dash-dials { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(210px, 100%), 1fr)); gap: 1rem; margin-bottom: 1rem; }
   .dash-dial { text-align: center; }
   .dash-dial svg { width: 100%; max-width: 240px; display: block; margin: 0 auto; overflow: visible; }

@@ -111,7 +111,7 @@ def _local_midnight(day):
     return timezone.make_aware(datetime.combine(day, time.min))
 
 
-def _class_day(roll_date, day_of_week):
+def class_day(roll_date, day_of_week):
     """The class a roll belongs to: its lesson's latest weekday on or before the roll.
 
     The take_roll page dates a roll when it is marked, so a Saturday class caught
@@ -142,7 +142,7 @@ def registers(request):
                     .values_list("roll__product_id", "roll__product__day_of_week", "roll__window_start")
                     .distinct())
     for product_id, day_of_week, window_start in marked_rolls:
-        marked.add((product_id, _class_day(timezone.localtime(window_start).date(), day_of_week)))
+        marked.add((product_id, class_day(timezone.localtime(window_start).date(), day_of_week)))
 
     has_own_classes = False
     today_rows, missed_rows = [], []

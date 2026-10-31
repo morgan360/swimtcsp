@@ -51,12 +51,15 @@ class OperationsAdminSite(TCSPAdminSite):
             from django.utils.timezone import localtime, now
 
             from custom_admins.financeadmin import finance_admin_site
-            from finances.views import _live_dials, _whats_on
+            from finances.views import _live_dials, _register_grid, _term_attendance, _whats_on
 
-            today = localtime(now()).date()
+            current = localtime(now())
+            today = current.date()
             live = _live_dials(today)
             extra_context = {
-                "dial_strip": [live[key] for key in ("swims", "registers", "attendance", "term") if live[key]],
+                "dial_strip": [live[key] for key in ("swims", "attendance", "term") if live[key]],
+                "register_grid": _register_grid(today, current.time()),
+                "term_attendance": _term_attendance(live["current_term"]) if live["current_term"] else None,
                 "whats_on": _whats_on(today),
                 "live_dashboard_url": (reverse("finance:dashboard")
                                        if finance_admin_site.has_permission(request) else None),

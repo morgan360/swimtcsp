@@ -33,6 +33,7 @@
     {% include "admin/financeadmin/_dial.html" %}
     {% endfor %}
   </div>
+  {% include "admin/financeadmin/_register_grid.html" with grid=register_grid attendance=term_attendance %}
   {% if whats_on %}<div class="dash-strip-today">{% include "admin/financeadmin/_whats_on.html" %}</div>{% endif %}
 </section>
 {% endif %}

@@ -441,6 +441,10 @@ ALLAUTH_USESITES = False
 TCSP_MFA_ON = False
 MFA_SUPPORTED_TYPES = ["totp", "recovery_codes"]
 MFA_TOTP_ISSUER = "TCSP"
+# allauth's default of 0 only accepts a code during its own 30 seconds, so one
+# typed as it changes is refused. Staff lost minutes to this at setup.
+MFA_TOTP_TOLERANCE = 1
+MFA_FORMS = {"activate_totp": "users.forms.StableSecretActivateTOTPForm"}
 # After the code, allauth offers "Trust this browser": that browser then skips
 # the code (not the password) for a week. Turned on 2026-10-19, because a
 # code at every login is tedious with the 2-hour idle logout. Staff should be

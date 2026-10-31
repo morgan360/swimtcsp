@@ -1,5 +1,8 @@
 from django import forms
 from allauth.account.forms import SignupForm
+from allauth.core import context
+from allauth.mfa.totp.forms import ActivateTOTPForm
+from allauth.mfa.totp.internal.auth import SECRET_SESSION_KEY
 from allauth.socialaccount.forms import SignupForm as SocialSignupForm
 from django.core.exceptions import ValidationError
 from django.contrib.auth.models import Group
@@ -11,6 +14,21 @@ from django_recaptcha.widgets import ReCaptchaV2Checkbox
 
 # Get the custom user model
 User = get_user_model()
+
+
+class StableSecretActivateTOTPForm(ActivateTOTPForm):
+    """2FA setup that keeps one QR code however often the page is reloaded.
+
+    allauth makes a new secret on every page load, so a reload silently breaks
+    what was already scanned and the app's codes are then refused for good.
+    """
+
+    def __init__(self, *args, **kwargs):
+        session = context.request.session
+        secret = session.get(SECRET_SESSION_KEY)
+        super().__init__(*args, **kwargs)
+        if secret:
+            session[SECRET_SESSION_KEY] = self.secret = secret
 
 
 def irish_phone_field():

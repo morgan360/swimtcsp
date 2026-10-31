@@ -12,6 +12,7 @@ general notes box has years of unrelated content in it, and it is deliberately
 left alone rather than migrated or cleared.
 """
 import itertools
+import time
 from unittest.mock import patch
 
 from allauth.socialaccount.models import SocialAccount, SocialLogin
@@ -329,6 +330,38 @@ class StaffTwoFactorTests(TestCase):
         response = self.client.get(reverse("mfa_activate_totp"))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "data:image/svg+xml")  # the QR code
+
+    def open_setup_page(self):
+        self.client.post(reverse("account_login"), {"login": "staff@test.com", "password": "pw"})
+        self.client.get(reverse("mfa_activate_totp"))
+        return self.client.session["mfa.totp.secret"]
+
+    def setup_code(self, secret, steps_from_now=0):
+        from allauth.mfa.totp.internal.auth import format_hotp_value, hotp_value
+
+        return format_hotp_value(hotp_value(secret, int(time.time()) // 30 + steps_from_now))
+
+    def has_authenticator(self):
+        from allauth.mfa.models import Authenticator
+
+        return Authenticator.objects.filter(user=self.staff, type=Authenticator.Type.TOTP).exists()
+
+    def test_reloading_the_setup_page_keeps_the_scanned_code_working(self):
+        secret = self.open_setup_page()
+        self.client.get(reverse("mfa_activate_totp"))
+        self.assertEqual(self.client.session["mfa.totp.secret"], secret)
+        self.client.post(reverse("mfa_activate_totp"), {"code": self.setup_code(secret)})
+        self.assertTrue(self.has_authenticator())
+
+    def test_a_code_that_has_only_just_changed_is_accepted(self):
+        secret = self.open_setup_page()
+        self.client.post(reverse("mfa_activate_totp"), {"code": self.setup_code(secret, steps_from_now=-1)})
+        self.assertTrue(self.has_authenticator())
+
+    def test_an_old_code_is_still_refused(self):
+        secret = self.open_setup_page()
+        self.client.post(reverse("mfa_activate_totp"), {"code": self.setup_code(secret, steps_from_now=-3)})
+        self.assertFalse(self.has_authenticator())
 
     def test_unverified_email_is_sent_to_verify_first(self):
         """allauth refuses to activate while an unverified address exists, so

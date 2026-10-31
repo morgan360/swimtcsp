@@ -5,7 +5,7 @@ from decimal import Decimal
 
 logger = logging.getLogger('finances')
 
-from django.db.models import F, Sum, Count
+from django.db.models import F, Q, Sum, Count
 from django.db.models.functions import TruncDay, TruncWeek, TruncMonth, TruncYear
 from django.utils.timezone import now, timedelta
 from django.shortcuts import render
@@ -1119,7 +1119,7 @@ def _live_dials(today):
     from swims_orders.models import OrderItem as SwimOrderItem
 
     today_period, _, week_period = _activity_periods(today)
-    live = {'term': None, 'registers': None, 'next_term': None}
+    live = {'term': None, 'next_term': None}
 
     current_term = Term.get_current_term()
     this_fill = _term_fill(current_term) if current_term else None
@@ -1140,10 +1140,7 @@ def _live_dials(today):
     live['swims'] = _dial('Today’s public swims', swimmers_booked, swim_places,
                           'swim places paid for', empty='No public swims today')
 
-    # A register is dated when it is marked, not by the class it is for (see
-    # AttendanceRoll.get_or_create_current), so a catch-up on Sunday counts on Sunday.
     # Swimmers left as Not Marked count too, so a half-done register shows.
-    marked_entries = AttendanceEntry.objects.exclude(status=AttendanceEntry.UNKNOWN)
     on_today = AttendanceEntry.objects.filter(roll__window_start__gte=today_period[1],
                                               roll__window_start__lt=today_period[2])
     attended = on_today.filter(status__in=[AttendanceEntry.PRESENT, AttendanceEntry.LATE]).count()
@@ -1151,18 +1148,6 @@ def _live_dials(today):
     live['attendance'] = _dial('Swimmers’ attendance today', attended, on_today.count(),
                                f'present or late · {unmarked} not marked',
                                empty='No registers marked yet today')
-
-    if current_term:
-        # Lessons with swimmers whose class day has come round so far this week.
-        due = set(LessonEnrollment.objects
-                  .filter(term=current_term, lesson__day_of_week__lte=today.weekday())
-                  .values_list('lesson_id', flat=True))
-        taken = set(marked_entries
-                    .filter(roll__product_id__in=due, roll__window_start__gte=week_period[1],
-                            roll__window_start__lt=week_period[2])
-                    .values_list('roll__product_id', flat=True))
-        live['registers'] = _dial('Classes’ attendance recorded this week', len(taken), len(due),
-                                  'classes so far', empty='No classes yet this week')
 
     next_term = Term.get_next_term()
     if next_term:
@@ -1278,49 +1263,146 @@ def _whats_on(today):
             'empty': not (swims or lessons or schools)}
 
 
+def _marked_class_days(since):
+    """(lesson id, class date) for every class with something marked since a date.
+
+    The tablet dates a roll when it is marked, so anseo.views.class_day gives a
+    catch-up back to the class it is for.
+    """
+    from anseo.models import AttendanceEntry
+    from anseo.views import class_day
+
+    rolls = (AttendanceEntry.objects.exclude(status=AttendanceEntry.UNKNOWN)
+             # A range rather than __date, which needs MySQL's time zone tables.
+             .filter(roll__window_start__gte=make_aware(datetime.datetime.combine(since, datetime.time.min)))
+             .values_list('roll__product_id', 'roll__product__day_of_week', 'roll__window_start')
+             .distinct())
+    return {(lesson_id, class_day(localtime(start).date(), day_of_week))
+            for lesson_id, day_of_week, start in rolls}
+
+
+def _lessons_on(term, day):
+    """The classes with swimmers on a day of a term, in start-time order."""
+    from lessons_bookings.models import LessonEnrollment
+
+    return list(LessonEnrollment.objects.filter(term=term, lesson__day_of_week=day.weekday())
+                .values('lesson_id', 'lesson__name', 'lesson__start_time')
+                .annotate(swimmers=Count('id')).order_by('lesson__start_time', 'lesson__name'))
+
+
+def _lesson_instructors(term):
+    """Instructor names by lesson id for a term."""
+    from lessons_bookings.models import LessonAssignment
+
+    instructors = defaultdict(list)
+    for assignment in LessonAssignment.objects.filter(term=term).select_related('instructor').prefetch_related('lessons'):
+        for lesson in assignment.lessons.all():
+            instructors[lesson.id].append(assignment.instructor.get_full_name())
+    return instructors
+
+
 def _unrecorded_registers(today, current_time, weeks_back=0):
     """Classes that have run in a week with nothing marked on their register.
 
-    Leaves out classes on a closed day and ones that haven't started yet. A roll
-    is dated when it is marked, so "recorded" means marked at any point that week:
-    catching up on a class the following week counts for the wrong week.
+    Leaves out classes on a closed day and ones that haven't started yet.
     """
-    from anseo.models import AttendanceEntry
-    from lessons_bookings.models import LessonAssignment, LessonEnrollment, Term
+    from lessons_bookings.models import Term
     from timetable.closures import closure_for, closures_between
 
     monday = today - timedelta(days=today.weekday() + 7 * weeks_back)
     sunday = monday + timedelta(days=6)
     closures = closures_between(monday, sunday)
-    # A range rather than __date, which needs MySQL's time zone tables.
-    week_start = make_aware(datetime.datetime.combine(monday, datetime.time.min))
-    week_end = week_start + timedelta(days=7)
+    marked = _marked_class_days(monday)
     rows, due = [], 0
     for offset in range(7):
         day = monday + timedelta(days=offset)
         term = Term.objects.filter(start_date__lte=day, end_date__gte=day).first()
         if day > today or not term or closure_for('lesson', day, closures):
             continue
-        lessons = (LessonEnrollment.objects.filter(term=term, lesson__day_of_week=day.weekday())
-                   .values('lesson_id', 'lesson__name', 'lesson__start_time')
-                   .annotate(swimmers=Count('id')).order_by('lesson__start_time', 'lesson__name'))
+        lessons = _lessons_on(term, day)
         if day == today:
             lessons = [row for row in lessons
                        if not row['lesson__start_time'] or row['lesson__start_time'] <= current_time]
-        lessons = list(lessons)
         due += len(lessons)
-        marked = set(AttendanceEntry.objects.exclude(status=AttendanceEntry.UNKNOWN)
-                     .filter(roll__term=term, roll__window_start__gte=week_start, roll__window_start__lt=week_end)
-                     .values_list('roll__product_id', flat=True))
-        instructors = defaultdict(list)
-        for assignment in LessonAssignment.objects.filter(term=term).select_related('instructor').prefetch_related('lessons'):
-            for lesson in assignment.lessons.all():
-                instructors[lesson.id].append(assignment.instructor.get_full_name())
+        instructors = _lesson_instructors(term)
         rows += [{'day': day, 'time': row['lesson__start_time'], 'name': row['lesson__name'],
                   'swimmers': row['swimmers'], 'instructors': ', '.join(instructors[row['lesson_id']]),
                   'lesson_id': row['lesson_id'], 'term_id': term.id}
-                 for row in lessons if row['lesson_id'] not in marked]
+                 for row in lessons if (row['lesson_id'], day) not in marked]
     return {'rows': rows, 'due': due, 'monday': monday, 'sunday': sunday}
+
+
+def _register_grid(today, current_time):
+    """Last week's and this week's classes as boxes, filled in once a register is taken.
+
+    Each box is taken, missed or later (hasn't started). Only taken and missed
+    count, and a closed day has its label instead of boxes.
+    """
+    from django.urls import reverse
+    from lessons_bookings.models import Term
+    from timetable.closures import CLOSURE_LABELS, closure_for, closures_between
+
+    this_monday = today - timedelta(days=today.weekday())
+    last_monday = this_monday - timedelta(days=7)
+    closures = closures_between(last_monday, this_monday + timedelta(days=6))
+    marked = _marked_class_days(last_monday)
+    instructors_by_term = {}
+
+    weeks = []
+    for title, monday in (('This week', this_monday), ('Last week', last_monday)):
+        days = []
+        taken = due = 0
+        for offset in range(7):
+            day = monday + timedelta(days=offset)
+            term = Term.objects.filter(start_date__lte=day, end_date__gte=day).first()
+            lessons = _lessons_on(term, day) if term else []
+            if not lessons:
+                continue
+            closure = closure_for('lesson', day, closures)
+            if closure:
+                days.append({'date': day, 'closed': CLOSURE_LABELS[closure.affects], 'boxes': []})
+                continue
+            if term.id not in instructors_by_term:
+                instructors_by_term[term.id] = _lesson_instructors(term)
+            boxes = []
+            for row in lessons:
+                start = row['lesson__start_time']
+                if (row['lesson_id'], day) in marked:
+                    state = 'taken'
+                elif day > today or (day == today and start and start > current_time):
+                    state = 'later'
+                else:
+                    state = 'missed'
+                taken += state == 'taken'
+                due += state != 'later'
+                boxes.append({
+                    'lesson_id': row['lesson_id'],
+                    'name': row['lesson__name'],
+                    'instructors': ', '.join(instructors_by_term[term.id][row['lesson_id']]),
+                    'state': state,
+                    # A future class has no register to open yet.
+                    'url': reverse('anseo:phone_roll', args=[row['lesson_id'], day.isoformat()])
+                    if day <= today else None,
+                })
+            days.append({'date': day, 'closed': None, 'boxes': boxes})
+        weeks.append({'title': title, 'monday': monday, 'days': days, 'taken': taken, 'due': due})
+    return weeks
+
+
+def _term_attendance(term):
+    """How well attended a term's classes are, from the registers taken so far."""
+    from anseo.models import AttendanceEntry
+
+    totals = (AttendanceEntry.objects.exclude(status=AttendanceEntry.UNKNOWN).filter(roll__term=term)
+              .aggregate(marked=Count('id'), registers=Count('roll', distinct=True),
+                         attended=Count('id', filter=Q(status__in=[AttendanceEntry.PRESENT, AttendanceEntry.LATE]))))
+    if not totals['marked']:
+        return {'registers': 0}
+    return {
+        'registers': totals['registers'],
+        'pct': round(totals['attended'] / totals['marked'] * 100),
+        'per_class': round(totals['attended'] / totals['registers'], 1),
+    }
 
 
 @staff_member_required
@@ -1347,7 +1429,7 @@ DASHBOARD_SECTIONS = [
      ('New enrolments', 'Joined waiting list', 'New customers', 'New guardians')),
     ('security', 'Security', ('staff_2fa', 'guardian_2fa', 'guardian_email'),
      ('Customers logged in', 'Chat messages refused', 'Attackers blocked')),
-    ('operations', 'Operations', ('swims', 'attendance', 'registers'),
+    ('operations', 'Operations', ('swims', 'attendance'),
      ('Swim check-ins', 'Timetable views', 'Homepage views', 'Book clicks')),
     ('admin', 'Admin', (),
      ('Customers active', 'Managers active', 'Other staff active', 'AI chat questions')),
@@ -1413,7 +1495,7 @@ def live_dashboard(request, template_name='admin/financeadmin/dashboard.html'):
     # --- Dials -------------------------------------------------------------
     live = _live_dials(today)
     current_term, this_fill = live['current_term'], live['this_fill']
-    dials = [live[key] for key in ('term', 'checkouts', 'swims', 'attendance', 'registers', 'next_term',
+    dials = [live[key] for key in ('term', 'checkouts', 'swims', 'attendance', 'next_term',
                                    'staff_2fa', 'guardian_2fa', 'guardian_email') if live[key]]
 
     # --- Tiles -------------------------------------------------------------
@@ -1538,6 +1620,8 @@ def live_dashboard(request, template_name='admin/financeadmin/dashboard.html'):
     # list (Full-Timers can't), so only offer the links that will work for them.
     coupons_url = (reverse('finance:coupons_coupon_changelist')
                    if request.user.has_perm('coupons.view_coupon') else None)
+    sections['operations']['register_grid'] = _register_grid(today, localtime(now()).time())
+    sections['operations']['term_attendance'] = _term_attendance(current_term) if current_term else None
     sections['enrolments']['links'] = [link('Lesson Enrollments', 'finance:lesson_enrollments')]
     sections['operations']['links'] = [link('Classes with unrecorded registers', 'finance:unrecorded_registers')]
     sections['finance']['links'] = [link('Revenue report', 'finance:revenue_report'),

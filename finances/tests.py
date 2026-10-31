@@ -416,16 +416,90 @@ class DashboardTests(TestCase):
         self.assertEqual((dial["pct"], dial["angle"], dial["level"]), (100, 90.0, "high"))
         self.assertEqual(self.get().context["term_fill"]["full"], 1)
 
-    def test_registers_taken_this_week(self):
-        dial = self.dials()["Classes’ attendance recorded this week"]
-        # The one Monday lesson is always due by today, and today's register for it is marked.
-        self.assertEqual((dial["value"], dial["max"]), (1, 1))
+    def this_weeks_registers(self):
+        return self.get().context["sections"]["operations"]["register_grid"][0]
 
-    def test_registers_dial_ignores_registers_nobody_marked(self):
+    def test_registers_taken_this_week(self):
+        week = self.this_weeks_registers()
+        # The one Monday lesson is always due by today, and today's register for it is marked.
+        self.assertEqual((week["taken"], week["due"]), (1, 1))
+        self.assertNotIn("Classes’ attendance recorded this week", self.dials())
+
+    def test_register_grid_ignores_registers_nobody_marked(self):
         from anseo.models import AttendanceEntry
         AttendanceEntry.objects.update(status=AttendanceEntry.UNKNOWN)
-        dial = self.dials()["Classes’ attendance recorded this week"]
-        self.assertEqual((dial["value"], dial["max"]), (0, 1))
+        week = self.this_weeks_registers()
+        self.assertEqual(week["taken"], 0)
+
+    def test_register_grid_states_closures_and_catch_ups(self):
+        from datetime import datetime, time
+
+        from anseo.models import AttendanceEntry, AttendanceRoll
+        from timetable.models import CalendarEvent
+        from finances.views import _register_grid, _unrecorded_registers
+
+        this_monday = timezone.localdate() - timedelta(days=timezone.localdate().weekday())
+        last_monday = this_monday - timedelta(days=7)
+        self.term.start_date = last_monday - timedelta(days=7)
+        self.term.end_date = this_monday + timedelta(days=30)
+        self.term.save()
+        category = Category.objects.create(name="Grid", program=Program.objects.create(name="G"))
+        parent = User.objects.create_user(email="grid@example.com", password="pw", first_name="G")
+        kid = Swimling.objects.create(guardian=parent, first_name="K", last_name="T")
+
+        def lesson(name, day, hour=9):
+            product = Product.objects.create(category=category, name=name, day_of_week=day, num_places=5,
+                                             active=True, start_time=time(hour), end_time=time(hour, 30))
+            return product, LessonEnrollment.objects.create(lesson=product, swimling=kid, term=self.term)
+
+        def mark(product, enrolment, day):
+            window = timezone.make_aware(datetime.combine(day, time(8)))
+            roll = AttendanceRoll.objects.create(product=product, term=self.term, window_start=window,
+                                                 window_end=window + timedelta(hours=8))
+            AttendanceEntry.objects.create(roll=roll, enrollment=enrolment, swimling_id=kid.id,
+                                           status=AttendanceEntry.ABSENT)
+
+        caught_up, enrolment = lesson("Caught up", 2)
+        evening, _ = lesson("Evening", 2, hour=18)
+        friday_class, _ = lesson("Friday", 4)
+        lesson("Closed", 3)
+        # Marked on Monday of this week, for Wednesday of last week.
+        mark(caught_up, enrolment, this_monday)
+        CalendarEvent.objects.create(title="Shut", category="closure", affects="lessons",
+                                     start_date=this_monday + timedelta(days=3))
+
+        # As if it were this Wednesday at noon.
+        wednesday = this_monday + timedelta(days=2)
+        this_week, last_week = _register_grid(wednesday, time(12))
+        days = {day["date"].weekday(): day for day in this_week["days"]}
+        states = {box["lesson_id"]: box["state"] for box in days[2]["boxes"]}
+        self.assertEqual((states[caught_up.id], states[evening.id]), ("missed", "later"))
+        self.assertEqual(days[3]["closed"], "No lessons")
+        friday = next(box for box in days[4]["boxes"] if box["lesson_id"] == friday_class.id)
+        self.assertEqual((friday["state"], friday["url"]), ("later", None))
+
+        last_days = {day["date"].weekday(): day for day in last_week["days"]}
+        box = next(box for box in last_days[2]["boxes"] if box["lesson_id"] == caught_up.id)
+        self.assertEqual(box["state"], "taken")
+        self.assertEqual(box["url"], reverse("anseo:phone_roll", args=[caught_up.id, (last_monday + timedelta(days=2)).isoformat()]))
+
+        # The list of unrecorded classes agrees.
+        rows = _unrecorded_registers(wednesday, time(12), weeks_back=1)["rows"]
+        self.assertNotIn(caught_up.id, [row["lesson_id"] for row in rows])
+
+    def test_term_attendance_leaves_out_not_marked(self):
+        from anseo.models import AttendanceEntry, AttendanceRoll
+        from finances.views import _term_attendance
+
+        AttendanceEntry.objects.all().delete()
+        self.assertEqual(_term_attendance(self.term), {"registers": 0})
+        roll = AttendanceRoll.objects.filter(term=self.term).first()
+        enrolment = LessonEnrollment.objects.filter(term=self.term).first()
+        for number, status in enumerate(("present", "late", "absent", "unknown")):
+            kid = Swimling.objects.create(guardian=enrolment.swimling.guardian, first_name=f"A{number}", last_name="T")
+            other = LessonEnrollment.objects.create(lesson=enrolment.lesson, swimling=kid, term=self.term)
+            AttendanceEntry.objects.create(roll=roll, enrollment=other, swimling_id=kid.id, status=status)
+        self.assertEqual(_term_attendance(self.term), {"registers": 1, "pct": 67, "per_class": 2.0})
 
     def test_old_finances_dashboard_url_is_not_the_live_dashboard(self):
         # The live dashboard once shared the name ``dashboard`` with the older view
@@ -441,8 +515,8 @@ class DashboardTests(TestCase):
         response = self.client.get(reverse("operations:index"))
         self.assertEqual(response.status_code, 200)
         titles = [d["title"] for d in response.context["dial_strip"]]
-        self.assertEqual(titles, ["Today’s public swims", "Classes’ attendance recorded this week",
-                                  "Swimmers’ attendance today", "This term’s lessons"])
+        self.assertEqual(titles, ["Today’s public swims", "Swimmers’ attendance today", "This term’s lessons"])
+        self.assertContains(response, "reg-week")
         # Plain staff cannot open Finance, so no link to it and no money on the page.
         self.assertIsNone(response.context["live_dashboard_url"])
         self.assertNotContains(response, "Full dashboard")

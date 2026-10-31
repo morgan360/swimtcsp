@@ -1,0 +1,53 @@
+{# Registers taken, from finances.views._register_grid and _term_attendance. Pass grid and attendance. Styles: _dial_styles.html #}
+<div class="reg-wrap">
+  <div class="dash-card">
+    <h2>Class registers</h2>
+    {% for week in grid %}
+    <div class="reg-week">
+      <h3>{{ week.title }}: {{ week.taken }} of {{ week.due }} taken</h3>
+      {% if week.days %}
+      <div class="reg-days">
+        {% for day in week.days %}
+        <div class="reg-day">
+          <span class="reg-day-name">{{ day.date|date:"D j" }}</span>
+          {% if day.closed %}
+          <span class="reg-closed">{{ day.closed }}</span>
+          {% else %}
+          <div class="reg-boxes">
+            {% for box in day.boxes %}
+            {% if box.url %}
+            <a class="reg-box is-{{ box.state }}" href="{{ box.url }}" title="{{ box.name }}{% if box.instructors %} · {{ box.instructors }}{% endif %}" aria-label="{{ box.name }}, {{ day.date|date:'l' }}: {% if box.state == 'taken' %}register taken{% elif box.state == 'later' %}not started{% else %}no register{% endif %}"></a>
+            {% else %}
+            <span class="reg-box is-{{ box.state }}" title="{{ box.name }}{% if box.instructors %} · {{ box.instructors }}{% endif %}"></span>
+            {% endif %}
+            {% endfor %}
+          </div>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <p class="dash-caption">No classes.</p>
+      {% endif %}
+    </div>
+    {% endfor %}
+    <div class="reg-key">
+      <span><i class="reg-box is-taken"></i> Taken</span>
+      <span><i class="reg-box is-missed"></i> Not taken</span>
+      <span><i class="reg-box is-later"></i> Not started</span>
+    </div>
+  </div>
+  {% if attendance %}
+  <div class="dash-card">
+    <h2>Term attendance</h2>
+    {% if attendance.registers %}
+    <div class="dash-big">{{ attendance.pct }}%</div>
+    <div class="dash-caption">about {{ attendance.per_class }} swimmers per class</div>
+    <div class="dash-caption">from {{ attendance.registers }} register{{ attendance.registers|pluralize }}, so only classes with a register taken</div>
+    {% else %}
+    <div class="dash-big is-muted">—</div>
+    <div class="dash-caption">No registers taken yet this term</div>
+    {% endif %}
+  </div>
+  {% endif %}
+</div>

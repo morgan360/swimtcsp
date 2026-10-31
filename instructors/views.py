@@ -1,7 +1,13 @@
+import base64
+from io import BytesIO
+
+import qrcode
+from qrcode.image.svg import SvgPathImage
 from django.contrib.auth.decorators import login_required
 
 from utils.decorators import staff_or_instructor_required
 from django.shortcuts import render, get_object_or_404, redirect
+from django.urls import reverse
 from types import SimpleNamespace
 from datetime import date as dt_date, time as dt_time
 from instructors.models import InstructorAssignment
@@ -55,6 +61,17 @@ def level_order_for(category_name: str) -> int:
 
 
 #### START ####
+def registers_qr_code(request):
+    """A QR code of the phone registers page, as a data URI for an <img>.
+
+    Built from the request so that dev's dashboard points at dev and production's
+    at production.
+    """
+    buffer = BytesIO()
+    qrcode.make(request.build_absolute_uri(reverse("anseo:registers")), image_factory=SvgPathImage).save(buffer)
+    return "data:image/svg+xml;base64," + base64.b64encode(buffer.getvalue()).decode("ascii")
+
+
 @login_required
 def instructor_dashboard(request):
     term_data = get_term_context_data()
@@ -172,6 +189,7 @@ def instructor_dashboard(request):
         "terms": terms,
         "total_students": total_students,
         "lessons_this_week": lessons_this_week,
+        "registers_qr_code": registers_qr_code(request),
     })
 
 def stage_key(label: str):

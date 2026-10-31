@@ -70,3 +70,14 @@ class SkillReportAccessTests(TestCase):
         for url in self._urls():
             with self.subTest(url=url):
                 self.assertEqual(self.client.get(url).status_code, 200)
+
+
+class RegistersCardTests(TestCase):
+    def test_dashboard_shows_a_qr_code_for_this_sites_registers_page(self):
+        instructor = User.objects.create_user(email="card@tcsp.ie", password="pw", first_name="I")
+        self.client.force_login(instructor)
+        response = self.client.get(reverse("instructors:instructor_dashboard"))
+        self.assertContains(response, "Take registers on your phone")
+        self.assertContains(response, "data:image/svg+xml;base64,")
+        self.assertContains(response, "Add to Home Screen")
+

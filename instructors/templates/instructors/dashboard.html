@@ -21,6 +21,46 @@
             </div>
         </div>
 
+        <!-- Phone registers -->
+        <div class="bg-white rounded-2xl shadow-lg p-6 mb-8 text-gray-800">
+            <h3 class="text-xl font-bold text-blue-900 mb-2 flex items-center">
+                <i class="fa-solid fa-mobile-screen-button mr-2"></i>
+                Take registers on your phone
+            </h3>
+            <p class="mb-4">
+                Mark your class from your own phone when you come off the bank. You'll see today's classes and any
+                you missed in the past week. Everyone starts as Here, so you only tap anyone who was absent, late or
+                excused, then save. It saves to the same register as the tablet, and it counts for the day the class ran.
+            </p>
+            <div class="grid gap-6 md:grid-cols-3">
+                <div class="text-center">
+                    <img src="{{ registers_qr_code }}" alt="QR code for the phone registers page"
+                         class="mx-auto w-40 h-40 bg-white">
+                    <p class="mt-2 text-sm text-gray-600">Scan with your phone's camera</p>
+                    <a href="{% url 'anseo:registers' %}" class="text-sm font-semibold text-blue-800 underline">On your phone already? Open it here</a>
+                </div>
+                <div>
+                    <h4 class="font-semibold mb-1">iPhone</h4>
+                    <ol class="list-decimal list-inside space-y-1 text-sm">
+                        <li>Scan the code and open the page in Safari.</li>
+                        <li>Log in and let your phone save your password.</li>
+                        <li>Tap the Share button, the square with an arrow pointing up.</li>
+                        <li>Tap Add to Home Screen, then Add.</li>
+                    </ol>
+                </div>
+                <div>
+                    <h4 class="font-semibold mb-1">Android</h4>
+                    <ol class="list-decimal list-inside space-y-1 text-sm">
+                        <li>Scan the code and open the page in Chrome.</li>
+                        <li>Log in and let your phone save your password.</li>
+                        <li>Tap the &#8942; menu at the top right.</li>
+                        <li>Tap Add to Home screen or Install app, then confirm.</li>
+                    </ol>
+                </div>
+            </div>
+            <p class="mt-4 text-sm text-gray-600">You'll then have a Registers icon with your other apps. You only need to do this once.</p>
+        </div>
+
         <!-- Summary Stats -->
             <div class="bg-white/50 rounded-2xl shadow-lg p-6 mt-8 mb-8 backdrop-blur-sm">
                 <h3 class="text-xl font-bold text-white mb-4 flex items-center">

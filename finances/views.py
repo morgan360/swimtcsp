@@ -1332,8 +1332,8 @@ def _unrecorded_registers(today, current_time, weeks_back=0):
     return {'rows': rows, 'due': due, 'monday': monday, 'sunday': sunday}
 
 
-def _register_grid(today, current_time):
-    """Last week's and this week's classes as boxes, filled in once a register is taken.
+def _register_grid(today, current_time, include_last_week=True):
+    """This week's classes, and optionally last week's, as boxes filled in once a register is taken.
 
     Each box is taken, missed or later (hasn't started). Only taken and missed
     count, and a closed day has its label instead of boxes.
@@ -1348,8 +1348,12 @@ def _register_grid(today, current_time):
     marked = _marked_class_days(last_monday)
     instructors_by_term = {}
 
+    periods = [('This week', this_monday)]
+    if include_last_week:
+        periods.append(('Last week', last_monday))
+
     weeks = []
-    for title, monday in (('This week', this_monday), ('Last week', last_monday)):
+    for title, monday in periods:
         days = []
         taken = due = 0
         for offset in range(7):

@@ -58,7 +58,7 @@ class OperationsAdminSite(TCSPAdminSite):
             live = _live_dials(today)
             extra_context = {
                 "dial_strip": [live[key] for key in ("swims", "attendance", "term") if live[key]],
-                "register_grid": _register_grid(today, current.time()),
+                "register_grid": _register_grid(today, current.time(), include_last_week=False),
                 "term_attendance": _term_attendance(live["current_term"]) if live["current_term"] else None,
                 "whats_on": _whats_on(today),
                 "live_dashboard_url": (reverse("finance:dashboard")

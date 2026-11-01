@@ -431,6 +431,16 @@ class DashboardTests(TestCase):
         week = self.this_weeks_registers()
         self.assertEqual(week["taken"], 0)
 
+    def test_live_dashboard_shows_two_weeks_and_summaries_show_this_week(self):
+        def titles(grid):
+            return [week["title"] for week in grid]
+
+        self.assertEqual(titles(self.get().context["sections"]["operations"]["register_grid"]),
+                         ["This week", "Last week"])
+        for url in (reverse("operations:index"), reverse("dashboard:dashboard_home")):
+            with self.subTest(url=url):
+                self.assertEqual(titles(self.client.get(url).context["register_grid"]), ["This week"])
+
     def test_register_grid_states_closures_and_catch_ups(self):
         from datetime import datetime, time
 

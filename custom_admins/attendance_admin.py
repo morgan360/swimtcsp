@@ -14,7 +14,7 @@ attendance_admin_site = operations_site
 @admin.register(AttendanceRoll, site=attendance_admin_site)
 class AttendanceRollAdmin(TCSPModelAdmin):
     list_display = ('product', 'term', 'window_start', 'window_end', 'created_by', 'created_at')
-    search_fields = ('product__name', 'term__label')
+    search_fields = ('product__name',)  # Term has no text field; use the Term filter
     list_filter = [('product', SearchableRelatedDropdownFilter), ('term', SearchableRelatedDropdownFilter)]
     readonly_fields = ('created_by', 'created_at')
 

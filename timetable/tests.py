@@ -97,10 +97,14 @@ class YearCalendarTests(TestCase):
         self.assertEqual(_when(date(2026, 12, 28), date(2027, 1, 2)), "28 Dec – 2 Jan")
 
     def test_only_closures_are_tinted(self):
+        from django.utils import timezone
+
         from timetable.models import CalendarEvent
 
+        # Relative to today: the page only lists closures that haven't ended yet,
+        # so a fixed date makes this test fail once that date has passed.
         CalendarEvent.objects.create(title="Bank holiday", category="closure", affects="all",
-                                     start_date=date(2026, 11, 2))
+                                     start_date=timezone.localdate() + timedelta(days=7))
         html = self.client.get(reverse("timetable:timetable_grid")).content.decode()
         self.assertEqual(html.count("yc-tint yc-tint-closed"), 1)
 

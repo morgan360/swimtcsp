@@ -993,7 +993,7 @@ class GoogleReviewsTests(TestCase):
         with self.settings(GOOGLE_PLACES_API_KEY="k", GOOGLE_PLACE_ID="p"):
             response = self.page()
         self.assertContains(response, "Google reviews")
-        self.assertContains(response, "4.6★")
+        self.assertContains(response, "4.6<span class=\"dash-stars\">★")
         self.assertContains(response, "Lovely pool, great instructors.")
         self.assertContains(response, "Aoife B")
         self.assertContains(response, "https://maps.google.com/?cid=1")
@@ -1006,7 +1006,7 @@ class GoogleReviewsTests(TestCase):
         with self.settings(GOOGLE_PLACES_API_KEY="k", GOOGLE_PLACE_ID="p"):
             response = self.page()
         self.get.assert_not_called()
-        self.assertContains(response, "4.5★")
+        self.assertContains(response, "4.5<span class=\"dash-stars\">★")
 
     def test_google_down_falls_back_to_the_last_snapshot(self):
         import requests
@@ -1016,7 +1016,7 @@ class GoogleReviewsTests(TestCase):
                 self.assertLogs("finances", "ERROR"):
             response = self.page()
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "4.5★")
+        self.assertContains(response, "4.5<span class=\"dash-stars\">★")
 
     def test_google_down_with_no_snapshot_hides_the_section(self):
         import requests

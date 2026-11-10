@@ -1,9 +1,10 @@
 {# The Live Dashboard's Google reviews card. Pass google_reviews (a GoogleReviewSnapshot). #}
+<style>.dash-stars { color: #f5b301; }</style>
 <div class="dash-charts">
   <div class="dash-card">
     <h2>Google rating</h2>
     <div class="dash-coupons">
-      <div><span class="dash-tile-num">{{ google_reviews.rating|default:"–" }}★</span>
+      <div><span class="dash-tile-num">{{ google_reviews.rating|default:"–" }}<span class="dash-stars">★</span></span>
         <span class="dash-tile-when">from {{ google_reviews.review_count }} review{{ google_reviews.review_count|pluralize }}</span></div>
     </div>
     <p class="dash-hint">Checked {{ google_reviews.fetched_at|date:"D j M, H:i" }}, and again at most every 6 hours.
@@ -16,7 +17,7 @@
       {% for review in google_reviews.reviews %}
       <li>
         <div class="dash-chat-meta">
-          <span title="{{ review.rating }} out of 5">{% for star in "12345" %}{% if forloop.counter <= review.rating %}★{% else %}☆{% endif %}{% endfor %}</span>
+          <span class="dash-stars" title="{{ review.rating }} out of 5">{% for star in "12345" %}{% if forloop.counter <= review.rating %}★{% else %}☆{% endif %}{% endfor %}</span>
           · {% if review.author_url %}<a href="{{ review.author_url }}" rel="noopener" target="_blank">{{ review.author }}</a>{% else %}{{ review.author }}{% endif %}
           {% if review.when %}· {{ review.when }}{% endif %}
         </div>

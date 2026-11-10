@@ -1,0 +1,37 @@
+{# The Live Dashboard's Google reviews card. Pass google_reviews (a GoogleReviewSnapshot). #}
+<div class="dash-charts">
+  <div class="dash-card">
+    <h2>Google rating</h2>
+    <div class="dash-coupons">
+      <div><span class="dash-tile-num">{{ google_reviews.rating|default:"–" }}★</span>
+        <span class="dash-tile-when">from {{ google_reviews.review_count }} review{{ google_reviews.review_count|pluralize }}</span></div>
+    </div>
+    <p class="dash-hint">Checked {{ google_reviews.fetched_at|date:"D j M, H:i" }}, and again at most every 6 hours.
+      New reviews are counted from these checks, so the first day shows none.</p>
+  </div>
+  <div class="dash-card">
+    <h2>Reviews Google shows first</h2>
+    {% if google_reviews.reviews %}
+    <ul class="dash-chats">
+      {% for review in google_reviews.reviews %}
+      <li>
+        <div class="dash-chat-meta">
+          <span title="{{ review.rating }} out of 5">{% for star in "12345" %}{% if forloop.counter <= review.rating %}★{% else %}☆{% endif %}{% endfor %}</span>
+          · {% if review.author_url %}<a href="{{ review.author_url }}" rel="noopener" target="_blank">{{ review.author }}</a>{% else %}{{ review.author }}{% endif %}
+          {% if review.when %}· {{ review.when }}{% endif %}
+        </div>
+        {% if review.text %}
+        <details class="dash-chat-answer">
+          <summary>Review<span class="dash-answer-preview">: {{ review.text|truncatechars:100 }}</span></summary>
+          <div class="dash-chat-answer-body">{{ review.text|linebreaksbr }}</div>
+        </details>
+        {% else %}<div class="dash-chat-text is-muted">Rating only, no text</div>{% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="dash-hint">Google hasn't shared any reviews yet.</p>
+    {% endif %}
+    <p class="dash-hint">Reviews from Google. It shares only five, the ones it ranks most relevant, which are often old. The newest are on Google itself.</p>
+  </div>
+</div>

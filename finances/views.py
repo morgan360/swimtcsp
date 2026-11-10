@@ -15,6 +15,7 @@ from django.http import JsonResponse, HttpResponse
 from django.utils.timezone import localtime, make_aware
 import datetime
 
+from finances import google_reviews
 from swims_orders.models import Order  # ✅ your Order model
 from lessons_orders.models import Order as LessonOrder
 from schools_orders.models import Order as SchoolOrder
@@ -1438,6 +1439,7 @@ DASHBOARD_SECTIONS = [
     ('admin', 'Admin', (),
      ('Customers active', 'Managers active', 'Other staff active', 'AI chat questions')),
     ('finance', 'Finance', (), ('Revenue', 'Paid orders')),
+    ('reviews', 'Google reviews', (), ('New Google reviews',)),  # only when set up
 ]
 
 
@@ -1610,11 +1612,18 @@ def live_dashboard(request, template_name='admin/financeadmin/dashboard.html'):
         },
     }
 
+    # Google reviews: only once the Places API key and place are set up.
+    google = google_reviews.latest_snapshot()
+    if google:
+        tiles.append(tile('New Google reviews', google_reviews.new_review_counts(periods),
+                          hint=f'{google.rating or "–"}★ from {google.review_count} reviews'))
+
     tiles_by_label = {t['label']: t for t in tiles}
     sections = {
         key: {'key': key, 'title': title, 'dials': [live[d] for d in dial_keys if live[d]],
               'tiles': [tiles_by_label[label] for label in tile_labels]}
         for key, title, dial_keys, tile_labels in DASHBOARD_SECTIONS
+        if key != 'reviews' or google
     }
 
     def link(label, name):
@@ -1632,6 +1641,8 @@ def live_dashboard(request, template_name='admin/financeadmin/dashboard.html'):
                                     link('Reconciliation', 'finance:reconciliation'),
                                     *([{'label': 'All coupons', 'url': coupons_url}] if coupons_url else []),
                                     link('Daily Activity', 'finance:activity_report')]
+    if google and google.maps_url:
+        sections['reviews']['links'] = [{'label': 'All reviews on Google', 'url': google.maps_url}]
     if settings_site.has_permission(request) and request.user.has_perm('security.view_securityincident'):
         sections['security']['links'] = [link('All incidents', 'settings:security_securityincident_changelist')]
 
@@ -1656,5 +1667,6 @@ def live_dashboard(request, template_name='admin/financeadmin/dashboard.html'):
         'chat_log_url': (reverse('settings:chatbot_chatbotquery_changelist')
                          if settings_site.has_permission(request) else None),
         'chart_data': chart_data,
+        'google_reviews': google,
     }
     return render(request, template_name, context)

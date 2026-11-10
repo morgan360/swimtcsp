@@ -10,7 +10,7 @@
       New reviews are counted from these checks, so the first day shows none.</p>
   </div>
   <div class="dash-card">
-    <h2>Latest Google reviews</h2>
+    <h2>Reviews Google shows first</h2>
     {% if google_reviews.reviews %}
     <ul class="dash-chats">
       {% for review in google_reviews.reviews %}
@@ -32,6 +32,6 @@
     {% else %}
     <p class="dash-hint">Google hasn't shared any reviews yet.</p>
     {% endif %}
-    <p class="dash-hint">Reviews from Google. It shares up to five, the ones it picks as most relevant, not every review.</p>
+    <p class="dash-hint">Reviews from Google. It shares only five, the ones it ranks most relevant, which are often old. The newest are on Google itself.</p>
   </div>
 </div>

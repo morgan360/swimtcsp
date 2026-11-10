@@ -1,8 +1,10 @@
-"""The pool's Google rating and latest reviews, for the Live Dashboard.
+"""The pool's Google rating and review count, for the Live Dashboard.
 
 Read from the Places API (New) at most every REFRESH_HOURS and kept as
-GoogleReviewSnapshot rows. Google only shares up to five reviews (its "most
-relevant"), so this shows a sample, not every review. If Google can't be
+GoogleReviewSnapshot rows, whose rising count gives "new reviews today / this
+week". No review text is fetched: the API only returns the five reviews Google
+ranks most relevant (for the pool, 3-9 years old) and can't sort by newest, so
+the dashboard links to Google for the reviews themselves. If Google can't be
 reached the dashboard gets the last good snapshot: it must never fail because
 of Google.
 """
@@ -19,9 +21,8 @@ from finances.models import GoogleReviewSnapshot
 logger = logging.getLogger('finances')
 
 PLACES_URL = 'https://places.googleapis.com/v1/places/{place_id}'
-FIELD_MASK = 'rating,userRatingCount,reviews,googleMapsUri'
+FIELD_MASK = 'rating,userRatingCount,googleMapsUri'  # no reviews: see above
 REFRESH_HOURS = 6
-KEEP_REVIEW_TEXT_DAYS = 30
 TIMEOUT_SECONDS = 5
 
 
@@ -43,7 +44,7 @@ def latest_snapshot():
 
 
 def fetch():
-    """Ask Google for the rating and reviews and save a snapshot. None on failure."""
+    """Ask Google for the rating and review count and save a snapshot. None on failure."""
     try:
         response = requests.get(
             PLACES_URL.format(place_id=settings.GOOGLE_PLACE_ID),
@@ -62,28 +63,9 @@ def fetch():
     snapshot = GoogleReviewSnapshot.objects.create(
         rating=rating,
         review_count=int(place.get('userRatingCount') or 0),
-        reviews=[_review(r) for r in place.get('reviews', [])],
         maps_url=place.get('googleMapsUri', '')[:500],
     )
-    GoogleReviewSnapshot.objects.filter(
-        fetched_at__lt=timezone.now() - timedelta(days=KEEP_REVIEW_TEXT_DAYS),
-    ).update(reviews=[])
     return snapshot
-
-
-def _review(review):
-    """Keep only what the dashboard shows, and Google's attribution for it."""
-    author = review.get('authorAttribution') or {}
-    text = review.get('text') or review.get('originalText') or {}
-    return {
-        'author': author.get('displayName', 'A Google user'),
-        'author_url': author.get('uri', ''),
-        'rating': int(review.get('rating') or 0),
-        'text': text.get('text', ''),
-        'when': review.get('relativePublishTimeDescription', ''),
-        'published': review.get('publishTime', ''),
-        'url': review.get('googleMapsUri', ''),
-    }
 
 
 def new_review_counts(periods):

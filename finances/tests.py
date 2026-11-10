@@ -948,13 +948,6 @@ class GoogleReviewsTests(TestCase):
         "rating": 4.6,
         "userRatingCount": 120,
         "googleMapsUri": "https://maps.google.com/?cid=1",
-        "reviews": [{
-            "rating": 5,
-            "text": {"text": "Lovely pool, great instructors."},
-            "relativePublishTimeDescription": "a week ago",
-            "publishTime": "2026-11-03T10:00:00Z",
-            "authorAttribution": {"displayName": "Aoife B", "uri": "https://www.google.com/maps/contrib/1"},
-        }],
     }
 
     @classmethod
@@ -976,9 +969,9 @@ class GoogleReviewsTests(TestCase):
     def page(self):
         return self.client.get(reverse("finance:dashboard"))
 
-    def snapshot(self, count, hours_ago, **kwargs):
+    def snapshot(self, count, hours_ago):
         from finances.models import GoogleReviewSnapshot
-        snap = GoogleReviewSnapshot.objects.create(review_count=count, rating=Decimal("4.5"), **kwargs)
+        snap = GoogleReviewSnapshot.objects.create(review_count=count, rating=Decimal("4.5"))
         GoogleReviewSnapshot.objects.filter(pk=snap.pk).update(
             fetched_at=timezone.now() - timedelta(hours=hours_ago))
         return snap
@@ -989,24 +982,25 @@ class GoogleReviewsTests(TestCase):
         self.assertNotContains(response, "Google reviews")
         self.get.assert_not_called()
 
-    def test_fetches_and_shows_the_rating_and_reviews(self):
+    def test_fetches_and_shows_the_rating_and_a_link_to_the_reviews(self):
         with self.settings(GOOGLE_PLACES_API_KEY="k", GOOGLE_PLACE_ID="p"):
             response = self.page()
         self.assertContains(response, "Google reviews")
-        self.assertContains(response, "4.6★")
-        self.assertContains(response, "Lovely pool, great instructors.")
-        self.assertContains(response, "Aoife B")
+        self.assertContains(response, "4.6<span class=\"dash-stars\">★")
         self.assertContains(response, "https://maps.google.com/?cid=1")
         headers = self.get.call_args.kwargs["headers"]
         self.assertEqual(headers["X-Goog-Api-Key"], "k")
-        self.assertIn("reviews", headers["X-Goog-FieldMask"])
+        # Review text is never asked for: Google only gives its five "most relevant",
+        # often years old, and asking for them costs more.
+        self.assertEqual(headers["X-Goog-FieldMask"], "rating,userRatingCount,googleMapsUri")
+        self.assertContains(response, "Sort → Newest")
 
     def test_a_recent_snapshot_is_not_fetched_again(self):
         self.snapshot(100, hours_ago=1)
         with self.settings(GOOGLE_PLACES_API_KEY="k", GOOGLE_PLACE_ID="p"):
             response = self.page()
         self.get.assert_not_called()
-        self.assertContains(response, "4.5★")
+        self.assertContains(response, "4.5<span class=\"dash-stars\">★")
 
     def test_google_down_falls_back_to_the_last_snapshot(self):
         import requests
@@ -1016,7 +1010,7 @@ class GoogleReviewsTests(TestCase):
                 self.assertLogs("finances", "ERROR"):
             response = self.page()
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "4.5★")
+        self.assertContains(response, "4.5<span class=\"dash-stars\">★")
 
     def test_google_down_with_no_snapshot_hides_the_section(self):
         import requests
@@ -1037,12 +1031,3 @@ class GoogleReviewsTests(TestCase):
         self.assertEqual(google_reviews.new_review_counts([week, no_history]), [3, 0])
         self.snapshot(98, hours_ago=0)
         self.assertEqual(google_reviews.new_review_counts([week]), [0])
-
-    def test_old_review_text_is_cleared(self):
-        from finances import google_reviews
-        old = self.snapshot(90, hours_ago=24 * 31, reviews=[{"text": "old"}])
-        with self.settings(GOOGLE_PLACES_API_KEY="k", GOOGLE_PLACE_ID="p"):
-            google_reviews.fetch()
-        old.refresh_from_db()
-        self.assertEqual(old.reviews, [])
-        self.assertEqual(old.review_count, 90)

@@ -939,3 +939,110 @@ class ChatRatingsDashboardTests(TestCase):
         response = self.client.get(reverse("finance:dashboard"))
         self.assertIsNone(response.context["chat_ratings"])
         self.assertContains(response, "No answers rated yet")
+
+
+class GoogleReviewsTests(TestCase):
+    """The Live Dashboard's Google reviews section (finances.google_reviews)."""
+
+    PLACE = {
+        "rating": 4.6,
+        "userRatingCount": 120,
+        "googleMapsUri": "https://maps.google.com/?cid=1",
+        "reviews": [{
+            "rating": 5,
+            "text": {"text": "Lovely pool, great instructors."},
+            "relativePublishTimeDescription": "a week ago",
+            "publishTime": "2026-11-03T10:00:00Z",
+            "authorAttribution": {"displayName": "Aoife B", "uri": "https://www.google.com/maps/contrib/1"},
+        }],
+    }
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.manager = User.objects.create_user(email="manager@tcsp.ie", password="pw", first_name="M")
+        cls.manager.is_staff = True
+        cls.manager.save(update_fields=["is_staff"])
+        cls.manager.groups.add(Group.objects.get_or_create(name="Manager")[0])
+
+    def setUp(self):
+        from unittest import mock
+        patcher = mock.patch("finances.google_reviews.requests.get")
+        self.get = patcher.start()
+        self.addCleanup(patcher.stop)
+        self.get.return_value.json.return_value = self.PLACE
+        self.get.return_value.raise_for_status.return_value = None
+        self.client.force_login(self.manager)
+
+    def page(self):
+        return self.client.get(reverse("finance:dashboard"))
+
+    def snapshot(self, count, hours_ago, **kwargs):
+        from finances.models import GoogleReviewSnapshot
+        snap = GoogleReviewSnapshot.objects.create(review_count=count, rating=Decimal("4.5"), **kwargs)
+        GoogleReviewSnapshot.objects.filter(pk=snap.pk).update(
+            fetched_at=timezone.now() - timedelta(hours=hours_ago))
+        return snap
+
+    def test_hidden_until_set_up(self):
+        with self.settings(GOOGLE_PLACES_API_KEY="", GOOGLE_PLACE_ID=""):
+            response = self.page()
+        self.assertNotContains(response, "Google reviews")
+        self.get.assert_not_called()
+
+    def test_fetches_and_shows_the_rating_and_reviews(self):
+        with self.settings(GOOGLE_PLACES_API_KEY="k", GOOGLE_PLACE_ID="p"):
+            response = self.page()
+        self.assertContains(response, "Google reviews")
+        self.assertContains(response, "4.6★")
+        self.assertContains(response, "Lovely pool, great instructors.")
+        self.assertContains(response, "Aoife B")
+        self.assertContains(response, "https://maps.google.com/?cid=1")
+        headers = self.get.call_args.kwargs["headers"]
+        self.assertEqual(headers["X-Goog-Api-Key"], "k")
+        self.assertIn("reviews", headers["X-Goog-FieldMask"])
+
+    def test_a_recent_snapshot_is_not_fetched_again(self):
+        self.snapshot(100, hours_ago=1)
+        with self.settings(GOOGLE_PLACES_API_KEY="k", GOOGLE_PLACE_ID="p"):
+            response = self.page()
+        self.get.assert_not_called()
+        self.assertContains(response, "4.5★")
+
+    def test_google_down_falls_back_to_the_last_snapshot(self):
+        import requests
+        self.snapshot(100, hours_ago=10)
+        self.get.side_effect = requests.Timeout("slow")
+        with self.settings(GOOGLE_PLACES_API_KEY="k", GOOGLE_PLACE_ID="p"), \
+                self.assertLogs("finances", "ERROR"):
+            response = self.page()
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "4.5★")
+
+    def test_google_down_with_no_snapshot_hides_the_section(self):
+        import requests
+        self.get.return_value.raise_for_status.side_effect = requests.HTTPError("403")
+        with self.settings(GOOGLE_PLACES_API_KEY="k", GOOGLE_PLACE_ID="p"), \
+                self.assertLogs("finances", "ERROR"):
+            response = self.page()
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, "Google reviews")
+
+    def test_new_reviews_count_the_rise_and_never_go_negative(self):
+        from finances import google_reviews
+        now = timezone.now()
+        self.snapshot(100, hours_ago=24 * 9)
+        self.snapshot(103, hours_ago=1)
+        week = ("Week", now - timedelta(days=7), now + timedelta(hours=1))
+        no_history = ("Old", now - timedelta(days=30), now)
+        self.assertEqual(google_reviews.new_review_counts([week, no_history]), [3, 0])
+        self.snapshot(98, hours_ago=0)
+        self.assertEqual(google_reviews.new_review_counts([week]), [0])
+
+    def test_old_review_text_is_cleared(self):
+        from finances import google_reviews
+        old = self.snapshot(90, hours_ago=24 * 31, reviews=[{"text": "old"}])
+        with self.settings(GOOGLE_PLACES_API_KEY="k", GOOGLE_PLACE_ID="p"):
+            google_reviews.fetch()
+        old.refresh_from_db()
+        self.assertEqual(old.reviews, [])
+        self.assertEqual(old.review_count, 90)

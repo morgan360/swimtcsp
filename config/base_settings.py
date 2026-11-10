@@ -48,6 +48,11 @@ OPENAI_CHAT_MODEL = config('OPENAI_CHAT_MODEL', default='gpt-5.4-mini')
 OPENAI_EMBED_MODEL = config('OPENAI_EMBED_MODEL', default='text-embedding-3-small')
 OPENAI_PROJECT = config('OPENAI_PROJECT', default='')
 
+# Google reviews on the Live Dashboard (finances.google_reviews), from the
+# Places API (New). Leave either blank and the dashboard leaves the section out.
+GOOGLE_PLACES_API_KEY = config('GOOGLE_PLACES_API_KEY', default='')
+GOOGLE_PLACE_ID = config('GOOGLE_PLACE_ID', default='')
+
 # FAQ retrieval tiers. A query is embedded once and scored against every FAQ:
 #   >= FAQ_MATCH_THRESHOLD  -> serve the stored answer verbatim (no model call)
 #   >= FAQ_MIN_CONFIDENCE   -> serve it, but hedged ("I'm not certain, but...")

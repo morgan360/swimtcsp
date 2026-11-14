@@ -6,9 +6,11 @@
 {% endcomment %}
 {% include "timetable/_year_calendar_styles.html" %}
 <style>
+  /* Sized by the card, not the window: the Operations home puts it in a narrow column. */
+  .yf-wrap { container-type: inline-size; }
   .yf-strip { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); align-items: end; row-gap: 1rem; }
-  @media (max-width: 1023px) { .yf-strip { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
-  @media (max-width: 639px)  { .yf-strip { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+  @container (max-width: 900px) { .yf-strip { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
+  @container (max-width: 420px) { .yf-strip { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
   .yf-month { display: flex; flex-direction: column; justify-content: flex-end; height: 100%; min-width: 0; }
   .yf-mast { display: flex; flex-direction: column; align-items: flex-start; gap: 2px;
              margin-left: 8px; padding-bottom: 6px; border-left: 2px solid #9ca3af; }
@@ -30,7 +32,7 @@
 </style>
 <div class="dash-card" style="margin-bottom: 1rem;" aria-label="The year ahead">
   <h2>The year ahead</h2>
-  <div class="yf-strip">
+  <div class="yf-wrap"><div class="yf-strip">
     {% for slot in year.slots %}
     <div class="yf-month{% if slot.is_now %} yf-now{% endif %}">
       {% if slot.flags %}
@@ -44,7 +46,7 @@
       <div class="yf-base"><span>{% if forloop.first or slot.first.month == 1 %}{{ slot.first|date:"M Y" }}{% else %}{{ slot.first|date:"M" }}{% endif %}</span></div>
     </div>
     {% endfor %}
-  </div>
+  </div></div>
   <ul class="yf-key">
     {% for kind, label in year.legend %}
     <li><span class="yf-flag yc-{{ kind }}"></span>{{ label }}</li>

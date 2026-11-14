@@ -23,6 +23,7 @@
 
 {% block content %}
 {% if dial_strip %}
+{% include "admin/financeadmin/_year_strip.html" with year=year_strip %}
 <section class="dash-strip" aria-label="Today at the pool">
   <div class="dash-strip-head">
     <h2>Today at the pool</h2>

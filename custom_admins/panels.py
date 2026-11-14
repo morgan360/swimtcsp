@@ -52,6 +52,7 @@ class OperationsAdminSite(TCSPAdminSite):
 
             from custom_admins.financeadmin import finance_admin_site
             from finances.views import _live_dials, _register_grid, _term_attendance, _whats_on
+            from timetable.year import year_flags
 
             current = localtime(now())
             today = current.date()
@@ -61,6 +62,7 @@ class OperationsAdminSite(TCSPAdminSite):
                 "register_grid": _register_grid(today, current.time(), include_last_week=False),
                 "term_attendance": _term_attendance(live["current_term"]) if live["current_term"] else None,
                 "whats_on": _whats_on(today),
+                "year_strip": year_flags(today),
                 "live_dashboard_url": (reverse("finance:dashboard")
                                        if finance_admin_site.has_permission(request) else None),
             }

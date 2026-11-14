@@ -44,7 +44,11 @@
     .dash-home .dash-big { font-size: 1.3rem; }
     .dash-home .dash-caption { font-size: 0.75rem; }
     @media (max-width: 480px) { .dash-home .dash-dials { grid-template-columns: 1fr 1fr; } }
+    /* The year strip as a card like the section below. */
+    .dash-home-year .dash-card { border: 0; border-radius: 0.5rem; box-shadow: 0 4px 6px -1px rgb(0 0 0 / .1), 0 2px 4px -2px rgb(0 0 0 / .1); padding: 1.5rem; margin-bottom: 2rem !important; }
+    .dash-home-year .dash-card h2 { font-size: 1.125rem; font-weight: 600; color: #111827; margin-bottom: .75rem; }
   </style>
+  <div class="dash-home dash-home-year">{% include "admin/financeadmin/_year_strip.html" with year=year_strip %}</div>
   <section class="dash-home bg-white rounded-lg shadow-md p-6 mb-8" aria-label="Today at the pool">
     <div class="dash-home-head">
       <h3 class="text-lg font-semibold text-gray-900">Today at the pool</h3>

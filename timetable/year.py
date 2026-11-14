@@ -108,3 +108,28 @@ def year_calendar(today, months=12):
                  for first, last, kind, label in events]
     upcoming = [k for k in key_dates if k['last'] >= today]
     return {'months': month_list, 'key_dates': key_dates, 'upcoming': upcoming, 'legend': LEGEND}
+
+
+# One or two words per flag on the Live Dashboard's year strip; the legend
+# under it says what each colour means.
+FLAG_TEXT = {LESSONS_START: 'Lessons', REBOOKING: 'Rebooking', BOOKING: 'Booking', CLOSED: 'Closed'}
+PARTIAL_TEXT = {'No lessons': 'No lessons', 'No public swims': 'No swims'}
+
+
+def year_flags(today):
+    """year_calendar as 12 month slots for the Live Dashboard, each with a small
+    flag per key date that begins in it: forked when it runs several days. The
+    full wording and range are the flag's hover text."""
+    year = year_calendar(today)
+    slots = [{'first': m['first'], 'is_now': (m['first'].year, m['first'].month) == (today.year, today.month),
+              'flags': []} for m in year['months']]
+    by_month = {(s['first'].year, s['first'].month): s for s in slots}
+    for item in year['key_dates']:
+        first, last, kind = item['first'], item['last'], item['kind']
+        by_month[(first.year, first.month)]['flags'].append({
+            # Start day only: the fork already says it runs on.
+            'kind': kind, 'day': first.day, 'multi': first != last, 'past': last < today,
+            'text': FLAG_TEXT.get(kind) or PARTIAL_TEXT.get(item['label'].split(':')[0], 'Partly closed'),
+            'title': f"{item['when']}: {item['label']}",
+        })
+    return {'slots': slots, 'legend': year['legend']}

@@ -1490,6 +1490,7 @@ def live_dashboard(request, template_name='admin/financeadmin/dashboard.html'):
     from schools_bookings.models import ScoEnrollment
     from swims.models import PublicSwimProduct
     from swims_orders.models import OrderItem as SwimOrderItem
+    from timetable.year import year_flags
     from users.models import ActiveDay, LoginEvent
     from waiting_list.models import WaitingList
 
@@ -1653,6 +1654,7 @@ def live_dashboard(request, template_name='admin/financeadmin/dashboard.html'):
         'week_start': week_period[1],
         'dials': dials,
         'whats_on': _whats_on(today),
+        'year_strip': year_flags(today),
         'tiles': tiles,
         'sections': sections,
         'incidents': SecurityIncident.objects.all()[:SECURITY_INCIDENTS_SHOWN],

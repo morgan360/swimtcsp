@@ -40,30 +40,6 @@ def is_Manager(user):
     return user.is_authenticated and user.groups.filter(name='Manager').exists()
 
 
-# One or two words per flag on the dashboard's year strip; the legend below it
-# says what each colour means.
-_FLAG_TEXT = {'start': 'Lessons', 'rebooking': 'Rebooking', 'booking': 'Booking', 'closed': 'Closed'}
-_PARTIAL_TEXT = {'No lessons': 'No lessons', 'No public swims': 'No swims'}
-
-
-def _year_flags(year, today):
-    """The 12 months of timetable.year.year_calendar as slots, each with a small
-    flag per key date that begins in it (forked for several days). The full
-    wording is the flag's hover text."""
-    slots = [{'first': m['first'], 'is_now': (m['first'].year, m['first'].month) == (today.year, today.month),
-              'flags': []} for m in year['months']]
-    by_month = {(s['first'].year, s['first'].month): s for s in slots}
-    for item in year['key_dates']:
-        first, last, kind = item['first'], item['last'], item['kind']
-        flag = {
-            # Start day only: a forked flag already says it runs on, and the hover text has the range.
-            'kind': kind, 'days': first.day, 'multi': first != last, 'past': last < today,
-            'text': _FLAG_TEXT.get(kind) or _PARTIAL_TEXT.get(item['label'].split(':')[0], 'Partly closed'),
-            'when': item['when'], 'label': item['label'],
-        }
-        by_month[(first.year, first.month)]['flags'].append(flag)
-    return slots
-
 @login_required
 @user_passes_test(is_staff)
 def dashboard_home(request):
@@ -76,19 +52,15 @@ def dashboard_home(request):
 
     from custom_admins.financeadmin import finance_admin_site
     from finances.views import _live_dials, _register_grid, _term_attendance, _whats_on
-    from timetable.year import year_calendar
 
     current = timezone.localtime(timezone.now())
     today = current.date()
     live = _live_dials(today)
-    year = year_calendar(today)
     context = {
         'dial_strip': [live[key] for key in ('swims', 'attendance', 'term') if live[key]],
         'register_grid': _register_grid(today, current.time(), include_last_week=False),
         'term_attendance': _term_attendance(live['current_term']) if live['current_term'] else None,
         'whats_on': _whats_on(today),
-        'year_flags': _year_flags(year, today),
-        'year_legend': year['legend'],
         'live_dashboard_url': (reverse('finance:dashboard')
                                if finance_admin_site.has_permission(request) else None),
     }

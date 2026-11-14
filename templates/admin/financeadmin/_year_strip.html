@@ -1,9 +1,8 @@
 {% comment %}
-  Staff home: the year as 12 month slots on a baseline, each with a small flag
-  per key date from timetable.year.year_calendar (the same dates customers see
-  on the Timetable's Calendar tab): one-day events get a plain flag, several
-  days a forked one. Flags carry a word or two (full wording on hover); the
-  legend below says what each colour means.
+  Live Dashboard: the year as 12 month slots on a baseline, each with a small
+  flag per key date from timetable.year.year_flags (the same dates customers
+  see on the Timetable's Calendar tab). One-day events get a plain flag,
+  several days a forked one; hover a flag for the full wording. Pass year.
 {% endcomment %}
 {% include "timetable/_year_calendar_styles.html" %}
 <style>
@@ -20,25 +19,25 @@
               clip-path: polygon(0 0, 100% 0, calc(100% - 6px) 50%, 100% 100%, 0 100%); }
   .yf-past { opacity: .4; }
   .yf-base { border-top: 3px solid #1e3a8a; padding-top: 3px; text-align: center;
-             font-size: 12px; font-weight: 600; color: #1e3a8a; }
+             font-size: 12px; font-weight: 600; color: var(--body-fg); }
   .yf-now .yf-base { border-top-color: #f59e0b; }
-  .yf-now .yf-base span { background: #fef3c7; border-radius: 9999px; padding: 0 .5rem; }
-  .yf-key { display: flex; flex-wrap: wrap; gap: .25rem 1.25rem; margin-top: 1rem; font-size: 13px; color: #374151; }
-  .yf-key li { display: flex; align-items: center; gap: .4rem; }
+  .yf-now .yf-base span { background: #fef3c7; color: #1e3a8a; border-radius: 9999px; padding: 0 .5rem; }
+  .yf-key { display: flex; flex-wrap: wrap; gap: .25rem 1.25rem; margin: 1rem 0 0; padding: 0; list-style: none;
+            font-size: 12px; color: var(--body-quiet-color); }
+  .yf-key li { display: flex; align-items: center; gap: .4rem; list-style: none; padding: 0; }
   .yf-key .yf-flag { flex-shrink: 0; width: 1.1rem; height: .7rem; padding: 0; }
-  .yf-key .yf-multi { padding: 0; clip-path: polygon(0 0, 100% 0, 60% 50%, 100% 100%, 0 100%); }
+  .yf-key .yf-multi { clip-path: polygon(0 0, 100% 0, 60% 50%, 100% 100%, 0 100%); }
 </style>
-<section class="bg-white rounded-lg shadow-md p-6 mb-8" aria-label="The year ahead">
-  <h3 class="text-lg font-semibold text-gray-900 mb-3">The year ahead</h3>
-
+<div class="dash-card" style="margin-bottom: 1rem;" aria-label="The year ahead">
+  <h2>The year ahead</h2>
   <div class="yf-strip">
-    {% for slot in year_flags %}
+    {% for slot in year.slots %}
     <div class="yf-month{% if slot.is_now %} yf-now{% endif %}">
       {% if slot.flags %}
       <div class="yf-mast">
         {% for flag in slot.flags %}
         <span class="yf-flag{% if flag.multi %} yf-multi{% endif %} yc-{{ flag.kind }}{% if flag.past %} yf-past{% endif %}"
-              title="{{ flag.when }}: {{ flag.label }}"><b>{{ flag.days }}</b> {{ flag.text }}</span>
+              title="{{ flag.title }}"><b>{{ flag.day }}</b> {{ flag.text }}</span>
         {% endfor %}
       </div>
       {% endif %}
@@ -46,11 +45,10 @@
     </div>
     {% endfor %}
   </div>
-
   <ul class="yf-key">
-    {% for kind, label in year_legend %}
+    {% for kind, label in year.legend %}
     <li><span class="yf-flag yc-{{ kind }}"></span>{{ label }}</li>
     {% endfor %}
     <li><span class="yf-flag yf-multi yc-closed"></span>Forked: several days</li>
   </ul>
-</section>
+</div>

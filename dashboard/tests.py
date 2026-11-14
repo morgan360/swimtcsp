@@ -117,11 +117,30 @@ class DashboardHomeTests(TestCase):
         self.assertNotContains(response, 'Full dashboard')
         self.assertNotContains(response, '€')
 
-    def test_staff_see_a_twelve_month_calendar(self):
+    def test_staff_see_a_twelve_month_strip(self):
         self.client.force_login(self.staff)
         response = self.client.get(reverse('dashboard:dashboard_home'))
         self.assertContains(response, 'The year ahead')
-        self.assertEqual(len(response.context['year']['months']), 12)
+        self.assertEqual(len(response.context['year_flags']), 12)
+
+    def test_multi_day_closures_get_a_forked_flag(self):
+        from datetime import timedelta
+
+        from django.utils import timezone
+
+        from timetable.models import CalendarEvent
+
+        start = timezone.localdate().replace(day=1) + timedelta(days=40)
+        CalendarEvent.objects.create(title='Maintenance', category='closure',
+                                     affects=CalendarEvent.AFFECTS_ALL,
+                                     start_date=start, end_date=start + timedelta(days=2))
+        self.client.force_login(self.staff)
+        response = self.client.get(reverse('dashboard:dashboard_home'))
+        flags = [f for slot in response.context['year_flags'] for f in slot['flags']]
+        self.assertEqual(len(flags), 1)
+        self.assertTrue(flags[0]['multi'])
+        self.assertEqual(flags[0]['text'], 'Maintenance')
+        self.assertContains(response, 'yf-flag yf-multi')
 
     def test_finance_users_get_the_full_dashboard_link(self):
         self.client.force_login(self.manager)

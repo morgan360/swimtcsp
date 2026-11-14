@@ -213,6 +213,23 @@ class DashboardTests(TestCase):
         self.assertEqual(response.status_code, 200)
         return response
 
+    def test_year_strip_has_twelve_months_and_forks_multi_day_closures(self):
+        from timetable.models import CalendarEvent
+
+        start = timezone.localdate().replace(day=1) + timedelta(days=40)
+        CalendarEvent.objects.create(title="Maintenance", category="closure", affects=CalendarEvent.AFFECTS_ALL,
+                                     start_date=start, end_date=start + timedelta(days=2))
+        response = self.get()
+        slots = response.context["year_strip"]["slots"]
+        self.assertEqual(len(slots), 12)
+        closures = [f for slot in slots for f in slot["flags"] if f["kind"] == "closed"]
+        self.assertEqual(len(closures), 1)
+        self.assertTrue(closures[0]["multi"])
+        self.assertEqual(closures[0]["text"], "Closed")
+        self.assertContains(response, "The year ahead")
+        self.assertContains(response, "Pool closed: Maintenance")  # hover text
+        self.assertContains(response, "yf-flag yf-multi yc-closed")
+
     def dials(self):
         return {dial["title"]: dial for dial in self.get().context["dials"]}
 

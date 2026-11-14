@@ -65,6 +65,8 @@
   · <a href="{{ activity_report_url }}">exact figures in Daily Activity</a>
 </p>
 
+{% include "admin/financeadmin/_year_strip.html" with year=year_strip %}
+
 <nav class="dash-jump">
   {% for key, section in sections.items %}<a href="#dash-{{ key }}">{{ section.title }}</a>{% endfor %}
 </nav>

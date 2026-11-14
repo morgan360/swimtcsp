@@ -8,6 +8,9 @@
 {% if user|in_group:'Desk' or user.is_staff %}
 
 <div class="max-w-7xl mx-auto">
+  <!-- The year ahead: same dates as the Timetable's Calendar tab -->
+  {% include "dashboard/_year_calendar.html" %}
+
   <!-- Welcome Hero Section -->
   <div class="bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-500 via-cyan-400 to-blue-900 rounded-lg shadow-lg overflow-hidden mb-8">
 

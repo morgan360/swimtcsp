@@ -117,6 +117,12 @@ class DashboardHomeTests(TestCase):
         self.assertNotContains(response, 'Full dashboard')
         self.assertNotContains(response, '€')
 
+    def test_staff_see_a_twelve_month_calendar(self):
+        self.client.force_login(self.staff)
+        response = self.client.get(reverse('dashboard:dashboard_home'))
+        self.assertContains(response, 'The year ahead')
+        self.assertEqual(len(response.context['year']['months']), 12)
+
     def test_finance_users_get_the_full_dashboard_link(self):
         self.client.force_login(self.manager)
         response = self.client.get(reverse('dashboard:dashboard_home'))

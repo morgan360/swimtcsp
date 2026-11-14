@@ -40,38 +40,33 @@ def is_Manager(user):
     return user.is_authenticated and user.groups.filter(name='Manager').exists()
 
 
-# Short flag text for the dashboard's year strip; closures keep their own label.
-_FLAG_TEXT = {'start': 'Lessons start', 'rebooking': 'Rebooking opens', 'booking': 'Booking opens'}
-
-
-def _closure_text(item):
-    """Red already says the pool is closed, so just the reason; partial closures
-    keep what is off ("No lessons: Christmas")."""
-    label = item['label'].split(' (')[0]
-    return label.split(': ', 1)[1] if item['kind'] == 'closed' and ': ' in label else label
+# One or two words per flag on the dashboard's year strip; the key below it
+# carries the full wording.
+_FLAG_TEXT = {'start': 'Lessons', 'rebooking': 'Rebooking', 'booking': 'Booking', 'closed': 'Closed'}
+_PARTIAL_TEXT = {'No lessons': 'No lessons', 'No public swims': 'No swims'}
 
 
 def _year_flags(year, today):
-    """The 12 months of timetable.year.year_calendar as slots, each holding a flag
-    per key date that begins in it. Multi-day events (closures) get a forked flag."""
+    """The 12 months of timetable.year.year_calendar as slots, each with a small
+    flag per key date that begins in it (forked for several days), plus the key:
+    every flag again with its full wording.
+
+    Returns (slots, key)."""
     slots = [{'first': m['first'], 'is_now': (m['first'].year, m['first'].month) == (today.year, today.month),
               'flags': []} for m in year['months']]
     by_month = {(s['first'].year, s['first'].month): s for s in slots}
+    key = []
     for item in year['key_dates']:
-        first, last = item['first'], item['last']
-        if first == last:
-            days = str(first.day)
-        elif (first.year, first.month) == (last.year, last.month):
-            days = f"{first.day}–{last.day}"
-        else:
-            days = f"{first.day} {first:%b} – {last.day} {last:%b}"
-        by_month[(first.year, first.month)]['flags'].append({
-            'kind': item['kind'], 'days': days, 'multi': first != last, 'past': last < today,
-            'text': _FLAG_TEXT.get(item['kind']) or _closure_text(item),
-            'title': f"{item['when']}: {item['label']}",
-        })
-    return slots
-
+        first, last, kind = item['first'], item['last'], item['kind']
+        flag = {
+            # Start day only: a forked flag already says it runs on, and the key has the range.
+            'kind': kind, 'days': first.day, 'multi': first != last, 'past': last < today,
+            'text': _FLAG_TEXT.get(kind) or _PARTIAL_TEXT.get(item['label'].split(':')[0], 'Partly closed'),
+            'when': item['when'], 'label': item['label'],
+        }
+        by_month[(first.year, first.month)]['flags'].append(flag)
+        key.append(flag)
+    return slots, key
 
 @login_required
 @user_passes_test(is_staff)
@@ -90,14 +85,14 @@ def dashboard_home(request):
     current = timezone.localtime(timezone.now())
     today = current.date()
     live = _live_dials(today)
-    year = year_calendar(today)
+    year_flags, year_key = _year_flags(year_calendar(today), today)
     context = {
         'dial_strip': [live[key] for key in ('swims', 'attendance', 'term') if live[key]],
         'register_grid': _register_grid(today, current.time(), include_last_week=False),
         'term_attendance': _term_attendance(live['current_term']) if live['current_term'] else None,
         'whats_on': _whats_on(today),
-        'year_flags': _year_flags(year, today),
-        'year_legend': year['legend'],
+        'year_flags': year_flags,
+        'year_key': year_key,
         'live_dashboard_url': (reverse('finance:dashboard')
                                if finance_admin_site.has_permission(request) else None),
     }

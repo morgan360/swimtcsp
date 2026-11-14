@@ -1,0 +1,42 @@
+{% comment %}
+  Staff home: a compact 12-month calendar from timetable.year.year_calendar,
+  the same dates customers see on the Timetable's Calendar tab (lesson starts,
+  rebooking and booking opening, closures). Hover a coloured day for its label.
+{% endcomment %}
+{% include "timetable/_year_calendar_styles.html" %}
+<section class="bg-white rounded-lg shadow-md p-6 mb-8" aria-label="The year at the pool">
+  <div class="flex flex-wrap justify-between items-baseline gap-3 mb-4">
+    <h3 class="text-lg font-semibold text-gray-900">The year ahead</h3>
+    <ul class="flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-600">
+      {% for kind, label in year.legend %}
+      <li class="flex items-center gap-2"><span class="yc-dot yc-{{ kind }}"></span>{{ label }}</li>
+      {% endfor %}
+    </ul>
+  </div>
+
+  <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3">
+    {% for month in year.months %}
+    <div class="rounded-lg border border-gray-200 p-2">
+      <h4 class="text-center text-sm font-semibold text-blue-900 mb-1">{{ month.first|date:"M Y" }}</h4>
+      <div class="grid grid-cols-7 text-center text-[10px] font-semibold text-gray-400">
+        <span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span>
+      </div>
+      {% for week in month.weeks %}
+      <div class="grid grid-cols-7 text-center text-[11px]">
+        {% for day in week %}
+          {% if not day.in_month %}<span></span>
+          {% elif day.marks %}
+            {% with mark=day.marks.0 %}
+            <span class="yc-day yc-{{ mark.kind }}{% if day.is_today %} yc-today{% endif %}"
+                  title="{{ day.date|date:'D j M' }}: {% for m in day.marks %}{{ m.label }}{% if not forloop.last %}; {% endif %}{% endfor %}">{{ day.date.day }}</span>
+            {% endwith %}
+          {% else %}
+            <span class="yc-day text-gray-700{% if day.is_today %} yc-today{% endif %}">{{ day.date.day }}</span>
+          {% endif %}
+        {% endfor %}
+      </div>
+      {% endfor %}
+    </div>
+    {% endfor %}
+  </div>
+</section>

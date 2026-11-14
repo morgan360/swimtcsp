@@ -52,6 +52,7 @@ def dashboard_home(request):
 
     from custom_admins.financeadmin import finance_admin_site
     from finances.views import _live_dials, _register_grid, _term_attendance, _whats_on
+    from timetable.year import year_calendar
 
     current = timezone.localtime(timezone.now())
     today = current.date()
@@ -61,6 +62,7 @@ def dashboard_home(request):
         'register_grid': _register_grid(today, current.time(), include_last_week=False),
         'term_attendance': _term_attendance(live['current_term']) if live['current_term'] else None,
         'whats_on': _whats_on(today),
+        'year': year_calendar(today),
         'live_dashboard_url': (reverse('finance:dashboard')
                                if finance_admin_site.has_permission(request) else None),
     }

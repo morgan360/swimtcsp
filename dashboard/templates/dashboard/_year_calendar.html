@@ -1,41 +1,53 @@
 {% comment %}
-  Staff home: a compact 12-month calendar from timetable.year.year_calendar,
-  the same dates customers see on the Timetable's Calendar tab (lesson starts,
-  rebooking and booking opening, closures). Hover a coloured day for its label.
+  Staff home: the year as 12 month slots on a baseline, each with a flag per key
+  date from timetable.year.year_calendar (the same dates customers see on the
+  Timetable's Calendar tab). One-day events get a plain flag; several days, like
+  a closure, a forked one. Hover a flag for the full wording.
 {% endcomment %}
 {% include "timetable/_year_calendar_styles.html" %}
-<section class="bg-white rounded-lg shadow-md p-6 mb-8" aria-label="The year at the pool">
+<style>
+  .yf-strip { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); align-items: end; row-gap: 1.25rem; }
+  @media (max-width: 1023px) { .yf-strip { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
+  @media (max-width: 639px)  { .yf-strip { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+  .yf-month { display: flex; flex-direction: column; justify-content: flex-end; height: 100%; min-width: 0; }
+  .yf-mast { display: flex; flex-direction: column; align-items: flex-start; gap: 4px;
+             margin-left: 10px; padding-bottom: 10px; border-left: 2px solid #9ca3af; }
+  .yf-flag { display: block; max-width: calc(100% - 4px); font-size: 11px; line-height: 1.2;
+             padding: 3px 8px 3px 6px; border-radius: 0 3px 3px 0; font-weight: 500; }
+  .yf-flag b { display: block; font-weight: 700; }
+  .yf-multi { padding-right: 16px; border-radius: 0;
+              clip-path: polygon(0 0, 100% 0, calc(100% - 9px) 50%, 100% 100%, 0 100%); }
+  .yf-past { opacity: .4; }
+  .yf-base { border-top: 3px solid #1e3a8a; padding-top: 4px; text-align: center;
+             font-size: 13px; font-weight: 600; color: #1e3a8a; }
+  .yf-now .yf-base { border-top-color: #f59e0b; }
+  .yf-now .yf-base span { background: #fef3c7; border-radius: 9999px; padding: 0 .5rem; }
+  .yf-key-flag { display: inline-block; width: 1.4rem; height: .8rem; background: #9ca3af; }
+  .yf-key-flag.yf-multi { padding: 0; clip-path: polygon(0 0, 100% 0, 65% 50%, 100% 100%, 0 100%); }
+</style>
+<section class="bg-white rounded-lg shadow-md p-6 mb-8" aria-label="The year ahead">
   <div class="flex flex-wrap justify-between items-baseline gap-3 mb-4">
     <h3 class="text-lg font-semibold text-gray-900">The year ahead</h3>
     <ul class="flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-600">
-      {% for kind, label in year.legend %}
+      {% for kind, label in year_legend %}
       <li class="flex items-center gap-2"><span class="yc-dot yc-{{ kind }}"></span>{{ label }}</li>
       {% endfor %}
+      <li class="flex items-center gap-2"><span class="yf-key-flag yf-multi"></span>Several days</li>
     </ul>
   </div>
 
-  <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3">
-    {% for month in year.months %}
-    <div class="rounded-lg border border-gray-200 p-2">
-      <h4 class="text-center text-sm font-semibold text-blue-900 mb-1">{{ month.first|date:"M Y" }}</h4>
-      <div class="grid grid-cols-7 text-center text-[10px] font-semibold text-gray-400">
-        <span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span>
-      </div>
-      {% for week in month.weeks %}
-      <div class="grid grid-cols-7 text-center text-[11px]">
-        {% for day in week %}
-          {% if not day.in_month %}<span></span>
-          {% elif day.marks %}
-            {% with mark=day.marks.0 %}
-            <span class="yc-day yc-{{ mark.kind }}{% if day.is_today %} yc-today{% endif %}"
-                  title="{{ day.date|date:'D j M' }}: {% for m in day.marks %}{{ m.label }}{% if not forloop.last %}; {% endif %}{% endfor %}">{{ day.date.day }}</span>
-            {% endwith %}
-          {% else %}
-            <span class="yc-day text-gray-700{% if day.is_today %} yc-today{% endif %}">{{ day.date.day }}</span>
-          {% endif %}
+  <div class="yf-strip">
+    {% for slot in year_flags %}
+    <div class="yf-month{% if slot.is_now %} yf-now{% endif %}">
+      {% if slot.flags %}
+      <div class="yf-mast">
+        {% for flag in slot.flags %}
+        <span class="yf-flag{% if flag.multi %} yf-multi{% endif %} yc-{{ flag.kind }}{% if flag.past %} yf-past{% endif %}"
+              title="{{ flag.title }}"><b>{{ flag.days }}</b>{{ flag.text }}</span>
         {% endfor %}
       </div>
-      {% endfor %}
+      {% endif %}
+      <div class="yf-base"><span>{% if forloop.first or slot.first.month == 1 %}{{ slot.first|date:"M Y" }}{% else %}{{ slot.first|date:"M" }}{% endif %}</span></div>
     </div>
     {% endfor %}
   </div>

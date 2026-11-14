@@ -544,6 +544,8 @@ class DashboardTests(TestCase):
         titles = [d["title"] for d in response.context["dial_strip"]]
         self.assertEqual(titles, ["Today’s public swims", "Swimmers’ attendance today", "This term’s lessons"])
         self.assertContains(response, "reg-week")
+        self.assertContains(response, "The year ahead")
+        self.assertEqual(len(response.context["year_strip"]["slots"]), 12)
         # Plain staff cannot open Finance, so no link to it and no money on the page.
         self.assertIsNone(response.context["live_dashboard_url"])
         self.assertNotContains(response, "Full dashboard")

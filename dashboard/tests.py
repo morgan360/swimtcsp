@@ -139,7 +139,9 @@ class DashboardHomeTests(TestCase):
         flags = [f for slot in response.context['year_flags'] for f in slot['flags']]
         self.assertEqual(len(flags), 1)
         self.assertTrue(flags[0]['multi'])
-        self.assertEqual(flags[0]['text'], 'Maintenance')
+        self.assertEqual(flags[0]['text'], 'Closed')
+        self.assertEqual(flags[0]['label'], 'Pool closed: Maintenance')
+        self.assertContains(response, 'Pool closed: Maintenance')
         self.assertContains(response, 'yf-flag yf-multi')
 
     def test_finance_users_get_the_full_dashboard_link(self):

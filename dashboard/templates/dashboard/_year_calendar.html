@@ -2,7 +2,8 @@
   Staff home: the year as 12 month slots on a baseline, each with a small flag
   per key date from timetable.year.year_calendar (the same dates customers see
   on the Timetable's Calendar tab): one-day events get a plain flag, several
-  days a forked one. Flags carry a word or two; the key below has the full text.
+  days a forked one. Flags carry a word or two (full wording on hover); the
+  legend below says what each colour means.
 {% endcomment %}
 {% include "timetable/_year_calendar_styles.html" %}
 <style>
@@ -22,11 +23,10 @@
              font-size: 12px; font-weight: 600; color: #1e3a8a; }
   .yf-now .yf-base { border-top-color: #f59e0b; }
   .yf-now .yf-base span { background: #fef3c7; border-radius: 9999px; padding: 0 .5rem; }
-  .yf-key { columns: 3 16rem; column-gap: 2rem; margin-top: 1.25rem; font-size: 13px; color: #374151; }
-  .yf-key li { display: flex; align-items: baseline; gap: .5rem; break-inside: avoid; padding: 1px 0; }
+  .yf-key { display: flex; flex-wrap: wrap; gap: .25rem 1.25rem; margin-top: 1rem; font-size: 13px; color: #374151; }
+  .yf-key li { display: flex; align-items: center; gap: .4rem; }
   .yf-key .yf-flag { flex-shrink: 0; width: 1.1rem; height: .7rem; padding: 0; }
   .yf-key .yf-multi { padding: 0; clip-path: polygon(0 0, 100% 0, 60% 50%, 100% 100%, 0 100%); }
-  .yf-key .yf-when { flex-shrink: 0; width: 6.5rem; font-weight: 600; font-variant-numeric: tabular-nums; }
 </style>
 <section class="bg-white rounded-lg shadow-md p-6 mb-8" aria-label="The year ahead">
   <h3 class="text-lg font-semibold text-gray-900 mb-3">The year ahead</h3>
@@ -47,15 +47,10 @@
     {% endfor %}
   </div>
 
-  {% if year_key %}
   <ul class="yf-key">
-    {% for flag in year_key %}
-    <li{% if flag.past %} class="yf-past"{% endif %}>
-      <span class="yf-flag{% if flag.multi %} yf-multi{% endif %} yc-{{ flag.kind }}"></span>
-      <span class="yf-when">{{ flag.when }}</span>
-      <span>{{ flag.label }}</span>
-    </li>
+    {% for kind, label in year_legend %}
+    <li><span class="yf-flag yc-{{ kind }}"></span>{{ label }}</li>
     {% endfor %}
+    <li><span class="yf-flag yf-multi yc-closed"></span>Forked: several days</li>
   </ul>
-  {% endif %}
 </section>

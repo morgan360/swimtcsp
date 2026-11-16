@@ -215,48 +215,65 @@ def lessons(request):
 STAGNANT_TERMS = 4
 
 
-def stagnant_swimmers(term):
-    """Swimmers in ``term`` who have been at the same level for four terms running.
+def stagnant_runs(term):
+    """Who in ``term`` has been at the same level for four terms running.
 
-    One (category id, this term's enrolment, the run of enrolments at that level,
-    newest first) per swimmer and level. The Live Dashboard counts these as well,
-    so the two always agree.
+    {(swimling id, category id): ids of their enrolments at that level, newest
+    term first}. Read as plain rows rather than model objects: the history is
+    every enrolment of every current swimmer, and the Live Dashboard counts
+    these on each load.
     """
-    current_entries = {}
-    for enrollment in (LessonEnrollment.objects.filter(term=term)
-                       .select_related('swimling__guardian', 'lesson__category', 'lesson')
-                       .order_by('swimling_id')):
-        lesson, swimling = enrollment.lesson, enrollment.swimling
-        category = getattr(lesson, 'category', None)
-        if not lesson or not swimling or not category:
-            continue
-        current_entries.setdefault((swimling.id, category.id), enrollment)
-    if not current_entries:
-        return []
+    in_term = LessonEnrollment.objects.filter(term=term)
+    current = set(in_term.filter(lesson__category__isnull=False).order_by()
+                  .values_list('swimling_id', 'lesson__category_id'))
+    if not current:
+        return {}
 
-    history_by_swimling = defaultdict(list)
-    for enrollment in (LessonEnrollment.objects.filter(swimling_id__in={s for s, _ in current_entries})
-                       .select_related('lesson__category', 'term')
-                       .order_by('-term__start_date', '-term_id', '-created')):
-        history_by_swimling[enrollment.swimling_id].append(enrollment)
+    history = defaultdict(list)
+    for row in (LessonEnrollment.objects.filter(swimling_id__in=in_term.order_by().values('swimling_id'))
+                .order_by('-term__start_date', '-term_id', '-created')
+                .values_list('swimling_id', 'id', 'term_id', 'lesson__category_id')):
+        history[row[0]].append(row[1:])
 
-    stagnant = []
-    for (swimling_id, category_id), current_enrollment in current_entries.items():
+    runs = {}
+    for swimling_id, category_id in current:
         run, seen_terms, started = [], set(), False
-        for enrollment in history_by_swimling.get(swimling_id, []):
-            if enrollment.term_id in seen_terms:
+        # One enrolment a term, the newest; the run ends at the first other level.
+        for enrollment_id, term_id, enrollment_category_id in history[swimling_id]:
+            if term_id in seen_terms:
                 continue
-            seen_terms.add(enrollment.term_id)
-            enrollment_category = getattr(enrollment.lesson, 'category', None)
-            if not enrollment_category:
+            seen_terms.add(term_id)
+            if enrollment_category_id is None:
                 continue
-            if enrollment_category.id == category_id:
+            if enrollment_category_id == category_id:
                 started = True
-                run.append(enrollment)
+                run.append(enrollment_id)
             elif started:
                 break
         if len(run) >= STAGNANT_TERMS:
-            stagnant.append((category_id, current_enrollment, run))
+            runs[(swimling_id, category_id)] = run
+    return runs
+
+
+def stagnant_swimmers(term):
+    """stagnant_runs() with the enrolments loaded, for the page that lists them.
+
+    One (category id, this term's enrolment, the run of enrolments at that level,
+    newest first) per swimmer and level.
+    """
+    runs = stagnant_runs(term)
+    if not runs:
+        return []
+    by_id = LessonEnrollment.objects.select_related('lesson__category', 'term').in_bulk(
+        [enrollment_id for run in runs.values() for enrollment_id in run])
+    stagnant, placed = [], set()
+    for enrollment in (LessonEnrollment.objects.filter(term=term, swimling_id__in={s for s, _ in runs})
+                       .select_related('swimling__guardian', 'lesson__category', 'lesson')
+                       .order_by('swimling_id')):
+        key = (enrollment.swimling_id, getattr(enrollment.lesson, 'category_id', None))
+        if key in runs and key not in placed:
+            placed.add(key)
+            stagnant.append((key[1], enrollment, [by_id[enrollment_id] for enrollment_id in runs[key]]))
     return stagnant
 
 

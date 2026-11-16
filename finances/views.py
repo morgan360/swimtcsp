@@ -1542,7 +1542,8 @@ def _money_attention(today):
     """Money that may need someone to look at it: counts and euro, never names.
 
     Unpaid orders are checkouts started in the last week and still not paid a day
-    later. Unmatched are paid orders the Reconciliation page lists as problems.
+    later. Unmatched are paid orders the Reconciliation page lists as problems,
+    less the ones for €0.
     Refunds have no date of their own, so they are counted by when the order was placed.
     """
     current = now()
@@ -1555,14 +1556,14 @@ def _money_attention(today):
                 'count': sum(t['count'] for t in totals)}
 
     models = [model for model, _ in ORDER_MODELS.values()]
-    _, summary = _classify_orders(since, today)
-    problems = [figures for category, figures in summary.items() if category != 'matched']
+    # An order for €0 (fully couponed) never goes to BOIPA, so it has nothing to match.
+    results, _ = _classify_orders(since, today)
+    problems = [r['order_amount'] for r in results if r['category'] != 'matched' and r['order_amount']]
     return {
         'unpaid': total(model.objects.filter(paid=False, amount__gt=0,
                                              created__gte=current - timedelta(days=UNPAID_DAYS),
                                              created__lt=current - timedelta(days=1)) for model in models),
-        'unmatched': {'value': sum((p['amount'] for p in problems), Decimal('0')),
-                      'count': sum(p['count'] for p in problems)},
+        'unmatched': {'value': sum(problems, Decimal('0')), 'count': len(problems)},
         'refunded': total(model.objects.filter(paid=True, payment_status='refunded', created__gte=since_start)
                           for model in models),
         'since': since,
@@ -1617,7 +1618,7 @@ def live_dashboard(request, template_name='admin/financeadmin/dashboard.html'):
     from chatbot.models import ChatbotQuery
     from custom_admins.financeadmin import finance_admin_site
     from custom_admins.panels import settings_site
-    from dashboard.views import STAGNANT_TERMS, stagnant_swimmers
+    from dashboard.views import STAGNANT_TERMS, stagnant_runs
     from lessons_bookings.models import LessonEnrollment, Term
     from schools_bookings.models import ScoEnrollment
     from swims.models import PublicSwimProduct
@@ -1801,7 +1802,7 @@ def live_dashboard(request, template_name='admin/financeadmin/dashboard.html'):
         'chat_budget': _chat_budget(),
         'unstaffed_week': _unstaffed_week(today),
         'unstaffed_url': reverse('dashboard:admin_lessons_list'),
-        'stuck': ({'count': len(stagnant_swimmers(current_term)), 'terms': STAGNANT_TERMS,
+        'stuck': ({'count': len(stagnant_runs(current_term)), 'terms': STAGNANT_TERMS,
                    'url': reverse('dashboard:swimling_stagnation')} if current_term else None),
         'term': current_term,
         'term_fill': this_fill,

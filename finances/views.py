@@ -1120,7 +1120,7 @@ def _live_dials(today):
     from swims_orders.models import OrderItem as SwimOrderItem
 
     today_period, _, week_period = _activity_periods(today)
-    live = {'term': None, 'next_term': None, 'schools': None}
+    live = {'term': None, 'next_term': None, 'rebooked': None, 'schools': None}
 
     current_term = Term.get_current_term()
     this_fill = _term_fill(current_term) if current_term else None
@@ -1155,6 +1155,15 @@ def _live_dials(today):
         next_fill = _term_fill(next_term)
         live['next_term'] = _dial('Next term booked', next_fill['enrolled'], next_fill['places'],
                                   f'places booked · starts {next_term.start_date.day} {next_term.start_date:%b}')
+        if current_term:
+            # Rebooked: this term's swimmers who already have a place next term,
+            # whichever class it is in. Counted in swimmers, not places.
+            here = LessonEnrollment.objects.filter(term=current_term).order_by()
+            rebooked = (LessonEnrollment.objects.filter(term=next_term, swimling_id__in=here.values('swimling_id'))
+                        .order_by().values('swimling_id').distinct().count())
+            live['rebooked'] = _dial('Rebooked for next term', rebooked,
+                                     here.values('swimling_id').distinct().count(),
+                                     'swimmers from this term have a place next term')
 
     # Schools: places in the school terms running today, counted as lessons are —
     # a class counts if it is active for one of those schools or has swimmers in it.
@@ -1489,7 +1498,7 @@ SECURITY_INCIDENTS_SHOWN = 10
 
 # Which section of the Live Dashboard each dial (by key) and tile (by label) is in.
 DASHBOARD_SECTIONS = [
-    ('enrolments', 'Enrolments', ('term', 'next_term', 'schools', 'checkouts'),
+    ('enrolments', 'Enrolments', ('term', 'next_term', 'rebooked', 'schools', 'checkouts'),
      ('New enrolments', 'Joined waiting list', 'New customers', 'New guardians')),
     ('security', 'Security', ('staff_2fa', 'guardian_2fa', 'guardian_email'),
      ('Customers logged in', 'Chat messages refused', 'Attackers blocked')),
@@ -1635,7 +1644,7 @@ def live_dashboard(request, template_name='admin/financeadmin/dashboard.html'):
     # --- Dials -------------------------------------------------------------
     live = _live_dials(today)
     current_term, this_fill = live['current_term'], live['this_fill']
-    dials = [live[key] for key in ('term', 'checkouts', 'swims', 'attendance', 'next_term', 'schools',
+    dials = [live[key] for key in ('term', 'checkouts', 'swims', 'attendance', 'next_term', 'rebooked', 'schools',
                                    'staff_2fa', 'guardian_2fa', 'guardian_email') if live[key]]
     if this_fill:
         waiting = _waiting_by_level()

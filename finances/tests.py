@@ -584,6 +584,7 @@ class DashboardTests(TestCase):
 
     def test_no_next_term_hides_its_dial(self):
         self.assertNotIn("Next term booked", self.dials())
+        self.assertNotIn("Rebooked for next term", self.dials())
 
     def test_renders_with_no_terms_at_all(self):
         from anseo.models import AttendanceRoll
@@ -623,6 +624,20 @@ class DashboardTests(TestCase):
         phase = self.get().context["phase"]
         self.assertEqual((phase["label"], phase["next"], phase["days"]), ("Rebooking", "booking opens to all", 5))
         self.assertContains(self.get(), "booking opens to all in 5 days")
+        self.assertContains(self.get(), "Current Phase – Rebooking")
+
+    def test_rebooked_counts_this_terms_swimmers_with_a_place_next_term(self):
+        today = timezone.localdate()
+        next_term = Term.objects.create(start_date=today + timedelta(days=60), end_date=today + timedelta(days=120))
+        back, back_twice = Swimling.objects.all()[:2]
+        newcomer = Swimling.objects.create(guardian=back.guardian, first_name="New", last_name="T")
+        other = Product.objects.create(category=self.lesson.category, day_of_week=1, num_places=5, active=True)
+        LessonEnrollment.objects.create(lesson=self.lesson, swimling=back, term=next_term)
+        LessonEnrollment.objects.create(lesson=self.lesson, swimling=back_twice, term=next_term)
+        LessonEnrollment.objects.create(lesson=other, swimling=back_twice, term=next_term)  # two classes, one swimmer
+        LessonEnrollment.objects.create(lesson=self.lesson, swimling=newcomer, term=next_term)  # not a rebooking
+        dial = self.dials()["Rebooked for next term"]
+        self.assertEqual((dial["value"], dial["max"]), (2, 5))
 
     def test_waiting_list_is_shown_against_its_level(self):
         from waiting_list.models import WaitingList

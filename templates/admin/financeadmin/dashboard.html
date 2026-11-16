@@ -54,6 +54,19 @@
   .dash-table th, .dash-table td { padding: 0.3rem 1.25rem 0.3rem 0; text-align: left; border: 0; border-bottom: 1px solid var(--hairline-color); background: none; color: var(--body-fg); font-size: 0.85rem; }
   .dash-table th { color: var(--body-quiet-color); font-weight: 600; text-transform: none; letter-spacing: 0; }
   .dash-table-num { font-size: 1.1rem; font-weight: 700; font-variant-numeric: tabular-nums; text-align: right !important; }
+  .dash-levels { display: flex; flex-wrap: wrap; gap: 0.75rem 1.25rem; margin: 0.5rem 0 0.75rem; }
+  .dash-level { text-align: center; min-width: 4.5rem; }
+  .dash-level-name { margin-bottom: 0.3rem; color: var(--body-fg); font-size: 0.8rem; font-weight: 600; }
+  .dash-level-boxes { display: flex; justify-content: center; gap: 0.4rem; }
+  .dash-fillbox { position: relative; box-sizing: border-box; width: 2.1rem; height: 2.6rem; margin: 0 auto; border: 1.5px solid #64748b; border-radius: 4px; overflow: hidden; }
+  .dash-fillbox span { position: absolute; left: 0; right: 0; bottom: 0; }
+  .dash-fillbox.is-low span { background: #f59e0b; }
+  .dash-fillbox.is-mid span { background: #2563eb; }
+  .dash-fillbox.is-high span { background: #16a34a; }
+  .dash-fillbox.is-next { border-style: dashed; }
+  .dash-fillbox.is-next span { opacity: 0.6; }
+  .dash-level-pct { margin-top: 0.15rem; color: var(--body-fg); font-size: 0.8rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .dash-level-note { color: var(--body-quiet-color); font-size: 0.7rem; font-variant-numeric: tabular-nums; }
   .dash-chart { position: relative; height: 16rem; width: 100%; overflow: hidden; }
 
   @media (max-width: 480px) {
@@ -79,15 +92,35 @@
 <div class="dash-charts">
   {% if term_fill %}
   <div class="dash-card dash-wide">
-    <h2>How full each level is this term</h2>
+    <h2>How full each level is · this term{% if term_fill.compares_next %} and next{% endif %} <button type="button" class="dash-info" aria-label="What this shows">i<span role="tooltip">One column per level. The solid box fills as this term’s places in that level are taken: green at 90% or more, blue from 50%, amber below.{% if term_fill.compares_next %} The dashed box is next term: places already booked for the same level, which fills up as families rebook.{% else %} Once rebooking opens, a second, dashed box shows next term’s bookings for the same level.{% endif %} The figures under each box are places taken / places available, counting places, not children. “Waiting” is the number on the waiting list for that level now.</span></button></h2>
     <p class="dash-hint">
       <strong>{{ term_fill.full }}</strong> class{{ term_fill.full|pluralize:"es" }} full,
       <strong>{{ term_fill.nearly_full }}</strong> nearly full (90%+) ·
       <a href="{{ lesson_enrollments_url }}">see every class</a>
     </p>
-    <div class="dash-chart" style="height: {{ term_fill.categories|length|add:2 }}rem; min-height: 12rem;">
-      <canvas id="fillChart"></canvas>
+    <div class="dash-levels">
+      {% for level in term_fill.categories %}
+      <div class="dash-level">
+        <div class="dash-level-name">{{ level.name }}</div>
+        <div class="dash-level-boxes">
+          <div title="This term: {{ level.enrolled }} of {{ level.places }} places">
+            <div class="dash-fillbox is-{{ level.level }}"><span style="height: {{ level.bar }}%;"></span></div>
+            <div class="dash-level-pct">{{ level.pct }}%</div>
+            <div class="dash-level-note">{{ level.enrolled }}/{{ level.places }}</div>
+          </div>
+          {% if level.next %}
+          <div title="Next term: {{ level.next.enrolled }} of {{ level.next.places }} places booked">
+            <div class="dash-fillbox is-next is-{{ level.next.level }}"><span style="height: {{ level.next.bar }}%;"></span></div>
+            <div class="dash-level-pct">{{ level.next.pct }}%</div>
+            <div class="dash-level-note">{{ level.next.enrolled }}/{{ level.next.places }}</div>
+          </div>
+          {% endif %}
+        </div>
+        {% if level.waiting %}<div class="dash-level-note">{{ level.waiting }} waiting</div>{% endif %}
+      </div>
+      {% endfor %}
     </div>
+    {% if term_fill.compares_next %}<p class="dash-hint">Solid: this term · Dashed: next term’s bookings so far</p>{% endif %}
   </div>
   {% endif %}
 </div>
@@ -328,31 +361,6 @@
     },
     options: { ...tight, scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true, ticks: { precision: 0 } } } }
   });
-
-  const fill = document.getElementById('fillChart');
-  if (fill) {
-    const cats = data.categories;
-    new Chart(fill, {
-      type: 'bar',
-      data: {
-        labels: cats.map(c => c.waiting ? `${c.name} · ${c.waiting} waiting` : c.name),
-        datasets: [{
-          label: 'Full',
-          data: cats.map(c => c.pct),
-          backgroundColor: cats.map(c => c.pct >= 90 ? colours.green : c.pct >= 50 ? colours.blue : colours.amber),
-        }]
-      },
-      options: {
-        ...tight,
-        indexAxis: 'y',
-        plugins: {
-          legend: { display: false },
-          tooltip: { callbacks: { label: c => `${cats[c.dataIndex].enrolled} of ${cats[c.dataIndex].places} places (${c.parsed.x}%) · ${cats[c.dataIndex].waiting} waiting` } }
-        },
-        scales: { x: { beginAtZero: true, suggestedMax: 100, ticks: { callback: v => v + '%' } } }
-      }
-    });
-  }
 })();
 </script>
 

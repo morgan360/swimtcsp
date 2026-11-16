@@ -1144,6 +1144,7 @@ def _live_dials(today):
 
     today_period, _, week_period = _activity_periods(today)
     live = {'term': None, 'next_term': None, 'rebooked': None, 'schools': None}
+    live_next_fill = None
 
     current_term = Term.get_current_term()
     this_fill = _term_fill(current_term) if current_term else None
@@ -1175,7 +1176,7 @@ def _live_dials(today):
 
     next_term = Term.get_next_term()
     if next_term:
-        next_fill = _term_fill(next_term)
+        next_fill = live_next_fill = _term_fill(next_term)
         live['next_term'] = _dial('Next term booked', next_fill['enrolled'], next_fill['places'],
                                   f'places booked · starts {next_term.start_date.day} {next_term.start_date:%b}')
         if current_term:
@@ -1240,7 +1241,7 @@ def _live_dials(today):
     for key, info in DIAL_INFO.items():
         if live.get(key):
             live[key]['info'] = info
-    live.update(current_term=current_term, this_fill=this_fill)
+    live.update(current_term=current_term, this_fill=this_fill, next_fill=live_next_fill)
     return live
 
 
@@ -1621,6 +1622,30 @@ def _phase_now(term, today):
     return phase
 
 
+def _fill_level(pct):
+    """The colour band a fill percentage falls in, as the dials use: low, mid or high."""
+    return 'high' if pct >= NEARLY_FULL_PCT else 'mid' if pct >= 50 else 'low'
+
+
+def _level_boxes(this_fill, next_fill, term, today):
+    """Ready each level of this term's fill for its box on the dashboard.
+
+    Adds the box's height and colour, how many are waiting, and, once rebooking
+    has opened, the same level's fill next term to compare it with.
+    """
+    waiting = _waiting_by_level()
+    rebooking_open = bool(next_fill and term.rebooking_date and today >= term.rebooking_date)
+    next_levels = {c['name']: c for c in next_fill['categories']} if rebooking_open else {}
+    for category in this_fill['categories']:
+        category.update(waiting=waiting.get(category['name'], 0), bar=min(category['pct'], 100),
+                        level=_fill_level(category['pct']))
+        coming = next_levels.get(category['name'])
+        if coming:
+            category['next'] = {'enrolled': coming['enrolled'], 'places': coming['places'], 'pct': coming['pct'],
+                                'bar': min(coming['pct'], 100), 'level': _fill_level(coming['pct'])}
+    this_fill['compares_next'] = rebooking_open
+
+
 def _waiting_by_level():
     """Swimmers waiting now per level, named as _term_fill names its levels."""
     from waiting_list.models import WaitingList
@@ -1694,9 +1719,7 @@ def live_dashboard(request, template_name='admin/financeadmin/dashboard.html'):
     dials = [live[key] for key in ('term', 'checkouts', 'swims', 'attendance', 'next_term', 'rebooked', 'schools',
                                    'staff_2fa', 'guardian_2fa', 'guardian_email') if live[key]]
     if this_fill:
-        waiting = _waiting_by_level()
-        for category in this_fill['categories']:
-            category['waiting'] = waiting.get(category['name'], 0)
+        _level_boxes(this_fill, live['next_fill'], current_term, today)
 
     # --- Tiles -------------------------------------------------------------
     order_rows = [_paid_orders(model, periods) for model, _ in ORDER_MODELS.values()]
@@ -1799,7 +1822,6 @@ def live_dashboard(request, template_name='admin/financeadmin/dashboard.html'):
                 model.objects.filter(paid=True).exclude(payment_status='refunded'), 'created', days, 'amount')]
             for model, label in ORDER_MODELS.values()
         },
-        'categories': this_fill['categories'] if this_fill else [],
         'chats': {
             label: _daily_series(chats.filter(response_type=key), 'timestamp', days)
             for key, label in CHAT_TYPES.items()

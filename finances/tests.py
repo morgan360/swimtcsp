@@ -652,8 +652,28 @@ class DashboardTests(TestCase):
         WaitingList.objects.bulk_create([WaitingList(swimling=kids[0], product=self.lesson),
                                          WaitingList(swimling=kids[1], product=self.lesson),
                                          WaitingList(swimling=kids[2], product=self.lesson, completed=True)])
-        categories = self.get().context["chart_data"]["categories"]
+        categories = self.get().context["term_fill"]["categories"]
         self.assertEqual([(c["name"], c["waiting"]) for c in categories], [("Beginners 1", 2)])
+
+    def test_level_boxes_compare_with_next_term_once_rebooking_opens(self):
+        today = timezone.localdate()
+        next_term = Term.objects.create(start_date=today + timedelta(days=60), end_date=today + timedelta(days=120))
+        LessonEnrollment.objects.create(lesson=self.lesson, swimling=Swimling.objects.first(), term=next_term)
+
+        # Before rebooking opens there is nothing to compare with.
+        Term.objects.filter(id=self.term.id).update(rebooking_date=today + timedelta(days=3))
+        fill = self.get().context["term_fill"]
+        self.assertFalse(fill["compares_next"])
+        self.assertNotIn("next", fill["categories"][0])
+
+        Term.objects.filter(id=self.term.id).update(rebooking_date=today)
+        response = self.get()
+        level, = response.context["term_fill"]["categories"]
+        self.assertEqual((level["enrolled"], level["places"], level["level"], level["bar"]), (5, 5, "high", 100))
+        self.assertEqual((level["next"]["enrolled"], level["next"]["places"], level["next"]["level"]), (1, 5, "low"))
+        self.assertContains(response, "Next term: 1 of 5 places booked")
+        self.assertNotContains(response, "fillChart")
+        self.assertContains(response, "The dashed box is next term")
 
     def test_chat_budget_reads_the_spend_counters(self):
         from django.core.cache import cache

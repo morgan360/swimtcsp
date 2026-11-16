@@ -61,8 +61,7 @@
 
 {% block content %}
 <p class="dash-sub">
-  {{ today|date:"l j F Y" }}{% if term %} · term {{ term.start_date|date:"j M" }} – {{ term.end_date|date:"j M" }}{% endif %}
-  {% if phase %}· <strong>{{ phase.label }}</strong>{% if phase.next %}, {{ phase.next }} in {{ phase.days }} day{{ phase.days|pluralize }} ({{ phase.next_date|date:"j M" }}){% endif %}{% endif %}
+  {% if phase %}<strong>Current Phase – {{ phase.label }}</strong>{% if phase.next %} · {{ phase.next }} in {{ phase.days }} day{{ phase.days|pluralize }} ({{ phase.next_date|date:"j M" }}){% endif %} · {% endif %}{{ today|date:"l j F Y" }}{% if term %} · term {{ term.start_date|date:"j M" }} – {{ term.end_date|date:"j M" }}{% endif %}
   · <a href="{{ activity_report_url }}">exact figures in Daily Activity</a>
 </p>
 

@@ -397,6 +397,12 @@ class DashboardTests(TestCase):
         self.client.force_login(self.staff)
         self.assertIn(self.client.get(reverse("finance:dashboard")).status_code, (302, 403))
 
+    def test_every_dial_explains_what_it_counts(self):
+        response = self.get()
+        for dial in response.context["dials"]:
+            self.assertTrue(dial.get("info"), dial["title"])
+        self.assertContains(response, "Counts places, not children")
+
     def test_swims_dial_counts_todays_paid_swimmers(self):
         dial = self.dials()["Today’s public swims"]
         # Refunded, unpaid and next week's bookings are left out; so is the other day's session.
@@ -670,10 +676,13 @@ class DashboardTests(TestCase):
             old = Term.objects.create(start_date=today - timedelta(days=100 * n + 60),
                                       end_date=today - timedelta(days=100 * n))
             LessonEnrollment.objects.create(lesson=self.lesson, swimling=stuck, term=old)
-            # Moved up from another level two terms ago, so the run is broken.
-            LessonEnrollment.objects.create(lesson=other if n >= 2 else self.lesson, swimling=mover, term=old)
+            # Moved up from another level three terms ago: at this level for three terms, not four.
+            LessonEnrollment.objects.create(lesson=other if n >= 3 else self.lesson, swimling=mover, term=old)
         response = self.get()
-        self.assertEqual(response.context["stuck"]["count"], 1)
+        self.assertEqual([(row["terms"], row["count"]) for row in response.context["stuck"]["rows"]],
+                         [("3 terms", 1), ("4 terms", 1), ("5 terms or more", 0)])
+        self.assertEqual((response.context["stuck"]["longest"], response.context["stuck"]["longest_count"]), (4, 1))
+        self.assertContains(response, "Longest: <strong>4 terms</strong> (1 swimmer)")
         from dashboard.views import stagnant_swimmers
         (category_id, enrolment, run), = stagnant_swimmers(self.term)
         self.assertEqual((enrolment.swimling_id, enrolment.term_id, len(run)), (stuck.id, self.term.id, 4))

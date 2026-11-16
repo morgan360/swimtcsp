@@ -215,8 +215,8 @@ def lessons(request):
 STAGNANT_TERMS = 4
 
 
-def stagnant_runs(term):
-    """Who in ``term`` has been at the same level for four terms running.
+def stagnant_runs(term, minimum=STAGNANT_TERMS):
+    """Who in ``term`` has been at the same level for ``minimum`` terms running.
 
     {(swimling id, category id): ids of their enrolments at that level, newest
     term first}. Read as plain rows rather than model objects: the history is
@@ -250,7 +250,7 @@ def stagnant_runs(term):
                 run.append(enrollment_id)
             elif started:
                 break
-        if len(run) >= STAGNANT_TERMS:
+        if len(run) >= minimum:
             runs[(swimling_id, category_id)] = run
     return runs
 

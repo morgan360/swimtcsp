@@ -1108,6 +1108,29 @@ def _dial(title, value, maximum, caption, empty='No data yet', target=None, targ
     }
 
 
+# What each dial counts, shown from the "i" beside its title.
+DIAL_INFO = {
+    'term': 'Class places taken this term, out of every place in the classes that are running. '
+            'Counts places, not children: a swimmer in two classes fills two places.',
+    'next_term': 'Class places already booked for next term, by rebooking or a new booking. '
+                 'Counts places, so a swimmer booked into two classes counts twice.',
+    'rebooked': 'This term’s swimmers who already have at least one place next term. Counts each child once, '
+                'so it can be a little lower than places booked. Newcomers are not counted here.',
+    'schools': 'Swimmers enrolled in school classes for the school terms running today, out of the places '
+               'on those classes.',
+    'checkouts': 'Families who reached the payment page this week and went on to pay. A family counts once, '
+                 'however many tries it took. Orders staff placed and orders for €0 are left out.',
+    'swims': 'Places paid for in today’s public swim sessions, out of the places on offer today. '
+             'Refunded orders are left out.',
+    'attendance': 'Swimmers marked present or late today, out of everyone on a register opened today. '
+                  'Swimmers not yet marked count against it.',
+    'staff_2fa': 'Active staff accounts that have an authenticator app set up for two-factor sign-in.',
+    'guardian_2fa': 'Customer accounts with a swimmer that have an authenticator app set up.',
+    'guardian_email': 'Customer accounts with a swimmer whose email address is confirmed, by our email link '
+                      'or by signing in with Google.',
+}
+
+
 def _live_dials(today):
     """The dashboard's dials, keyed so a page can show just some of them.
 
@@ -1214,6 +1237,9 @@ def _live_dials(today):
                               f"families who reached payment · {funnel['retried']} needed more than "
                               f"one try · {funnel['left']} left", empty='No checkouts yet this week')
 
+    for key, info in DIAL_INFO.items():
+        if live.get(key):
+            live[key]['info'] = info
     live.update(current_term=current_term, this_fill=this_fill)
     return live
 
@@ -1607,6 +1633,28 @@ def _waiting_by_level():
     return waiting
 
 
+STUCK_FROM_TERMS = 3   # the table's first row
+STUCK_TOP_TERMS = 5    # its last row: this many terms or more
+
+
+def _stuck_by_terms(term):
+    """How many of a term's swimmers have been at one level for 3, 4 and 5+ terms running."""
+    from django.urls import reverse
+    from dashboard.views import STAGNANT_TERMS, stagnant_runs
+
+    if not term:
+        return None
+    lengths = [len(run) for run in stagnant_runs(term, minimum=STUCK_FROM_TERMS).values()]
+    counts = defaultdict(int)
+    for length in lengths:
+        counts[min(length, STUCK_TOP_TERMS)] += 1
+    rows = [{'terms': f'{n} terms' if n < STUCK_TOP_TERMS else f'{n} terms or more', 'count': counts[n]}
+            for n in range(STUCK_FROM_TERMS, STUCK_TOP_TERMS + 1)]
+    longest = max(lengths, default=0)
+    return {'rows': rows, 'longest': longest, 'longest_count': lengths.count(longest),
+            'listed_from': STAGNANT_TERMS, 'url': reverse('dashboard:swimling_stagnation')}
+
+
 def _chat_budget():
     """Paid AI model calls so far against the site-wide caps (chatbot.helpers.budget)."""
     from chatbot.helpers import budget
@@ -1627,7 +1675,6 @@ def live_dashboard(request, template_name='admin/financeadmin/dashboard.html'):
     from chatbot.models import ChatbotQuery
     from custom_admins.financeadmin import finance_admin_site
     from custom_admins.panels import settings_site
-    from dashboard.views import STAGNANT_TERMS, stagnant_runs
     from lessons_bookings.models import LessonEnrollment, Term
     from schools_bookings.models import ScoEnrollment
     from swims.models import PublicSwimProduct
@@ -1811,8 +1858,7 @@ def live_dashboard(request, template_name='admin/financeadmin/dashboard.html'):
         'chat_budget': _chat_budget(),
         'unstaffed_week': _unstaffed_week(today),
         'unstaffed_url': reverse('dashboard:admin_lessons_list'),
-        'stuck': ({'count': len(stagnant_runs(current_term)), 'terms': STAGNANT_TERMS,
-                   'url': reverse('dashboard:swimling_stagnation')} if current_term else None),
+        'stuck': _stuck_by_terms(current_term),
         'term': current_term,
         'term_fill': this_fill,
         'recent_chats': recent_chats,

@@ -1,6 +1,6 @@
 {# One half-circle gauge, from finances.views._dial. Styles: _dial_styles.html #}
 <div class="dash-card dash-dial is-{{ dial.level }}">
-  <h2>{{ dial.title }}</h2>
+  <h2>{{ dial.title }}{% if dial.info %} <button type="button" class="dash-info" aria-label="What this counts">i<span role="tooltip">{{ dial.info }}</span></button>{% endif %}</h2>
   <svg viewBox="0 0 200 118" role="img"
        aria-label="{{ dial.title }}: {% if dial.pct is None %}{{ dial.empty }}{% else %}{{ dial.pct }}%{% endif %}">
     {# Zone ring: under 50%, 50–89%, 90%+ — the same key as Lesson Enrollments #}

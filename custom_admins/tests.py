@@ -430,7 +430,7 @@ class AdminMenuItemTests(TestCase):
         from navigation.models import MenuGroup, MenuItem
 
         group = MenuGroup.objects.create(name="Admin")
-        for url_name in ("operations:index", "finance:index", "settings:index"):
+        for url_name in ("operations:index", "finance:index", "settings:index", "finance:dashboard"):
             item = MenuItem.objects.create(group=group, label=url_name, url_name=url_name)
             with self.subTest(url_name=url_name):
                 self.assertNotEqual(

@@ -1120,7 +1120,7 @@ def _live_dials(today):
     from swims_orders.models import OrderItem as SwimOrderItem
 
     today_period, _, week_period = _activity_periods(today)
-    live = {'term': None, 'next_term': None}
+    live = {'term': None, 'next_term': None, 'schools': None}
 
     current_term = Term.get_current_term()
     this_fill = _term_fill(current_term) if current_term else None
@@ -1155,6 +1155,21 @@ def _live_dials(today):
         next_fill = _term_fill(next_term)
         live['next_term'] = _dial('Next term booked', next_fill['enrolled'], next_fill['places'],
                                   f'places booked · starts {next_term.start_date.day} {next_term.start_date:%b}')
+
+    # Schools: places in the school terms running today, counted as lessons are —
+    # a class counts if it is active for one of those schools or has swimmers in it.
+    from schools.models import ScoLessons
+    from schools_bookings.models import ScoEnrollment, ScoTerm
+
+    school_terms = ScoTerm.objects.filter(start_date__lte=today, end_date__gte=today)
+    school_ids = [school_id for school_id in school_terms.values_list('school_id', flat=True) if school_id]
+    if school_terms.exists():
+        in_class = dict(ScoEnrollment.objects.filter(term__in=school_terms).order_by()
+                        .values_list('lesson_id').annotate(n=Count('id')))
+        school_places = (ScoLessons.objects.filter(Q(active=True, school_id__in=school_ids) | Q(id__in=list(in_class)))
+                         .aggregate(n=Sum('num_places'))['n'] or 0)
+        live['schools'] = _dial('School places filled', sum(in_class.values()), school_places,
+                                'places in school terms running now', empty='No places set on school classes')
 
     # Two-factor: an authenticator app counts; recovery codes alone come with one anyway.
     from allauth.mfa.models import Authenticator
@@ -1194,6 +1209,55 @@ def _live_dials(today):
     return live
 
 
+def _taught_lessons(term, lesson_ids):
+    """Which of these lessons have an instructor for the term.
+
+    Instructors are assigned through either model; see instructors.utils.
+    """
+    from instructors.models import InstructorAssignment
+    from lessons_bookings.models import LessonAssignment
+
+    taught = set(InstructorAssignment.objects.filter(term=term, lesson_id__in=lesson_ids)
+                 .values_list('lesson_id', flat=True))
+    taught |= set(LessonAssignment.objects.filter(term=term, lessons__in=lesson_ids)
+                  .values_list('lessons', flat=True))
+    return taught
+
+
+def _unstaffed_week(today):
+    """Classes with swimmers but no instructor over the next seven days.
+
+    Days the pool is closed for lessons are left out. A week can straddle two
+    terms, so each day is read from the term it falls in.
+    """
+    from lessons.models import Product
+    from lessons_bookings.models import LessonEnrollment, Term
+    from timetable.closures import closure_for, closures_between
+
+    days = [today + timedelta(days=n) for n in range(7)]
+    closures = closures_between(days[0], days[-1])
+    unstaffed_by_term = {}
+    for term in Term.objects.filter(start_date__lte=days[-1], end_date__gte=days[0]):
+        swimmers = dict(LessonEnrollment.objects.filter(term=term).order_by()
+                        .values_list('lesson_id').annotate(n=Count('id')))
+        lessons = (Product.objects.filter(id__in=set(swimmers) - _taught_lessons(term, swimmers))
+                   .select_related('category').order_by('start_time'))
+        unstaffed_by_term[term] = [(lesson, swimmers[lesson.id]) for lesson in lessons]
+
+    rows = []
+    for day in days:
+        if closure_for('lesson', day, closures):
+            continue
+        for term, lessons in unstaffed_by_term.items():
+            if not (term.start_date <= day <= term.end_date):
+                continue
+            rows += [{'day': day, 'start': lesson.start_time, 'end': lesson.end_time,
+                      'name': lesson.category.name, 'swimmers': count}
+                     for lesson, count in lessons if lesson.day_of_week == day.weekday()]
+            break
+    return rows
+
+
 def _whats_on(today):
     """Today's timetable in brief: public swims, lessons and school classes.
 
@@ -1201,9 +1265,8 @@ def _whats_on(today):
     a day the pool is shut the usual classes still show; the page says "as timetabled".
     """
     from django.urls import reverse
-    from instructors.models import InstructorAssignment
     from lessons.models import Product
-    from lessons_bookings.models import LessonAssignment, LessonEnrollment, Term
+    from lessons_bookings.models import LessonEnrollment, Term
     from schools.models import ScoLessons
     from schools_bookings.models import ScoEnrollment, ScoTerm
     from swims.models import PublicSwimProduct
@@ -1230,11 +1293,7 @@ def _whats_on(today):
                         .order_by().values_list('lesson_id').annotate(n=Count('id')))
         if swimmers:
             times = Product.objects.filter(id__in=swimmers).values_list('start_time', 'end_time')
-            # Instructors are assigned through either model; see instructors.utils.
-            taught = set(InstructorAssignment.objects.filter(term=term, lesson_id__in=swimmers)
-                         .values_list('lesson_id', flat=True))
-            taught |= set(LessonAssignment.objects.filter(term=term, lessons__in=swimmers)
-                          .values_list('lessons', flat=True))
+            taught = _taught_lessons(term, swimmers)
             unstaffed = (Product.objects.filter(id__in=set(swimmers) - taught)
                          .select_related('category').order_by('start_time'))
             lessons = {
@@ -1430,7 +1489,7 @@ SECURITY_INCIDENTS_SHOWN = 10
 
 # Which section of the Live Dashboard each dial (by key) and tile (by label) is in.
 DASHBOARD_SECTIONS = [
-    ('enrolments', 'Enrolments', ('term', 'next_term', 'checkouts'),
+    ('enrolments', 'Enrolments', ('term', 'next_term', 'schools', 'checkouts'),
      ('New enrolments', 'Joined waiting list', 'New customers', 'New guardians')),
     ('security', 'Security', ('staff_2fa', 'guardian_2fa', 'guardian_email'),
      ('Customers logged in', 'Chat messages refused', 'Attackers blocked')),
@@ -1476,6 +1535,78 @@ def _coupon_totals(week_period):
     }
 
 
+UNPAID_DAYS = 7
+
+
+def _money_attention(today):
+    """Money that may need someone to look at it: counts and euro, never names.
+
+    Unpaid orders are checkouts started in the last week and still not paid a day
+    later. Unmatched are paid orders the Reconciliation page lists as problems.
+    Refunds have no date of their own, so they are counted by when the order was placed.
+    """
+    current = now()
+    since = today - timedelta(days=DASHBOARD_DAYS - 1)
+    since_start = make_aware(datetime.datetime.combine(since, datetime.time.min))
+
+    def total(querysets):
+        totals = [qs.aggregate(value=Sum('amount'), count=Count('id')) for qs in querysets]
+        return {'value': sum((t['value'] or Decimal('0') for t in totals), Decimal('0')),
+                'count': sum(t['count'] for t in totals)}
+
+    models = [model for model, _ in ORDER_MODELS.values()]
+    _, summary = _classify_orders(since, today)
+    problems = [figures for category, figures in summary.items() if category != 'matched']
+    return {
+        'unpaid': total(model.objects.filter(paid=False, amount__gt=0,
+                                             created__gte=current - timedelta(days=UNPAID_DAYS),
+                                             created__lt=current - timedelta(days=1)) for model in models),
+        'unmatched': {'value': sum((p['amount'] for p in problems), Decimal('0')),
+                      'count': sum(p['count'] for p in problems)},
+        'refunded': total(model.objects.filter(paid=True, payment_status='refunded', created__gte=since_start)
+                          for model in models),
+        'since': since,
+    }
+
+
+def _phase_now(term, today):
+    """Where lesson booking stands today, and the next date that changes it."""
+    from utils.constants import PHASE_DETAILS
+
+    if not term:
+        return None
+    milestones = [(term.rebooking_date, 'rebooking opens'), (term.pause_date, 'booking pauses'),
+                  (term.booking_date, 'booking opens to all'), (term.end_date, 'term ends')]
+    upcoming = sorted((day, what) for day, what in milestones if day and day > today)
+    phase = {'label': PHASE_DETAILS.get(term.determine_phase(), {}).get('label', 'No booking phase'), 'next': None}
+    if upcoming:
+        day, what = upcoming[0]
+        phase.update(next=what, next_date=day, days=(day - today).days)
+    return phase
+
+
+def _waiting_by_level():
+    """Swimmers waiting now per level, named as _term_fill names its levels."""
+    from waiting_list.models import WaitingList
+
+    waiting = defaultdict(int)
+    for short_name, name, count in (WaitingList.objects.filter(completed=False).order_by()
+                                    .values_list('product__category__short_name', 'product__category__name')
+                                    .annotate(n=Count('id'))):
+        waiting[short_name or name] += count
+    return waiting
+
+
+def _chat_budget():
+    """Paid AI model calls so far against the site-wide caps (chatbot.helpers.budget)."""
+    from chatbot.helpers import budget
+
+    hour_cap, day_cap = budget._limits()
+    today = budget.spent_today()
+    return {'today': today, 'day_cap': day_cap, 'hour': budget.spent_this_hour(), 'hour_cap': hour_cap,
+            'bar': min(_fill_pct(today, day_cap) or 0, 100)}
+
+
 @staff_member_required
 def live_dashboard(request, template_name='admin/financeadmin/dashboard.html'):
     """Live numbers for today and this week, as dials, tiles and charts."""
@@ -1486,6 +1617,7 @@ def live_dashboard(request, template_name='admin/financeadmin/dashboard.html'):
     from chatbot.models import ChatbotQuery
     from custom_admins.financeadmin import finance_admin_site
     from custom_admins.panels import settings_site
+    from dashboard.views import STAGNANT_TERMS, stagnant_swimmers
     from lessons_bookings.models import LessonEnrollment, Term
     from schools_bookings.models import ScoEnrollment
     from swims.models import PublicSwimProduct
@@ -1502,8 +1634,12 @@ def live_dashboard(request, template_name='admin/financeadmin/dashboard.html'):
     # --- Dials -------------------------------------------------------------
     live = _live_dials(today)
     current_term, this_fill = live['current_term'], live['this_fill']
-    dials = [live[key] for key in ('term', 'checkouts', 'swims', 'attendance', 'next_term',
+    dials = [live[key] for key in ('term', 'checkouts', 'swims', 'attendance', 'next_term', 'schools',
                                    'staff_2fa', 'guardian_2fa', 'guardian_email') if live[key]]
+    if this_fill:
+        waiting = _waiting_by_level()
+        for category in this_fill['categories']:
+            category['waiting'] = waiting.get(category['name'], 0)
 
     # --- Tiles -------------------------------------------------------------
     order_rows = [_paid_orders(model, periods) for model, _ in ORDER_MODELS.values()]
@@ -1660,6 +1796,13 @@ def live_dashboard(request, template_name='admin/financeadmin/dashboard.html'):
         'incidents': SecurityIncident.objects.all()[:SECURITY_INCIDENTS_SHOWN],
         'coupons': _coupon_totals(week_period),
         'coupons_url': coupons_url,
+        'money': _money_attention(today),
+        'phase': _phase_now(current_term, today),
+        'chat_budget': _chat_budget(),
+        'unstaffed_week': _unstaffed_week(today),
+        'unstaffed_url': reverse('dashboard:admin_lessons_list'),
+        'stuck': ({'count': len(stagnant_swimmers(current_term)), 'terms': STAGNANT_TERMS,
+                   'url': reverse('dashboard:swimling_stagnation')} if current_term else None),
         'term': current_term,
         'term_fill': this_fill,
         'recent_chats': recent_chats,

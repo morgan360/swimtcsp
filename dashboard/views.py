@@ -212,6 +212,54 @@ def lessons(request):
     return render(request, 'dashboard/lessons.html')
 
 
+STAGNANT_TERMS = 4
+
+
+def stagnant_swimmers(term):
+    """Swimmers in ``term`` who have been at the same level for four terms running.
+
+    One (category id, this term's enrolment, the run of enrolments at that level,
+    newest first) per swimmer and level. The Live Dashboard counts these as well,
+    so the two always agree.
+    """
+    current_entries = {}
+    for enrollment in (LessonEnrollment.objects.filter(term=term)
+                       .select_related('swimling__guardian', 'lesson__category', 'lesson')
+                       .order_by('swimling_id')):
+        lesson, swimling = enrollment.lesson, enrollment.swimling
+        category = getattr(lesson, 'category', None)
+        if not lesson or not swimling or not category:
+            continue
+        current_entries.setdefault((swimling.id, category.id), enrollment)
+    if not current_entries:
+        return []
+
+    history_by_swimling = defaultdict(list)
+    for enrollment in (LessonEnrollment.objects.filter(swimling_id__in={s for s, _ in current_entries})
+                       .select_related('lesson__category', 'term')
+                       .order_by('-term__start_date', '-term_id', '-created')):
+        history_by_swimling[enrollment.swimling_id].append(enrollment)
+
+    stagnant = []
+    for (swimling_id, category_id), current_enrollment in current_entries.items():
+        run, seen_terms, started = [], set(), False
+        for enrollment in history_by_swimling.get(swimling_id, []):
+            if enrollment.term_id in seen_terms:
+                continue
+            seen_terms.add(enrollment.term_id)
+            enrollment_category = getattr(enrollment.lesson, 'category', None)
+            if not enrollment_category:
+                continue
+            if enrollment_category.id == category_id:
+                started = True
+                run.append(enrollment)
+            elif started:
+                break
+        if len(run) >= STAGNANT_TERMS:
+            stagnant.append((category_id, current_enrollment, run))
+    return stagnant
+
+
 @login_required
 @user_passes_test(is_staff)
 def swimling_stagnation(request):
@@ -237,85 +285,12 @@ def swimling_stagnation(request):
         }
         return render(request, 'dashboard/swimling_stagnation.html', context)
 
-    current_enrollments = list(
-        LessonEnrollment.objects.filter(term=current_term)
-        .select_related('swimling__guardian', 'lesson__category', 'lesson')
-        .order_by('swimling_id')
-    )
-
-    current_entries = {}
-    swimling_ids = set()
-
-    for enrollment in current_enrollments:
-        lesson = enrollment.lesson
-        swimling = enrollment.swimling
-        category = getattr(lesson, 'category', None)
-        if not lesson or not swimling or not category:
-            continue
-
-        key = (swimling.id, category.id)
-        if key in current_entries:
-            continue
-
-        current_entries[key] = enrollment
-        swimling_ids.add(swimling.id)
-
-    if not current_entries:
-        context = {
-            'current_term': current_term,
-            'levels_data': [],
-            'total_swimlings': 0,
-            'level_choices': [],
-            'day_choices': Product.DAY_CHOICES,
-            'time_choices': [],
-            'selected_level': selected_level,
-            'selected_day': selected_day,
-            'selected_time': selected_time,
-        }
-        return render(request, 'dashboard/swimling_stagnation.html', context)
-
-    history_by_swimling = defaultdict(list)
-    history_enrollments = list(
-        LessonEnrollment.objects.filter(swimling_id__in=swimling_ids)
-        .select_related('lesson__category', 'term')
-        .order_by('-term__start_date', '-term_id', '-created')
-    )
-
-    for enrollment in history_enrollments:
-        history_by_swimling[enrollment.swimling_id].append(enrollment)
-
     levels_map = {}
     available_categories = {}
     available_times = set()
     total_swimlings = 0
 
-    for (swimling_id, category_id), current_enrollment in current_entries.items():
-        history_entries = history_by_swimling.get(swimling_id, [])
-        if not history_entries:
-            continue
-
-        consecutive_enrollments = []
-        seen_terms = set()
-        count_started = False
-
-        for enrollment in history_entries:
-            term_id = enrollment.term_id
-            if term_id in seen_terms:
-                continue
-            seen_terms.add(term_id)
-
-            enrollment_category = getattr(enrollment.lesson, 'category', None)
-            if not enrollment_category:
-                continue
-
-            if enrollment_category.id == category_id:
-                count_started = True
-                consecutive_enrollments.append(enrollment)
-            elif count_started:
-                break
-
-        if len(consecutive_enrollments) < 4:
-            continue
+    for category_id, current_enrollment, consecutive_enrollments in stagnant_swimmers(current_term):
 
         category = current_enrollment.lesson.category
         swimling = current_enrollment.swimling

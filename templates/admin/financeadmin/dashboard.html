@@ -62,6 +62,7 @@
 {% block content %}
 <p class="dash-sub">
   {{ today|date:"l j F Y" }}{% if term %} · term {{ term.start_date|date:"j M" }} – {{ term.end_date|date:"j M" }}{% endif %}
+  {% if phase %}· <strong>{{ phase.label }}</strong>{% if phase.next %}, {{ phase.next }} in {{ phase.days }} day{{ phase.days|pluralize }} ({{ phase.next_date|date:"j M" }}){% endif %}{% endif %}
   · <a href="{{ activity_report_url }}">exact figures in Daily Activity</a>
 </p>
 
@@ -116,6 +117,32 @@
 
 <div class="dash-today">{% include "admin/financeadmin/_whats_on.html" %}</div>
 
+<div class="dash-charts">
+  <div class="dash-card">
+    <h2>Classes with no instructor · next 7 days</h2>
+    {% if unstaffed_week %}
+    <ul class="dash-topics">
+      {% for class in unstaffed_week %}
+      <li><div class="dash-topic-row"><span>{{ class.day|date:"D j M" }} · {{ class.start|time:"H:i" }} · {{ class.name }}</span><span>{{ class.swimmers }} swimmer{{ class.swimmers|pluralize }}</span></div></li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="dash-hint">Every class with swimmers has an instructor.</p>
+    {% endif %}
+    <p class="dash-hint">Closed days are left out · <a href="{{ unstaffed_url }}">Assign instructors</a></p>
+  </div>
+  {% if stuck %}
+  <div class="dash-card">
+    <h2>Swimmers not moving up</h2>
+    <div class="dash-coupons">
+      <div><span class="dash-tile-num{% if not stuck.count %} is-muted{% endif %}">{{ stuck.count }}</span>
+        <span class="dash-tile-when">at the same level for {{ stuck.terms }} terms or more</span></div>
+    </div>
+    <p class="dash-hint"><a href="{{ stuck.url }}">See who, by level and class</a></p>
+  </div>
+  {% endif %}
+</div>
+
 {% include "admin/financeadmin/_dash_section.html" with section=sections.admin %}
 <div class="dash-charts">
   <div class="dash-card">
@@ -135,6 +162,14 @@
     </ol>
     <p class="dash-hint">Top topics, sorted by keyword · {{ chat_summary.unsorted_pct }}% didn’t fit one</p>
     {% endif %}
+    <h2 class="dash-subhead">Paid AI answers against the cap</h2>
+    <ul class="dash-topics">
+      <li>
+        <div class="dash-topic-row"><span>Today</span><span>{{ chat_budget.today }} of {{ chat_budget.day_cap }}</span></div>
+        <div class="dash-topic-bar"><div style="width: {{ chat_budget.bar }}%;"></div></div>
+      </li>
+    </ul>
+    <p class="dash-hint">This hour: {{ chat_budget.hour }} of {{ chat_budget.hour_cap }}. At the cap the chatbot answers from the FAQ only.</p>
     <h2 class="dash-subhead">Last 14 days</h2>
     <div class="dash-chart"><canvas id="chatChart"></canvas></div>
   </div>
@@ -199,6 +234,18 @@
   <div class="dash-card">
     <h2>Revenue by type · last 14 days</h2>
     <div class="dash-chart"><canvas id="revenueChart"></canvas></div>
+  </div>
+  <div class="dash-card">
+    <h2>Money needing attention</h2>
+    <div class="dash-coupons">
+      <div><span class="dash-tile-num{% if not money.unpaid.count %} is-muted{% endif %}">€{{ money.unpaid.value|floatformat:"2g" }}</span>
+        <span class="dash-tile-when">unpaid for over a day · {{ money.unpaid.count }} order{{ money.unpaid.count|pluralize }} this past week</span></div>
+      <div><span class="dash-tile-num{% if not money.unmatched.count %} is-muted{% endif %}">€{{ money.unmatched.value|floatformat:"2g" }}</span>
+        <span class="dash-tile-when">paid, not matched to BOIPA · {{ money.unmatched.count }} order{{ money.unmatched.count|pluralize }}</span></div>
+      <div><span class="dash-tile-num{% if not money.refunded.count %} is-muted{% endif %}">€{{ money.refunded.value|floatformat:"2g" }}</span>
+        <span class="dash-tile-when">refunded · {{ money.refunded.count }} order{{ money.refunded.count|pluralize }}</span></div>
+    </div>
+    <p class="dash-hint">Unmatched and refunded cover orders placed since {{ money.since|date:"j M" }}. Unpaid orders are checkouts nobody finished; some were paid on a second try. · <a href="{{ reconciliation_url }}?start_date={{ money.since|date:"Y-m-d" }}">Reconciliation</a></p>
   </div>
   <div class="dash-card">
     <h2>Coupons</h2>
@@ -280,7 +327,7 @@
     new Chart(fill, {
       type: 'bar',
       data: {
-        labels: cats.map(c => c.name),
+        labels: cats.map(c => c.waiting ? `${c.name} · ${c.waiting} waiting` : c.name),
         datasets: [{
           label: 'Full',
           data: cats.map(c => c.pct),
@@ -292,7 +339,7 @@
         indexAxis: 'y',
         plugins: {
           legend: { display: false },
-          tooltip: { callbacks: { label: c => `${cats[c.dataIndex].enrolled} of ${cats[c.dataIndex].places} places (${c.parsed.x}%)` } }
+          tooltip: { callbacks: { label: c => `${cats[c.dataIndex].enrolled} of ${cats[c.dataIndex].places} places (${c.parsed.x}%) · ${cats[c.dataIndex].waiting} waiting` } }
         },
         scales: { x: { beginAtZero: true, suggestedMax: 100, ticks: { callback: v => v + '%' } } }
       }

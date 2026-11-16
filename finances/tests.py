@@ -593,6 +593,73 @@ class DashboardTests(TestCase):
         self.assertNotIn("This term’s lessons", [d["title"] for d in response.context["dials"]])
         self.assertIsNone(response.context["term_fill"])
 
+    def test_money_needing_attention(self):
+        from swims.models import PublicSwimProduct
+        from swims_orders.models import Order as SwimOrder
+
+        customer = User.objects.get(email="parent@example.com")
+        session = PublicSwimProduct.objects.first()
+        today = timezone.localdate()
+
+        def order(days_ago, amount, **kwargs):
+            placed = SwimOrder.objects.create(user=customer, product=session, booking=today, amount=amount, **kwargs)
+            SwimOrder.objects.filter(id=placed.id).update(created=timezone.now() - timedelta(days=days_ago))
+
+        order(3, "12.00", paid=False)   # abandoned
+        order(20, "50.00", paid=False)  # too old to count
+        order(3, "0.00", paid=False)    # nothing owed
+        money = self.get().context["money"]
+        # Today's unpaid order from setUpTestData is under a day old, so it is left out.
+        self.assertEqual((money["unpaid"]["count"], money["unpaid"]["value"]), (1, Decimal("12.00")))
+        # Refunded: the one from setUpTestData. Unmatched: every paid order here lacks a BOIPA txId.
+        self.assertEqual((money["refunded"]["count"], money["refunded"]["value"]), (1, Decimal("8.00")))
+        self.assertEqual(money["unmatched"]["count"], 3)
+
+    def test_booking_phase_and_next_date(self):
+        today = timezone.localdate()
+        Term.objects.filter(id=self.term.id).update(rebooking_date=today - timedelta(days=2),
+                                                    booking_date=today + timedelta(days=5))
+        phase = self.get().context["phase"]
+        self.assertEqual((phase["label"], phase["next"], phase["days"]), ("Rebooking", "booking opens to all", 5))
+        self.assertContains(self.get(), "booking opens to all in 5 days")
+
+    def test_waiting_list_is_shown_against_its_level(self):
+        from waiting_list.models import WaitingList
+
+        kids = Swimling.objects.all()[:3]
+        WaitingList.objects.bulk_create([WaitingList(swimling=kids[0], product=self.lesson),
+                                         WaitingList(swimling=kids[1], product=self.lesson),
+                                         WaitingList(swimling=kids[2], product=self.lesson, completed=True)])
+        categories = self.get().context["chart_data"]["categories"]
+        self.assertEqual([(c["name"], c["waiting"]) for c in categories], [("Beginners 1", 2)])
+
+    def test_chat_budget_reads_the_spend_counters(self):
+        from django.core.cache import cache
+        from chatbot.helpers import budget
+
+        cache.set(budget.DAILY_KEY, 150, 60)
+        cache.set(budget.HOURLY_KEY, 7, 60)
+        self.addCleanup(cache.delete_many, [budget.DAILY_KEY, budget.HOURLY_KEY])
+        with self.settings(CHATBOT_MAX_MODEL_CALLS_PER_DAY=600, CHATBOT_MAX_MODEL_CALLS_PER_HOUR=100):
+            spend = self.get().context["chat_budget"]
+        self.assertEqual((spend["today"], spend["day_cap"], spend["hour"], spend["hour_cap"], spend["bar"]),
+                         (150, 600, 7, 100, 25))
+
+    def test_swimmers_not_moving_up_counts_four_terms_at_one_level(self):
+        today = timezone.localdate()
+        stuck, mover = Swimling.objects.all()[:2]
+        other = Product.objects.create(category=Category.objects.create(name="Beginners 2", program=Program.objects.first()),
+                                       day_of_week=1, num_places=5, active=True)
+        for n in range(1, 4):
+            old = Term.objects.create(start_date=today - timedelta(days=100 * n + 60),
+                                      end_date=today - timedelta(days=100 * n))
+            LessonEnrollment.objects.create(lesson=self.lesson, swimling=stuck, term=old)
+            # Moved up from another level two terms ago, so the run is broken.
+            LessonEnrollment.objects.create(lesson=other if n >= 2 else self.lesson, swimling=mover, term=old)
+        response = self.get()
+        self.assertEqual(response.context["stuck"]["count"], 1)
+        self.assertContains(response, reverse("dashboard:swimling_stagnation"))
+
     def test_charts_cover_fourteen_days(self):
         data = self.get().context["chart_data"]
         self.assertEqual(len(data["days"]), 14)
@@ -855,6 +922,34 @@ class WhatsOnTodayTests(TestCase):
         self.assertTrue(lessons["url"].endswith(f"?day={self.weekday}"))
         self.assertEqual([(s["name"], s["swimmers"]) for s in on["schools"]], [("St Mary's", 2)])
         self.assertFalse(on["empty"])
+
+    def test_unstaffed_classes_for_the_week_skip_closed_days(self):
+        from datetime import time
+
+        from finances.views import _unstaffed_week
+        from timetable.models import CalendarEvent
+
+        today = timezone.localdate()
+        week = _unstaffed_week(today)
+        # Today's 18:00 class and tomorrow's 16:00 class have nobody teaching them.
+        self.assertEqual([(c["day"], c["start"], c["swimmers"]) for c in week],
+                         [(today, time(18), 1), (today + timedelta(days=1), time(16), 1)])
+        CalendarEvent.objects.create(title="Shut", category="closure", affects="lessons",
+                                     start_date=today + timedelta(days=1))
+        self.assertEqual([c["day"] for c in _unstaffed_week(today)], [today])
+
+    def test_schools_dial_counts_places_in_running_school_terms(self):
+        from finances.views import _live_dials
+
+        dial = _live_dials(timezone.localdate())["schools"]
+        self.assertEqual((dial["value"], dial["max"]), (2, 30))
+
+    def test_no_school_term_hides_the_schools_dial(self):
+        from finances.views import _live_dials
+        from schools_bookings.models import ScoTerm
+
+        ScoTerm.objects.all().delete()
+        self.assertIsNone(_live_dials(timezone.localdate())["schools"])
 
     def test_no_term_running(self):
         Term.objects.all().delete()

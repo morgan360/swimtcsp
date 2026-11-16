@@ -1,3 +1,5 @@
+{% include "emails/_company_header.txt" %}
+
 Hi {{ user.first_name }},
 
 Thank you for booking with TCSP!

@@ -4,7 +4,8 @@ Hi {{ user.first_name }},
 
 This is your confirmation for the lesson booking:
 
-Swimling: {{ swimling.full_name }}
+Paid by: {{ user.get_full_name }}
+Swimmer: {{ swimling.first_name }} {{ swimling.last_name }}
 Lesson: {{ lesson.name }}
 Day: {{ lesson.get_day_of_week_display }}
 Time: {{ lesson.start_time }} - {{ lesson.end_time }}

@@ -613,7 +613,8 @@ class DashboardTests(TestCase):
         self.assertEqual((money["unpaid"]["count"], money["unpaid"]["value"]), (1, Decimal("12.00")))
         # Refunded: the one from setUpTestData. Unmatched: every paid order here lacks a BOIPA txId.
         self.assertEqual((money["refunded"]["count"], money["refunded"]["value"]), (1, Decimal("8.00")))
-        self.assertEqual(money["unmatched"]["count"], 3)
+        order(2, "0.00", paid=True)     # fully couponed: never went to BOIPA
+        self.assertEqual(self.get().context["money"]["unmatched"]["count"], 3)
 
     def test_booking_phase_and_next_date(self):
         today = timezone.localdate()
@@ -658,6 +659,11 @@ class DashboardTests(TestCase):
             LessonEnrollment.objects.create(lesson=other if n >= 2 else self.lesson, swimling=mover, term=old)
         response = self.get()
         self.assertEqual(response.context["stuck"]["count"], 1)
+        from dashboard.views import stagnant_swimmers
+        (category_id, enrolment, run), = stagnant_swimmers(self.term)
+        self.assertEqual((enrolment.swimling_id, enrolment.term_id, len(run)), (stuck.id, self.term.id, 4))
+        self.client.force_login(self.manager)
+        self.assertContains(self.client.get(reverse("dashboard:swimling_stagnation")), stuck.first_name)
         self.assertContains(response, reverse("dashboard:swimling_stagnation"))
 
     def test_charts_cover_fourteen_days(self):

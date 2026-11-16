@@ -11,7 +11,7 @@
       <p>Your swim booking is confirmed.</p>
 
       <ul style="list-style: none; padding-left: 0; margin-bottom: 20px;">
-        <li><strong>Swimling:</strong> {{ order.user.get_full_name }}</li>
+        <li><strong>Paid by:</strong> {{ order.user.get_full_name }}</li>
         <li><strong>Session:</strong> {{ product.name }}</li>
         <li><strong>Date:</strong> {{ booking_date|date:"l, j F Y" }}</li>
         <li><strong>Order ID:</strong> {{ order.id }}</li>

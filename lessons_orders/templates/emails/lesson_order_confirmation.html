@@ -14,12 +14,13 @@
 
       <p><strong>Order ID:</strong> {{ order.id }}</p>
       <p><strong>Order Date:</strong> {{ order.created|date:"j F Y" }}</p>
+      <p><strong>Paid by:</strong> {{ user.get_full_name }}</p>
 
       <h3 style="margin-top: 30px; color: #363636;">Booking Summary</h3>
       <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
         <thead style="background-color: #f14668; color: white;">
           <tr>
-            <th style="text-align: left; padding: 10px;">Swimling</th>
+            <th style="text-align: left; padding: 10px;">Swimmer</th>
             <th style="text-align: left; padding: 10px;">Lesson</th>
             <th style="text-align: center; padding: 10px;">Term</th>
             <th style="text-align: right; padding: 10px;">Price</th>
@@ -28,7 +29,7 @@
         <tbody>
           {% for item in order_items %}
           <tr style="border-bottom: 1px solid #dbdbdb;">
-            <td style="padding: 10px;">{{ item.swimling.first_name }}</td>
+            <td style="padding: 10px;">{{ item.swimling.first_name }} {{ item.swimling.last_name }}</td>
             <td style="padding: 10px;">{{ item.product.name }}</td>
             <td style="text-align: center;">
               {{ item.term.start_date|date:"j M Y" }} – {{ item.term.end_date|date:"j M Y" }}

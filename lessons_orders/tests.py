@@ -700,3 +700,20 @@ class ReceiptCompanyHeaderTests(TestCase):
                     self.assertIn("Templeville Road, Templeogue, Dublin, D6W E622", body)
             # A mail program can't load a site-relative path, so the logo is a full address.
             self.assertIn('src="https://www.tcsp.ie/static/img/logo.png"', render_to_string(f"{name}.html", {}))
+
+    def test_every_confirmation_email_names_the_payer_and_the_swimmer_in_full(self):
+        """An insurer needs to see who paid and which child the lessons were for."""
+        from django.template.loader import render_to_string
+
+        payer = {"first_name": "Aoife", "get_full_name": "Aoife Byrne"}
+        child = {"first_name": "Cian", "last_name": "Byrne"}
+        context = {"user": payer, "order": {"id": 7, "user": payer}, "swimling": child,
+                   "order_items": [{"swimling": child, "product": {"name": "Beginners 1"}, "price": 95}]}
+        for name in self.TEMPLATES:
+            for extension in ("html", "txt"):
+                with self.subTest(template=f"{name}.{extension}"):
+                    body = render_to_string(f"{name}.{extension}", context)
+                    self.assertIn("Paid by:", body)
+                    self.assertIn("Aoife Byrne", body)
+                    if name != "emails/order_confirmation":  # public swims have no named swimmer
+                        self.assertIn("Cian Byrne", body)

@@ -1,8 +1,11 @@
+{% include "emails/_company_header.txt" %}
+
 Hi {{ user.first_name }},
 
 Your lesson booking is confirmed!
 
 Order ID: {{ order.id }}
+Paid by: {{ user.get_full_name }}
 
 {% for item in order_items %}- {{ item.swimling.first_name }} {{ item.swimling.last_name }}: {{ item.product.name }} — €{{ item.get_cost|floatformat:2 }}
 {% endfor %}

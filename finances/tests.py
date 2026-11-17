@@ -1243,7 +1243,7 @@ class GoogleLatestReviewsTests(TestCase):
 
     def test_shows_the_latest_three_with_first_names_only(self):
         response = self.page()
-        self.assertContains(response, "Latest reviews")
+        self.assertContains(response, "Latest Google reviews")
         self.assertContains(response, "<strong>Sarah</strong>", html=False)
         self.assertNotContains(response, "O&#x27;Brien")
         self.assertContains(response, "<strong>A Google user</strong>", html=False)

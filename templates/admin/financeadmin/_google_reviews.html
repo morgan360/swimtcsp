@@ -1,58 +1,43 @@
-{# The Live Dashboard's Google rating card. Pass google_reviews (a GoogleReviewSnapshot). #}
+{# The Live Dashboard's Google card, beside the New Google reviews tile. Pass google_reviews (a GoogleReviewSnapshot). #}
 <style>
   .dash-stars { color: #f5b301; }
   .dash-stars-empty { color: var(--hairline-color, #ddd); }
-  /* Rating and notes on the left, the latest reviews to their right; stacked when narrow.
-     The card itself sits beside the "New Google reviews" tile, hence the wider breakpoint. */
-  .dash-google { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0.75rem 1.5rem; }
-  @media (min-width: 1200px) {
-    .dash-google.has-reviews { grid-template-columns: minmax(200px, 1fr) minmax(0, 2fr); }
-  }
-  .dash-google .dash-subhead { margin-top: 0; }
-  .dash-reviews { list-style: none; margin: 0; padding: 0; }
+  .dash-reviews { list-style: none; margin: 0.5rem 0 0; padding: 0; }
   .dash-reviews li { list-style: none; margin: 0; border-top: 1px solid var(--hairline-color, #eee); padding: 0.6rem 0; }
-  .dash-reviews li:first-child { border-top: 0; padding-top: 0; }
+  .dash-reviews li:first-child { border-top: 0; }
   .dash-review-head { display: flex; flex-wrap: wrap; gap: 0.25rem 0.6rem; align-items: baseline; }
-  .dash-review-text { margin: 0.3rem 0 0; white-space: pre-line; overflow-wrap: anywhere; }
+  .dash-review-text { margin: 0.3rem 0 0; white-space: pre-line; overflow-wrap: anywhere; max-width: 75ch; }
   .dash-review-unreplied { font-size: 0.75rem; color: var(--error-fg, #ba2121); }
 </style>
+{% with reviews=google_reviews.reviews_for_display %}
 <div class="dash-card">
-  <h2>Google rating</h2>
-  {% with reviews=google_reviews.reviews_for_display %}
-  <div class="dash-google{% if reviews %} has-reviews{% endif %}">
-    <div>
-      <div class="dash-coupons">
-        <div><span class="dash-tile-num">{{ google_reviews.rating|default:"–" }}<span class="dash-stars">★</span></span>
-          <span class="dash-tile-when">from {{ google_reviews.review_count }} review{{ google_reviews.review_count|pluralize }}</span></div>
+  {% if reviews %}
+  <h2>Latest Google reviews</h2>
+  <ul class="dash-reviews">
+    {% for review in reviews %}
+    <li>
+      <div class="dash-review-head">
+        <span aria-label="{{ review.stars }} out of 5 stars"><span class="dash-stars">{{ review.filled }}</span><span class="dash-stars-empty">{{ review.empty }}</span></span>
+        <strong>{{ review.first_name|default:"A Google user" }}</strong>
+        {% if review.date %}<span class="dash-tile-when" style="display:inline">{{ review.date|date:"j M Y" }}</span>{% endif %}
+        {% if not review.replied %}<span class="dash-review-unreplied">Not replied to</span>{% endif %}
       </div>
-      {% if google_reviews.maps_url %}
-        {% if reviews %}
-        <p class="dash-hint"><a href="{{ google_reviews.maps_url }}" rel="noopener" target="_blank">All reviews on Google</a> · replies are made in Google Business Profile.</p>
-        {% else %}
-        <p class="dash-hint">To read them, use <a href="{{ google_reviews.maps_url }}" rel="noopener" target="_blank">All reviews on Google</a>, open Reviews and choose Sort → Newest.</p>
-        {% endif %}
-      {% endif %}
-      <p class="dash-hint">From Google, checked {{ google_reviews.fetched_at|date:"D j M, H:i" }} and again at most every 6 hours.
-        New reviews are counted from these checks, so the first day shows none.</p>
-    </div>
-    {% if reviews %}
-    <div>
-      <h2 class="dash-subhead">Latest reviews</h2>
-      <ul class="dash-reviews">
-        {% for review in reviews %}
-        <li>
-          <div class="dash-review-head">
-            <span aria-label="{{ review.stars }} out of 5 stars"><span class="dash-stars">{{ review.filled }}</span><span class="dash-stars-empty">{{ review.empty }}</span></span>
-            <strong>{{ review.first_name|default:"A Google user" }}</strong>
-            {% if review.date %}<span class="dash-tile-when" style="display:inline">{{ review.date|date:"j M Y" }}</span>{% endif %}
-            {% if not review.replied %}<span class="dash-review-unreplied">Not replied to</span>{% endif %}
-          </div>
-          {% if review.text %}<p class="dash-review-text">{{ review.text|truncatewords:60 }}</p>{% else %}<p class="dash-review-text dash-tile-when">Stars only, no text.</p>{% endif %}
-        </li>
-        {% endfor %}
-      </ul>
-    </div>
-    {% endif %}
+      {% if review.text %}<p class="dash-review-text">{{ review.text|truncatewords:60 }}</p>{% else %}<p class="dash-review-text dash-tile-when">Stars only, no text.</p>{% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+  <p class="dash-hint">Overall <span class="dash-stars">★</span> {{ google_reviews.rating|default:"–" }} from {{ google_reviews.review_count }} review{{ google_reviews.review_count|pluralize }}{% if google_reviews.maps_url %} · <a href="{{ google_reviews.maps_url }}" rel="noopener" target="_blank">All reviews on Google</a>{% endif %} · replies are made in Google Business Profile · checked {{ google_reviews.fetched_at|date:"D j M, H:i" }}, every 6 hours.</p>
+  {% else %}
+  <h2>Google rating</h2>
+  <div class="dash-coupons">
+    <div><span class="dash-tile-num">{{ google_reviews.rating|default:"–" }}<span class="dash-stars">★</span></span>
+      <span class="dash-tile-when">from {{ google_reviews.review_count }} review{{ google_reviews.review_count|pluralize }}</span></div>
   </div>
-  {% endwith %}
+  {% if google_reviews.maps_url %}
+  <p class="dash-hint">To read them, use <a href="{{ google_reviews.maps_url }}" rel="noopener" target="_blank">All reviews on Google</a>, open Reviews and choose Sort → Newest.</p>
+  {% endif %}
+  <p class="dash-hint">From Google, checked {{ google_reviews.fetched_at|date:"D j M, H:i" }} and again at most every 6 hours.
+    New reviews are counted from these checks, so the first day shows none.</p>
+  {% endif %}
 </div>
+{% endwith %}

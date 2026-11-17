@@ -14,13 +14,13 @@
   .dash-searches .num { font-variant-numeric: tabular-nums; color: var(--body-quiet-color); white-space: nowrap; }
 </style>
 <div class="dash-card" style="margin-bottom: 1rem;">
-  <h2>How people find us on Google</h2>
+  <h2>How people find us on Google <button type="button" class="dash-info" aria-label="What this shows">i<span role="tooltip">From Google Business Profile. Each figure is the last {{ perf.days }} days Google has figures for ({{ perf.from|date:"j M" }} – {{ perf.through|date:"j M" }}). The arrow compares it with the {{ perf.days }} days before that. Google's figures run a few days behind, so there are no figures for today. Checked twice a day.</span></button></h2>
   <div class="dash-gperf">
     <div>
       <div class="dash-gperf-figs">
         {% for f in perf.figures %}
         <div>
-          <div class="dash-tile-label">{{ f.label }}</div>
+          <div class="dash-tile-label">{{ f.label }}{% if f.info %} <button type="button" class="dash-info" aria-label="What this counts">i<span role="tooltip">{{ f.info }}</span></button>{% endif %}</div>
           <span class="dash-tile-num">{{ f.now|floatformat:"0g" }}</span>
           {% if f.change is not None %}
           <span class="dash-gperf-change {% if f.change > 0 %}is-up{% elif f.change < 0 %}is-down{% endif %}">{% if f.change > 0 %}▲ {{ f.change }}%{% elif f.change < 0 %}▼ {{ f.change|cut:"-" }}%{% else %}no change{% endif %} <span class="dash-tile-when" style="display:inline">vs {{ f.before|floatformat:"0g" }}</span></span>
@@ -29,11 +29,11 @@
         {% endfor %}
       </div>
       <p class="dash-hint">Views by where: {% for v in perf.views_split %}{{ v.label }} {{ v.now }}{% if not forloop.last %} · {% endif %}{% endfor %}.</p>
-      <p class="dash-hint">Last {{ perf.days }} days Google has figures for ({{ perf.from|date:"j M" }} – {{ perf.through|date:"j M" }}), against the {{ perf.days }} days before. Google's figures run a few days behind. Checked {{ perf.fetched_at|date:"D j M, H:i" }}, twice a day.</p>
+      <p class="dash-hint">{{ perf.from|date:"j M" }} – {{ perf.through|date:"j M" }}, against the {{ perf.days }} days before · checked {{ perf.fetched_at|date:"D j M, H:i" }}.</p>
     </div>
     {% if perf.searches %}
     <div>
-      <h2 class="dash-subhead">What people searched for, {{ perf.searches_month|date:"F Y" }}</h2>
+      <h2 class="dash-subhead">What people searched for, {{ perf.searches_month|date:"F Y" }} <button type="button" class="dash-info" aria-label="What this shows">i<span role="tooltip">The words people typed into Google Search or Maps when the pool's listing was shown to them, in the last full month; Google gives them a month at a time. Each person counts once per search term per month. Searches for the pool's own name or address, which Google lists under many spellings, are added together. Google gives small numbers only as "under 15".</span></button></h2>
       <ul class="dash-searches">
         {% for s in perf.searches %}
         <li><span>{{ s.term }}</span><span class="num">{% if s.under %}under {{ s.count }}{% else %}{{ s.count }}{% endif %}</span></li>

@@ -1353,7 +1353,9 @@ class GooglePerformanceTests(TestCase):
         self.assertEqual(perf["through"], self.through)  # the empty 17 Nov point is ignored
         self.assertEqual(perf["from"], self.through - timedelta(days=27))
         figures = {f["label"]: f for f in perf["figures"]}
-        self.assertEqual(figures["Views of the listing"], {"label": "Views of the listing", "now": 560, "before": 280, "change": 100})
+        views = figures["Views of the listing"]
+        self.assertEqual((views["now"], views["before"], views["change"]), (560, 280, 100))
+        self.assertIn("Search or Google Maps", views["info"])  # the "i" pop-up
         self.assertEqual(figures["Website clicks"]["change"], 0)
         self.assertEqual(figures["Calls"]["change"], -100)
         self.assertIsNone(figures["Directions"]["change"])  # nothing before: no percentage
@@ -1433,6 +1435,9 @@ class DashboardOpensTests(TestCase):
         self.assertEqual(tile["week"], 3)
         # Most opens first; no first name falls back to the start of the email.
         self.assertEqual(tile["hint"], "This week: Esther 2 · brian 1")
+        first = today - timedelta(days=30)
+        self.assertEqual(tile["info"], f"Counted from {first.day} {first:%B %Y}; earlier opens weren't recorded. "
+                                       "Every load of this page counts, refreshes included.")
 
     def test_in_the_admin_section(self):
         from finances.views import DASHBOARD_SECTIONS

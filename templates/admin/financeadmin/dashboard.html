@@ -313,6 +313,7 @@
 
 {% if google_reviews %}
 {% include "admin/financeadmin/_dash_section.html" with section=sections.reviews aside="admin/financeadmin/_google_reviews.html" %}
+{% if google_performance %}{% include "admin/financeadmin/_google_performance.html" with perf=google_performance %}{% endif %}
 {% endif %}
 
 {{ chart_data|json_script:"dashboard-data" }}

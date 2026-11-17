@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import date, timedelta
 from decimal import Decimal
 
 from django.contrib.auth import get_user_model
@@ -1285,3 +1285,119 @@ class GoogleLatestReviewsTests(TestCase):
         self.post.assert_not_called()
         self.assertNotContains(response, "Latest reviews")
         self.assertContains(response, "Sort → Newest")
+
+
+class GooglePerformanceTests(TestCase):
+    """How people find the pool on Google (finances.google_performance)."""
+
+    GBP = GoogleLatestReviewsTests.GBP
+
+    @staticmethod
+    def day(d, value):
+        return {"date": {"year": d.year, "month": d.month, "day": d.day}, "value": str(value)}
+
+    def daily(self, through):
+        """56 days of figures up to `through`: 10 views a day, then 20 a day in the last 28."""
+        points = {m: [] for m in ["BUSINESS_IMPRESSIONS_MOBILE_MAPS", "WEBSITE_CLICKS", "CALL_CLICKS"]}
+        for i in range(56):
+            d = through - timedelta(days=i)
+            recent = i < 28
+            points["BUSINESS_IMPRESSIONS_MOBILE_MAPS"].append(self.day(d, 20 if recent else 10))
+            points["WEBSITE_CLICKS"].append(self.day(d, 1))
+            points["CALL_CLICKS"].append(self.day(d, 0 if recent else 1))
+        series = [{"dailyMetric": m, "timeSeries": {"datedValues": v + [{"date": {"year": 2026, "month": 11, "day": 17}}]}}
+                  for m, v in points.items()]
+        return {"multiDailyMetricTimeSeries": [{"dailyMetricTimeSeries": series}]}
+
+    KEYWORDS = {"searchKeywordsCounts": [
+        {"searchKeyword": "pool", "insightsValue": {"value": "59"}},
+        {"searchKeyword": "aqua aerobics dublin", "insightsValue": {"threshold": "15"}},
+        {"searchKeyword": "templeogue college swimming pool, templeville road", "insightsValue": {"value": "220"}},
+        {"searchKeyword": "templeogue college swimming pool templeville rd", "insightsValue": {"value": "22"}},
+        {"searchKeyword": "templeogue college swimming pool dublin 6w", "insightsValue": {"threshold": "15"}},
+        {"searchKeyword": "swimming pool", "insightsValue": {"value": "290"}},
+    ]}
+
+    def setUp(self):
+        from unittest import mock
+        from django.core.cache import cache
+        cache.clear()
+        self.addCleanup(cache.clear)
+        get = mock.patch("finances.google_performance.requests.get")
+        post = mock.patch("finances.google_reviews.requests.post")
+        self.get, self.post = get.start(), post.start()
+        self.addCleanup(get.stop)
+        self.addCleanup(post.stop)
+        self.post.return_value.json.return_value = {"access_token": "at"}
+        self.through = date(2026, 11, 14)
+
+        def fake_get(url, **kwargs):
+            response = mock.Mock()
+            # requests.get is one function, so this also answers the reviews card's calls.
+            if "places.googleapis" in url:
+                response.json.return_value = GoogleReviewsTests.PLACE
+            elif "mybusiness.googleapis" in url:
+                response.json.return_value = {"reviews": []}
+            else:
+                response.json.return_value = self.KEYWORDS if "searchkeywords" in url else self.daily(self.through)
+            return response
+        self.get.side_effect = fake_get
+
+    def summary(self):
+        from finances import google_performance
+        with self.settings(**self.GBP):
+            return google_performance.summary()
+
+    def test_compares_the_last_28_days_google_has_with_the_28_before(self):
+        perf = self.summary()
+        self.assertEqual(perf["through"], self.through)  # the empty 17 Nov point is ignored
+        self.assertEqual(perf["from"], self.through - timedelta(days=27))
+        figures = {f["label"]: f for f in perf["figures"]}
+        self.assertEqual(figures["Views of the listing"], {"label": "Views of the listing", "now": 560, "before": 280, "change": 100})
+        self.assertEqual(figures["Website clicks"]["change"], 0)
+        self.assertEqual(figures["Calls"]["change"], -100)
+        self.assertIsNone(figures["Directions"]["change"])  # nothing before: no percentage
+
+    def test_searches_group_the_pool_by_name_and_put_exact_counts_first(self):
+        searches = self.summary()["searches"]
+        self.assertEqual([(s["term"], s["count"], s["under"]) for s in searches], [
+            ("swimming pool", 290, False),
+            ("The pool by name or address", 242, False),
+            ("pool", 59, False),
+            ("aqua aerobics dublin", 15, True),
+        ])
+
+    def test_cached_so_google_is_asked_at_most_twice_a_day(self):
+        self.summary()
+        calls = self.get.call_count
+        self.summary()
+        self.assertEqual(self.get.call_count, calls)
+
+    def test_google_down_shows_the_last_good_figures(self):
+        import requests
+        from django.core.cache import cache
+        from finances import google_performance
+        first = self.summary()
+        cache.delete(google_performance.CACHE_KEY)  # as if 12 hours had passed
+        self.get.side_effect = requests.Timeout("slow")
+        with self.assertLogs("finances", "ERROR"):
+            self.assertEqual(self.summary(), first)
+
+    def test_not_set_up_asks_google_nothing(self):
+        from finances import google_performance
+        self.assertIsNone(google_performance.summary())  # GBP_* are blank under test
+        self.get.assert_not_called()
+        self.post.assert_not_called()
+
+    def test_shown_on_the_dashboard(self):
+        manager = User.objects.create_user(email="manager@tcsp.ie", password="pw", first_name="M")
+        manager.is_staff = True
+        manager.save(update_fields=["is_staff"])
+        manager.groups.add(Group.objects.get_or_create(name="Manager")[0])
+        self.client.force_login(manager)
+        with self.settings(**self.GBP):
+            response = self.client.get(reverse("finance:dashboard"))
+        self.assertContains(response, "How people find us on Google")
+        self.assertContains(response, "The pool by name or address")
+        self.assertContains(response, "under 15")
+        self.assertContains(response, "▲ 100%")

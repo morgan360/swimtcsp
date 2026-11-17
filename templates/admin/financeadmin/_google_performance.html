@@ -1,0 +1,46 @@
+{# How people find the pool on Google (finances.google_performance). Pass perf. #}
+<style>
+  .dash-gperf { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0.75rem 2rem; }
+  @media (min-width: 1000px) { .dash-gperf { grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); } }
+  .dash-gperf-figs { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(140px, 100%), 1fr)); gap: 0.75rem; }
+  .dash-gperf-change { display: block; font-size: 0.75rem; }
+  .dash-gperf-change.is-up { color: var(--message-success-fg, #2e7d32); }
+  .dash-gperf-change.is-down { color: var(--error-fg, #ba2121); }
+  .dash-gperf .dash-subhead { margin-top: 0; }
+  .dash-searches { list-style: none; margin: 0; padding: 0; }
+  .dash-searches li { list-style: none; margin: 0; display: flex; justify-content: space-between; gap: 1rem;
+                      padding: 0.25rem 0; border-top: 1px solid var(--hairline-color, #eee); }
+  .dash-searches li:first-child { border-top: 0; }
+  .dash-searches .num { font-variant-numeric: tabular-nums; color: var(--body-quiet-color); white-space: nowrap; }
+</style>
+<div class="dash-card" style="margin-bottom: 1rem;">
+  <h2>How people find us on Google</h2>
+  <div class="dash-gperf">
+    <div>
+      <div class="dash-gperf-figs">
+        {% for f in perf.figures %}
+        <div>
+          <div class="dash-tile-label">{{ f.label }}</div>
+          <span class="dash-tile-num">{{ f.now|floatformat:"0g" }}</span>
+          {% if f.change is not None %}
+          <span class="dash-gperf-change {% if f.change > 0 %}is-up{% elif f.change < 0 %}is-down{% endif %}">{% if f.change > 0 %}▲ {{ f.change }}%{% elif f.change < 0 %}▼ {{ f.change|cut:"-" }}%{% else %}no change{% endif %} <span class="dash-tile-when" style="display:inline">vs {{ f.before|floatformat:"0g" }}</span></span>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+      <p class="dash-hint">Views by where: {% for v in perf.views_split %}{{ v.label }} {{ v.now }}{% if not forloop.last %} · {% endif %}{% endfor %}.</p>
+      <p class="dash-hint">Last {{ perf.days }} days Google has figures for ({{ perf.from|date:"j M" }} – {{ perf.through|date:"j M" }}), against the {{ perf.days }} days before. Google's figures run a few days behind. Checked {{ perf.fetched_at|date:"D j M, H:i" }}, twice a day.</p>
+    </div>
+    {% if perf.searches %}
+    <div>
+      <h2 class="dash-subhead">What people searched for, {{ perf.searches_month|date:"F Y" }}</h2>
+      <ul class="dash-searches">
+        {% for s in perf.searches %}
+        <li><span>{{ s.term }}</span><span class="num">{% if s.under %}under {{ s.count }}{% else %}{{ s.count }}{% endif %}</span></li>
+        {% endfor %}
+      </ul>
+      <p class="dash-hint">Searches where the pool's listing was shown. Google gives small numbers only as "under" a figure.</p>
+    </div>
+    {% endif %}
+  </div>
+</div>

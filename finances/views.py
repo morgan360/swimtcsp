@@ -15,7 +15,7 @@ from django.http import JsonResponse, HttpResponse
 from django.utils.timezone import localtime, make_aware
 import datetime
 
-from finances import google_reviews
+from finances import google_performance, google_reviews
 from swims_orders.models import Order  # ✅ your Order model
 from lessons_orders.models import Order as LessonOrder
 from schools_orders.models import Order as SchoolOrder
@@ -1891,5 +1891,7 @@ def live_dashboard(request, template_name='admin/financeadmin/dashboard.html'):
                          if settings_site.has_permission(request) else None),
         'chart_data': chart_data,
         'google_reviews': google,
+        # How people find the pool on Google: needs the Business Profile sign-in too.
+        'google_performance': google_performance.summary() if google else None,
     }
     return render(request, template_name, context)

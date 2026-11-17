@@ -84,19 +84,28 @@ def fetch():
     return snapshot
 
 
+def gbp_access_token():
+    """A short-lived Business Profile access token from the stored refresh token.
+
+    Raises requests.RequestException / KeyError on failure, for the caller to log.
+    Also used by finances.google_performance.
+    """
+    token = requests.post(GBP_TOKEN_URL, data={
+        'client_id': settings.GBP_CLIENT_ID,
+        'client_secret': settings.GBP_CLIENT_SECRET,
+        'refresh_token': settings.GBP_REFRESH_TOKEN,
+        'grant_type': 'refresh_token',
+    }, timeout=TIMEOUT_SECONDS)
+    token.raise_for_status()
+    return token.json()['access_token']
+
+
 def fetch_latest_reviews():
     """The newest LATEST_REVIEWS reviews from the Business Profile API. None on failure."""
     try:
-        token = requests.post(GBP_TOKEN_URL, data={
-            'client_id': settings.GBP_CLIENT_ID,
-            'client_secret': settings.GBP_CLIENT_SECRET,
-            'refresh_token': settings.GBP_REFRESH_TOKEN,
-            'grant_type': 'refresh_token',
-        }, timeout=TIMEOUT_SECONDS)
-        token.raise_for_status()
         response = requests.get(
             GBP_REVIEWS_URL.format(account=settings.GBP_ACCOUNT_ID, location=settings.GBP_LOCATION_ID),
-            headers={'Authorization': f"Bearer {token.json()['access_token']}"},
+            headers={'Authorization': f'Bearer {gbp_access_token()}'},
             params={'pageSize': LATEST_REVIEWS, 'orderBy': 'updateTime desc'},
             timeout=TIMEOUT_SECONDS,
         )

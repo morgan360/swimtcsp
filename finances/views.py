@@ -1725,6 +1725,15 @@ def _dashboard_opens(periods):
     return totals, (f'This week: {who}' if who else 'Nobody yet this week')
 
 
+def _dashboard_opens_info():
+    """The Live Dashboard opens tile's "i": when counting began, and what counts."""
+    from finances.models import DashboardOpen
+
+    first = DashboardOpen.objects.order_by('date').values_list('date', flat=True).first()
+    since = f"Counted from {first:%-d %B %Y}; earlier opens weren't recorded." if first else ''
+    return f'{since} Every load of this page counts, refreshes included.'.strip()
+
+
 def live_dashboard(request, template_name='admin/financeadmin/dashboard.html'):
     """Live numbers for today and this week, as dials, tiles and charts."""
     from django.contrib.auth import get_user_model
@@ -1763,8 +1772,8 @@ def live_dashboard(request, template_name='admin/financeadmin/dashboard.html'):
     staff = {'user__is_staff': True}
     managers = {'user__is_staff': True, 'user__groups__name': 'Manager'}
 
-    def tile(label, values, money=False, hint=''):
-        return {'label': label, 'today': values[0], 'week': values[1], 'money': money, 'hint': hint}
+    def tile(label, values, money=False, hint='', info=''):
+        return {'label': label, 'today': values[0], 'week': values[1], 'money': money, 'hint': hint, 'info': info}
 
     tiles = [
         tile('Revenue', [sum(col) for col in zip(*(r[1] for r in order_rows))], money=True,
@@ -1788,7 +1797,7 @@ def live_dashboard(request, template_name='admin/financeadmin/dashboard.html'):
         tile('Swim check-ins', _period_counts(Order.objects.all(), periods, 'checked_in_at')),
         tile('Joined waiting list', _period_counts(WaitingList.objects.all(), periods, 'created_at'),
              hint=f'{WaitingList.objects.filter(completed=False).count()} waiting now'),
-        tile('Live Dashboard opens', opens, hint=opens_by),
+        tile('Live Dashboard opens', opens, hint=opens_by, info=_dashboard_opens_info()),
     ]
 
     # Timetable use (timetable.visits): counts per day, staff and bots left out.

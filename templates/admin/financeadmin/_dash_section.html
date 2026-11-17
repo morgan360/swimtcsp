@@ -21,7 +21,7 @@
 <div class="dash-tiles">
   {% for tile in section.tiles %}
   <div class="dash-card dash-tile">
-    <div class="dash-tile-label">{{ tile.label }}</div>
+    <div class="dash-tile-label">{{ tile.label }}{% if tile.info %} <button type="button" class="dash-info" aria-label="About this number">i<span role="tooltip">{{ tile.info }}</span></button>{% endif %}</div>
     <div class="dash-tile-values">
       <div>
         <span class="dash-tile-num{% if not tile.today %} is-muted{% endif %}">{% if tile.money %}€{{ tile.today|floatformat:"0g" }}{% else %}{{ tile.today }}{% endif %}</span>

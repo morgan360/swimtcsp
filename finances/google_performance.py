@@ -42,6 +42,17 @@ ACTIONS = {
     'BUSINESS_DIRECTION_REQUESTS': 'Directions',
     'CALL_CLICKS': 'Calls',
 }
+# The "i" pop-up for each figure on the dashboard.
+INFO = {
+    'Views of the listing': ("How often the pool's Google listing was shown, on Google Search or Google Maps, "
+                             "on phones and computers. Google counts each person at most once a day on each of "
+                             "these, so it's close to people rather than page loads."),
+    'Website clicks': "Clicks on the website link in the pool's Google listing.",
+    'Directions': "Requests for directions to the pool from its Google listing.",
+    'Calls': ("Taps on the call button in the pool's Google listing. Google can't tell whether the call went "
+              "through or was answered."),
+}
+
 # People searching for the pool by its name or address, which Google lists as
 # many near-identical spellings of the address. Shown as one line.
 BY_NAME = 'templeogue college swimming pool'
@@ -104,7 +115,7 @@ def fetch(today=None):
         now = sum(total(m, now_from, through) for m in metrics)
         before = sum(total(m, before_from, now_from - timedelta(days=1)) for m in metrics)
         change = round((now - before) * 100 / before) if before else None
-        return {'label': label, 'now': now, 'before': before, 'change': change}
+        return {'label': label, 'now': now, 'before': before, 'change': change, 'info': INFO.get(label, '')}
 
     return {
         'fetched_at': timezone.now(),

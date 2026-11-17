@@ -55,6 +55,16 @@ OPENAI_PROJECT = config('OPENAI_PROJECT', default='')
 GOOGLE_PLACES_API_KEY = '' if 'test' in sys.argv else config('GOOGLE_PLACES_API_KEY', default='')
 GOOGLE_PLACE_ID = '' if 'test' in sys.argv else config('GOOGLE_PLACE_ID', default='')
 
+# The latest Google reviews (text, stars, first name) come from the Google
+# Business Profile API instead, which can sort by newest. It needs an OAuth
+# refresh token from a one-off sign-in by an account that manages the pool's
+# Business Profile. Leave any blank and the card shows only the rating.
+GBP_CLIENT_ID = '' if 'test' in sys.argv else config('GBP_CLIENT_ID', default='')
+GBP_CLIENT_SECRET = '' if 'test' in sys.argv else config('GBP_CLIENT_SECRET', default='')
+GBP_REFRESH_TOKEN = '' if 'test' in sys.argv else config('GBP_REFRESH_TOKEN', default='')
+GBP_ACCOUNT_ID = '' if 'test' in sys.argv else config('GBP_ACCOUNT_ID', default='')
+GBP_LOCATION_ID = '' if 'test' in sys.argv else config('GBP_LOCATION_ID', default='')
+
 # FAQ retrieval tiers. A query is embedded once and scored against every FAQ:
 #   >= FAQ_MATCH_THRESHOLD  -> serve the stored answer verbatim (no model call)
 #   >= FAQ_MIN_CONFIDENCE   -> serve it, but hedged ("I'm not certain, but...")

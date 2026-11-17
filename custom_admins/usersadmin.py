@@ -19,6 +19,7 @@ from django.utils.encoding import force_bytes
 from django.core.mail import send_mail
 from django.conf import settings
 
+from finances.models import DashboardOpen
 from users.models import ActiveDay, LoginEvent, Swimling
 from users.resources import SwimlingResource, UserResource, GroupResource
 from lessons_bookings.models import LessonEnrollment, Term
@@ -306,6 +307,13 @@ class ActiveDayAdmin(LoginEventAdmin):
     date_hierarchy = "date"
 
 
+class DashboardOpenAdmin(LoginEventAdmin):
+    """Read-only count of Live Dashboard opens per person per day, written by finances.views.live_dashboard."""
+    list_display = ("date", "user", "count")
+    list_filter = ("date",)
+    date_hierarchy = "date"
+
+
 # 🔹 Register all
 users_admin_site.register(User, UserAdmin)
 operations_site.register(User, GuardianLookupAdmin)
@@ -313,5 +321,6 @@ operations_site.register(Swimling, SwimlingAdmin)
 users_admin_site.register(Group, GroupAdmin)
 users_admin_site.register(LoginEvent, LoginEventAdmin)
 users_admin_site.register(ActiveDay, ActiveDayAdmin)
+users_admin_site.register(DashboardOpen, DashboardOpenAdmin)
 users_admin_site.register(Product, ProductAutocompleteAdmin)
 users_admin_site.register(Term, TermAutocompleteAdmin)

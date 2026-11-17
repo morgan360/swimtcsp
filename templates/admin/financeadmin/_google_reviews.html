@@ -2,9 +2,10 @@
 <style>
   .dash-stars { color: #f5b301; }
   .dash-stars-empty { color: var(--hairline-color, #ddd); }
-  /* Rating and notes on the left, the latest reviews to their right; stacked when narrow. */
+  /* Rating and notes on the left, the latest reviews to their right; stacked when narrow.
+     The card itself sits beside the "New Google reviews" tile, hence the wider breakpoint. */
   .dash-google { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0.75rem 1.5rem; }
-  @media (min-width: 900px) {
+  @media (min-width: 1200px) {
     .dash-google.has-reviews { grid-template-columns: minmax(200px, 1fr) minmax(0, 2fr); }
   }
   .dash-google .dash-subhead { margin-top: 0; }

@@ -2,11 +2,11 @@
 
 Read from the Places API (New) at most every REFRESH_HOURS and kept as
 GoogleReviewSnapshot rows, whose rising count gives "new reviews today / this
-week". No review text is fetched: the API only returns the five reviews Google
-ranks most relevant (for the pool, 3-9 years old) and can't sort by newest, so
-the dashboard links to Google for the reviews themselves. If Google can't be
-reached the dashboard gets the last good snapshot: it must never fail because
-of Google.
+week". The Places API can't sort reviews by newest (it gives the five Google
+ranks most relevant, for the pool 3-9 years old), so the latest reviews come
+from the Google Business Profile API instead, when its GBP_* settings are set.
+Only the reviewer's first name is kept. If Google can't be reached the
+dashboard gets the last good snapshot: it must never fail because of Google.
 """
 import logging
 from datetime import timedelta
@@ -25,9 +25,19 @@ FIELD_MASK = 'rating,userRatingCount,googleMapsUri'  # no reviews: see above
 REFRESH_HOURS = 6
 TIMEOUT_SECONDS = 5
 
+GBP_TOKEN_URL = 'https://oauth2.googleapis.com/token'
+GBP_REVIEWS_URL = 'https://mybusiness.googleapis.com/v4/accounts/{account}/locations/{location}/reviews'
+LATEST_REVIEWS = 3
+STARS = {'ONE': 1, 'TWO': 2, 'THREE': 3, 'FOUR': 4, 'FIVE': 5}
+
 
 def configured():
     return bool(settings.GOOGLE_PLACES_API_KEY and settings.GOOGLE_PLACE_ID)
+
+
+def reviews_configured():
+    return all([settings.GBP_CLIENT_ID, settings.GBP_CLIENT_SECRET, settings.GBP_REFRESH_TOKEN,
+                settings.GBP_ACCOUNT_ID, settings.GBP_LOCATION_ID])
 
 
 def latest_snapshot():
@@ -60,12 +70,68 @@ def fetch():
         logger.error('Google reviews fetch failed: %s %s', exc.__class__.__name__, body or exc)
         return None
 
+    latest = fetch_latest_reviews() if reviews_configured() else []
+    if latest is None:  # Business Profile failed: keep the reviews we last had
+        previous = GoogleReviewSnapshot.objects.first()
+        latest = previous.latest_reviews if previous else []
+
     snapshot = GoogleReviewSnapshot.objects.create(
         rating=rating,
         review_count=int(place.get('userRatingCount') or 0),
         maps_url=place.get('googleMapsUri', '')[:500],
+        latest_reviews=latest,
     )
     return snapshot
+
+
+def fetch_latest_reviews():
+    """The newest LATEST_REVIEWS reviews from the Business Profile API. None on failure."""
+    try:
+        token = requests.post(GBP_TOKEN_URL, data={
+            'client_id': settings.GBP_CLIENT_ID,
+            'client_secret': settings.GBP_CLIENT_SECRET,
+            'refresh_token': settings.GBP_REFRESH_TOKEN,
+            'grant_type': 'refresh_token',
+        }, timeout=TIMEOUT_SECONDS)
+        token.raise_for_status()
+        response = requests.get(
+            GBP_REVIEWS_URL.format(account=settings.GBP_ACCOUNT_ID, location=settings.GBP_LOCATION_ID),
+            headers={'Authorization': f"Bearer {token.json()['access_token']}"},
+            params={'pageSize': LATEST_REVIEWS, 'orderBy': 'updateTime desc'},
+            timeout=TIMEOUT_SECONDS,
+        )
+        response.raise_for_status()
+        reviews = response.json().get('reviews', [])
+    except (requests.RequestException, ValueError, KeyError) as exc:
+        # Google's error bodies never echo the secret or tokens. "invalid_grant"
+        # means the refresh token was revoked: redo the one-off sign-in.
+        body = getattr(getattr(exc, 'response', None), 'text', '')[:300]
+        logger.error('Google latest reviews fetch failed: %s %s', exc.__class__.__name__, body or exc)
+        return None
+    return [_review(r) for r in reviews[:LATEST_REVIEWS]]
+
+
+def _review(review):
+    reviewer = review.get('reviewer') or {}
+    name = (reviewer.get('displayName') or '').split()
+    return {
+        'first_name': name[0] if name and not reviewer.get('isAnonymous') else '',
+        'stars': STARS.get(review.get('starRating'), 0),
+        'date': (review.get('createTime') or '')[:10],
+        'text': _own_words(review.get('comment', '')),
+        'replied': bool(review.get('reviewReply')),
+    }
+
+
+def _own_words(comment):
+    """Google's translation of a review if it added one, otherwise the review as written.
+
+    A translated review comes as "(Translated by Google) <English>\n\n(Original)\n<original>".
+    """
+    comment = comment.strip()
+    if comment.startswith('(Translated by Google)'):
+        comment = comment[len('(Translated by Google)'):].split('(Original)')[0]
+    return comment.strip()
 
 
 def new_review_counts(periods):

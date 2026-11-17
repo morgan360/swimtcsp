@@ -1195,3 +1195,93 @@ class GoogleReviewsTests(TestCase):
         self.assertEqual(google_reviews.new_review_counts([week, no_history]), [3, 0])
         self.snapshot(98, hours_ago=0)
         self.assertEqual(google_reviews.new_review_counts([week]), [0])
+
+
+class GoogleLatestReviewsTests(TestCase):
+    """The latest reviews on the Google card, from the Business Profile API."""
+
+    PLACE = {"rating": 4.5, "userRatingCount": 208, "googleMapsUri": "https://maps.google.com/?cid=1"}
+    GBP = dict(GOOGLE_PLACES_API_KEY="k", GOOGLE_PLACE_ID="p", GBP_CLIENT_ID="cid",
+               GBP_CLIENT_SECRET="sec", GBP_REFRESH_TOKEN="rt", GBP_ACCOUNT_ID="111",
+               GBP_LOCATION_ID="222")
+    REVIEWS = {"reviews": [
+        {"reviewer": {"displayName": "Sarah O'Brien"}, "starRating": "FIVE",
+         "createTime": "2026-11-09T10:00:00Z", "comment": "Lovely lessons",
+         "reviewReply": {"comment": "Thanks!"}},
+        {"reviewer": {"displayName": "A Google User", "isAnonymous": True}, "starRating": "THREE",
+         "createTime": "2026-10-17T10:00:00Z",
+         "comment": "(Translated by Google) Cold water\n\n(Original)\nUisce fuar"},
+        {"reviewer": {"displayName": "Tom"}, "starRating": "FOUR", "createTime": "2026-09-01T10:00:00Z"},
+    ]}
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.manager = User.objects.create_user(email="manager@tcsp.ie", password="pw", first_name="M")
+        cls.manager.is_staff = True
+        cls.manager.save(update_fields=["is_staff"])
+        cls.manager.groups.add(Group.objects.get_or_create(name="Manager")[0])
+
+    def setUp(self):
+        from unittest import mock
+        get = mock.patch("finances.google_reviews.requests.get")
+        post = mock.patch("finances.google_reviews.requests.post")
+        self.get, self.post = get.start(), post.start()
+        self.addCleanup(get.stop)
+        self.addCleanup(post.stop)
+        self.post.return_value.json.return_value = {"access_token": "at"}
+
+        def fake_get(url, **kwargs):
+            response = mock.Mock()
+            response.json.return_value = self.REVIEWS if "mybusiness" in url else self.PLACE
+            return response
+        self.get.side_effect = fake_get
+        self.client.force_login(self.manager)
+
+    def page(self):
+        with self.settings(**self.GBP):
+            return self.client.get(reverse("finance:dashboard"))
+
+    def test_shows_the_latest_three_with_first_names_only(self):
+        response = self.page()
+        self.assertContains(response, "Latest reviews")
+        self.assertContains(response, "<strong>Sarah</strong>", html=False)
+        self.assertNotContains(response, "O&#x27;Brien")
+        self.assertContains(response, "<strong>A Google user</strong>", html=False)
+        self.assertContains(response, "Cold water")
+        self.assertNotContains(response, "Uisce fuar")
+        self.assertContains(response, "9 Nov 2026")
+        self.assertContains(response, "Stars only, no text.")
+        self.assertContains(response, "Not replied to", count=2)
+        self.assertNotContains(response, "Sort → Newest")
+
+        reviews_call = [c for c in self.get.call_args_list if "mybusiness" in c.args[0]][0]
+        self.assertIn("accounts/111/locations/222/reviews", reviews_call.args[0])
+        self.assertEqual(reviews_call.kwargs["params"], {"pageSize": 3, "orderBy": "updateTime desc"})
+        self.assertEqual(reviews_call.kwargs["headers"]["Authorization"], "Bearer at")
+        self.assertEqual(self.post.call_args.kwargs["data"]["refresh_token"], "rt")
+
+    def test_only_the_first_name_is_stored(self):
+        from finances.models import GoogleReviewSnapshot
+        self.page()
+        stored = GoogleReviewSnapshot.objects.first().latest_reviews
+        self.assertEqual([r["first_name"] for r in stored], ["Sarah", "", "Tom"])
+        self.assertNotIn("O'Brien", str(stored))
+
+    def test_business_profile_down_keeps_the_last_reviews(self):
+        import requests
+        from finances.models import GoogleReviewSnapshot
+        old = GoogleReviewSnapshot.objects.create(review_count=200, latest_reviews=[
+            {"first_name": "Ann", "stars": 4, "date": "2026-08-01", "text": "Good", "replied": True}])
+        GoogleReviewSnapshot.objects.filter(pk=old.pk).update(fetched_at=timezone.now() - timedelta(hours=10))
+        self.post.return_value.raise_for_status.side_effect = requests.HTTPError("400 invalid_grant")
+        with self.assertLogs("finances", "ERROR"):
+            response = self.page()
+        self.assertContains(response, "208 reviews")  # the rating still refreshed
+        self.assertContains(response, "<strong>Ann</strong>", html=False)
+
+    def test_without_business_profile_settings_the_card_is_as_before(self):
+        with self.settings(**{**self.GBP, "GBP_REFRESH_TOKEN": ""}):
+            response = self.client.get(reverse("finance:dashboard"))
+        self.post.assert_not_called()
+        self.assertNotContains(response, "Latest reviews")
+        self.assertContains(response, "Sort → Newest")

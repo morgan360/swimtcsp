@@ -5,6 +5,7 @@ from decimal import Decimal
 
 logger = logging.getLogger('finances')
 
+from django.db import IntegrityError, transaction
 from django.db.models import F, Q, Sum, Count
 from django.db.models.functions import TruncDay, TruncWeek, TruncMonth, TruncYear
 from django.utils.timezone import now, timedelta
@@ -1532,7 +1533,7 @@ DASHBOARD_SECTIONS = [
     ('operations', 'Operations', ('swims', 'attendance'),
      ('Swim check-ins', 'Timetable views', 'Homepage views', 'Book clicks')),
     ('admin', 'Admin', (),
-     ('Customers active', 'Managers active', 'Other staff active', 'AI chat questions')),
+     ('Customers active', 'Managers active', 'Other staff active', 'AI chat questions', 'Live Dashboard opens')),
     ('finance', 'Finance', (), ('Revenue', 'Paid orders')),
     ('reviews', 'Google reviews', (), ('New Google reviews',)),  # only when set up
 ]
@@ -1691,6 +1692,39 @@ def _chat_budget():
 
 
 @staff_member_required
+def _count_dashboard_open(request, today):
+    """Add one to today's Live Dashboard count for whoever is looking.
+
+    Not while hijacking a user: that's someone else's session, not a real open.
+    """
+    from finances.models import DashboardOpen
+
+    user = request.user
+    if request.method != 'GET' or not user.is_authenticated or getattr(user, 'is_hijacked', False):
+        return
+    if DashboardOpen.objects.filter(user=user, date=today).update(count=F('count') + 1):
+        return
+    try:
+        with transaction.atomic():
+            DashboardOpen.objects.create(user=user, date=today, count=1)
+    except IntegrityError:  # another request made today's row first
+        DashboardOpen.objects.filter(user=user, date=today).update(count=F('count') + 1)
+
+
+def _dashboard_opens(periods):
+    """The Live Dashboard opens tile: totals per period, and who opened it this week."""
+    from finances.models import DashboardOpen
+
+    # Periods run midnight to midnight local time, so their dates are the days they cover.
+    totals = [DashboardOpen.objects.filter(date__gte=start.date(), date__lt=end.date())
+              .aggregate(n=Sum('count'))['n'] or 0 for _, start, end in periods]
+    _, week_start, week_end = periods[-1]
+    people = (DashboardOpen.objects.filter(date__gte=week_start.date(), date__lt=week_end.date())
+              .values('user__first_name', 'user__email').annotate(n=Sum('count')).order_by('-n', 'user__first_name'))
+    who = ' · '.join(f"{p['user__first_name'] or p['user__email'].split('@')[0]} {p['n']}" for p in people)
+    return totals, (f'This week: {who}' if who else 'Nobody yet this week')
+
+
 def live_dashboard(request, template_name='admin/financeadmin/dashboard.html'):
     """Live numbers for today and this week, as dials, tiles and charts."""
     from django.contrib.auth import get_user_model
@@ -1712,6 +1746,8 @@ def live_dashboard(request, template_name='admin/financeadmin/dashboard.html'):
     today = localtime(now()).date()
     today_period, _, week_period = _activity_periods(today)
     periods = [today_period, week_period]  # tiles show today and this week
+    _count_dashboard_open(request, today)  # first, so this visit counts in its own tile
+    opens, opens_by = _dashboard_opens(periods)
 
     # --- Dials -------------------------------------------------------------
     live = _live_dials(today)
@@ -1752,6 +1788,7 @@ def live_dashboard(request, template_name='admin/financeadmin/dashboard.html'):
         tile('Swim check-ins', _period_counts(Order.objects.all(), periods, 'checked_in_at')),
         tile('Joined waiting list', _period_counts(WaitingList.objects.all(), periods, 'created_at'),
              hint=f'{WaitingList.objects.filter(completed=False).count()} waiting now'),
+        tile('Live Dashboard opens', opens, hint=opens_by),
     ]
 
     # Timetable use (timetable.visits): counts per day, staff and bots left out.

@@ -1401,3 +1401,51 @@ class GooglePerformanceTests(TestCase):
         self.assertContains(response, "The pool by name or address")
         self.assertContains(response, "under 15")
         self.assertContains(response, "▲ 100%")
+
+
+class DashboardOpensTests(TestCase):
+    """The Live Dashboard counts how often, and by whom, it is opened."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.manager = User.objects.create_user(email="esther@tcsp.ie", password="pw", first_name="Esther")
+        cls.manager.is_staff = True
+        cls.manager.save(update_fields=["is_staff"])
+        cls.manager.groups.add(Group.objects.get_or_create(name="Manager")[0])
+        cls.other = User.objects.create_user(email="brian@tcsp.ie", password="pw", first_name="")
+        cls.other.is_staff = True
+        cls.other.save(update_fields=["is_staff"])
+
+    def open_dashboard(self):
+        self.client.force_login(self.manager)
+        response = self.client.get(reverse("finance:dashboard"))
+        return {t["label"]: t for t in response.context["tiles"]}
+
+    def test_each_open_counts_and_says_who(self):
+        from finances.models import DashboardOpen
+        today = timezone.localdate()
+        DashboardOpen.objects.create(user=self.other, date=today - timedelta(days=today.weekday()), count=1)
+        DashboardOpen.objects.create(user=self.other, date=today - timedelta(days=30), count=9)  # long ago
+        self.open_dashboard()
+        tile = self.open_dashboard()["Live Dashboard opens"]
+        self.assertEqual(DashboardOpen.objects.get(user=self.manager, date=today).count, 2)
+        self.assertEqual(tile["today"], 2 + (1 if today.weekday() == 0 else 0))
+        self.assertEqual(tile["week"], 3)
+        # Most opens first; no first name falls back to the start of the email.
+        self.assertEqual(tile["hint"], "This week: Esther 2 · brian 1")
+
+    def test_in_the_admin_section(self):
+        from finances.views import DASHBOARD_SECTIONS
+        admin = next(s for s in DASHBOARD_SECTIONS if s[0] == "admin")
+        self.assertIn("Live Dashboard opens", admin[3])
+
+    def test_a_post_or_a_hijacked_session_is_not_counted(self):
+        from unittest import mock
+        from finances.models import DashboardOpen
+        from finances.views import _count_dashboard_open
+        request = mock.Mock(method="POST", user=self.manager)
+        _count_dashboard_open(request, timezone.localdate())
+        request = mock.Mock(method="GET", user=self.manager)
+        request.user.is_hijacked = True
+        _count_dashboard_open(request, timezone.localdate())
+        self.assertFalse(DashboardOpen.objects.exists())

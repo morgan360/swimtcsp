@@ -35,3 +35,22 @@ class GoogleReviewSnapshot(models.Model):
                 when = None
             shown.append({**review, 'date': when, 'filled': '★' * stars, 'empty': '★' * (5 - stars)})
         return shown
+
+
+class DashboardOpen(models.Model):
+    """How often each staff member opened the Live Dashboard on a day.
+
+    One row per person per day with a count, written by finances.views.live_dashboard.
+    Only the Live Dashboard is counted, and only staff can open it.
+    """
+
+    user = models.ForeignKey('users.User', on_delete=models.CASCADE, related_name='dashboard_opens')
+    date = models.DateField(db_index=True)
+    count = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['-date']
+        constraints = [models.UniqueConstraint(fields=['user', 'date'], name='unique_dashboard_open_day')]
+
+    def __str__(self):
+        return f'{self.user} opened the Live Dashboard {self.count}× on {self.date}'

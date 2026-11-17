@@ -12,6 +12,13 @@
 <style>
   .dash-sub { color: var(--body-quiet-color); margin: 0 0 1rem; }
   .dash-today { margin-bottom: 1rem; }
+  /* A section whose tiles have a card beside them (the Google rating card). */
+  .dash-with-aside { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0.75rem; align-items: start; margin-bottom: 1rem; }
+  .dash-with-aside > .dash-tiles { margin-bottom: 0; }
+  @media (min-width: 900px) {
+    .dash-with-aside { grid-template-columns: minmax(180px, 220px) minmax(0, 1fr); }
+    .dash-with-aside > .dash-tiles { grid-template-columns: 1fr; }
+  }
   .dash-tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(150px, 100%), 1fr)); gap: 0.75rem; margin-bottom: 1rem; }
   .dash-tile-label { font-weight: 600; color: var(--body-fg); margin-bottom: 0.4rem; }
   .dash-tile-values { display: flex; justify-content: space-between; align-items: baseline; gap: 0.5rem; }
@@ -305,8 +312,7 @@
 </div>
 
 {% if google_reviews %}
-{% include "admin/financeadmin/_dash_section.html" with section=sections.reviews %}
-{% include "admin/financeadmin/_google_reviews.html" %}
+{% include "admin/financeadmin/_dash_section.html" with section=sections.reviews aside="admin/financeadmin/_google_reviews.html" %}
 {% endif %}
 
 {{ chart_data|json_script:"dashboard-data" }}

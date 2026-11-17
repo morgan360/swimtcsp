@@ -1,4 +1,5 @@
-{# A Live Dashboard section's heading, dials and tiles. Pass section. #}
+{% comment %}A Live Dashboard section's heading, dials and tiles. Pass section, and optionally aside:
+   a template shown to the right of the tiles (stacked below them on narrow screens).{% endcomment %}
 <h2 class="dash-section-title" id="dash-{{ section.key }}">{{ section.title }}</h2>
 {% if section.links %}
 <p class="dash-section-links">
@@ -16,6 +17,7 @@
 {% if section.register_grid %}
 {% include "admin/financeadmin/_register_grid.html" with grid=section.register_grid attendance=section.term_attendance %}
 {% endif %}
+{% if aside %}<div class="dash-with-aside">{% endif %}
 <div class="dash-tiles">
   {% for tile in section.tiles %}
   <div class="dash-card dash-tile">
@@ -34,3 +36,7 @@
   </div>
   {% endfor %}
 </div>
+{% if aside %}
+{% include aside %}
+</div>
+{% endif %}

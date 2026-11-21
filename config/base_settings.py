@@ -322,15 +322,6 @@ MIDDLEWARE = [
 
 
 
-REMOTE_TCSP_DB = {
-    'HOST': config('REMOTE_TCSP_DB_HOST'),
-    'PORT': config('REMOTE_TCSP_DB_PORT', cast=int),
-    'USER': config('REMOTE_TCSP_DB_USER'),
-    'PASSWORD': config('REMOTE_TCSP_DB_PASSWORD'),
-    'NAME': config('REMOTE_TCSP_DB_NAME'),
-    'CHARSET': config('REMOTE_TCSP_DB_CHARSET'),
-}
-
 ROOT_URLCONF = 'core.urls'
 
 TEMPLATES = [

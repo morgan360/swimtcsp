@@ -2,7 +2,6 @@ from import_export import resources, fields
 from .models import Term, LessonEnrollment
 from datetime import datetime
 from import_export.results import RowResult
-from utils.sync_terms import sync_terms_from_remote
 
 
 class TermResource(resources.ModelResource):
@@ -24,10 +23,6 @@ class TermResource(resources.ModelResource):
             'booking_switch_date',
             'assessment_date',
         )
-
-    def before_import(self, dataset, using_transactions, dry_run, **kwargs):
-        sync_terms_from_remote()
-        return super().before_import(dataset, using_transactions, dry_run, **kwargs)
 
     def clean_date(self, value):
         if value in ("0000-00-00", None, ""):

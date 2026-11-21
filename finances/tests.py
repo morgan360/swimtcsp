@@ -253,6 +253,18 @@ class DashboardTests(TestCase):
         EmailAddress.objects.create(user=parent, email="PARENT@example.com", verified=True, primary=True)
         self.assertEqual(self.dials()["Guardians with confirmed email"]["value"], 1)
 
+    def test_guardian_dials_leave_out_archived_families_but_say_so(self):
+        parent = User.objects.get(email="parent@example.com")
+        lapsed = User.objects.create_user(email="lapsed@example.com", password="x", first_name="L")
+        Swimling.objects.create(guardian=lapsed, first_name="Old", last_name="T")
+        User.objects.filter(pk=lapsed.pk).update(archived_at=timezone.now())
+
+        for title in ("Guardians with confirmed email", "Guardians with 2FA"):
+            dial = self.dials()[title]
+            self.assertEqual(dial["max"], 1, title)
+        self.assertContains(self.get(), "1 archived not counted")
+        self.assertIsNone(parent.archived_at)
+
     def test_timetable_use_tiles(self):
         from timetable.models import PageVisit
 

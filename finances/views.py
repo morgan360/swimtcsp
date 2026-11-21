@@ -1126,9 +1126,11 @@ DIAL_INFO = {
     'attendance': 'Swimmers marked present or late today, out of everyone on a register opened today. '
                   'Swimmers not yet marked count against it.',
     'staff_2fa': 'Active staff accounts that have an authenticator app set up for two-factor sign-in.',
-    'guardian_2fa': 'Customer accounts with a swimmer that have an authenticator app set up.',
-    'guardian_email': 'Customer accounts with a swimmer whose email address is confirmed, by our email link '
-                      'or by signing in with Google.',
+    'guardian_2fa': 'Current customer accounts with a swimmer that have an authenticator app set up. '
+                    'Archived accounts (no activity for 3 years, or never used since the move from the old '
+                    'website) are left out.',
+    'guardian_email': 'Current customer accounts with a swimmer whose email address is confirmed, by our email '
+                      'link or by signing in with Google. Archived accounts are left out.',
 }
 
 
@@ -1212,11 +1214,19 @@ def _live_dials(today):
     active = get_user_model().objects.filter(is_active=True)
     with_app = set(Authenticator.objects.filter(type=Authenticator.Type.TOTP).values_list('user_id', flat=True))
     staff_ids = set(active.filter(is_staff=True).values_list('id', flat=True))
-    guardian_ids = set(active.filter(is_staff=False, swimling__isnull=False).values_list('id', flat=True))
+    # Archived families (users.retention: 3 years quiet, or never used since the
+    # WordPress import) still have active logins but will not set anything up,
+    # so counting them would only drag the dials down. Shown, not hidden.
+    with_swimmer = active.filter(is_staff=False, swimling__isnull=False)
+    guardian_ids = set(with_swimmer.filter(archived_at__isnull=True).values_list('id', flat=True))
+    archived_count = with_swimmer.filter(archived_at__isnull=False).values('id').distinct().count()
+    guardian_caption = 'current accounts with a swimmer'
+    if archived_count:
+        guardian_caption += f' · {archived_count:,} archived not counted'
     live['staff_2fa'] = _dial('Staff with 2FA', len(staff_ids & with_app), len(staff_ids),
                               'active staff accounts')
     live['guardian_2fa'] = _dial('Guardians with 2FA', len(guardian_ids & with_app), len(guardian_ids),
-                                 'accounts with a swimmer', empty='No guardian accounts')
+                                 guardian_caption, empty='No guardian accounts')
 
     # Confirmed email, counted as users.adapters.email_confirmed counts it: a verified
     # address, or Google having verified the same one (recorded only once they next
@@ -1232,7 +1242,7 @@ def _live_dials(today):
         if google_verified_email(account) == account.user.email.lower():
             confirmed.add(account.user_id)
     live['guardian_email'] = _dial('Guardians with confirmed email', len(confirmed), len(guardian_ids),
-                                   'accounts with a swimmer', empty='No guardian accounts')
+                                   guardian_caption, empty='No guardian accounts')
 
     funnel = _checkout_funnel(week_period[1], week_period[2])
     live['checkouts'] = _dial('Checkouts finished this week', funnel['finished'], funnel['started'],

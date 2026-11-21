@@ -1,0 +1,42 @@
+{# Newsletter figures from Mailchimp (finances.mailchimp_stats). Pass mc. Reuses the Google performance card's styles. #}
+<style>
+  .dash-mc { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0.75rem 2rem; }
+  @media (min-width: 1000px) { .dash-mc { grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); } }
+  .dash-mc-figs { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(120px, 100%), 1fr)); gap: 0.75rem; }
+  .dash-mc .dash-subhead { margin-top: 0; }
+  .dash-mc-list { list-style: none; margin: 0; padding: 0; }
+  .dash-mc-list li { list-style: none; margin: 0; padding: 0.35rem 0; border-top: 1px solid var(--hairline-color, #eee); }
+  .dash-mc-list li:first-child { border-top: 0; }
+  .dash-mc-list .num { font-variant-numeric: tabular-nums; color: var(--body-quiet-color); font-size: 0.8rem; }
+</style>
+<div class="dash-card" style="margin-bottom: 1rem;">
+  <div class="dash-mc">
+    <div>
+      <div class="dash-mc-figs">
+        {% for f in mc.figures %}
+        <div>
+          <div class="dash-tile-label">{{ f.label }} <button type="button" class="dash-info" aria-label="What this counts">i<span role="tooltip">{{ f.info }}</span></button></div>
+          <span class="dash-tile-num">{% if f.kind == "pct" %}{{ f.value }}%{% else %}{{ f.value|floatformat:"0g" }}{% endif %}</span>
+          {% if f.label == "Joined" or f.label == "Left" %}<span class="dash-tile-when">last {{ mc.days }} days</span>{% endif %}
+          {% if f.label == "Opened" or f.label == "Clicked" %}<span class="dash-tile-when">average per email</span>{% endif %}
+        </div>
+        {% endfor %}
+      </div>
+      <p class="dash-hint">{{ opted_in }} customer{{ opted_in|pluralize }} ticked “News by email” on the booking site; they are tagged “TCSP: …” in Mailchimp each morning.</p>
+      <p class="dash-hint">Checked {{ mc.fetched_at|date:"D j M, H:i" }} · refreshed every few hours.</p>
+    </div>
+    {% if mc.campaigns %}
+    <div>
+      <h2 class="dash-subhead">Recent emails <button type="button" class="dash-info" aria-label="What this shows">i<span role="tooltip">The last emails sent to this audience, newest first: how many it went to, and the share who opened it and clicked a link. Apple Mail opens emails automatically for privacy, so opens read high; clicks are the surer sign.</span></button></h2>
+      <ul class="dash-mc-list">
+        {% for c in mc.campaigns %}
+        <li>
+          {% if c.url %}<a href="{{ c.url }}" target="_blank" rel="noopener">{{ c.subject }}</a>{% else %}{{ c.subject }}{% endif %}
+          <div class="num">{{ c.sent|date:"D j M" }} · to {{ c.recipients|floatformat:"0g" }} · opened {{ c.opened }}% · clicked {{ c.clicked }}%</div>
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+  </div>
+</div>

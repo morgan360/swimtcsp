@@ -16,7 +16,7 @@ from django.http import JsonResponse, HttpResponse
 from django.utils.timezone import localtime, make_aware
 import datetime
 
-from finances import google_performance, google_reviews
+from finances import google_performance, google_reviews, mailchimp_stats
 from swims_orders.models import Order  # ✅ your Order model
 from lessons_orders.models import Order as LessonOrder
 from schools_orders.models import Order as SchoolOrder
@@ -1913,6 +1913,10 @@ def live_dashboard(request, template_name='admin/financeadmin/dashboard.html'):
                                     link('Reconciliation', 'finance:reconciliation'),
                                     *([{'label': 'All coupons', 'url': coupons_url}] if coupons_url else []),
                                     link('Daily Activity', 'finance:activity_report')]
+    # Newsletter: Mailchimp's own figures, cached for a few hours (finances.mailchimp_stats).
+    newsletter = mailchimp_stats.summary()
+    if newsletter:
+        sections['newsletter'] = {'key': 'newsletter', 'title': 'Newsletter', 'dials': [], 'tiles': []}
     if google and google.maps_url:
         sections['reviews']['links'] = [{'label': 'All reviews on Google', 'url': google.maps_url}]
     if settings_site.has_permission(request) and request.user.has_perm('security.view_securityincident'):
@@ -1949,5 +1953,7 @@ def live_dashboard(request, template_name='admin/financeadmin/dashboard.html'):
         'google_reviews': google,
         # How people find the pool on Google: needs the Business Profile sign-in too.
         'google_performance': google_performance.summary() if google else None,
+        'newsletter': newsletter,
+        'newsletter_opted_in': mailchimp_stats.opted_in_on_site() if newsletter else 0,
     }
     return render(request, template_name, context)

@@ -1,3 +1,7 @@
+> **Out of date (November 2026):** the old WordPress site and its database host are gone, and every
+> command here that copied data from it (`test_connection.py`, `sync_*`, `import_*_remote`) has been
+> removed. For deploying today, see `DEPLOYMENT.md` and `deploy-to-production.sh`.
+
 # deploying\_site
 
 #### Freeze Reuirements

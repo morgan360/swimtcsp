@@ -1,5 +1,4 @@
-from django.contrib import admin, messages
-from django.shortcuts import render
+from django.contrib import admin
 from django.contrib.admin import SimpleListFilter
 from import_export.admin import ImportExportMixin
 from .models import Term, LessonAssignment, LessonEnrollment
@@ -12,7 +11,6 @@ from custom_admins.lessonsadmin import lessons_admin_site
 from django_admin_listfilter_dropdown.filters import DropdownFilter, RelatedDropdownFilter, ChoiceDropdownFilter
 from django.utils.html import format_html
 from django.urls import reverse
-from utils.sync_terms import sync_terms_from_remote
 from custom_admins.base import TCSPModelAdmin
 
 # LESSON ENROLLMENT
@@ -147,33 +145,12 @@ class TermAdmin(ImportExportMixin, TCSPModelAdmin):
     resource_class = TermResource
     list_display = ['id', 'start_date', 'end_date', 'rebooking_date', 'pause_date', 'booking_date', 'assessment_date', 'changed_by']
     exclude = ('changed_by',)
-    actions = ['sync_terms_now']  # ✅ add the custom action
     search_fields = ('id', 'start_date', 'end_date')
 
     def save_model(self, request, obj, form, change):
         if not change:
             obj.changed_by = request.user
         super().save_model(request, obj, form, change)
-
-    @admin.action(description="🔄 Sync Terms from Remote MySQL")
-    def sync_terms_now(self, request, queryset):
-        """Overwrite the local Term table from the remote database.
-
-        It ignores the selection — picking one term rewrites all of them — so it
-        asks first.
-        """
-        if request.POST.get("confirmed") != "yes":
-            return render(request, "admin/lessons_bookings/sync_terms_confirmation.html", {
-                **self.admin_site.each_context(request),
-                "opts": self.model._meta,
-                "queryset": queryset,
-                "term_count": self.model.objects.count(),
-            })
-        try:
-            sync_terms_from_remote()
-            self.message_user(request, "✅ Terms successfully synced from remote database.", messages.SUCCESS)
-        except Exception as e:
-            self.message_user(request, f"❌ Sync failed: {str(e)}", messages.ERROR)
 
 
 admin.site.register(Term, TermAdmin)

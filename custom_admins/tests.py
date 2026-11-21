@@ -298,18 +298,6 @@ class DangerousActionTests(TestCase):
         order.refresh_from_db()
         self.assertNotEqual(order.payment_status, "refunded")
 
-    def test_sync_terms_shows_a_confirmation_page(self):
-        from lessons_bookings.models import Term
-
-        term = Term.objects.create(
-            start_date="2026-01-05", end_date="2026-03-27",
-            rebooking_date="2025-12-01", booking_date="2025-12-08")
-        response = self.client.post(
-            reverse("operations:lessons_bookings_term_changelist"),
-            {"action": "sync_terms_now", "_selected_action": [str(term.pk)]})
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "rewrites all")
-
 
 class PaymentRecordsAreReadOnlyTests(TestCase):
     """Gateway records were fully editable; staff could rewrite a txId."""

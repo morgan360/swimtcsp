@@ -1,0 +1,31 @@
+{% extends "admin/base_site.html" %}
+{% block content %}
+<div id="content-main">
+  <p><strong>This cannot be undone.</strong> For each account below, the name, email, phone numbers and notes are
+    replaced, the account can no longer log in, every swimmer on it loses their name, date of birth, medical
+    information and notes, and the contact is deleted from Mailchimp. Payment records are kept, without the name.</p>
+
+  <table>
+    <thead><tr><th>Account</th><th>Email</th><th>Swimmers</th><th>Booked in current or future terms</th></tr></thead>
+    <tbody>
+    {% for row in rows %}
+      <tr>
+        <td>{{ row.user.pk }} — {{ row.user.get_full_name|default:"—" }}</td>
+        <td>{{ row.user.email }}</td>
+        <td>{% for s in row.swimlings %}{{ s.first_name }} {{ s.last_name|default:"" }}{% if not forloop.last %}, {% endif %}{% empty %}—{% endfor %}</td>
+        <td>{% if row.upcoming %}<strong style="color:#b91c1c">{{ row.upcoming }} enrolment{{ row.upcoming|pluralize }} — check before erasing</strong>{% else %}None{% endif %}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+
+  <form method="post" style="margin-top:1.5em">
+    {% csrf_token %}
+    {% for obj in queryset %}<input type="hidden" name="{{ action_checkbox_name }}" value="{{ obj.pk }}">{% endfor %}
+    <input type="hidden" name="action" value="erase_personal_data">
+    <input type="hidden" name="confirm_erase" value="yes">
+    <input type="submit" class="button" style="background:#b91c1c;color:#fff" value="Yes, erase {{ rows|length }} account{{ rows|length|pluralize }}">
+    <a href="." class="button cancel-link" style="margin-left:1em">No, go back</a>
+  </form>
+</div>
+{% endblock %}

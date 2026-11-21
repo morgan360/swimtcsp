@@ -223,6 +223,11 @@ LOGGING = {
             'level': 'DEBUG',
             'propagate': False,
         },
+        'mailchimp': {
+            'handlers': ['chatbot_file', 'console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
     },
 }
 

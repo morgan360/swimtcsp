@@ -11,6 +11,10 @@
            placeholder="Find a member — name, email or phone"
            aria-label="Find a member — swimmer or guardian">
     <input type="submit" value="Search">
+    <label class="tcsp-search-archived">
+      <input type="checkbox" name="archived" value="1" {% if include_archived %}checked{% endif %}>
+      Include archived families (no activity for 3+ years)
+    </label>
   </form>
 
   {% if query %}
@@ -25,7 +29,7 @@
           {% for s in swimlings %}
             <tr>
               <td><a href="{% url 'operations:users_swimling_change' s.pk %}">{{ s.first_name }} {{ s.last_name|default_if_none:"" }}</a></td>
-              <td>{% if s.guardian %}<a href="{% url 'operations:users_user_change' s.guardian.pk %}">{{ s.guardian.first_name }} {{ s.guardian.last_name|default_if_none:"" }}</a>{% else %}—{% endif %}</td>
+              <td>{% if s.guardian %}<a href="{% url 'operations:users_user_change' s.guardian.pk %}">{{ s.guardian.first_name }} {{ s.guardian.last_name|default_if_none:"" }}</a>{% if s.guardian.archived_at %} <span class="help">(archived)</span>{% endif %}{% else %}—{% endif %}</td>
               <td>{{ s.guardian.email|default_if_none:"—" }}</td>
               <td>{{ s.guardian.mobile_phone|default:"—" }}</td>
               <td>{% if s.guardian and request.user|can_hijack:s.guardian %}{% include "admin/_tcsp_hijack_button.html" with target=s.guardian label="Hijack parent" %}{% endif %}</td>
@@ -47,7 +51,7 @@
         <tbody>
           {% for g in guardians %}
             <tr>
-              <td><a href="{% url 'operations:users_user_change' g.pk %}">{{ g.first_name }} {{ g.last_name|default_if_none:"" }}</a></td>
+              <td><a href="{% url 'operations:users_user_change' g.pk %}">{{ g.first_name }} {{ g.last_name|default_if_none:"" }}</a>{% if g.archived_at %} <span class="help">(archived)</span>{% endif %}</td>
               <td>{{ g.email }}</td>
               <td>{{ g.mobile_phone|default:"—" }}</td>
               <td>{% for s in g.swimling_set.all %}{{ s.first_name }}{% if not forloop.last %}, {% endif %}{% empty %}—{% endfor %}</td>

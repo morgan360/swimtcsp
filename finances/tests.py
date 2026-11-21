@@ -3,7 +3,7 @@ from decimal import Decimal
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 
@@ -1466,3 +1466,68 @@ class DashboardOpensTests(TestCase):
         request.user.is_hijacked = True
         _count_dashboard_open(request, timezone.localdate())
         self.assertFalse(DashboardOpen.objects.exists())
+
+
+@override_settings(MAILCHIMP_API_KEY="key-us1", MAILCHIMP_LIST_ID="list")
+class NewsletterDashboardTests(TestCase):
+    """The Live Dashboard's Newsletter section (finances.mailchimp_stats)."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.manager = User.objects.create_user(email="manager@tcsp.ie", password="pw", first_name="M")
+        cls.manager.is_staff = True
+        cls.manager.save(update_fields=["is_staff"])
+        cls.manager.groups.add(Group.objects.get_or_create(name="Manager")[0])
+
+    def setUp(self):
+        from unittest import mock
+        from django.core.cache import cache
+        cache.clear()
+        patcher = mock.patch("mailchimp.client.get_mailchimp_client")
+        self.client_factory = patcher.start()
+        self.addCleanup(patcher.stop)
+        self.addCleanup(cache.clear)
+        api = self.client_factory.return_value
+        api.lists.get_list.return_value = {"stats": {
+            "member_count": 7236, "cleaned_count": 638, "open_rate": 56.9, "click_rate": 6.6,
+            "campaign_last_sent": "2026-11-19T09:07:58+00:00"}}
+        api.lists.get_list_members_info.side_effect = [{"total_items": 16}, {"total_items": 23}]
+        api.campaigns.list.return_value = {"campaigns": [{
+            "settings": {"subject_line": "Rebooking is now open"}, "send_time": "2026-11-16T07:00:00+00:00",
+            "emails_sent": 818, "report_summary": {"open_rate": 0.803, "click_rate": 0.445},
+            "long_archive_url": "https://mailchi.mp/x"}]}
+        self.client.force_login(self.manager)
+
+    def page(self):
+        return self.client.get(reverse("finance:dashboard"))
+
+    def test_shows_audience_and_recent_emails(self):
+        User.objects.create_user(email="yes@example.com", password="x", first_name="Y", marketing_opt_in=True)
+        response = self.page()
+        self.assertContains(response, 'id="dash-newsletter"')
+        self.assertContains(response, "7,236")
+        self.assertContains(response, "Rebooking is now open")
+        self.assertContains(response, "opened 80% · clicked 44%")
+        self.assertContains(response, "1 customer ticked")
+
+    def test_asks_mailchimp_once_then_uses_the_cache(self):
+        self.page()
+        self.page()
+        self.assertEqual(self.client_factory.return_value.lists.get_list.call_count, 1)
+
+    def test_mailchimp_down_shows_last_good_figures_or_nothing(self):
+        from django.core.cache import cache
+        from finances import mailchimp_stats
+        self.client_factory.return_value.lists.get_list.side_effect = Exception("down")
+        response = self.page()
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'id="dash-newsletter"')
+
+        cache.set(mailchimp_stats.LAST_GOOD_KEY, {"fetched_at": timezone.now(), "days": 30, "figures": [],
+                                                  "last_sent": None, "campaigns": []}, None)
+        self.assertContains(self.page(), 'id="dash-newsletter"')
+
+    @override_settings(MAILCHIMP_API_KEY="")
+    def test_hidden_when_not_set_up(self):
+        self.assertNotContains(self.page(), 'id="dash-newsletter"')
+        self.client_factory.assert_not_called()

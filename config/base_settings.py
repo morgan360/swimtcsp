@@ -566,7 +566,8 @@ DEFAULT_SUPPORT_EMAIL = "swimming@tcsp.ie"
 # by utils.email_backend.ReplyToEmailBackend to any message not setting its own.
 DEFAULT_REPLY_TO_EMAIL = config('DEFAULT_REPLY_TO_EMAIL', default=DEFAULT_SUPPORT_EMAIL)
 # Mailchimp
-MAILCHIMP_API_KEY = config("MAILCHIMP_API_KEY")
+# Blank under test, like the Google keys, so no test ever reaches the real audience.
+MAILCHIMP_API_KEY = '' if 'test' in sys.argv else config("MAILCHIMP_API_KEY")
 MAILCHIMP_SERVER_PREFIX = config("MAILCHIMP_SERVER_PREFIX")
 MAILCHIMP_LIST_ID = config("MAILCHIMP_LIST_ID")
 

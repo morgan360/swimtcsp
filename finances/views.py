@@ -1916,7 +1916,13 @@ def live_dashboard(request, template_name='admin/financeadmin/dashboard.html'):
     # Newsletter: Mailchimp's own figures, cached for a few hours (finances.mailchimp_stats).
     newsletter = mailchimp_stats.summary()
     if newsletter:
-        sections['newsletter'] = {'key': 'newsletter', 'title': 'Newsletter', 'dials': [], 'tiles': []}
+        # Just above Finance, in the jump links as on the page.
+        ordered = {}
+        for key, section in sections.items():
+            if key == 'finance':
+                ordered['newsletter'] = {'key': 'newsletter', 'title': 'Newsletter', 'dials': [], 'tiles': []}
+            ordered[key] = section
+        sections = ordered
     if google and google.maps_url:
         sections['reviews']['links'] = [{'label': 'All reviews on Google', 'url': google.maps_url}]
     if settings_site.has_permission(request) and request.user.has_perm('security.view_securityincident'):

@@ -114,6 +114,9 @@ class TCSPAdminSite(AdminSite):
         from users.models import Swimling
 
         term = (request.GET.get("q") or "").strip()
+        # Archived families are hidden unless the tick-box asks for them, e.g.
+        # when one rings to come back. Anonymised accounts never appear.
+        include_archived = request.GET.get("archived") == "1"
         # Each word must match somewhere, so "Ciara Tuc" finds Ciara Tucker:
         # matching the whole phrase against one field at a time found nothing,
         # because no single field holds a first name and a surname together.
@@ -132,10 +135,16 @@ class TCSPAdminSite(AdminSite):
         swimlings, guardians = [], []
         swimling_total = guardian_total = 0
         if words:
-            found = matching(Swimling.objects.select_related("guardian"), swimling_fields)
+            swimling_qs = Swimling.objects.select_related("guardian").filter(guardian__anonymised_at__isnull=True)
+            if not include_archived:
+                swimling_qs = swimling_qs.filter(guardian__archived_at__isnull=True)
+            found = matching(swimling_qs, swimling_fields)
             swimling_total = found.count()
             swimlings = list(found.order_by("last_name", "first_name")[:self.SEARCH_LIMIT])
-            found = matching(get_user_model().objects.prefetch_related("swimling_set"), guardian_fields)
+            guardian_qs = get_user_model().objects.prefetch_related("swimling_set").filter(anonymised_at__isnull=True)
+            if not include_archived:
+                guardian_qs = guardian_qs.filter(archived_at__isnull=True)
+            found = matching(guardian_qs, guardian_fields)
             guardian_total = found.count()
             guardians = list(found.order_by("last_name", "first_name")[:self.SEARCH_LIMIT])
 
@@ -143,6 +152,7 @@ class TCSPAdminSite(AdminSite):
             **self.each_context(request),
             "title": f"Search results for “{term}”" if term else "Search",
             "query": term,
+            "include_archived": include_archived,
             "swimlings": swimlings,
             "guardians": guardians,
             "swimling_total": swimling_total,

@@ -79,12 +79,37 @@ class IrishPhoneSignupMixin:
         return user
 
 
-class CustomSignupForm(IrishPhoneSignupMixin, SignupForm):
+MARKETING_LABEL = "Send me TCSP news by email: term dates, new classes and offers."
+
+
+def marketing_opt_in_field():
+    """The consent tick-box. Never ticked in advance: GDPR consent has to be given, not assumed."""
+    return forms.BooleanField(
+        label=MARKETING_LABEL,
+        required=False,
+        help_text="You can unsubscribe at any time from any email, or from your profile.",
+    )
+
+
+class MarketingOptInSignupMixin:
+    """Stores the sign-up tick-box. A declared field is added on each form class
+    itself (see irish_phone_field for why a mixin cannot carry it)."""
+
+    def save(self, request):
+        user = super().save(request)
+        if self.cleaned_data.get("marketing_opt_in"):
+            from mailchimp.services import record_opt_in
+            record_opt_in(user, True)
+        return user
+
+
+class CustomSignupForm(MarketingOptInSignupMixin, IrishPhoneSignupMixin, SignupForm):
     first_name = forms.CharField(max_length=150, required=True)
     last_name = forms.CharField(max_length=150, required=True)
     lessons = forms.BooleanField(label="I wish to sign up for swimming lessons.",
                                  required=False)
     phone_number = irish_phone_field()
+    marketing_opt_in = marketing_opt_in_field()
     captcha = ReCaptchaField(widget=ReCaptchaV2Checkbox())
 
     def __init__(self, *args, **kwargs):
@@ -110,12 +135,13 @@ class CustomSignupForm(IrishPhoneSignupMixin, SignupForm):
         return user
 
 
-class CustomSocialSignupForm(IrishPhoneSignupMixin, SocialSignupForm):
+class CustomSocialSignupForm(MarketingOptInSignupMixin, IrishPhoneSignupMixin, SocialSignupForm):
     """Google signup, which allauth otherwise completes with whatever the provider
     returns — never a phone number. No captcha here: the provider has already
     established there is a person behind the request."""
 
     phone_number = irish_phone_field()
+    marketing_opt_in = marketing_opt_in_field()
 
 
 # Update Profile - NO USERNAME
@@ -126,6 +152,7 @@ class UserForm(forms.ModelForm):
         label="Phone Number",
         help_text="Irish numbers only (e.g. 085..., 01..., or +353 ...)",
     )
+    marketing_opt_in = marketing_opt_in_field()
 
     class Meta:
         model = User
@@ -153,6 +180,17 @@ class UserForm(forms.ModelForm):
         self.fields['mobile_phone'].widget.attrs.update({
             'placeholder': 'Enter your phone number'
         })
+        if self.instance and self.instance.pk:
+            self.fields['marketing_opt_in'].initial = self.instance.marketing_opt_in
+
+    def save(self, commit=True):
+        # Not a model field on this form, so Mailchimp hears about the change and
+        # the date of consent is kept.
+        user = super().save(commit)
+        if commit:
+            from mailchimp.services import record_opt_in
+            record_opt_in(user, self.cleaned_data.get("marketing_opt_in"))
+        return user
 
 
 

@@ -148,6 +148,16 @@
                         needed.</p>
                 </div>
 
+                <!-- News by email (marketing consent) -->
+                <div class="mb-4">
+                    <label for="{{ u_form.marketing_opt_in.id_for_label }}"
+                        class="flex items-center gap-3 p-3 rounded-md border border-gray-300 bg-white text-blue-900 cursor-pointer">
+                        {{ u_form.marketing_opt_in|add_class:"h-5 w-5 focus:ring-red-500 rounded border-gray-300" }}
+                        <span>{{ u_form.marketing_opt_in.label }}</span>
+                    </label>
+                    <p class="text-sm text-gray-500 mt-1">{{ u_form.marketing_opt_in.help_text }}</p>
+                </div>
+
                 <!-- Admin Notes -->
                 <div class="mb-6">
                     <label for="{{ u_form.admin_notes.id_for_label }}" class="block font-semibold mb-1 text-blue-800">

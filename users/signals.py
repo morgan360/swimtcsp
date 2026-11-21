@@ -29,3 +29,7 @@ def log_successful_login(sender, request, user, **kwargs):
     if request is not None and request.path in (reverse('hijack:acquire'), reverse('hijack:release')):
         return
     LoginEvent.objects.create(user=user)
+
+    # A family archived after three quiet years has come back.
+    from users.retention import unarchive_on_login
+    unarchive_on_login(user)

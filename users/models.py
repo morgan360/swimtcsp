@@ -48,6 +48,22 @@ class User(AbstractBaseUser, PermissionsMixin):
     last_login = models.DateTimeField(null=True, blank=True)
     date_joined = models.DateTimeField(auto_now_add=True)
     admin_notes = models.TextField(null=True, blank=True)
+    # Set by users.retention after three years without a paid order, login or
+    # visit; the personal details nobody needs any more are erased at the same
+    # time. Cleared again if they log back in. Never use is_active for this:
+    # that would lock out a parent who comes back.
+    archived_at = models.DateTimeField(null=True, blank=True, db_index=True)
+    # Set once the account has been anonymised, after six years or on request.
+    anonymised_at = models.DateTimeField(null=True, blank=True)
+    # Consent to marketing email, given by the tick-box at sign-up or on the
+    # profile page. Only these accounts are copied to Mailchimp; see
+    # mailchimp.services.sync_user.
+    marketing_opt_in = models.BooleanField(
+        default=False,
+        verbose_name="News by email",
+        help_text="Agreed to receive TCSP news and offers by email.",
+    )
+    marketing_opt_in_at = models.DateTimeField(null=True, blank=True)
 
     USERNAME_FIELD = 'email'
     EMAIL_FIELD = 'email'
@@ -97,6 +113,38 @@ class ActiveDay(models.Model):
 
     def __str__(self):
         return f"{self.user} on {self.date}"
+
+class DataRetentionEvent(models.Model):
+    """Audit trail for users.retention: what was done to which account, when.
+
+    Holds no personal data on purpose — only the account id and the names of the
+    fields that were cleared — so the log itself never needs erasing. user_id is
+    a plain integer rather than a foreign key for the same reason.
+    """
+    ARCHIVED = "archived"
+    UNARCHIVED = "unarchived"
+    ANONYMISED = "anonymised"
+    ERASED = "erased"
+    ACTIONS = [
+        (ARCHIVED, "Archived after 3 years inactive"),
+        (UNARCHIVED, "Unarchived on login"),
+        (ANONYMISED, "Anonymised after 6 years"),
+        (ERASED, "Erased on request"),
+    ]
+
+    user_id = models.PositiveIntegerField(db_index=True)
+    action = models.CharField(max_length=20, choices=ACTIONS)
+    created = models.DateTimeField(auto_now_add=True, db_index=True)
+    performed_by_id = models.PositiveIntegerField(
+        null=True, blank=True, help_text="Staff account that asked for it; blank for the scheduled job.")
+    detail = models.JSONField(default=dict, blank=True)
+
+    class Meta:
+        ordering = ["-created"]
+
+    def __str__(self):
+        return f"User {self.user_id} {self.action} {self.created:%Y-%m-%d}"
+
 
 # Stores the swimmer details with link to guardians
 class Swimling(models.Model):

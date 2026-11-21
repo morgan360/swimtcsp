@@ -277,6 +277,11 @@
   </div>
 </div>
 
+{% if newsletter %}
+{% include "admin/financeadmin/_dash_section.html" with section=sections.newsletter %}
+{% include "admin/financeadmin/_mailchimp_stats.html" with mc=newsletter opted_in=newsletter_opted_in %}
+{% endif %}
+
 {% include "admin/financeadmin/_dash_section.html" with section=sections.finance %}
 <div class="dash-charts">
   <div class="dash-card">
@@ -314,11 +319,6 @@
 {% if google_reviews %}
 {% include "admin/financeadmin/_dash_section.html" with section=sections.reviews aside="admin/financeadmin/_google_reviews.html" %}
 {% if google_performance %}{% include "admin/financeadmin/_google_performance.html" with perf=google_performance %}{% endif %}
-{% endif %}
-
-{% if newsletter %}
-{% include "admin/financeadmin/_dash_section.html" with section=sections.newsletter %}
-{% include "admin/financeadmin/_mailchimp_stats.html" with mc=newsletter opted_in=newsletter_opted_in %}
 {% endif %}
 
 {{ chart_data|json_script:"dashboard-data" }}

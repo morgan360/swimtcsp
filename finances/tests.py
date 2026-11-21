@@ -1510,6 +1510,13 @@ class NewsletterDashboardTests(TestCase):
         self.assertContains(response, "opened 80% · clicked 44%")
         self.assertContains(response, "1 customer ticked")
 
+    def test_sits_just_above_finance_on_the_page_and_in_the_links(self):
+        response = self.page()
+        html = response.content.decode()
+        self.assertLess(html.index('id="dash-newsletter"'), html.index('id="dash-finance"'))
+        keys = list(response.context["sections"])
+        self.assertEqual(keys.index("newsletter") + 1, keys.index("finance"))
+
     def test_asks_mailchimp_once_then_uses_the_cache(self):
         self.page()
         self.page()

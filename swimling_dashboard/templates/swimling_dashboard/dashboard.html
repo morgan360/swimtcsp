@@ -45,6 +45,28 @@
       </div>
     </div>
 
+    {% if swimlings_missing_details %}
+    <!-- Ask returning families to re-enter details erased while archived -->
+    <div class="bg-amber-50 border border-amber-300 text-amber-900 rounded-xl px-6 py-4 mb-6 shadow-sm">
+      <p class="font-semibold text-sm sm:text-base">
+        <i class="fa-solid fa-circle-exclamation mr-2"></i>Please check your swimmers' details
+      </p>
+      <p class="text-xs sm:text-sm text-amber-800 mt-1">
+        We need a date of birth for each swimmer, and anything their teacher should know at poolside,
+        such as asthma, allergies or epilepsy.
+      </p>
+      <div class="flex flex-wrap items-center gap-2 mt-3">
+        {% for swimling in swimlings_missing_details %}
+        <button onclick="openEditSwimlingModal({{ swimling.id }})"
+          data-edit-url="{% url 'swimling_dashboard:edit-swimling' id=swimling.id %}"
+          class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 text-gray-600 hover:bg-gray-50 hover:border-gray-400 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md text-sm font-medium">
+          <i class="fa-solid fa-user-pen mr-2"></i>Update {{ swimling.first_name }}
+        </button>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
     <!-- Main Dashboard Content -->
     <div id="dashboard-panels" class="space-y-8">
       {% include "swimling_dashboard/_dashboard_panels.html" %}

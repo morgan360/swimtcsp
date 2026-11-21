@@ -398,6 +398,10 @@ def guardian_dashboard(request):
         'public_lessons_data': public_lessons_data,
         'school_panel_data': school_panel_data,
         'first_active_term': first_active_term,
+        # Children with no date of birth: mostly families back after their
+        # account was archived (users.retention erases DOB, medical info and
+        # notes), so ask them to fill the details in again before booking.
+        'swimlings_missing_details': [s for s in swimlings if s.dob is None],
     }
 
     return render(request, 'swimling_dashboard/dashboard.html', context)

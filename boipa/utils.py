@@ -87,7 +87,7 @@ def _order_key(reference):
         return None
 
 
-def confirm_payment(tx_id, merchant_tx_id):
+def confirm_payment(tx_id, merchant_tx_id, expected_amount=None):
     """Ask BOIPA whether `tx_id` is a captured payment for this order.
 
     Returns (ok, reason). The payment callbacks used to believe whatever they
@@ -119,11 +119,33 @@ def confirm_payment(tx_id, merchant_tx_id):
         if _order_key(theirs_ref) != ours:
             return False, f"BOIPA's transaction is for {theirs_ref!r}, not {merchant_tx_id!r}"
         if details["captured"]:
+            # The amount is in the checkout URL, and on 22 Nov the bot asked for
+            # links at 0.01, -1 and 1E+30. Every real payment checked (651) was
+            # charged exactly the order amount.
+            paid = details.get("amount")
+            if expected_amount is not None and (paid is None or paid < Decimal(str(expected_amount)) - Decimal("0.005")):
+                return False, f"BOIPA captured {paid}, but the order is for {expected_amount}"
             return True, ""
         if details["status"] not in STILL_PROCESSING:
             break
         logger.info(f"BOIPA {tx_id} still {details['status']}, asking again (attempt {attempt + 1})")
     return False, f"BOIPA status is {details['status'] or 'blank'}, not CAPTURED"
+
+
+def order_for_reference(merchant_tx_id):
+    """The order a reference names, or None. Unknown prefixes are lesson orders,
+    as payment_response has always treated them."""
+    key = _order_key(merchant_tx_id)
+    if not key:
+        return None
+    prefix, order_id = key
+    if prefix in ("swims", "swim"):
+        from swims_orders.models import Order
+    elif prefix in ("school", "schools"):
+        from schools_orders.models import Order
+    else:
+        from lessons_orders.models import Order
+    return Order.objects.filter(id=order_id).first()
 
 
 def get_boipa_transaction_details(tx_id):

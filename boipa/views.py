@@ -13,7 +13,7 @@ from .models import (
 from lessons_bookings.utils.enrollment import handle_lessons_enrollment
 from schools_bookings.utils.enrollment import handle_schools_enrollment
 from .payment_functions import create_hpp_payment_link  # NEW BOIPA API function
-from .utils import confirm_payment
+from .utils import confirm_payment, order_for_reference
 from swims_orders.tasks import send_order_email
 from lessons_orders.tasks import send_lesson_order_email
 from schools_orders.tasks import send_school_order_email
@@ -55,7 +55,19 @@ def initiate_boipa_payment_session(request, order_ref, total_price):
     The new API uses OAuth2 access tokens and creates a complete HPP link
     via API call (no more manual token generation).
     """
-    total_price = Decimal(total_price)
+    # The price in the URL is not trusted: on 22 Nov 2026 a script asked for links
+    # at 0.01, -1 and 1E+30. The order's own amount is what gets charged.
+    order = order_for_reference(order_ref)
+    if order is None or order.paid:
+        boipa_logger.warning(f"⛔ Payment link refused for {order_ref!r}: {'already paid' if order else 'no such order'}")
+        return render(request, 'boipa/error.html', {'error': 'This order is already paid or could not be found. Please contact support if you need help.', 'error_message': ''})
+    if order.amount is None or order.amount <= 0:
+        boipa_logger.warning(f"⛔ Payment link refused for {order_ref!r}: order amount {order.amount}")
+        return render(request, 'boipa/error.html', {
+            'error': 'Unable to create payment link. Please try again or contact support.', 'error_message': ''})
+    if str(total_price) != str(order.amount):
+        boipa_logger.warning(f"Payment link for {order_ref!r}: URL said {total_price!r}, charging order amount {order.amount}")
+    total_price = order.amount
 
     # Optional: Extract payer information from request (user, session, etc.)
     payer_info = None
@@ -167,7 +179,8 @@ def payment_response(request):
     # Nothing in the request is trusted: a browser can be sent here with any
     # status it likes. BOIPA must confirm the payment before anything changes.
     if result == "success" and order_ref and txId:
-        confirmed, reason = confirm_payment(txId, merchantTxId)
+        expected = getattr(order_for_reference(merchantTxId), "amount", None)
+        confirmed, reason = confirm_payment(txId, merchantTxId, expected)
         if not confirmed:
             boipa_logger.warning(f"⛔ payment_response not confirmed by BOIPA for {merchantTxId!r} ({txId!r}): {reason}")
             from security.services import note_unconfirmed_payment
@@ -471,7 +484,7 @@ def payment_notification(request):
         return HttpResponse("Payment not successful", status=200)
 
     # Nothing in the body is trusted: BOIPA must confirm the payment first.
-    confirmed, reason = confirm_payment(tx_id, merchantTxId)
+    confirmed, reason = confirm_payment(tx_id, merchantTxId, order.amount)
     if not confirmed:
         boipa_logger.warning(f"⛔ payment_notification not confirmed by BOIPA for {merchantTxId!r} ({tx_id!r}): {reason}")
         from security.services import note_unconfirmed_payment

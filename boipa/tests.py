@@ -170,3 +170,33 @@ class CaptureRaceTests(TestCase):
         with patch("boipa.utils._fetch_new_api", return_value=None):
             self.assertFalse(utils.confirm_payment("TRN_fake", "lesson_5553")[0])
         self.sleep.assert_not_called()
+
+
+@override_settings(CHATBOT_ABUSE_ALERT_EMAIL="owner@example.com")
+class AmountTests(PaymentConfirmationTests.__bases__[0]):
+    """22 Nov 2026: the bot asked for payment links at 0.01, -1 and 1E+30."""
+
+    setUp = PaymentConfirmationTests.setUp
+
+    def test_underpayment_is_refused(self):
+        with patch("boipa.utils._fetch_new_api", return_value={
+                "captured": True, "status": "CAPTURED", "amount": Decimal("0.01"),
+                "currency": "EUR", "raw": {"reference": self.ref}}):
+            self.client.get(reverse("boipa:payment_response"),
+                            {"reference": self.ref, "id": REAL_TX, "status": "CAPTURED"})
+        self.order.refresh_from_db()
+        self.assertFalse(self.order.paid)
+
+    def test_payment_link_charges_the_order_amount_not_the_url(self):
+        with patch("boipa.views.create_hpp_payment_link", return_value={"url": "https://pay.example/x"}) as make:
+            for price in ("0.01", "-1", "1E+30", "7.00"):
+                self.client.get(reverse("boipa:initiate_payment_session", args=[self.ref, price]))
+        self.assertEqual({c.args[2] for c in make.call_args_list}, {Decimal("7.00")})
+
+    def test_no_link_for_a_paid_or_missing_order(self):
+        self.order.paid = True
+        self.order.save()
+        with patch("boipa.views.create_hpp_payment_link") as make:
+            self.client.get(reverse("boipa:initiate_payment_session", args=[self.ref, "7.00"]))
+            self.client.get(reverse("boipa:initiate_payment_session", args=["swims_99999999_1", "7.00"]))
+            make.assert_not_called()

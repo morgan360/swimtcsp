@@ -1,4 +1,6 @@
 # boipa/utils.py
+import hashlib
+import hmac
 import re
 import time
 
@@ -85,6 +87,43 @@ def _order_key(reference):
         return parts[0], int(parts[1])
     except ValueError:
         return None
+
+
+def signed_by_boipa(request):
+    """True when the request carries BOIPA's X-GP-Signature for its exact body.
+
+    BOIPA signs what it POSTs to us: SHA-512 of the raw body followed by our app
+    key, as hex. A forger without the key cannot produce it. Checked against all
+    four real callbacks on 22 Nov 2026.
+    """
+    signature = (request.headers.get("X-GP-Signature") or "").strip().lower()
+    app_key = getattr(settings, "BOIPA_APP_KEY", "") or ""
+    if not signature or not app_key:
+        return False
+    expected = hashlib.sha512(request.body + app_key.encode()).hexdigest()
+    return hmac.compare_digest(signature, expected)
+
+
+def confirm_signed_payment(data, merchant_tx_id, expected_amount=None):
+    """(ok, reason) for a payload signed by BOIPA: its own word, checked for
+    status, order and amount. No lookup needed, which matters because BOIPA's API
+    still says INITIATED until after we have answered this very request (seen
+    for 15 s on 22 Nov 2026, lesson_5555)."""
+    status = str(data.get("status") or "").upper()
+    if status != "CAPTURED":
+        return False, f"signed status is {status or 'blank'}, not CAPTURED"
+    ours = _order_key(merchant_tx_id)
+    theirs = data.get("reference") or data.get("order_reference")
+    if not ours or _order_key(theirs) != ours:
+        return False, f"signed payment is for {theirs!r}, not {merchant_tx_id!r}"
+    if expected_amount is not None:
+        try:
+            paid = Decimal(str(data.get("amount"))) / 100
+        except Exception:
+            return False, f"signed amount {data.get('amount')!r} unreadable"
+        if paid < Decimal(str(expected_amount)) - Decimal("0.005"):
+            return False, f"signed payment is {paid}, but the order is for {expected_amount}"
+    return True, ""
 
 
 def confirm_payment(tx_id, merchant_tx_id, expected_amount=None):

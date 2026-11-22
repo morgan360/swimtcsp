@@ -13,7 +13,7 @@ from .models import (
 from lessons_bookings.utils.enrollment import handle_lessons_enrollment
 from schools_bookings.utils.enrollment import handle_schools_enrollment
 from .payment_functions import create_hpp_payment_link  # NEW BOIPA API function
-from .utils import confirm_payment, order_for_reference
+from .utils import confirm_payment, confirm_signed_payment, order_for_reference, signed_by_boipa
 from swims_orders.tasks import send_order_email
 from lessons_orders.tasks import send_lesson_order_email
 from schools_orders.tasks import send_school_order_email
@@ -180,7 +180,10 @@ def payment_response(request):
     # status it likes. BOIPA must confirm the payment before anything changes.
     if result == "success" and order_ref and txId:
         expected = getattr(order_for_reference(merchantTxId), "amount", None)
-        confirmed, reason = confirm_payment(txId, merchantTxId, expected)
+        if signed_by_boipa(request):
+            confirmed, reason = confirm_signed_payment(data, merchantTxId, expected)
+        else:
+            confirmed, reason = confirm_payment(txId, merchantTxId, expected)
         if not confirmed:
             boipa_logger.warning(f"⛔ payment_response not confirmed by BOIPA for {merchantTxId!r} ({txId!r}): {reason}")
             from security.services import note_unconfirmed_payment
@@ -484,7 +487,10 @@ def payment_notification(request):
         return HttpResponse("Payment not successful", status=200)
 
     # Nothing in the body is trusted: BOIPA must confirm the payment first.
-    confirmed, reason = confirm_payment(tx_id, merchantTxId, order.amount)
+    if signed_by_boipa(request):
+        confirmed, reason = confirm_signed_payment(data, merchantTxId, order.amount)
+    else:
+        confirmed, reason = confirm_payment(tx_id, merchantTxId, order.amount)
     if not confirmed:
         boipa_logger.warning(f"⛔ payment_notification not confirmed by BOIPA for {merchantTxId!r} ({tx_id!r}): {reason}")
         from security.services import note_unconfirmed_payment

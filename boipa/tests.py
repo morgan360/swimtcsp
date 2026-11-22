@@ -70,8 +70,8 @@ class PaymentConfirmationTests(TestCase):
         self.assertStillUnpaid()
         self.assertFalse(SwimOrderPaymentNotification.objects.filter(status="CAPTURED").exists())
         self.assertEqual(SecurityIncident.objects.filter(kind="payment_rejected").count(), 1)
-        self.assertEqual(len(mail.outbox), 1)
-        self.assertIn("NOT marked paid", mail.outbox[0].body)
+        # Unsigned, so a forgery: on the dashboard, not in the inbox.
+        self.assertEqual(mail.outbox, [])
 
     def test_injection_in_the_transaction_id_never_reaches_boipa(self):
         with patch("boipa.utils._fetch_new_api") as lookup:

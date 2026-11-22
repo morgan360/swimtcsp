@@ -27,6 +27,11 @@ logger = logging.getLogger(__name__)
 # incident, not fifteen.
 COOLDOWN_SECONDS = 60 * 60
 
+# Across all sessions. A script that starts a fresh session for every message
+# (22 Nov 2026) would otherwise get one email per message.
+MAX_ALERTS_PER_HOUR = 5
+GLOBAL_KEY = "chatbot:abuse-alert:all"
+
 
 def recipients():
     """Who to tell, or [] when alerting is switched off."""
@@ -56,6 +61,9 @@ def send_abuse_alert(query, moderation, request=None):
     if cache.get(cooldown_key):
         logger.info("Abuse alert suppressed (cooldown) for session %s", session_key)
         return False
+    if (cache.get(GLOBAL_KEY) or 0) >= MAX_ALERTS_PER_HOUR:
+        logger.info("Abuse alert suppressed (hourly cap) for session %s", session_key)
+        return False
 
     try:
         subject = "[TCSP] Chatbot blocked an abusive message"
@@ -75,6 +83,11 @@ def send_abuse_alert(query, moderation, request=None):
     # Set the cooldown only after a successful send, so a failed send does not
     # silence the next hour of alerts.
     cache.set(cooldown_key, 1, COOLDOWN_SECONDS)
+    if not cache.add(GLOBAL_KEY, 1, COOLDOWN_SECONDS):
+        try:
+            cache.incr(GLOBAL_KEY)
+        except ValueError:  # expired between the add and the incr
+            cache.set(GLOBAL_KEY, 1, COOLDOWN_SECONDS)
     logger.warning(
         "Chatbot abuse alert sent for session %s (%s)",
         session_key, moderation.category_text or "uncategorised",

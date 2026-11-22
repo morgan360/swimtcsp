@@ -6,13 +6,15 @@ class SecurityIncident(models.Model):
     request: a scanner's hundred hits are one block."""
 
     CHAT_REFUSED, CHAT_BLOCKED, PROBE_BLOCKED, CSRF_BLOCKED = 'chat_refused', 'chat_blocked', 'probe_blocked', 'csrf_blocked'
+    SCRIPT_REFUSED = 'script_refused'
     KIND_CHOICES = [
         (CHAT_REFUSED, 'Chat message refused'),
         (CHAT_BLOCKED, 'Chat blocked'),
         (PROBE_BLOCKED, 'Scanner blocked'),
         (CSRF_BLOCKED, 'Form spam blocked'),
+        (SCRIPT_REFUSED, 'Script turned away'),
     ]
-    BLOCKS = (CHAT_BLOCKED, PROBE_BLOCKED, CSRF_BLOCKED)
+    BLOCKS = (CHAT_BLOCKED, PROBE_BLOCKED, CSRF_BLOCKED, SCRIPT_REFUSED)
 
     created = models.DateTimeField(auto_now_add=True, db_index=True)
     kind = models.CharField(max_length=20, choices=KIND_CHOICES)

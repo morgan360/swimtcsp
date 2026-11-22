@@ -165,7 +165,10 @@ def build_digest(since, web_log=WEB_LOG, server_log=SERVER_LOG,
     from security.models import SecurityIncident
     scanners = SecurityIncident.objects.filter(
         kind=SecurityIncident.PROBE_BLOCKED, created__gte=since.replace(tzinfo=dt_timezone.utc)).count()
-    sections.append(('Scanners blocked', f'{scanners} address(es) blocked for an hour. See Security on the Live Dashboard.'))
+    scripts = SecurityIncident.objects.filter(
+        kind=SecurityIncident.SCRIPT_REFUSED, created__gte=since.replace(tzinfo=dt_timezone.utc)).count()
+    sections.append(('Scanners blocked', f'{scanners} address(es) blocked for an hour. '
+                     f'{scripts} address(es) turned away for using a scripting tool. See Security on the Live Dashboard.'))
 
     sections.append(('Counted as noise, not listed', '\n'.join(counted) or 'None.'))
 

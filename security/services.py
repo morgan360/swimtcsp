@@ -26,6 +26,34 @@ logger = logging.getLogger(__name__)
 
 PROBE_PATH = re.compile(r"/wp-|/wordpress|xmlrpc|\.php$|/\.env|/\.git|phpmyadmin|^/api/", re.IGNORECASE)
 PROBE_LIMIT = 5
+
+# Files no visitor has any reason to ask for: secrets, source, server internals.
+# One request for one of these is enough. WordPress paths stay on PROBE_LIMIT,
+# because old /wp-content/ image links from the previous site still get followed
+# by real people.
+CONFIG_PROBE_PATH = re.compile(
+    r"/\.(env|git|svn|hg|aws|ssh|htaccess|htpasswd|DS_Store)"
+    r"|(^|/)(local_)?settings\.py$|(^|/)(config|wp-config)\.(py|php|json|ya?ml)$"
+    r"|web\.config$|phpinfo|server-status|server-info"
+    r"|\.(sql|bak|old|swp|sqlite3?)$"
+    r"|(^|/)(__debug__|debug|envdump|actuator)(/|$)",
+    re.IGNORECASE,
+)
+CONFIG_PROBE_LIMIT = 1
+
+# Command-line tools and HTTP libraries. Customers come in browsers and BOIPA
+# calls back as "HostedPaymentPage" (and /boipa/ is exempt anyway). In ten days
+# of production logs to Nov 2026 every request from one of these was a scan:
+# WordPress probes, config-file hunts, and the 22 Nov chatbot injection run.
+# Easily faked, so this stops the low-effort majority, not a determined attacker.
+SCRIPTED_CLIENT = re.compile(
+    r"^(curl|wget|python-requests|python-httpx|python-urllib|python/[\d.]+ aiohttp|aiohttp"
+    r"|go-http-client|java/|apache-httpclient|okhttp|libwww-perl|lwp::|scrapy|httpie"
+    r"|node-fetch|axios|undici|ruby|php/|guzzlehttp|powershell"
+    r"|sqlmap|nikto|nuclei|zgrab|masscan|nmap|wpscan|dirbuster|gobuster|ffuf|feroxbuster)",
+    re.IGNORECASE,
+)
+SCRIPTED_CLIENT_REFUSAL = "Automated clients are not allowed on this site."
 CSRF_LIMIT = 20
 ATTACK_WINDOW = 10 * 60
 IP_BLOCK = 60 * 60
@@ -93,6 +121,25 @@ def ip_is_blocked(request):
         return False
 
 
+def is_scripted_client(request):
+    """True for a request from a command-line tool or HTTP library."""
+    try:
+        if not _on() or is_exempt(request):
+            return False
+        if not SCRIPTED_CLIENT.match((request.META.get('HTTP_USER_AGENT') or '').strip()):
+            return False
+        ip = client_ip(request)
+        if ip in getattr(settings, 'SECURITY_IP_ALLOWLIST', ()):
+            return False
+        # One row per address per window, not per request: a scan is one incident.
+        if _count(f'security:scripted:{ip}', ATTACK_WINDOW) == 1:
+            _record(SecurityIncident.SCRIPT_REFUSED, request, ip)
+        return True
+    except Exception as exc:
+        logger.error("Could not check for a scripted client: %s", exc)
+        return False
+
+
 def _strike(request, name, limit, kind, what=None):
     """Count an attack signal from this address, blocking it at the limit. With
     no `what` there is no email of its own."""
@@ -116,7 +163,11 @@ def note_response(request, status):
     """Called for every response: count requests for files a scanner looks for.
     Blocked but not emailed: production sees 4 to 16 of these a day, nearly all
     routine WordPress scans. The daily log digest gives the count instead."""
-    if status == 404 and PROBE_PATH.search(request.path):
+    if status != 404:
+        return
+    if CONFIG_PROBE_PATH.search(request.path):
+        _strike(request, 'config', CONFIG_PROBE_LIMIT, SecurityIncident.PROBE_BLOCKED)
+    elif PROBE_PATH.search(request.path):
         _strike(request, 'probe', PROBE_LIMIT, SecurityIncident.PROBE_BLOCKED)
 
 

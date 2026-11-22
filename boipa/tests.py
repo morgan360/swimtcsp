@@ -129,3 +129,74 @@ class PaymentConfirmationTests(TestCase):
             self.assertEqual(utils.confirm_payment(REAL_TX, "lesson_5552"), (True, ""))
         with boipa_says(reference="lesson_5553"):
             self.assertFalse(utils.confirm_payment(REAL_TX, "lesson_5552")[0])
+
+
+class CaptureRaceTests(TestCase):
+    """22 Nov 2026 10:59: BOIPA called back before its own record said CAPTURED."""
+
+    def lookups(self, *statuses, reference="lesson_5553"):
+        return patch("boipa.utils._fetch_new_api", side_effect=[
+            {"captured": s == "CAPTURED", "status": s, "amount": None, "currency": "EUR",
+             "raw": {"reference": reference}} for s in statuses])
+
+    def setUp(self):
+        sleep = patch("boipa.utils.time.sleep")
+        self.sleep = sleep.start()
+        self.addCleanup(sleep.stop)
+
+    def test_initiated_then_captured_is_confirmed(self):
+        with self.lookups("INITIATED", "INITIATED", "CAPTURED"):
+            self.assertEqual(utils.confirm_payment(REAL_TX, "lesson_5553"), (True, ""))
+        self.assertEqual(self.sleep.call_count, 2)
+
+    def test_never_captured_gives_up(self):
+        with self.lookups(*["INITIATED"] * (len(utils.CAPTURE_WAITS) + 1)):
+            ok, reason = utils.confirm_payment(REAL_TX, "lesson_5553")
+        self.assertFalse(ok)
+        self.assertIn("INITIATED", reason)
+        self.assertLessEqual(sum(utils.CAPTURE_WAITS), 12)
+
+    def test_declined_is_not_waited_on(self):
+        with self.lookups("DECLINED"):
+            self.assertFalse(utils.confirm_payment(REAL_TX, "lesson_5553")[0])
+        self.sleep.assert_not_called()
+
+    def test_someone_elses_transaction_is_not_waited_on(self):
+        with self.lookups("INITIATED", reference="lesson_1"):
+            self.assertFalse(utils.confirm_payment(REAL_TX, "lesson_5553")[0])
+        self.sleep.assert_not_called()
+
+    def test_forgery_is_not_waited_on(self):
+        with patch("boipa.utils._fetch_new_api", return_value=None):
+            self.assertFalse(utils.confirm_payment("TRN_fake", "lesson_5553")[0])
+        self.sleep.assert_not_called()
+
+
+@override_settings(CHATBOT_ABUSE_ALERT_EMAIL="owner@example.com")
+class AmountTests(PaymentConfirmationTests.__bases__[0]):
+    """22 Nov 2026: the bot asked for payment links at 0.01, -1 and 1E+30."""
+
+    setUp = PaymentConfirmationTests.setUp
+
+    def test_underpayment_is_refused(self):
+        with patch("boipa.utils._fetch_new_api", return_value={
+                "captured": True, "status": "CAPTURED", "amount": Decimal("0.01"),
+                "currency": "EUR", "raw": {"reference": self.ref}}):
+            self.client.get(reverse("boipa:payment_response"),
+                            {"reference": self.ref, "id": REAL_TX, "status": "CAPTURED"})
+        self.order.refresh_from_db()
+        self.assertFalse(self.order.paid)
+
+    def test_payment_link_charges_the_order_amount_not_the_url(self):
+        with patch("boipa.views.create_hpp_payment_link", return_value={"url": "https://pay.example/x"}) as make:
+            for price in ("0.01", "-1", "1E+30", "7.00"):
+                self.client.get(reverse("boipa:initiate_payment_session", args=[self.ref, price]))
+        self.assertEqual({c.args[2] for c in make.call_args_list}, {Decimal("7.00")})
+
+    def test_no_link_for_a_paid_or_missing_order(self):
+        self.order.paid = True
+        self.order.save()
+        with patch("boipa.views.create_hpp_payment_link") as make:
+            self.client.get(reverse("boipa:initiate_payment_session", args=[self.ref, "7.00"]))
+            self.client.get(reverse("boipa:initiate_payment_session", args=["swims_99999999_1", "7.00"]))
+            make.assert_not_called()

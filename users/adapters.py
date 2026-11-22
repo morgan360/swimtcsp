@@ -9,6 +9,7 @@ from allauth.core.exceptions import ImmediateHttpResponse
 from allauth.socialaccount.internal.flows.login import record_authentication
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
 
 User = get_user_model()
 
@@ -71,7 +72,43 @@ class NewAccountEmailVerificationStage(EmailVerificationStage):
         return super().handle()
 
 
+# Throwaway inboxes anyone can read. On 22 Nov 2026 an attack script signed up
+# with mailnesia.com and "verified" through its public inbox. No real customer
+# used any of these on that date (one account in all, the script's). Proton and
+# similar private services are real mailboxes and stay allowed.
+DISPOSABLE_EMAIL_DOMAINS = frozenset("""
+    mailnesia.com mailinator.com guerrillamail.com guerrillamail.net guerrillamail.org
+    guerrillamailblock.com sharklasers.com grr.la pokemail.net spam4.me yopmail.com
+    yopmail.fr yopmail.net 10minutemail.com 10minutemail.net temp-mail.org tempmail.com
+    tempmail.net tempmailo.com tempr.email trashmail.com trashmail.de trashmail.net
+    getnada.com nada.email maildrop.cc dispostable.com throwawaymail.com mohmal.com
+    emailondeck.com mintemail.com fakeinbox.com mailcatch.com mytemp.email tempinbox.com
+    burnermail.io spamgourmet.com mailpoof.com moakt.com mail.tm mail.gw inboxkitten.com
+    emailfake.com fakemail.net discard.email mailsac.com tmail.ws tmpmail.org tmpmail.net
+    1secmail.com 1secmail.org 1secmail.net
+""".split())
+
+DISPOSABLE_EMAIL_MESSAGE = (
+    "Please use your own email address. We send booking confirmations and "
+    "class updates there, so temporary inboxes can't be used."
+)
+
+
+def is_disposable_email(email):
+    domain = (email or "").rsplit("@", 1)[-1].strip().lower().rstrip(".")
+    parts = domain.split(".")
+    # The domain itself or any parent of it: x.mailinator.com counts too.
+    return any(".".join(parts[i:]) in DISPOSABLE_EMAIL_DOMAINS for i in range(len(parts) - 1))
+
+
 class AccountAdapter(DefaultAccountAdapter):
+    def clean_email(self, email):
+        """Runs on sign-up and when adding or changing an email address."""
+        email = super().clean_email(email)
+        if is_disposable_email(email):
+            raise ValidationError(DISPOSABLE_EMAIL_MESSAGE)
+        return email
+
     def get_login_stages(self):
         return [
             "users.adapters.NewAccountEmailVerificationStage"

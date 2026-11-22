@@ -721,3 +721,20 @@ class EmailConfirmationReminderTests(TestCase):
         self.assertIn("background-color:#2563eb; color:#ffffff", html)
         self.assertIn("Or paste this link into your browser", html)
         self.assertNotIn("cta-button", html)
+
+
+class DisposableEmailTests(TestCase):
+    """22 Nov 2026: an attack script signed up with a public mailnesia.com inbox."""
+
+    def test_throwaway_inboxes_are_refused(self):
+        from django.core.exceptions import ValidationError
+        from users.adapters import AccountAdapter
+        for email in ("tcspqa.research3@mailnesia.com", "x@MAILINATOR.com", "y@sub.yopmail.com"):
+            with self.assertRaises(ValidationError, msg=email):
+                AccountAdapter().clean_email(email)
+
+    def test_real_mailboxes_are_allowed(self):
+        from users.adapters import AccountAdapter
+        for email in ("parent@gmail.com", "someone@proton.me", "a@eircom.net", "b@tcsp.ie",
+                      "c@notmailinator.com"):
+            self.assertEqual(AccountAdapter().clean_email(email), email)

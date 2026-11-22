@@ -22,10 +22,23 @@ def _days(start, closures):
     ]
 
 
+def _start_date(value):
+    """?start= as a date, today when absent, None when it isn't a date. A bad
+    value used to raise and return a 500 (seen from a scanner on 22 Nov 2026)."""
+    if not value:
+        return date.today()
+    try:
+        return date.fromisoformat(value)
+    except ValueError:
+        return None
+
+
 @api_view(['GET'])
 def public_timetable(request):
     start_str = request.GET.get('start')
-    start = date.fromisoformat(start_str) if start_str else date.today()
+    start = _start_date(start_str)
+    if start is None:
+        return Response({"error": "start must be a date, YYYY-MM-DD"}, status=400)
     end = start + timedelta(days=6)
 
     products = PublicSwimProduct.objects.filter(available=True).select_related('category')
@@ -63,7 +76,9 @@ def public_timetable(request):
 @api_view(['GET'])
 def weekly_timetable(request):
     start_str = request.GET.get('start')
-    start = date.fromisoformat(start_str) if start_str else date.today()
+    start = _start_date(start_str)
+    if start is None:
+        return Response({"error": "start must be a date, YYYY-MM-DD"}, status=400)
     end = start + timedelta(days=6)
 
     lesson_events = []

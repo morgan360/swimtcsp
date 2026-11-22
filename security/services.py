@@ -54,6 +54,17 @@ SCRIPTED_CLIENT = re.compile(
     re.IGNORECASE,
 )
 SCRIPTED_CLIENT_REFUSAL = "Automated clients are not allowed on this site."
+
+# Scripts posing as a browser. Every real browser's name includes AppleWebKit
+# (Chrome, Safari, Edge) or Gecko (Firefox); after curl was refused on 22 Nov
+# 2026 the attack switched to bare "Mozilla/5.0" and "Mozilla/5.0 Chrome/120",
+# over 1,000 requests that day against 1-50 a day before. Declared crawlers
+# ("compatible; Googlebot", Semrush and the like) say so and are left alone.
+FAKE_BROWSER = re.compile(r"^Mozilla/5\.0(?!.*(AppleWebKit|Gecko|Trident|compatible|bot|crawl|spider|preview))",
+                          re.IGNORECASE)
+# Images and styles stay open to anything: email services fetch the logo in our
+# confirmation emails as bare "Mozilla/5.0".
+FAKE_BROWSER_ALLOWED_PATHS = ('/static/', '/media/', '/favicon')
 CSRF_LIMIT = 20
 ATTACK_WINDOW = 10 * 60
 IP_BLOCK = 60 * 60
@@ -126,7 +137,9 @@ def is_scripted_client(request):
     try:
         if not _on() or is_exempt(request):
             return False
-        if not SCRIPTED_CLIENT.match((request.META.get('HTTP_USER_AGENT') or '').strip()):
+        agent = (request.META.get('HTTP_USER_AGENT') or '').strip()
+        if not SCRIPTED_CLIENT.match(agent) and not (
+                FAKE_BROWSER.match(agent) and not request.path.startswith(FAKE_BROWSER_ALLOWED_PATHS)):
             return False
         ip = client_ip(request)
         if ip in getattr(settings, 'SECURITY_IP_ALLOWLIST', ()):
@@ -209,10 +222,15 @@ def note_chat_refusal(request):
 
 
 def note_unconfirmed_payment(request, reference, reason):
-    """A payment callback BOIPA would not confirm: record it and email (capped).
-    Never blocks, because during a BOIPA outage this is a real customer."""
+    """A payment callback BOIPA would not confirm: record it, and email (capped)
+    only when it carries BOIPA's signature header. Real BOIPA callbacks always do,
+    so a refused one may be a real customer; one without is a forgery, and only
+    goes on the Security dashboard (on 22 Nov 2026 those filled the inbox).
+    Never blocks."""
     try:
         incident = _record(SecurityIncident.PAYMENT_REJECTED, request, client_ip(request))
+        if not request.headers.get("X-GP-Signature"):
+            return
         _alert(incident,
                f"A payment confirmation for order {str(reference)[:60]!r} was not confirmed by BOIPA "
                f"({reason}). The order was NOT marked paid and no email went to the customer.\n\n"

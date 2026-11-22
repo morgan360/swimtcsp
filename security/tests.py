@@ -112,3 +112,62 @@ class ScriptedClientTests(SecurityTestCase):
     @override_settings(SECURITY_BLOCKING_ON=False)
     def test_switch_lets_scripts_through(self):
         self.assertEqual(self.client.get("/", HTTP_USER_AGENT="curl/7.88.1").status_code, 200)
+
+
+class FakeBrowserTests(SecurityTestCase):
+    """22 Nov 2026: refused as curl, the script renamed itself "Mozilla/5.0"."""
+
+    REAL = (
+        "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148",
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/158.0.0.0 Safari/537.36",
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 14.6; rv:133.0) Gecko/20100101 Firefox/133.0",
+        "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)",
+        "Mozilla/5.0 (compatible; SemrushBot/7~bl; +http://www.semrush.com/bot.html)",
+    )
+    FAKE = ("Mozilla/5.0", "Mozilla/5.0 Chrome/120", "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+            "Mozilla/5.0 (X11; Linux x86_64) Chrome/120 Safari/537.36")
+
+    def test_fake_browsers_are_turned_away(self):
+        for agent in self.FAKE:
+            self.assertEqual(self.client.get("/", HTTP_USER_AGENT=agent).status_code, 403, agent)
+
+    def test_real_browsers_and_declared_crawlers_get_through(self):
+        for agent in self.REAL:
+            self.assertEqual(self.client.get("/", HTTP_USER_AGENT=agent).status_code, 200, agent)
+
+    def test_email_services_can_still_load_the_logo(self):
+        response = self.client.get("/static/img/logo.png", HTTP_USER_AGENT="Mozilla/5.0")
+        self.assertNotEqual(response.status_code, 403)
+
+
+class UnconfirmedPaymentEmailTests(SecurityTestCase):
+    def _forged(self, **headers):
+        import json
+        return self.client.post("/boipa/payment-notification/", data=json.dumps(
+            {"reference": f"swims_{self.order_id}_1", "id": "FAKE1", "status": "CAPTURED"}),
+            content_type="application/json", **headers)
+
+    def setUp(self):
+        super().setUp()
+        from datetime import date, time
+        from decimal import Decimal
+        from django.contrib.auth import get_user_model
+        from swims.models import PublicSwimCategory, PublicSwimProduct
+        from swims_orders.models import Order
+        user = get_user_model().objects.create_user(email="c@example.com", password="x")
+        cat = PublicSwimCategory.objects.create(name="P", slug="p")
+        product = PublicSwimProduct.objects.create(category=cat, day_of_week=6, start_time=time(15),
+                                                   end_time=time(16), num_places=5)
+        self.order_id = Order.objects.create(user=user, product=product, booking=date(2026, 11, 22),
+                                             amount=Decimal("7.00")).id
+
+    def test_unsigned_forgery_is_recorded_without_an_email(self):
+        with patch("boipa.utils._fetch_new_api", return_value=None):
+            self._forged()
+        self.assertEqual(SecurityIncident.objects.filter(kind="payment_rejected").count(), 1)
+        self.assertEqual(mail.outbox, [])
+
+    def test_refused_signed_callback_still_emails(self):
+        with patch("boipa.utils._fetch_new_api", return_value=None):
+            self._forged(HTTP_X_GP_SIGNATURE="not-a-valid-signature")
+        self.assertEqual(len(mail.outbox), 1)

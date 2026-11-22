@@ -13,6 +13,8 @@ class AttackBlockMiddleware:
     def __call__(self, request):
         if services.ip_is_blocked(request):
             return HttpResponseForbidden("Blocked. Try again later.", content_type="text/plain")
+        if services.is_scripted_client(request):
+            return HttpResponseForbidden(services.SCRIPTED_CLIENT_REFUSAL, content_type="text/plain")
         response = self.get_response(request)
         services.note_response(request, response.status_code)
         return response

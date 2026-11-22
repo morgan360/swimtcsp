@@ -200,3 +200,42 @@ class AmountTests(PaymentConfirmationTests.__bases__[0]):
             self.client.get(reverse("boipa:initiate_payment_session", args=[self.ref, "7.00"]))
             self.client.get(reverse("boipa:initiate_payment_session", args=["swims_99999999_1", "7.00"]))
             make.assert_not_called()
+
+
+@override_settings(BOIPA_APP_KEY="test-app-key", CHATBOT_ABUSE_ALERT_EMAIL="owner@example.com")
+class SignedCallbackTests(PaymentConfirmationTests.__bases__[0]):
+    """BOIPA signs its callbacks; its API lags until after we reply (22 Nov 2026)."""
+
+    setUp = PaymentConfirmationTests.setUp
+    assertStillUnpaid = PaymentConfirmationTests.assertStillUnpaid
+
+    def _post(self, payload, key="test-app-key", signature=None):
+        import hashlib
+        body = json.dumps(payload, separators=(",", ":")).encode()
+        sig = signature or hashlib.sha512(body + key.encode()).hexdigest()
+        return self.client.post(reverse("boipa:payment_response"), data=body,
+                                content_type="application/json", HTTP_X_GP_SIGNATURE=sig)
+
+    def payload(self, **over):
+        return {"id": REAL_TX, "status": "CAPTURED", "reference": self.ref, "amount": "700",
+                "currency": "EUR", **over}
+
+    def test_signed_capture_is_paid_without_asking_the_api(self):
+        with patch("boipa.utils._fetch_new_api") as lookup:
+            response = self._post(self.payload())
+            lookup.assert_not_called()
+        self.assertIn(b"Payment successful", response.content)
+        self.order.refresh_from_db()
+        self.assertTrue(self.order.paid)
+        self.sent.assert_called_once()
+
+    def test_wrong_key_falls_back_to_the_api(self):
+        with boipa_says(reference=None):
+            self._post(self.payload(), key="not-our-key")
+        self.assertStillUnpaid()
+
+    def test_signed_but_underpaid_or_other_order_is_refused(self):
+        self._post(self.payload(amount="1"))
+        self._post(self.payload(reference="swims_999_1"))
+        self._post(self.payload(status="DECLINED"))
+        self.assertStillUnpaid()

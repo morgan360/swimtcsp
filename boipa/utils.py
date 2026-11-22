@@ -1,5 +1,6 @@
 # boipa/utils.py
 import re
+import time
 
 import requests
 from django.conf import settings
@@ -66,6 +67,14 @@ def verify_boipa_transaction(tx_id):
 # else is refused before it is put into the API URL alongside our bearer token.
 TX_ID_FORMAT = re.compile(r"[A-Za-z0-9_-]{1,100}")
 
+# BOIPA calls payment-response about 100 ms after creating the transaction, and
+# its lookup API can still say INITIATED at that point (a real €312 lesson
+# payment, 22 Nov 2026 10:59). A transaction that is ours but still processing
+# is asked about again, for up to about 10 seconds in all, before it counts as
+# unpaid. Forgeries never get here: BOIPA has no record of them.
+STILL_PROCESSING = {"INITIATED", "PENDING", "PREAUTHORIZED", "PROCESSING", ""}
+CAPTURE_WAITS = (0.5, 1, 1.5, 2, 2, 3)
+
 
 def _order_key(reference):
     """('swims', 103466) from 'swims_103466_1795342279', or None."""
@@ -88,6 +97,9 @@ def confirm_payment(tx_id, merchant_tx_id):
     for this order: BOIPA's own record carries the reference we gave it, so a
     real €7 swim payment cannot be replayed against a €300 lesson order.
 
+    A transaction that is ours but still INITIATED is asked about again for a
+    few seconds, because BOIPA calls back before its own record catches up.
+
     Fails closed. If BOIPA cannot be reached the order stays unpaid and staff are
     told, rather than a forged message getting through during an outage.
     """
@@ -96,16 +108,22 @@ def confirm_payment(tx_id, merchant_tx_id):
     ours = _order_key(merchant_tx_id)
     if not ours:
         return False, "malformed order reference"
-    details = _fetch_new_api(tx_id)
-    if details is None:
-        return False, "BOIPA has no record of this transaction, or could not be reached"
-    if not details["captured"]:
-        return False, f"BOIPA status is {details['status'] or 'blank'}, not CAPTURED"
-    raw = details.get("raw") or {}
-    theirs_ref = raw.get("reference") or raw.get("order_reference")
-    if _order_key(theirs_ref) != ours:
-        return False, f"BOIPA's transaction is for {theirs_ref!r}, not {merchant_tx_id!r}"
-    return True, ""
+    for attempt, delay in enumerate((0,) + CAPTURE_WAITS):
+        if delay:
+            time.sleep(delay)
+        details = _fetch_new_api(tx_id)
+        if details is None:
+            return False, "BOIPA has no record of this transaction, or could not be reached"
+        raw = details.get("raw") or {}
+        theirs_ref = raw.get("reference") or raw.get("order_reference")
+        if _order_key(theirs_ref) != ours:
+            return False, f"BOIPA's transaction is for {theirs_ref!r}, not {merchant_tx_id!r}"
+        if details["captured"]:
+            return True, ""
+        if details["status"] not in STILL_PROCESSING:
+            break
+        logger.info(f"BOIPA {tx_id} still {details['status']}, asking again (attempt {attempt + 1})")
+    return False, f"BOIPA status is {details['status'] or 'blank'}, not CAPTURED"
 
 
 def get_boipa_transaction_details(tx_id):

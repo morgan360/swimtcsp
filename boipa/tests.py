@@ -129,3 +129,44 @@ class PaymentConfirmationTests(TestCase):
             self.assertEqual(utils.confirm_payment(REAL_TX, "lesson_5552"), (True, ""))
         with boipa_says(reference="lesson_5553"):
             self.assertFalse(utils.confirm_payment(REAL_TX, "lesson_5552")[0])
+
+
+class CaptureRaceTests(TestCase):
+    """22 Nov 2026 10:59: BOIPA called back before its own record said CAPTURED."""
+
+    def lookups(self, *statuses, reference="lesson_5553"):
+        return patch("boipa.utils._fetch_new_api", side_effect=[
+            {"captured": s == "CAPTURED", "status": s, "amount": None, "currency": "EUR",
+             "raw": {"reference": reference}} for s in statuses])
+
+    def setUp(self):
+        sleep = patch("boipa.utils.time.sleep")
+        self.sleep = sleep.start()
+        self.addCleanup(sleep.stop)
+
+    def test_initiated_then_captured_is_confirmed(self):
+        with self.lookups("INITIATED", "INITIATED", "CAPTURED"):
+            self.assertEqual(utils.confirm_payment(REAL_TX, "lesson_5553"), (True, ""))
+        self.assertEqual(self.sleep.call_count, 2)
+
+    def test_never_captured_gives_up(self):
+        with self.lookups(*["INITIATED"] * (len(utils.CAPTURE_WAITS) + 1)):
+            ok, reason = utils.confirm_payment(REAL_TX, "lesson_5553")
+        self.assertFalse(ok)
+        self.assertIn("INITIATED", reason)
+        self.assertLessEqual(sum(utils.CAPTURE_WAITS), 12)
+
+    def test_declined_is_not_waited_on(self):
+        with self.lookups("DECLINED"):
+            self.assertFalse(utils.confirm_payment(REAL_TX, "lesson_5553")[0])
+        self.sleep.assert_not_called()
+
+    def test_someone_elses_transaction_is_not_waited_on(self):
+        with self.lookups("INITIATED", reference="lesson_1"):
+            self.assertFalse(utils.confirm_payment(REAL_TX, "lesson_5553")[0])
+        self.sleep.assert_not_called()
+
+    def test_forgery_is_not_waited_on(self):
+        with patch("boipa.utils._fetch_new_api", return_value=None):
+            self.assertFalse(utils.confirm_payment("TRN_fake", "lesson_5553")[0])
+        self.sleep.assert_not_called()

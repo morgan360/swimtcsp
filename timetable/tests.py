@@ -361,3 +361,17 @@ class TimetableVisitTests(ClosureFixtures, TestCase):
         page = self.client.get(reverse("home"), HTTP_USER_AGENT=BROWSER).content.decode()
         self.assertIn("/timetable/book/", page)
         self.assertIn("?via=home", page)
+
+
+class BadStartDateTests(TestCase):
+    """A malformed ?start= used to be a 500 (a scanner, 22 Nov 2026)."""
+
+    def test_bad_start_is_a_400_not_a_500(self):
+        for url in ("/timetable/api/week/", "/timetable/api/public/"):
+            response = self.client.get(url, {"start": "not-a-date"})
+            self.assertEqual(response.status_code, 400, url)
+
+    def test_good_and_missing_start_still_work(self):
+        for url in ("/timetable/api/week/", "/timetable/api/public/"):
+            self.assertEqual(self.client.get(url, {"start": "2026-11-23"}).status_code, 200, url)
+            self.assertEqual(self.client.get(url).status_code, 200, url)

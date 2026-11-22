@@ -7,12 +7,14 @@ class SecurityIncident(models.Model):
 
     CHAT_REFUSED, CHAT_BLOCKED, PROBE_BLOCKED, CSRF_BLOCKED = 'chat_refused', 'chat_blocked', 'probe_blocked', 'csrf_blocked'
     SCRIPT_REFUSED = 'script_refused'
+    PAYMENT_REJECTED = 'payment_rejected'
     KIND_CHOICES = [
         (CHAT_REFUSED, 'Chat message refused'),
         (CHAT_BLOCKED, 'Chat blocked'),
         (PROBE_BLOCKED, 'Scanner blocked'),
         (CSRF_BLOCKED, 'Form spam blocked'),
         (SCRIPT_REFUSED, 'Script turned away'),
+        (PAYMENT_REJECTED, 'Unconfirmed payment rejected'),
     ]
     BLOCKS = (CHAT_BLOCKED, PROBE_BLOCKED, CSRF_BLOCKED, SCRIPT_REFUSED)
 

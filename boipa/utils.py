@@ -1,4 +1,6 @@
 # boipa/utils.py
+import re
+
 import requests
 from django.conf import settings
 from decimal import Decimal
@@ -58,6 +60,52 @@ def verify_boipa_transaction(tx_id):
 
     # Legacy fallback (old numeric txIds)
     return _verify_legacy_api(tx_id)
+
+
+# BOIPA transaction ids look like TRN_nxP3BxRKhPOypvXG0H8C5WY_5_1795304199. Anything
+# else is refused before it is put into the API URL alongside our bearer token.
+TX_ID_FORMAT = re.compile(r"[A-Za-z0-9_-]{1,100}")
+
+
+def _order_key(reference):
+    """('swims', 103466) from 'swims_103466_1795342279', or None."""
+    parts = str(reference or "").split("_")
+    if len(parts) < 2:
+        return None
+    try:
+        return parts[0], int(parts[1])
+    except ValueError:
+        return None
+
+
+def confirm_payment(tx_id, merchant_tx_id):
+    """Ask BOIPA whether `tx_id` is a captured payment for this order.
+
+    Returns (ok, reason). The payment callbacks used to believe whatever they
+    were sent, so anyone could mark an order paid by posting status=CAPTURED with
+    its reference (done to a real customer's order on 22 Nov 2026). Now an order
+    is only marked paid when BOIPA itself says the transaction was captured, and
+    for this order: BOIPA's own record carries the reference we gave it, so a
+    real €7 swim payment cannot be replayed against a €300 lesson order.
+
+    Fails closed. If BOIPA cannot be reached the order stays unpaid and staff are
+    told, rather than a forged message getting through during an outage.
+    """
+    if not isinstance(tx_id, str) or not TX_ID_FORMAT.fullmatch(tx_id):
+        return False, "malformed transaction id"
+    ours = _order_key(merchant_tx_id)
+    if not ours:
+        return False, "malformed order reference"
+    details = _fetch_new_api(tx_id)
+    if details is None:
+        return False, "BOIPA has no record of this transaction, or could not be reached"
+    if not details["captured"]:
+        return False, f"BOIPA status is {details['status'] or 'blank'}, not CAPTURED"
+    raw = details.get("raw") or {}
+    theirs_ref = raw.get("reference") or raw.get("order_reference")
+    if _order_key(theirs_ref) != ours:
+        return False, f"BOIPA's transaction is for {theirs_ref!r}, not {merchant_tx_id!r}"
+    return True, ""
 
 
 def get_boipa_transaction_details(tx_id):

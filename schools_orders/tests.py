@@ -31,6 +31,10 @@ class SchoolOrderBOIPAIntegrationTest(TransactionTestCase):
 
     def setUp(self):
         """Set up test data for school order testing"""
+        # These tests send their own callbacks; stand in for BOIPA's confirmation.
+        confirm = patch('boipa.views.confirm_payment', return_value=(True, ''))
+        confirm.start()
+        self.addCleanup(confirm.stop)
         # Create test user (guardian/school admin)
         self.user = User.objects.create_user(
             email='schooladmin@test.com',

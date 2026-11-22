@@ -38,6 +38,9 @@ class ProratedPricingPaymentIntegrationTest(TransactionTestCase):
 
     def setUp(self):
         """Set up test data"""
+        confirm = patch('boipa.views.confirm_payment', return_value=(True, ''))
+        confirm.start()
+        self.addCleanup(confirm.stop)
         # Create user
         self.user = User.objects.create_user(
             email='testuser@test.com',

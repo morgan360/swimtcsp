@@ -206,3 +206,17 @@ def note_chat_refusal(request):
                    f"and this address from the chat for an hour. The rest of the site still works for them.")
     except Exception as exc:
         logger.error("Could not record a chat refusal: %s", exc)
+
+
+def note_unconfirmed_payment(request, reference, reason):
+    """A payment callback BOIPA would not confirm: record it and email (capped).
+    Never blocks, because during a BOIPA outage this is a real customer."""
+    try:
+        incident = _record(SecurityIncident.PAYMENT_REJECTED, request, client_ip(request))
+        _alert(incident,
+               f"A payment confirmation for order {str(reference)[:60]!r} was not confirmed by BOIPA "
+               f"({reason}). The order was NOT marked paid and no email went to the customer.\n\n"
+               f"If it was forged, nothing more is needed. If a customer says they paid, check the "
+               f"order in Finance > Reconciliation and mark it paid by hand.")
+    except Exception as exc:
+        logger.error("Could not record an unconfirmed payment: %s", exc)

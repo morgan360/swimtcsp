@@ -13,6 +13,7 @@ from .models import (
 from lessons_bookings.utils.enrollment import handle_lessons_enrollment
 from schools_bookings.utils.enrollment import handle_schools_enrollment
 from .payment_functions import create_hpp_payment_link  # NEW BOIPA API function
+from .utils import confirm_payment
 from swims_orders.tasks import send_order_email
 from lessons_orders.tasks import send_lesson_order_email
 from schools_orders.tasks import send_school_order_email
@@ -162,6 +163,16 @@ def payment_response(request):
                 order_ref = int(parts[1])  # ✅ only second part is numeric ID
             except ValueError:
                 order_ref = merchantTxId  # fallback to raw if parsing fails
+
+    # Nothing in the request is trusted: a browser can be sent here with any
+    # status it likes. BOIPA must confirm the payment before anything changes.
+    if result == "success" and order_ref and txId:
+        confirmed, reason = confirm_payment(txId, merchantTxId)
+        if not confirmed:
+            boipa_logger.warning(f"⛔ payment_response not confirmed by BOIPA for {merchantTxId!r} ({txId!r}): {reason}")
+            from security.services import note_unconfirmed_payment
+            note_unconfirmed_payment(request, merchantTxId, reason)
+            result = "unconfirmed"
 
     # Process payment if successful (NEW BOIPA API sends full data to return_url)
     if result == "success" and order_ref and txId:
@@ -321,6 +332,22 @@ def payment_response(request):
 """
         return HttpResponse(html)
 
+    elif result == "unconfirmed":
+        # Either forged, or BOIPA's API was unreachable just after a real payment.
+        # Staff have been emailed; tell the customer plainly what happens next.
+        return HttpResponse("""
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><title>Confirming payment</title></head>
+<body style="font-family:sans-serif;max-width:32rem;margin:3rem auto;padding:0 1rem">
+    <h1>We're confirming your payment</h1>
+    <p>We couldn't confirm this payment with the bank yet, so your booking isn't
+    complete. If money has left your account, please email
+    <a href="mailto:swimming@tcsp.ie">swimming@tcsp.ie</a> and we'll sort it out.</p>
+</body>
+</html>
+""")
+
     # Unknown response
     return HttpResponse("<h1>Unknown payment response</h1>", status=400)
 
@@ -398,8 +425,10 @@ def payment_notification(request):
     # Normalize useful fields for new API
     # New API sends "id" instead of "txId", and "status" instead of "result"
     tx_id = data.get("id") or data.get("txId", "")  # Try new format first
-    result = data.get("result", "")
-    status = data.get("status", "")
+    # str(): a forged JSON body can send objects here ({"$ne": null}).
+    result = str(data.get("result") or "")
+    status = str(data.get("status") or "")
+    tx_id = tx_id if isinstance(tx_id, str) else str(tx_id)
 
     # Quick success gate (BOIPA sends both 'status' and/or 'result')
     is_success = (result.lower() == "success") if result else (status.upper() == "CAPTURED")
@@ -440,6 +469,14 @@ def payment_notification(request):
             errorMessage=data.get("errorMessage", "Not successful"),
         )
         return HttpResponse("Payment not successful", status=200)
+
+    # Nothing in the body is trusted: BOIPA must confirm the payment first.
+    confirmed, reason = confirm_payment(tx_id, merchantTxId)
+    if not confirmed:
+        boipa_logger.warning(f"⛔ payment_notification not confirmed by BOIPA for {merchantTxId!r} ({tx_id!r}): {reason}")
+        from security.services import note_unconfirmed_payment
+        note_unconfirmed_payment(request, merchantTxId, reason)
+        return HttpResponse("Payment not confirmed", status=400)
 
     # ---- SUCCESS path: mark paid and create notification atomically ----
     def _to_decimal(v):

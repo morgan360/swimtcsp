@@ -165,18 +165,22 @@ def product_detail(request, id, slug):
     })
 
 
+MAX_TICKETS_PER_VARIANT = 50
+
+
 def calculate_total(request):
-    print(request.POST)  # Debugging: check what's being posted
     total = 0
     for key, value in request.POST.items():
         if key.startswith('quantity_'):
             variant_id = key.split('_')[1]
-            quantity = int(value)
             try:
+                quantity = int(value)
                 variant = PriceVariant.objects.get(id=variant_id)
-                total += variant.price * quantity
-            except PriceVariant.DoesNotExist:
+            except (ValueError, PriceVariant.DoesNotExist):
+                continue  # junk such as '1e30' or an unknown variant: ignore it
+            if not 0 <= quantity <= MAX_TICKETS_PER_VARIANT:
                 continue
+            total += variant.price * quantity
     return render(request, 'swims/partials/total_price.html', {'total': total})
 
 

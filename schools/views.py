@@ -15,7 +15,7 @@ import django_filters
 # -------------------------------
 # 📋 Lesson List for Public Schools
 # -------------------------------
-def school_list(request):
+def school_list(request, category_slug=None):
     sco_filter = LessonFilter(request.GET, queryset=ScoLessons.objects.all())
 
     if request.headers.get('HX-Request'):

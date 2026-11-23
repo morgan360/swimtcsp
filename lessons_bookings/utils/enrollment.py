@@ -8,6 +8,23 @@ from waiting_list.models import WaitingList
 
 logger = logging.getLogger(__name__)
 
+
+def already_enrolled(swimling, lesson, term):
+    """True if this swimling already holds a place in this class for this term.
+
+    Booking it again takes a second payment for a place the database refuses to
+    create (unique swimling+lesson+term). Four term-62 customers paid twice this
+    way before the check existed (Nov 2026)."""
+    if swimling is None or lesson is None or term is None:
+        return False
+    return LessonEnrollment.objects.filter(swimling=swimling, lesson=lesson, term=term).exists()
+
+
+def already_enrolled_items(order):
+    """The order's items whose swimling is already enrolled in that class and term."""
+    return [item for item in OrderItem.objects.filter(order=order).select_related('swimling', 'product', 'term')
+            if already_enrolled(item.swimling, item.product, item.term)]
+
 def handle_lessons_enrollment(order):
     # print( 'lesson_enrollment')
     try:

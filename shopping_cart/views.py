@@ -150,6 +150,12 @@ def cart_add(request, product_id, type):  # type could be 'lesson' or 'school'
                 # Fallback to current term
                 term = current_term
 
+        if type == 'lesson':
+            from lessons_bookings.utils.enrollment import already_enrolled
+            if already_enrolled(swimling, product, term):
+                messages.error(request, f"{swimling} is already booked into {product} for this term.")
+                return redirect('shopping_cart:cart_detail')
+
         # Call the add method with the correct parameters including type and term
         cart.add(product=product, type=type, swimling_id=swimling_id, term=term)
 
@@ -509,6 +515,11 @@ def process_order_items_from_cart(cart, OrderItemModel, order, ProductModel):
             raise ValueError("We couldn't determine which term to book for right now. Please try again later.")
 
         term = get_object_or_404(Term, id=term_id)
+        if ProductModel is Product:
+            from lessons_bookings.utils.enrollment import already_enrolled
+            if already_enrolled(swimling, product, term):
+                raise ValueError(f"{swimling} is already booked into {product} for this term. "
+                                 f"Please remove it from your cart.")
 
         OrderItemModel.objects.create(
             order=order,
@@ -746,6 +757,11 @@ def direct_rebooking(request, swimling_id, product_id):
             messages.error(request, "We couldn't determine the upcoming term for this rebooking. Please try again later.")
             return redirect('swimling_dashboard:guardian_dashboard')
 
+        from lessons_bookings.utils.enrollment import already_enrolled
+        if already_enrolled(swimling, lesson, next_term):
+            messages.error(request, f"{swimling} is already booked into {lesson} for next term.")
+            return redirect('swimling_dashboard:guardian_dashboard')
+
         # Use prorated price if term has started, otherwise full price
         total_price = lesson.get_prorated_price(next_term)
 
@@ -822,6 +838,11 @@ def confirm_waiting_list_booking(request, swimling_id, product_id):
         if current_term is None:
             messages.error(request, "We couldn't find an active term for this booking. Please try again later.")
             return redirect('shopping_cart:review_waiting_list_booking', swimling_id=swimling_id, product_id=product_id)
+
+        from lessons_bookings.utils.enrollment import already_enrolled
+        if already_enrolled(swimling, lesson, current_term):
+            messages.error(request, f"{swimling} is already booked into {lesson} this term.")
+            return redirect('swimling_dashboard:guardian_dashboard')
 
         # Use prorated price if term has started, otherwise full price
         total_price = lesson.get_prorated_price(current_term)

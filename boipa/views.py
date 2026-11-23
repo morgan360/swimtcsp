@@ -65,6 +65,20 @@ def initiate_boipa_payment_session(request, order_ref, total_price):
         boipa_logger.warning(f"⛔ Payment link refused for {order_ref!r}: order amount {order.amount}")
         return render(request, 'boipa/error.html', {
             'error': 'Unable to create payment link. Please try again or contact support.', 'error_message': ''})
+    # A lesson order for a class the swimling is already in would be charged and
+    # then fail to enrol. Stop before the customer pays twice.
+    from lessons_orders.models import Order as LessonOrder
+    if isinstance(order, LessonOrder):
+        from lessons_bookings.utils.enrollment import already_enrolled_items
+        duplicates = already_enrolled_items(order)
+        if duplicates:
+            boipa_logger.warning(f"⛔ Payment link refused for {order_ref!r}: already enrolled "
+                                 f"{[(i.swimling_id, i.product_id, i.term_id) for i in duplicates]}")
+            names = ', '.join(f"{i.swimling} ({i.product})" for i in duplicates)
+            return render(request, 'boipa/error.html', {
+                'error': f"{names} is already booked into this class for this term, so you have not been charged. "
+                         f"Your existing booking is on your dashboard.",
+                'error_message': ''})
     if str(total_price) != str(order.amount):
         boipa_logger.warning(f"Payment link for {order_ref!r}: URL said {total_price!r}, charging order amount {order.amount}")
     total_price = order.amount
@@ -83,7 +97,8 @@ def initiate_boipa_payment_session(request, order_ref, total_price):
     if link_data is None or 'url' not in link_data:
         boipa_logger.error(f"Failed to create HPP link for order_ref {order_ref}")
         return render(request, 'boipa/error.html', {
-            'error': 'Unable to create payment link. Please try again or contact support.'
+            'error': 'Unable to create payment link. Please try again or contact support.',
+            'error_message': '',
         })
 
     hpp_url = link_data['url']

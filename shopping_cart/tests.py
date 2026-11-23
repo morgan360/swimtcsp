@@ -288,3 +288,54 @@ class BookingPauseGateTests(TestCase):
 
         self.assertRedirects(response, reverse('shopping_cart:cart_detail'))
         self.assertTrue(self.client.session.get('cart'))
+
+
+class DoubleBookingTests(TestCase):
+    """Four term-62 customers paid twice for a class their child was already in
+    (Nov 2026): the payment went through, the enrolment failed on the unique
+    swimling+lesson+term key, and the confirmation email still went out."""
+
+    setUp = CartCouponPanelTests.setUp
+    _seed_cart = CartCouponPanelTests._seed_cart
+
+    def _enrol(self):
+        from lessons_bookings.models import LessonEnrollment
+        from lessons_orders.models import Order, OrderItem
+        first = Order.objects.create(user=self.user, amount=Decimal("100.00"), paid=True)
+        OrderItem.objects.create(order=first, product=self.product, swimling=self.swimling,
+                                 term=self.term, price=Decimal("100.00"), quantity=1)
+        LessonEnrollment.objects.create(swimling=self.swimling, lesson=self.product, term=self.term, order=first)
+        return first
+
+    def _second_order(self):
+        from lessons_orders.models import Order, OrderItem
+        order = Order.objects.create(user=self.user, amount=Decimal("100.00"), paid=False)
+        OrderItem.objects.create(order=order, product=self.product, swimling=self.swimling,
+                                 term=self.term, price=Decimal("100.00"), quantity=1)
+        return order
+
+    def test_checkout_refuses_a_class_already_booked(self):
+        from lessons_orders.models import Order
+        first = self._enrol()
+        response = self.client.get(reverse("shopping_cart:payment_process"))
+        self.assertRedirects(response, reverse("shopping_cart:cart_detail"), fetch_redirect_response=False)
+        self.assertEqual(list(Order.objects.values_list("id", flat=True)), [first.id])
+
+    def test_no_payment_link_for_a_class_already_booked(self):
+        from unittest.mock import patch
+        self._enrol()
+        order = self._second_order()
+        with patch("boipa.views.create_hpp_payment_link") as make:
+            response = self.client.get(reverse("boipa:initiate_payment_session",
+                                               args=[f"lesson_{order.id}", "100.00"]))
+        make.assert_not_called()
+        self.assertContains(response, "already booked")
+
+    def test_payment_link_still_made_for_a_new_booking(self):
+        from unittest.mock import patch
+        order = self._second_order()
+        with patch("boipa.views.create_hpp_payment_link", return_value={"url": "https://pay.example/x"}) as make:
+            response = self.client.get(reverse("boipa:initiate_payment_session",
+                                               args=[f"lesson_{order.id}", "100.00"]))
+        make.assert_called_once()
+        self.assertEqual(response.status_code, 302)

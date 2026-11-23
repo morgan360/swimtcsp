@@ -140,3 +140,11 @@ class SwimCouponCheckoutTests(TestCase):
         self.assertEqual(order.amount, Decimal("0.00"))
         self.ten.refresh_from_db()
         self.assertEqual((self.ten.times_used, self.ten.balance_remaining), (1, Decimal("2.00")))
+
+
+class CalculateTotalJunkTests(TestCase):
+    def test_junk_quantity_is_ignored_not_a_500(self):
+        from django.urls import reverse
+        for value in ("1e30", "-1", "abc", "999999"):
+            response = self.client.post(reverse("swims:calculate_total"), {"quantity_1": value})
+            self.assertEqual(response.status_code, 200, value)
